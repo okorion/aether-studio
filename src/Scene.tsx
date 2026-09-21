@@ -748,6 +748,7 @@ export default function Scene({ reducedMotion, active, onReady }: SceneProps) {
             canvas.dataset.quality = quality.toFixed(2)
             canvas.dataset.geometries = String(activeRenderer.info.memory.geometries)
             canvas.dataset.textures = String(activeRenderer.info.memory.textures)
+            canvas.dataset.renderFrame = String(renderedFrames)
           }
           if (canvas.dataset.renderState !== 'ready') {
             canvas.dataset.renderState = 'ready'

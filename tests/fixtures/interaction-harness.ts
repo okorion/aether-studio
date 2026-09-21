@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { createSceneInteraction } from '../../src/SceneInteraction'
 import { createSceneWorlds } from '../../src/SceneWorlds'
+import { sampleJourney } from '../../src/Journey'
 
 type Snapshot = {
   yaw: number
@@ -14,6 +15,7 @@ export type InteractionHarness = {
   step: (seconds: number) => Snapshot
   reset: (reducedMotion?: boolean) => void
   setOrbitEnabled: (enabled: boolean) => void
+  sampleJourney: typeof sampleJourney
   sampleWorld: (elapsed: number, progress: number) => {
     chain: number[]
     modelY: number
@@ -77,6 +79,7 @@ window.interactionHarness = {
   setOrbitEnabled(enabled) {
     interaction.setOrbitEnabled(enabled)
   },
+  sampleJourney,
   sampleWorld(elapsed, progress) {
     worlds ??= createSceneWorlds(worldScene, true)
     worlds.update(elapsed, progress)

@@ -56,7 +56,10 @@ export function sampleJourney(value: number) {
   const scales = windowWeight(progress, .74, .81, .87, .94)
   const core = windowWeight(progress, .20, .28, .88, .96)
   const end = smooth(.86, .97, progress)
-  const orbitWeight = 1 - windowWeight(progress, .20, .27, .86, .94)
+  // Camera input stays fully locked while the mechanical structure is present,
+  // including the scale curtain's fade above the lower ring. Sharing this
+  // weight with the input gate also prevents hover parallax inside locked scenes.
+  const orbitWeight = 1 - windowWeight(progress, .20, .235, .96, 1)
   const overlay = progress < .1 ? 'entry' : progress < .235 ? 'statement'
     : progress < .65 ? 'work' : progress < .78 ? 'machine'
       : progress < .89 ? 'scales' : 'contact'
@@ -67,7 +70,7 @@ export function sampleJourney(value: number) {
     structureYaw: Math.PI * 4 * smooth(.235, .665, progress),
     // An absolute scroll phase is reversible and exactly still at rest.
     chainPhase: progress * 10,
-    orbitWeight, orbitEnabled: progress < .235 || progress > .89,
+    orbitWeight, orbitEnabled: orbitWeight > 0,
     spine, machine, scales, core, end, overlay,
     energy: .22 + spine * 1.4 + machine * .75 + scales * .85,
     darkness: smooth(.81, .97, progress),

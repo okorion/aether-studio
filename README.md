@@ -1,16 +1,35 @@
 # AETHER STUDIO
 
-[사이트 바로 보기](https://aether-studio-nu.vercel.app/) · [검증 기록](docs/verification.md) · [초기 구현 PR](https://github.com/okorion/aether-studio/pull/1)
+[사이트 바로 보기](https://aether-studio-nu.vercel.app/) · [5개 지점 시각 비교](docs/visual-comparison.md) · [검증 기록](docs/verification.md)
 
 [Active Theory](https://activetheory.net/)의 어두운 몰입형 공간, 크롬 링, 입자, 얇은 곡선, 미니멀 내비게이션을 참고한 초기 구현입니다. React + TypeScript + Three.js + Vite로 개발했습니다.
 
 원본의 소스·로고·모델·이미지·음악을 복제하지 않았습니다. AETHER STUDIO 브랜드, 문구, 4개 가상 프로젝트와 시각 요소는 이 프로젝트용으로 작성했습니다. 원본의 전체 연출을 그대로 복제한 완성품은 아니며, 자체 절차적 3D 장면으로 구현한 초기 버전입니다.
 
-![배포 사이트의 데스크톱 첫 화면](docs/screenshots/production/desktop-home.png)
+![3D 여정의 첫 화면](docs/screenshots/journey/scroll-000.png)
 
-## 화면 미리보기
+## 3D 스크롤 여정
 
-아래 이미지는 2026-09-21 공개 배포 주소에서 직접 캡처했습니다. 데스크톱은 1440×900, 모바일은 390×844입니다. 실시간 3D 장면은 시간과 포인터에 따라 달라집니다.
+홈을 스크롤하면 작은 링 → 큰 링과 소개 → 입자 기둥과 프로젝트 → 청록 기계 장치 → 링 엔딩으로 이동합니다. 원형 링과 두 꼬리는 같은 좌표계에서 움직이며 꼬리 끝에만 유연한 변형을 적용합니다.
+
+- 마우스 이동: 은빛 리본 흔적이 남았다가 약 1.45초에 걸쳐 사라집니다.
+- 빈 공간을 누른 채 드래그: 카메라가 장면을 크게 선회하고, 놓으면 기본 시점으로 돌아옵니다.
+- Work / Contact: 콘텐츠 화면으로 이동합니다. 링크·버튼·dialog 조작은 카메라 입력에서 제외합니다.
+- 터치에서는 기본 스크롤을 유지합니다. 모션 정지·OS reduced motion에서는 궤적과 카메라 드래그를 끕니다.
+
+| 25% · 프로젝트 진입 | 50% · 원근 카드와 금속 기둥 |
+| --- | --- |
+| ![25%](docs/screenshots/journey/scroll-025.png) | ![50%](docs/screenshots/journey/scroll-050.png) |
+
+| 75% · 기계 장치 | 100% · 링 엔딩 |
+| --- | --- |
+| ![75%](docs/screenshots/journey/scroll-075.png) | ![100%](docs/screenshots/journey/scroll-100.png) |
+
+위 이미지는 실제 production 빌드를 Chromium·D3D11 GPU로 실행한 1440×900 캡처입니다. [원본·변경 전·변경 후 비교](docs/visual-comparison.md)에 관찰 조건과 한계를 기록했습니다. `60%`는 사용자가 제시한 시각 방향의 목표이며 자동 측정 점수가 아닙니다.
+
+## 콘텐츠 화면 · 초기 배포 기록
+
+아래 이미지는 초기 배포에서 캡처한 콘텐츠 화면입니다. 모바일 홈의 최신 스크롤 구성은 위 3D 여정과 같습니다. 데스크톱은 1440×900, 모바일은 390×844입니다.
 
 | 프로젝트 목록 | 프로젝트 상세 |
 | --- | --- |
@@ -78,6 +97,9 @@ npx vercel deploy --prod --scope okorions-projects
 | 브랜드·소개·연락처 | `src/App.tsx`, `index.html`, `public/favicon.svg` |
 | 프로젝트 내용 | `src/projects.ts` |
 | 3D 장면 | `src/Scene.tsx` |
+| 구체 입자·흐름 | `src/Atmosphere.ts` |
+| 리본 흔적·카메라 입력 | `src/SceneInteraction.ts` |
+| 원근 프로젝트·기계 장치 | `src/SceneWorlds.ts` |
 | 프로젝트 비주얼 | `src/ProjectArt.tsx`, `src/styles.css` |
 | 합성 사운드 | `src/audio.ts` |
 
@@ -85,7 +107,7 @@ npx vercel deploy --prod --scope okorions-projects
 
 ## 검증
 
-Playwright 테스트는 데스크톱 1440×900, 모바일 390×844, WebGL 비활성 환경을 사용합니다. 탐색, 상세 보기, 키보드 초점, 사운드, 모션 설정, 가로 넘침 및 3D 파일 로딩 실패를 포함합니다. GitHub Actions에서는 lint·타입·빌드를 확인하고 production preview를 SwiftShader로 실행해 같은 브라우저 테스트를 수행합니다.
+Playwright 테스트 21개는 데스크톱 1440×900, 모바일 390×844, WebGL 비활성 환경을 사용합니다. 탐색, 상세 보기, 초점, 사운드, 모션, 5개 스크롤 지점, hash/history, 로딩 실패와 카메라 입력을 포함합니다. 격리된 실제 shader 캔버스에서 흔적의 픽셀 발생·소멸도 확인합니다. GitHub Actions에서는 lint·타입·빌드를 확인하고 production preview를 SwiftShader로 실행합니다.
 
 시각 증거와 검수 내역은 [검증 기록](docs/verification.md)에 정리했습니다. WebGL 성능은 기기와 브라우저에 따라 달라질 수 있습니다. 실제 Safari/iOS 기기 검증은 수행하지 않았습니다.
 

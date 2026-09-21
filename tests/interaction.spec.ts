@@ -141,12 +141,12 @@ test('@interaction production scene accepts background drag and excludes navigat
     content: '*,*::before,*::after{animation:none!important;transition:none!important}',
   })
   const canvas = page.locator('.scene-canvas')
-  await page.mouse.move(1100, 350)
-  await page.waitForTimeout(250)
   // Exclude the pointer's trail/burst area from the comparison.
   const region = { x: 80, y: 100, width: 650, height: 650 }
   const before = await page.screenshot({ clip: region })
   expect(await page.screenshot({ clip: region })).toEqual(before)
+  // Establish the still baseline before hover starts the damped lighting field.
+  await page.mouse.move(1100, 350)
   const framesBefore = await page.evaluate(() => window.cameraTestFrames)
   await page.mouse.down()
   await page.mouse.move(900, 380, { steps: 8 })
@@ -332,6 +332,125 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
 
   test.afterEach(async ({ page }) => {
     await page.evaluate(() => window.interactionHarness?.dispose())
+  })
+
+  test('pointer lighting survives orbit locks, decays, and clears on excluded input', async ({ page }) => {
+    const result = await page.evaluate(() => {
+      const harness = window.interactionHarness
+      const canvas = document.getElementById('interaction-canvas')!
+      const move = (target: Element = canvas, pointerType = 'mouse') => target.dispatchEvent(
+        new PointerEvent('pointermove', { bubbles: true, pointerType, clientX: 480, clientY: 120 }),
+      )
+      const activate = () => {
+        harness.reset()
+        harness.setOrbitEnabled(false)
+        move()
+        return harness.stepField(.2)
+      }
+      const active = activate()
+      const idle = harness.stepField(3)
+      const cleared = []
+      for (const reason of ['ui', 'touch', 'leave', 'blur', 'hidden', 'hash', 'dialog']) {
+        const before = activate()
+        let dialog: HTMLDialogElement | undefined
+        if (reason === 'ui') move(document.querySelector('button')!)
+        if (reason === 'touch') move(canvas, 'touch')
+        if (reason === 'leave') document.dispatchEvent(new Event('pointerleave'))
+        if (reason === 'blur') window.dispatchEvent(new Event('blur'))
+        if (reason === 'hidden') {
+          Object.defineProperty(document, 'hidden', { value: true, configurable: true })
+          document.dispatchEvent(new Event('visibilitychange'))
+        }
+        if (reason === 'hash') {
+          history.replaceState(null, '', '#work')
+          window.dispatchEvent(new HashChangeEvent('hashchange'))
+        }
+        if (reason === 'dialog') {
+          dialog = document.createElement('dialog')
+          document.body.appendChild(dialog)
+          dialog.showModal()
+        }
+        cleared.push({ reason, before, after: harness.stepField(.1) })
+        if (reason === 'hidden') Reflect.deleteProperty(document, 'hidden')
+        if (reason === 'hash') {
+          history.replaceState(null, '', '#home')
+          window.dispatchEvent(new HashChangeEvent('hashchange'))
+        }
+        dialog?.close()
+        dialog?.remove()
+      }
+      harness.reset(true)
+      move()
+      return { active, idle, cleared, reduced: harness.stepField(.2) }
+    })
+    expect(result.active.strength).toBeGreaterThan(.4)
+    expect(result.active.strength).toBeLessThanOrEqual(1)
+    expect(result.active.ndc[0]).toBeGreaterThan(.4)
+    expect(result.active.ndc[1]).toBeGreaterThan(.4)
+    expect(result.active.aspect).toBeCloseTo(4 / 3)
+    expect(result.active.yaw).toBe(0)
+    expect(result.active.pitch).toBe(0)
+    expect(result.idle.strength).toBeLessThan(result.active.strength / 10)
+    for (const sample of result.cleared) {
+      expect(sample.before.strength, sample.reason).toBeGreaterThan(.4)
+      expect(sample.after.strength, sample.reason).toBe(0)
+      expect(sample.after.yaw, sample.reason).toBe(0)
+    }
+    expect(result.reduced.strength).toBe(0)
+  })
+
+  test('layer wipes are finite and reversible while device, floor, and scales keep separate heights', async ({ page }) => {
+    const result = await page.evaluate(() => {
+      const harness = window.interactionHarness
+      const states = Array.from({ length: 201 }, (_, i) => harness.sampleLayers(i / 200))
+      const invalid = [NaN, Infinity, -Infinity, -1].map(value => harness.sampleLayers(value))
+      const first = harness.sampleEditorial(.125)
+      const same = harness.sampleEditorial(.125)
+      const forward = harness.sampleEditorial(.175)
+      const reverse = harness.sampleEditorial(.125)
+      const fixed = [.70, .74, .78, .83, .93, .78].map(progress => harness.sampleWorld(10, progress))
+      return { states, invalid, end: harness.sampleLayers(2), first, same, forward, reverse, fixed }
+    })
+    for (const state of result.states) {
+      expect(Object.values(state).every(Number.isFinite)).toBe(true)
+      expect(state.statement).toBeGreaterThanOrEqual(0)
+      expect(state.statement).toBeLessThanOrEqual(1)
+      expect(state.scaleCopy).toBeGreaterThanOrEqual(0)
+      expect(state.scaleCopy).toBeLessThanOrEqual(1)
+    }
+    for (const edge of ['forestExit', 'forestEntry', 'monitorEntry', 'monitorExit'] as const) {
+      expect(result.states[0][edge]).toBeLessThan(0)
+      expect(result.states.at(-1)![edge]).toBeGreaterThan(1)
+      for (let i = 1; i < result.states.length; i++)
+        expect(result.states[i][edge]).toBeGreaterThanOrEqual(result.states[i - 1][edge])
+    }
+    for (const invalid of result.invalid) expect(invalid).toEqual(result.states[0])
+    expect(result.end).toEqual(result.states.at(-1))
+    expect(result.same).toEqual(result.first)
+    expect(result.forward[0].matrix).not.toEqual(result.first[0].matrix)
+    expect(result.reverse).toEqual(result.first)
+    expect(result.first[0].visible).toBe(true)
+    for (const state of result.fixed) {
+      expect(state.fixed.machineY).toBeCloseTo(-40.4, 8)
+      expect(state.fixed.floorY).toBeCloseTo(-44.1, 8)
+      expect(state.fixed.scaleY).toBeCloseTo(-48, 8)
+      expect(state.scaleTiles).toEqual(result.fixed[0].scaleTiles)
+    }
+    expect(result.fixed[2].fixed.machineVisible).toBe(true)
+    expect(result.fixed[2].fixed.scaleVisible).toBe(true)
+    expect(result.fixed[5]).toEqual(result.fixed[2])
+  })
+
+  test('scale surface pixels respond locally to pointer position and recover without CPU matrix changes', async ({ page }) => {
+    const pixels = await page.evaluate(() => window.interactionHarness.probeScalePointer())
+    expect(pixels.left.changed).toBeGreaterThan(20)
+    expect(pixels.right.changed).toBeGreaterThan(20)
+    expect(pixels.left.changed).toBeLessThan(160 * 120 / 2)
+    expect(pixels.right.changed).toBeLessThan(160 * 120 / 2)
+    expect(pixels.left.centroidX).toBeLessThan(.45)
+    expect(pixels.right.centroidX).toBeGreaterThan(.55)
+    expect(pixels.reset.changed).toBe(0)
+    expect(pixels.matricesUnchanged).toBe(true)
   })
 
   test('glass capture uses physical target pixels and restores renderer state at high DPR', async ({ page }) => {

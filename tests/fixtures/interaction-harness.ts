@@ -3,6 +3,7 @@ import { createSceneInteraction } from '../../src/SceneInteraction'
 import { createSceneWorlds } from '../../src/SceneWorlds'
 import { createSceneMonitors } from '../../src/SceneMonitors'
 import { sampleJourney } from '../../src/Journey'
+import { createSceneLayers, sampleLayers } from '../../src/SceneLayers'
 
 type Snapshot = {
   yaw: number
@@ -17,6 +18,10 @@ export type InteractionHarness = {
   reset: (reducedMotion?: boolean) => void
   setOrbitEnabled: (enabled: boolean) => void
   sampleJourney: typeof sampleJourney
+  sampleLayers: typeof sampleLayers
+  sampleEditorial: typeof sampleEditorial
+  stepField: typeof stepField
+  probeScalePointer: typeof probeScalePointer
   probeMonitorCapture: typeof probeMonitorCapture
   sampleWorld: (elapsed: number, progress: number) => {
     chain: number[]
@@ -25,6 +30,8 @@ export type InteractionHarness = {
     modelY: number
     chamberY: number
     structureYaw: number
+    fixed: { machineY: number; floorY: number; scaleY: number; machineVisible: boolean; scaleVisible: boolean }
+    scaleTiles: number[]
   }
   dispose: () => void
 }
@@ -57,6 +64,99 @@ const pixels = new Uint8Array(innerWidth * innerHeight * 4)
 const worldScene = new THREE.Scene()
 let worlds: ReturnType<typeof createSceneWorlds> | undefined
 const worldPosition = new THREE.Vector3()
+const editorialScene = new THREE.Scene()
+let editorial: ReturnType<typeof createSceneLayers> | undefined
+
+function advanceInteraction(seconds: number) {
+  const steps = Math.max(1, Math.ceil(seconds / .05))
+  let output = interaction.update(0, time, 1)
+  for (let i = 0; i < steps; i++) {
+    time += seconds / steps
+    output = interaction.update(seconds / steps, time, 1)
+  }
+  return output
+}
+
+function stepField(seconds: number) {
+  const { yaw, pitch, field } = advanceInteraction(seconds)
+  return { yaw, pitch, ndc: field.ndc.toArray(), strength: field.strength, aspect: field.aspect }
+}
+
+function sampleEditorial(progress: number) {
+  editorial ??= createSceneLayers(editorialScene)
+  editorial.update(progress, camera)
+  editorialScene.updateMatrixWorld(true)
+  return ['aether-statement-wrapper', 'aether-scale-wrapper'].map(name => {
+    const panel = editorialScene.getObjectByName(name) as THREE.Mesh<THREE.PlaneGeometry, THREE.ShaderMaterial>
+    if (!panel) throw new Error(`Missing editorial layer ${name}`)
+    return {
+      matrix: panel.matrixWorld.toArray(), visible: panel.visible,
+      opacity: panel.material.uniforms.uOpacity.value as number,
+      top: panel.material.uniforms.uTop.value as number,
+      bottom: panel.material.uniforms.uBottom.value as number,
+    }
+  })
+}
+
+function probeScalePointer() {
+  const modelScene = new THREE.Scene()
+  const assembly = createSceneWorlds(modelScene, true)
+  const probeScene = new THREE.Scene()
+  const probeCamera = new THREE.PerspectiveCamera(42, 4 / 3, .1, 60)
+  probeCamera.position.set(0, -48, 10)
+  probeCamera.lookAt(0, -48, 0)
+  probeCamera.updateMatrixWorld()
+  assembly.update(10, .83)
+  modelScene.updateMatrixWorld(true)
+  const tiles = modelScene.getObjectByName('aether-scale-tiles')
+  if (!(tiles instanceof THREE.InstancedMesh)) throw new Error('The actual scale tiles must exist')
+  const originalMatrices = Array.from(tiles.instanceMatrix.array)
+  // Render only the actual production material/geometry, with fixed light and
+  // time. Ambient particle animation cannot masquerade as pointer response.
+  probeScene.attach(tiles)
+  probeScene.add(new THREE.AmbientLight(0xffffff, 2))
+  const target = new THREE.WebGLRenderTarget(160, 120)
+  const previousTarget = renderer.getRenderTarget()
+  const previousAutoClear = renderer.autoClear
+  const draw = (x: number, strength: number) => {
+    assembly.update(10, .83, { ndc: new THREE.Vector2(x, 0), strength, aspect: 4 / 3 }, probeCamera)
+    renderer.setRenderTarget(target)
+    renderer.render(probeScene, probeCamera)
+    const image = new Uint8Array(160 * 120 * 4)
+    renderer.readRenderTargetPixels(target, 0, 0, 160, 120, image)
+    return image
+  }
+  const difference = (a: Uint8Array, b: Uint8Array) => {
+    let changed = 0, weight = 0, horizontal = 0
+    for (let i = 0; i < a.length; i += 4) {
+      const delta = Math.abs(a[i] - b[i]) + Math.abs(a[i + 1] - b[i + 1]) + Math.abs(a[i + 2] - b[i + 2])
+      if (delta > 12) {
+        changed++
+        weight += delta
+        horizontal += ((i / 4) % 160) / 160 * delta
+      }
+    }
+    return { changed, centroidX: weight ? horizontal / weight : -1 }
+  }
+  try {
+    renderer.autoClear = true
+    const baseline = draw(0, 0)
+    const left = draw(-.4, 1)
+    const right = draw(.4, 1)
+    const reset = draw(.4, 0)
+    return {
+      left: difference(baseline, left), right: difference(baseline, right),
+      reset: difference(baseline, reset),
+      matricesUnchanged: originalMatrices.every((value, index) => value === tiles.instanceMatrix.array[index]),
+    }
+  } finally {
+    renderer.setRenderTarget(previousTarget)
+    renderer.autoClear = previousAutoClear
+    probeScene.clear()
+    assembly.dispose()
+    target.dispose()
+  }
+}
 
 function probeMonitorCapture(pixelRatio: number, usePreviousTarget: boolean) {
   const monitors = createSceneMonitors(false, false)
@@ -168,12 +268,7 @@ function probeMonitorCapture(pixelRatio: number, usePreviousTarget: boolean) {
 
 window.interactionHarness = {
   step(seconds) {
-    const steps = Math.max(1, Math.ceil(seconds / 0.05))
-    let output = { yaw: 0, pitch: 0, zoom: 0, burst: 0 }
-    for (let i = 0; i < steps; i++) {
-      time += seconds / steps
-      output = interaction.update(seconds / steps, time, 1)
-    }
+    const { yaw, pitch, zoom, burst } = advanceInteraction(seconds)
     renderer.render(scene, camera)
     const gl = renderer.getContext()
     gl.readPixels(0, 0, innerWidth, innerHeight, gl.RGBA, gl.UNSIGNED_BYTE, pixels)
@@ -181,7 +276,7 @@ window.interactionHarness = {
     for (let i = 0; i < pixels.length; i += 4) {
       if (pixels[i] + pixels[i + 1] + pixels[i + 2] > 30) illuminatedPixels++
     }
-    return { ...output, illuminatedPixels }
+    return { yaw, pitch, zoom, burst, illuminatedPixels }
   },
   reset(reducedMotion = false) {
     interaction.dispose()
@@ -192,6 +287,10 @@ window.interactionHarness = {
     interaction.setOrbitEnabled(enabled)
   },
   sampleJourney,
+  sampleLayers,
+  sampleEditorial,
+  stepField,
+  probeScalePointer,
   probeMonitorCapture,
   sampleWorld(elapsed, progress) {
     worlds ??= createSceneWorlds(worldScene, true)
@@ -202,7 +301,12 @@ window.interactionHarness = {
     const monitors = worldScene.getObjectByName('aether-monitors')
     const matter = worldScene.getObjectByName('aether-matter')
     const chamber = worldScene.getObjectByName('aether-chamber-space')
+    const machine = worldScene.getObjectByName('aether-machine-assembly')
+    const floor = worldScene.getObjectByName('aether-separating-floor')
+    const scales = worldScene.getObjectByName('aether-scale-wall')
+    const tiles = worldScene.getObjectByName('aether-scale-tiles')
     if (!(chain instanceof THREE.InstancedMesh) || !(vertebrae instanceof THREE.InstancedMesh)
+      || !(tiles instanceof THREE.InstancedMesh) || !machine || !floor || !scales
       || !monitors || !matter || !chamber)
       throw new Error('The real spine, chain, monitors, matter, and chamber must be present')
     const modelY = matter.getWorldPosition(worldPosition).y
@@ -214,11 +318,20 @@ window.interactionHarness = {
       modelY,
       chamberY,
       structureYaw: matter.rotation.y,
+      fixed: {
+        machineY: machine.getWorldPosition(worldPosition).y,
+        floorY: floor.getWorldPosition(worldPosition).y,
+        scaleY: scales.getWorldPosition(worldPosition).y,
+        machineVisible: machine.visible,
+        scaleVisible: scales.visible,
+      },
+      scaleTiles: Array.from(tiles.instanceMatrix.array),
     }
   },
   dispose() {
     interaction.dispose()
     worlds?.dispose()
+    editorial?.dispose()
     renderer.dispose()
     renderer.forceContextLoss()
     canvas.remove()

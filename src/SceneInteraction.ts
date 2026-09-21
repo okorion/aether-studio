@@ -7,6 +7,7 @@ export function createSceneInteraction(
   canvas: HTMLCanvasElement,
   reducedMotion: boolean,
   software: boolean,
+  initialView = { yaw: 0, pitch: 0 },
 ) {
   const count = software ? 100 : 360
   const positions = new Float32Array(count * 3)
@@ -74,10 +75,10 @@ export function createSceneInteraction(
   let head = 0
   let held = false
   let pointerId = -1
-  let targetYaw = 0
-  let targetPitch = 0
-  let yaw = 0
-  let pitch = 0
+  let targetYaw = initialView.yaw
+  let targetPitch = initialView.pitch
+  let yaw = initialView.yaw
+  let pitch = initialView.pitch
   let zoom = 0
   let burst = 0
   let dirty = false

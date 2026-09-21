@@ -3,6 +3,8 @@ import * as THREE from 'three'
 import { createAtmosphere } from './Atmosphere'
 import { createSceneInteraction } from './SceneInteraction'
 import { createSceneWorlds } from './SceneWorlds'
+import { sampleJourney, smooth } from './Journey'
+import { createSceneGlow } from './SceneGlow'
 
 type SceneProps = {
   reducedMotion: boolean
@@ -71,6 +73,9 @@ function seededRandom(seed: number) {
 export default function Scene({ reducedMotion, onReady }: SceneProps) {
   const hostRef = useRef<HTMLDivElement>(null)
   const readyRef = useRef(onReady)
+  // Motion preference changes rebuild the render budget, preserving the view
+  // and time so pausing cannot snap a user's chosen angle back to the front.
+  const preserved = useRef({ yaw: 0, pitch: 0, elapsed: 0 })
 
   useEffect(() => {
     readyRef.current = onReady
@@ -148,14 +153,16 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
       // Software WebGL competes with input and layout for CPU time. Keep the
       // same scene, but use a bounded budget rather than starving navigation.
       const softwareRenderer = /swiftshader|llvmpipe|softpipe|software/i.test(rendererName)
+      let quality = 1
       const pixelRatio = (width: number) =>
-        Math.min(window.devicePixelRatio, softwareRenderer ? 0.75 : width < 768 ? 1.4 : 1.7)
+        Math.min(window.devicePixelRatio, softwareRenderer ? 0.75 : width < 768 ? 1.25 : 1.5) * quality
       activeRenderer.setPixelRatio(pixelRatio(window.innerWidth))
       activeRenderer.setSize(window.innerWidth, window.innerHeight)
       activeRenderer.setClearColor(0x020809, 0)
       activeRenderer.outputColorSpace = THREE.SRGBColorSpace
       activeRenderer.toneMapping = THREE.ACESFilmicToneMapping
       activeRenderer.toneMappingExposure = 1.45
+      activeRenderer.info.autoReset = false
       const canvas = activeRenderer.domElement
       canvas.className = 'scene-canvas'
       canvas.dataset.renderProfile = softwareRenderer ? 'software' : 'gpu'
@@ -218,7 +225,8 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
       }
       refreshEnvironment()
 
-      scene.add(new THREE.AmbientLight(0x3d7072, 1.2))
+      const ambient = new THREE.AmbientLight(0x3d7072, 1.2)
+      scene.add(ambient)
       const keyLight = new THREE.DirectionalLight(0xcafff0, 4)
       keyLight.position.set(-3, 5, 4)
       scene.add(keyLight)
@@ -277,6 +285,7 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
       glyphChrome.emissive.set(0x163b35)
       glyphChrome.emissiveIntensity = 0.18
       glyphChrome.envMapIntensity = 2.4
+      glyphChrome.transparent = true
       // Very shallow sculpted normals make the otherwise planar letter catch
       // different parts of the environment like a pressed-metal insignia.
       glyphChrome.onBeforeCompile = (shader) => {
@@ -584,14 +593,18 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
 
       const atmosphere = createAtmosphere(scene, softwareRenderer, smallScreen)
       effectDisposers.push(() => atmosphere.dispose())
-      const worlds = createSceneWorlds(scene, softwareRenderer)
+      const worlds = createSceneWorlds(scene, softwareRenderer, smallScreen)
       effectDisposers.push(() => worlds.dispose())
+      const glow = softwareRenderer || smallScreen ? undefined : createSceneGlow(activeRenderer, scene, camera)
+      glow?.resize(innerWidth, innerHeight, activeRenderer.getPixelRatio())
+      if (glow) effectDisposers.push(() => glow.dispose())
       const interaction = createSceneInteraction(
         scene,
         camera,
         canvas,
         reducedMotion,
         softwareRenderer,
+        preserved.current,
       )
       effectDisposers.push(() => interaction.dispose())
       const readProgress = () => {
@@ -602,21 +615,28 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
           1,
         )
       }
-      // Position, size and orientation are authored as one connected camera journey.
-      const poses = [
-        [0, 0, 0, 1.15, 0, 0, 0, 10.8],
-        [0.8, 0.1, 0, 2.65, 0.1, -0.55, -0.08, 10.8],
-        [0, 3, -4, 0.001, 0.2, 1.2, 0.25, 11.8],
-        [0, 3, -4, 0.001, 0.2, 1.2, 0.25, 11.8],
-        [0, 4, -5, 0.001, 0.1, 2, 1.6, 8.9],
-        [0, 0, 0, 0.95, 0.08, 0.45, Math.PI, 10.8],
-      ]
-      const stops = [0, 0.15, 0.25, 0.5, 0.75, 1]
+      // The same ring becomes a collar through the middle chapters. Nothing is
+      // sent behind the camera or scaled to zero to swap out the central focus.
+      const ringSurface = material(chrome.clone())
+      const innerSurface = material(darkChrome.clone())
+      ring.material = ringSurface
+      ringInner.material = innerSurface
+      const centre = new THREE.Vector3(0, 0, 0)
+      const projectedCentre = new THREE.Vector3()
       const pointer = new THREE.Vector2()
       let targetProgress = readProgress()
       let progress = targetProgress
-      let elapsed = 0
+      let elapsed = preserved.current.elapsed
       let previousTime = 0
+      let renderedFrames = 0
+      let frameAverage = 16
+      let qualityFrames = 0
+      const applyResolution = () => {
+        activeRenderer.setPixelRatio(pixelRatio(innerWidth))
+        activeRenderer.setSize(innerWidth, innerHeight)
+        glow?.resize(innerWidth, innerHeight, activeRenderer.getPixelRatio())
+        particlesMaterial.uniforms.uPixelRatio.value = activeRenderer.getPixelRatio()
+      }
 
       const render = (timestamp: number) => {
         frame = 0
@@ -629,38 +649,43 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
           ? targetProgress
           : THREE.MathUtils.damp(progress, targetProgress, 7, Math.min(wallDelta, 0.4))
         const scroll = THREE.MathUtils.clamp(progress, 0, 1)
+        const state = sampleJourney(scroll)
         particlesMaterial.uniforms.uTime.value = elapsed
         tailTime.value = elapsed
-        atmosphere.update(elapsed, scroll)
+        atmosphere.update(elapsed, scroll, activeRenderer.getPixelRatio())
         worlds.update(elapsed, scroll)
         const input = interaction.update(delta || 0.016, elapsed, activeRenderer.getPixelRatio())
-        const index = Math.min(4, Math.max(0, stops.findIndex((stop) => stop > scroll) - 1))
-        const keyIndex = scroll >= 1 ? 4 : index
-        const blend = THREE.MathUtils.smoothstep(
-          (scroll - stops[keyIndex]) / (stops[keyIndex + 1] - stops[keyIndex]),
-          0,
-          1,
-        )
-        const pose = poses[keyIndex].map((n, i) =>
-          THREE.MathUtils.lerp(n, poses[keyIndex + 1][i], blend),
-        )
+        preserved.current.yaw = input.yaw
+        preserved.current.pitch = input.pitch
+        preserved.current.elapsed = elapsed
+        const fold = smooth(.205, .295, scroll) * (1 - state.end)
         world.rotation.set(0, 0, 0)
         world.position.set(0, 0, 0)
-        emblem.position.set(pose[0], pose[1] + Math.sin(elapsed * 0.4) * 0.035, pose[2])
-        emblem.scale.setScalar(pose[3])
-        emblem.rotation.set(
-          pose[4] - pointer.y * 0.055,
-          pose[5] + Math.sin(elapsed * 0.18) * 0.1 + pointer.x * 0.12,
-          pose[6],
-        )
-        const orbitRadius = pose[7] + (innerWidth < 768 ? 4.5 : 0) - input.zoom * 1.7
+        emblem.position.copy(centre)
+        emblem.scale.setScalar(1.15 + fold * .2)
+        emblem.rotation.set(fold * Math.PI / 2, Math.sin(elapsed * .15) * .04 * (1-fold), state.end * Math.PI)
+        ribbons.rotation.x = -fold * Math.PI / 2
+        glyph.scale.setScalar(1 - fold * .92)
+        glyphChrome.opacity = 1 - fold
+        glyph.visible = glyphChrome.opacity > .005
+        ringSurface.roughness = .12 + fold * .1
+        const orbitRadius = state.radius + (innerWidth < 768 ? 4.8 : 0)
+        const azimuth = state.azimuth + input.yaw + pointer.x * .012
+        const elevation = THREE.MathUtils.clamp(state.elevation + input.pitch, -.72, .72)
         camera.position.set(
-          Math.sin(input.yaw) * orbitRadius + pointer.x * 0.22,
-          Math.sin(input.pitch) * orbitRadius + pointer.y * 0.15,
-          Math.cos(input.yaw) * orbitRadius,
+          Math.sin(azimuth) * Math.cos(elevation) * orbitRadius,
+          Math.sin(elevation) * orbitRadius,
+          Math.cos(azimuth) * Math.cos(elevation) * orbitRadius,
         )
-        rimLight.intensity = 25 + input.burst * 25
-        particlesMaterial.uniforms.uOpacity.value = 0.5
+        activeRenderer.toneMappingExposure = state.exposure
+        ambient.intensity = 1.1 - state.darkness * .68
+        keyLight.intensity = 3.4 + state.scales * 2 - state.darkness * 1.8
+        rimLight.color.setHSL(.55 + state.spine * .19 + state.scales * .25, .8, .64)
+        rimLight.intensity = 22 + state.energy * 12 + input.burst * 10
+        warmLight.color.setHSL(.16 + state.spine * .64, .7, .62)
+        warmLight.intensity = 10 + state.spine * 14 + state.scales * 18
+        scene.fog!.color.set(0x03090d)
+        particlesMaterial.uniforms.uOpacity.value = .35 * (1-state.darkness*.6)
         for (const creature of creatures) {
           creature.group.position.y =
             creature.anchor.y + Math.sin(elapsed * 0.24 + creature.phase) * 0.28
@@ -668,15 +693,47 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
             creature.anchor.x + Math.sin(elapsed * 0.1 + creature.phase) * 0.18
           creature.group.rotation.z = Math.sin(elapsed * 0.17 + creature.phase) * 0.13
         }
-        camera.lookAt(0, 0, 0)
+        camera.lookAt(centre)
+        camera.updateMatrixWorld()
 
         try {
-          activeRenderer.render(scene, camera)
+          activeRenderer.info.reset()
+          if (glow && quality > .65 && innerWidth >= 768) glow.render(state.energy)
+          else activeRenderer.render(scene, camera)
+          renderedFrames++
+          if (renderedFrames === 1 || renderedFrames % 15 === 0 || reducedMotion) {
+            projectedCentre.copy(centre).project(camera)
+            canvas.dataset.journeyStep = String(state.index + 1)
+            canvas.dataset.focusX = projectedCentre.x.toFixed(4)
+            canvas.dataset.focusY = projectedCentre.y.toFixed(4)
+            canvas.dataset.orbitYaw = input.yaw.toFixed(4)
+            canvas.dataset.frameMs = frameAverage.toFixed(1)
+            canvas.dataset.drawCalls = String(activeRenderer.info.render.calls)
+            canvas.dataset.quality = quality.toFixed(2)
+            canvas.dataset.geometries = String(activeRenderer.info.memory.geometries)
+            canvas.dataset.textures = String(activeRenderer.info.memory.textures)
+          }
           if (canvas.dataset.renderState !== 'ready') {
             canvas.dataset.renderState = 'ready'
             canvas.style.opacity = '1'
           }
           markReady()
+          // Sustained frame cost lowers resolution; hysteresis avoids oscillation
+          // after one shader compilation, resize, tab switch or screenshot.
+          if (!softwareRenderer && wallDelta > 0 && !reducedMotion) {
+            frameAverage += (Math.min(wallDelta, .25) * 1000 - frameAverage) * .035
+            qualityFrames++
+            if (((qualityFrames > 150 && frameAverage > 30) ||
+              (qualityFrames > 20 && frameAverage > 80)) && quality > .6) {
+              quality = Math.max(.6, quality - .15)
+              applyResolution()
+              qualityFrames = 0
+            } else if (qualityFrames > 360 && frameAverage < 19 && quality < 1) {
+              quality = Math.min(1, quality + .1)
+              applyResolution()
+              qualityFrames = 0
+            }
+          }
         } catch {
           failScene()
         }
@@ -703,9 +760,7 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
         const height = window.innerHeight
         camera.aspect = width / height
         camera.updateProjectionMatrix()
-        activeRenderer.setPixelRatio(pixelRatio(width))
-        activeRenderer.setSize(width, height)
-        particlesMaterial.uniforms.uPixelRatio.value = activeRenderer.getPixelRatio()
+        applyResolution()
         targetProgress = readProgress()
         requestRender()
       }

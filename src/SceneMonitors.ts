@@ -106,9 +106,9 @@ const fragmentShader = /* glsl */ `
     vec2 ripple = vec2(
       sin(panel.y * 46. + liquid * 9. + t * .35),
       cos(panel.x * 41. + detail * 6. - t * .25));
-    ripple *= .00135 + liquid * .0021;
-    ripple += (vec2(liquid, detail) - .5) * .0084;
-    ripple += panel * dot(panel, panel) * .0054;
+    ripple *= .0008 + liquid * .0012;
+    ripple += (vec2(liquid, detail) - .5) * .0042;
+    ripple += panel * dot(panel, panel) * .003;
     // Fine ripples keep particles recognizable instead of melting their shapes.
     ripple += vec2(sin(panel.y * 115. + detail * 4. + t * .21),
       cos(panel.x * 103. + liquid * 5. - t * .19)) * .00035;
@@ -136,7 +136,7 @@ const fragmentShader = /* glsl */ `
     float title = texture2D(uTitle, titleUv).a;
     float titleWeight = title * (gl_FrontFacing ? .96 : .38);
     color = mix(color, vec3(.88, .94, .93), titleWeight);
-    float alpha = mix(.48, .97, uHasBackground);
+    float alpha = mix(.66, .97, uHasBackground);
     alpha = max(alpha, titleWeight);
     gl_FragColor = vec4(color, alpha * uOpacity * mask);
     #include <tonemapping_fragment>
@@ -260,7 +260,7 @@ export function createSceneMonitors(software: boolean, mobile: boolean) {
         const proximity = Math.max(0, front)
         // No modulo/recycling: every screen travels from the lower-right,
         // through the foreground, then above and behind the preceding screen.
-        panel.position.set(Math.sin(turn) * 4.2 * mobileScale,
+        panel.position.set(Math.sin(turn) * (mobile ? 2.8 : 4.2) * mobileScale,
           -step * 1.8 * mobileScale, front * 2.65 - .05)
         panel.rotation.set(.015 + Math.sin(turn) * .025,
           -Math.sin(turn) * .86, -Math.sin(turn) * .035)

@@ -16,6 +16,7 @@
 | 프로젝트 상세 · 1440×900 | ![상세](screenshots/desktop-project.png) |
 | Contact · 1440×900 | ![Contact](screenshots/desktop-contact.png) |
 | 모바일 홈 · 390×844 | ![모바일](screenshots/mobile-home.png) |
+| 소프트웨어 렌더러 · 1440×900 | ![소프트웨어 모드](screenshots/software-home.png) |
 
 ## 리뷰 대응
 
@@ -25,7 +26,9 @@
 
 `WEBGL_lose_context`를 사용한 실제 컨텍스트 손실에서는 fallback이 표시되고, 복구 후 canvas가 하나만 유지되며 3D 화면으로 복귀하는 것을 확인했습니다. 여러 WebGL 브라우저와 캡처를 동시에 실행한 최종 검수 중 timeout이 발생해 테스트 worker를 1개로 고정했습니다. 후속 서버 로그에서 Playwright HTML 산출물이 Vite 전체 새로고침을 유발하는 것도 확인해 `.qa/`를 파일 감시에서 제외했습니다.
 
-Linux CI의 WebGL 입력 시간 초과는 별도로 조사했습니다. SwiftShader와 CPU 12배 제한 재현에서 개발 서버의 첫 클릭은 시간 초과됐고 production preview의 동일 흐름은 통과했습니다. CI는 명시적 SwiftShader와 이미 생성된 production 빌드를 사용하며, assertion·timeout은 그대로 유지합니다. 실패 시 trace와 보고서를 GitHub artifact로 보존합니다.
+Linux CI의 실패 trace에서 모든 자산 요청은 정상인데 RAF 기반 클릭 안정성 대기 중 최대 10.21초의 화면 갱신 공백이 확인됐습니다. SwiftShader·llvmpipe 등 소프트웨어 렌더러에는 DPR 0.75, 최대 2,000개 입자, 환경 반사 계산 생략, 프레임 사이 50ms의 입력 처리 시간을 적용했습니다. 일반 GPU의 시각 설정은 유지합니다. 독립 SwiftShader 검증에서 Work 클릭 71ms, context loss/restore 정상, 브라우저 오류 0개를 확인했습니다. 이 시간은 해당 로컬 검증의 관측값이며 모든 기기의 성능 보장이 아닙니다.
+
+CI는 명시적 SwiftShader와 이미 생성된 production 빌드를 사용하며, assertion·timeout은 그대로 유지합니다. 실패 시 trace와 보고서를 GitHub artifact로 보존합니다.
 
 ## 검증 범위와 한계
 

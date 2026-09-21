@@ -28,7 +28,7 @@
 
 Linux CI의 실패 trace에서 모든 자산 요청은 정상인데 RAF 기반 클릭 안정성 대기 중 최대 10.21초의 화면 갱신 공백이 확인됐습니다. SwiftShader·llvmpipe 등 소프트웨어 렌더러에는 DPR 0.75, 최대 2,000개 입자, 환경 반사 계산 생략, 프레임 사이 50ms의 입력 처리 시간을 적용했습니다. 일반 GPU의 시각 설정은 유지합니다. 독립 SwiftShader 검증에서 Work 클릭 71ms, context loss/restore 정상, 브라우저 오류 0개를 확인했습니다. 이 시간은 해당 로컬 검증의 관측값이며 모든 기기의 성능 보장이 아닙니다.
 
-CI는 명시적 SwiftShader와 이미 생성된 production 빌드를 사용하며, assertion·timeout은 그대로 유지합니다. 실패 시 trace와 보고서를 GitHub artifact로 보존합니다.
+CI는 명시적 SwiftShader와 이미 생성된 production 빌드를 사용합니다. 개별 action·expect 제한은 10초로 유지하고, 여러 화면을 순회하는 테스트 전체와 브라우저 fixture의 CI 시간 예산은 90초입니다(로컬 30초). 실패 시 trace와 보고서를 GitHub artifact로 보존합니다. 기능 브랜치의 중복 실행을 피하기 위해 pull request와 main push에서 검증합니다.
 
 ## 검증 범위와 한계
 

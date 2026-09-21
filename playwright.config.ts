@@ -9,7 +9,9 @@ export default defineConfig({
   maxFailures: process.env.CI ? 1 : undefined,
   // Isolate WebGL contexts: concurrent GPU scenes can starve software renderers.
   workers: 1,
-  timeout: 30_000,
+  // CI uses software WebGL across several screens per test. Keep individual
+  // actions at 10s, but allow the complete journey and fixtures a larger budget.
+  timeout: process.env.CI ? 90_000 : 30_000,
   expect: { timeout: 10_000 },
   reporter: [['list'], ['html', { outputFolder: '.qa/test/report', open: 'never' }]],
   use: {

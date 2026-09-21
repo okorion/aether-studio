@@ -6,6 +6,7 @@ declare global {
   interface Window {
     cameraTestFrames: number
     cameraTestFrozen: boolean
+    cameraTestCapture?: () => void
   }
 }
 
@@ -130,6 +131,7 @@ test('wheel input descends and reverses before 24 settled scroll checkpoints', a
 test('@interaction production scene accepts background drag and excludes navigation buttons', async ({
   page,
 }) => {
+  test.setTimeout(process.env.CI ? 150_000 : 45_000)
   // Freeze ambient animation time while allowing input and camera interpolation
   // to render. A changed image can then be attributed to the held camera.
   await page.addInitScript(() => {
@@ -139,7 +141,10 @@ test('@interaction production scene accepts background drag and excludes navigat
     window.requestAnimationFrame = (callback) =>
       request((timestamp) => {
         window.cameraTestFrames++
+        const capture = window.cameraTestCapture
+        const beforeFrame = capture ? document.querySelector('.scene-canvas')?.getAttribute('data-render-frame') : null
         callback(window.cameraTestFrozen ? 1000 : timestamp)
+        if (capture && beforeFrame !== document.querySelector('.scene-canvas')?.getAttribute('data-render-frame')) capture()
       })
   })
   await readyScene(page)
@@ -150,28 +155,51 @@ test('@interaction production scene accepts background drag and excludes navigat
   // Exclude the pointer's trail/burst area from the comparison.
   const region = { x: 80, y: 100, width: 650, height: 650 }
   const captureCamera = async () => {
-    // Linux SwiftShader can stall consecutive CDP captures of an unchanged
-    // compositor surface. Repaint one pixel outside the crop during capture;
-    // the production scene, frozen clock, crop, and strict equality stay intact.
-    const paintTimer = await page.evaluate(() => {
-      const marker = document.createElement('i')
-      marker.id = 'camera-capture-repaint'
-      marker.style.cssText = 'position:fixed;left:0;top:0;width:1px;height:1px;z-index:2147483647;pointer-events:none;background:#010101'
-      document.body.appendChild(marker)
-      let alternate = false
-      return window.setInterval(() => {
-        alternate = !alternate
-        marker.style.backgroundColor = alternate ? '#020202' : '#010101'
-      }, 100)
-    })
-    try {
-      return await page.screenshot({ clip: region })
-    } finally {
-      await page.evaluate(timer => {
-        clearInterval(timer)
-        document.getElementById('camera-capture-repaint')?.remove()
-      }, paintTimer)
-    }
+    // Read the completed production WebGL frame before presentation clears its
+    // buffer. This avoids the Linux CDP frozen-frame capture stall while keeping
+    // the actual scene, crop, frozen clock, and strict pixel equality intact.
+    const png = await page.evaluate((crop) => new Promise<string>((resolve, reject) => {
+      const surface = document.querySelector<HTMLCanvasElement>('.scene-canvas')!
+      const previousFrame = surface.dataset.renderFrame
+      const timer = window.setTimeout(() => {
+        window.cameraTestCapture = undefined
+        reject(new Error('No completed WebGL frame became available for camera capture'))
+      }, 15_000)
+      window.cameraTestCapture = () => {
+        // Scene diagnostics advance after rendering. Other RAF callbacks must
+        // not capture a previously presented/cleared drawing buffer.
+        if (surface.dataset.renderFrame === previousFrame) return
+        window.cameraTestCapture = undefined
+        clearTimeout(timer)
+        try {
+          const gl = surface.getContext('webgl2')!
+          const bounds = surface.getBoundingClientRect()
+          const ratioX = gl.drawingBufferWidth / bounds.width
+          const ratioY = gl.drawingBufferHeight / bounds.height
+          const x = Math.round((crop.x - bounds.x) * ratioX)
+          const y = Math.round((crop.y - bounds.y) * ratioY)
+          const width = Math.round(crop.width * ratioX)
+          const height = Math.round(crop.height * ratioY)
+          if (gl.isContextLost() || gl.getParameter(gl.FRAMEBUFFER_BINDING) !== null)
+            throw new Error('Camera capture requires a live default framebuffer')
+          if (x < 0 || y < 0 || width < 1 || height < 1 || x + width > gl.drawingBufferWidth || y + height > gl.drawingBufferHeight)
+            throw new Error('Camera crop falls outside the drawing buffer')
+          const pixels = new Uint8Array(width * height * 4)
+          gl.readPixels(x, gl.drawingBufferHeight - y - height, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels)
+          if (gl.getError() !== gl.NO_ERROR || !pixels.some((value, index) => index % 4 !== 3 && value > 16))
+            throw new Error('Camera capture returned invalid or empty scene pixels')
+          const output = document.createElement('canvas')
+          output.width = width; output.height = height
+          const context = output.getContext('2d')!
+          const image = context.createImageData(width, height)
+          for (let row = 0; row < height; row++)
+            image.data.set(pixels.subarray((height - 1 - row) * width * 4, (height - row) * width * 4), row * width * 4)
+          context.putImageData(image, 0, 0)
+          resolve(output.toDataURL('image/png').split(',')[1])
+        } catch (error) { reject(error) }
+      }
+    }), region)
+    return Buffer.from(png, 'base64')
   }
   const before = await captureCamera()
   expect(await captureCamera()).toEqual(before)

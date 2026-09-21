@@ -9,7 +9,11 @@ export default defineConfig({
     // Three.js is deferred until the scene mounts; keep the vendor runtime cached separately.
     chunkSizeWarningLimit: 600,
     rolldownOptions: {
-      output: { manualChunks: (id) => (id.includes('/node_modules/three/') ? 'three' : undefined) },
+      output: {
+        manualChunks: (id) => id.includes('/node_modules/three/examples/')
+          ? 'three-effects'
+          : id.includes('/node_modules/three/') ? 'three' : undefined,
+      },
     },
   },
 })

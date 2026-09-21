@@ -3,6 +3,7 @@ import ProjectArt from './ProjectArt'
 import SceneBoundary from './SceneBoundary'
 import { projects } from './projects'
 import type { Project } from './projects'
+import { sampleJourney } from './Journey'
 
 const tracks = ['01 — Blue hour', '02 — Slow current', '03 — Afterlight']
 
@@ -142,18 +143,10 @@ export default function App() {
       frame = 0
       const maximum = document.documentElement.scrollHeight - window.innerHeight
       const progress = maximum > 0 ? Math.min(1, Math.max(0, window.scrollY / maximum)) : 0
-      const stage =
-        progress < 0.075
-          ? 'entry'
-          : progress < 0.22
-            ? 'statement'
-            : progress < 0.62
-              ? 'work'
-              : progress < 0.87
-                ? 'machine'
-                : 'contact'
+      const state = sampleJourney(progress)
       if (journey.current) {
-        journey.current.dataset.stage = stage
+        journey.current.dataset.stage = state.overlay
+        journey.current.dataset.step = String(state.index + 1)
         journey.current.style.setProperty('--journey-progress', String(progress))
       }
     }
@@ -335,7 +328,7 @@ export default function App() {
             </div>
             <div className="journey-statement journey-overlay" aria-hidden="true">
               <p className="journey-title">
-                IMAGINATION
+                WORLDS
                 <br />
                 IN
                 <br />
@@ -368,6 +361,10 @@ export default function App() {
                 and imagination.
               </p>
             </div>
+            <div className="journey-scales journey-overlay">
+              <p className="eyebrow">MATTER / IN CONSTANT CHANGE</p>
+              <p>A thousand surfaces.<br />One living form.</p>
+            </div>
             <div className="journey-contact journey-overlay">
               <p className="eyebrow">THE NEXT WORLD IS OURS TO MAKE</p>
               <p>
@@ -381,7 +378,7 @@ export default function App() {
             </div>
             <div className="interaction-hint" aria-hidden="true">
               <span className="pointer-hint">
-                MOVE TO LEAVE A TRACE <span>·</span> HOLD &amp; DRAG TO ORBIT
+                DRAG TO ORBIT <span>·</span> DOUBLE CLICK TO RECENTER
               </span>
               <span className="touch-hint">SCROLL TO JOURNEY THROUGH</span>
             </div>

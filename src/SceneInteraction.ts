@@ -190,7 +190,7 @@ export function createSceneInteraction(
     targetPitch = 0
   }
   const doubleClick = (event: MouseEvent) => {
-    if (!interactive(event.target) && home()) reset()
+    if (!reducedMotion && !interactive(event.target) && home()) reset()
   }
   window.addEventListener('pointermove', move, { passive: true })
   window.addEventListener('pointerdown', down, { passive: true })

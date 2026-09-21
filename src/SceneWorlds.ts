@@ -154,7 +154,7 @@ const screenFragment = /* glsl */ `
   }
 `
 
-/** One fixed centre, articulated matter and the architecture around it. */
+/** Descending articulated matter inside an independently anchored shaft. */
 export function createSceneWorlds(scene: THREE.Scene, software: boolean, mobile = false) {
   const geometries: THREE.BufferGeometry[] = []
   const materials: THREE.Material[] = []
@@ -166,7 +166,10 @@ export function createSceneWorlds(scene: THREE.Scene, software: boolean, mobile 
   const matter = new THREE.Group()
   const monitors = new THREE.Group()
   const chamber = new THREE.Group()
-  root.add(matter, monitors, chamber)
+  const space = new THREE.Group()
+  matter.name = 'aether-matter'
+  space.name = 'aether-chamber-space'
+  root.add(matter, monitors, chamber, space)
   scene.add(root)
   const dummy = new THREE.Object3D()
   const color = new THREE.Color()
@@ -224,7 +227,8 @@ export function createSceneWorlds(scene: THREE.Scene, software: boolean, mobile 
     return item
   }
 
-  const rows = software ? 14 : mobile ? 20 : 28
+  const rows = software ? 18 : mobile ? 28 : 40
+  const spineHeight = 10.8
   const columns = software ? 6 : 8
   const count = rows * columns
   const feathers = instanced(matter, geo(featherGeometry(software ? 6 : 10)), metal, count)
@@ -236,7 +240,7 @@ export function createSceneWorlds(scene: THREE.Scene, software: boolean, mobile 
     const spineAngle = a + (row % 2) * .20
     const spineRadius = .68 + Math.sin(t * Math.PI) * .13 + Math.sin(row * 1.4) * .035
     poses[0].set([
-      Math.sin(spineAngle) * spineRadius, (t - .5) * 6.5, Math.cos(spineAngle) * spineRadius,
+      Math.sin(spineAngle) * spineRadius, (row / rows - .5) * spineHeight, Math.cos(spineAngle) * spineRadius,
       .18 + Math.sin(a) * .12, spineAngle, Math.sin(a) * .48,
       .72 + Math.abs(Math.sin(a)) * .48, .40, .65,
     ], i * 9)
@@ -284,6 +288,7 @@ export function createSceneWorlds(scene: THREE.Scene, software: boolean, mobile 
   const chainCount = software ? 56 : mobile ? 100 : 152
   const links = instanced(matter,
     geo(new THREE.TorusGeometry(1, .18, 5, software ? 8 : 12)), chainsMaterial, chainCount)
+  links.name = 'aether-spine-chain'
 
   // The illuminated particles inhabit this same structure through every transformation.
   const pointCount = software ? 420 : mobile ? 1100 : 2300
@@ -293,20 +298,22 @@ export function createSceneWorlds(scene: THREE.Scene, software: boolean, mobile 
   pointGeometry.setAttribute('position', new THREE.BufferAttribute(seeds, 3))
   const coreMaterial = mat(new THREE.ShaderMaterial({
     uniforms: {
-      uTime: { value: 0 }, uWeights: { value: new THREE.Vector3(1, 0, 0) },
+      uTime: { value: 0 }, uScroll: { value: 0 }, uWeights: { value: new THREE.Vector3(1, 0, 0) },
       uOpacity: { value: 0 }, uSize: { value: software ? 28 : mobile ? 25 : 19 },
     },
     transparent: true, blending: THREE.AdditiveBlending, depthWrite: false,
     vertexShader: /* glsl */ `
       uniform float uTime;
+      uniform float uScroll;
       uniform vec3 uWeights;
       uniform float uSize;
       varying float vBrightness;
       void main() {
-        float flow = fract(position.x + uTime * .085);
+        float flow = fract(position.x + mix(uTime, uScroll, uWeights.x) * .085);
         float a = position.y * 6.283185 + uTime * .7;
+        float spineAngle = position.y * 6.283185 + uScroll * .7;
         float r = .16 + position.z * .47;
-        vec3 spine = vec3(sin(a + flow * 15.0) * r, (flow - .5) * 6.3, cos(a + flow * 15.0) * r);
+        vec3 spine = vec3(sin(spineAngle + flow * 15.0) * r, (flow - .5) * 6.3, cos(spineAngle + flow * 15.0) * r);
         float latitude = position.x * 6.283185;
         float mr = 1.06 + cos(latitude) * (.16 + position.z * .14);
         vec3 machine = vec3(sin(a) * mr, cos(a) * mr, sin(latitude) * (.16 + position.z * .14));
@@ -340,6 +347,7 @@ export function createSceneWorlds(scene: THREE.Scene, software: boolean, mobile 
   // Architecture appears around the centre and remains behind the final ring.
   const architecture = mat(new THREE.MeshStandardMaterial({
     color: 0x0a171b, metalness: .7, roughness: .37, envMapIntensity: .75, transparent: true,
+    depthWrite: false,
   }))
   const floorGeometry = geo(new THREE.PlaneGeometry(24, 24, 22, 22))
   const vertices = floorGeometry.getAttribute('position')
@@ -349,7 +357,7 @@ export function createSceneWorlds(scene: THREE.Scene, software: boolean, mobile 
     vertices.setZ(i, Math.sin(x * 2.4 + y) * Math.cos(y * 1.8) * .045)
   }
   floorGeometry.computeVertexNormals()
-  const floor = mesh(chamber, floorGeometry, architecture, 0, -3.7)
+  const floor = mesh(space, floorGeometry, architecture, 0, -3.7)
   floor.rotation.x = -Math.PI / 2
   // One small reflection target on desktop. Software/mobile keep the cheaper metal floor.
   const floorReflection = !software && !mobile ? new Reflector(geo(new THREE.PlaneGeometry(20, 20)), {
@@ -374,9 +382,9 @@ export function createSceneWorlds(scene: THREE.Scene, software: boolean, mobile 
       vec4 base = texture2DProj(tDiffuse, warped);`,
     ).replace('vec4( blendOverlay( base.rgb, color ), 1.0 )',
       'vec4(blendOverlay(base.rgb, color), uOpacity)')
-    chamber.add(floorReflection)
+    space.add(floorReflection)
   }
-  const ceiling = mesh(chamber, geo(new THREE.PlaneGeometry(24, 24)), architecture, 0, 5.8)
+  const ceiling = mesh(space, geo(new THREE.PlaneGeometry(24, 24)), architecture, 0, 5.8)
   ceiling.rotation.x = Math.PI / 2
   const causticMaterial = mat(new THREE.ShaderMaterial({
     uniforms: { uTime: { value: 0 }, uOpacity: { value: 0 } },
@@ -399,9 +407,10 @@ export function createSceneWorlds(scene: THREE.Scene, software: boolean, mobile 
     `,
     transparent: true, blending: THREE.AdditiveBlending, depthWrite: false,
   }))
-  const caustics = mesh(chamber, geo(new THREE.PlaneGeometry(18, 20)), causticMaterial, 0, 4.8, -1)
+  // The underside of the floor becomes the next chamber's illuminated ceiling.
+  const caustics = mesh(space, geo(new THREE.PlaneGeometry(18, 20)), causticMaterial, 0, -3.76, -1)
   caustics.rotation.x = Math.PI / 2
-  const rocks = instanced(chamber, geo(new THREE.IcosahedronGeometry(1, software ? 0 : 1)),
+  const rocks = instanced(space, geo(new THREE.IcosahedronGeometry(1, software ? 0 : 1)),
     architecture, software ? 16 : mobile ? 28 : 48, false)
   for (let i = 0; i < rocks.count; i++) {
     const a = i * 2.399963
@@ -413,19 +422,19 @@ export function createSceneWorlds(scene: THREE.Scene, software: boolean, mobile 
     rocks.setMatrixAt(i, dummy.matrix)
   }
   const wallGeometry = geo(new THREE.BoxGeometry(1, 1, 1))
-  const architectureBars = instanced(chamber, wallGeometry, architecture, 28, false)
+  const architectureBars = instanced(space, wallGeometry, architecture, 28, false)
   for (let i = 0; i < 28; i++) {
     const side = i % 2 === 0 ? -1 : 1
     const row = Math.floor(i / 2)
-    dummy.position.set(side * (row < 8 ? 7.5 : 3.3), row < 8 ? .8 : 5.2,
+    dummy.position.set(side * (row < 8 ? 7.5 : 3.3), row < 8 ? -7 : 5.2,
       row < 8 ? 4 - row * 2.2 : 5 - (row - 8) * 3.4)
     dummy.rotation.set(0, 0, 0)
-    dummy.scale.set(row < 8 ? .34 : 15, row < 8 ? 9 : .36, .3)
+    dummy.scale.set(row < 8 ? .34 : 15, row < 8 ? 28 : .36, .3)
     dummy.updateMatrix()
     architectureBars.setMatrixAt(i, dummy.matrix)
   }
-  const backWall = mesh(chamber, wallGeometry, architecture, 0, .8, -12)
-  backWall.scale.set(16, 10, .3)
+  const backWall = mesh(space, wallGeometry, architecture, 0, -7, -12)
+  backWall.scale.set(16, 28, .3)
   const plinth = mesh(chamber,
     geo(new THREE.CylinderGeometry(2.25, 2.55, .27, software ? 32 : 64)), dark, 0, -3.13)
   const socket = mesh(chamber,
@@ -515,16 +524,28 @@ export function createSceneWorlds(scene: THREE.Scene, software: boolean, mobile 
     panels.push(panel)
   }
 
+  let lastMatterProgress = Number.NaN
+  const chamberWorld = new THREE.Vector3()
+  const scaleFloorHeight = sampleJourney(.83).height
   return {
+    getChamberHeight() {
+      return space.getWorldPosition(chamberWorld).y
+    },
     update(time: number, progress: number) {
       const journey = sampleJourney(progress)
+      root.position.y = journey.height
+      space.position.y = -40.4 - journey.height
+      // The scale curtain stays on its own floor. We travel underneath it,
+      // rather than shrinking it into a replacement ring at the screen centre.
+      matter.position.y = (scaleFloorHeight - journey.height) * smooth(.83, .87, progress)
+      const scrollTime = progress * 55
+      const spineTravel = progress * 1.4
       const sum = journey.spine + journey.machine + journey.scales
-      const spine = sum > .001 ? journey.spine / sum : 1
-      const machine = sum > .001 ? journey.machine / sum : 0
-      const scales = sum > .001 ? journey.scales / sum : 0
+      const spine = progress > .83 ? 0 : sum > .001 ? journey.spine / sum : 1
+      const machine = progress > .83 ? 0 : sum > .001 ? journey.machine / sum : 0
+      const scales = progress > .83 ? 1 : sum > .001 ? journey.scales / sum : 0
       const emergence = smooth(.20, .29, progress)
-      const returnToRing = smooth(.88, .96, progress)
-      const form = emergence * (1 - returnToRing)
+      const form = emergence
       matter.visible = journey.core > .001
       metal.opacity = journey.core
       silver.opacity = journey.core * (1 - scales)
@@ -533,15 +554,18 @@ export function createSceneWorlds(scene: THREE.Scene, software: boolean, mobile 
       joints.visible = scales < .999
       armourMorph.value = scales
       chainsMaterial.opacity = journey.core * (1 - machine * .55)
-      // The origin never travels; all transformations share this material centre.
-      matter.rotation.y = Math.sin(time * .12) * .05 + Math.sin(time * .16) * .09 * scales
-      if (matter.visible) {
+      // Geometry travels and turns with scroll. Video and light keep a separate
+      // ambient clock so resting on a project never drives its chains onwards.
+      matter.rotation.y = journey.structureYaw + Math.sin(time * .16) * .09 * scales
+      if (matter.visible && (scales > .001 || progress !== lastMatterProgress)) {
+        lastMatterProgress = progress
         for (let i = 0; i < count; i++) {
           const k = i * 9
           const ringAngle = i / count * TAU
-          const wave = Math.sin(time * 1.7 + i * .3) * .026 * spine
+          const wave = Math.sin(scrollTime * 1.7 + i * .3) * .026 * spine
           const px = poses[0][k] * spine + poses[1][k] * machine + poses[2][k] * scales
-          const py = poses[0][k + 1] * spine + poses[1][k + 1] * machine + poses[2][k + 1] * scales
+          const spineY = (THREE.MathUtils.euclideanModulo(Math.floor(i / columns) / rows + spineTravel, 1) - .5) * spineHeight
+          const py = spineY * spine + poses[1][k + 1] * machine + poses[2][k + 1] * scales
           const pz = poses[0][k + 2] * spine + poses[1][k + 2] * machine + poses[2][k + 2] * scales
           dummy.position.set(
             Math.sin(ringAngle) * 1.36 * (1 - form) + (px + wave) * form,
@@ -559,31 +583,35 @@ export function createSceneWorlds(scene: THREE.Scene, software: boolean, mobile 
             .31 * (1 - form) + (poses[0][k + 7] * spine + poses[1][k + 7] * machine + poses[2][k + 7] * scales) * form,
             .5,
           )
+          dummy.scale.multiplyScalar(1 - spine * (1 - smooth(0, .6, spineHeight / 2 - Math.abs(spineY))))
           dummy.updateMatrix()
           feathers.setMatrixAt(i, dummy.matrix)
         }
         feathers.instanceMatrix.needsUpdate = true
         for (let i = 0; i < rows; i++) {
           const t = i / (rows - 1)
-          const y = (t - .5) * 6.5 * spine + Math.sign(t - .5) * (1.9 + Math.abs(t - .5) * 1.1) * machine
+          const spineY = (THREE.MathUtils.euclideanModulo(i / rows + spineTravel, 1) - .5) * spineHeight
+          const edge = smooth(0, .6, spineHeight / 2 - Math.abs(spineY))
+          const y = spineY * spine + Math.sign(t - .5) * (1.9 + Math.abs(t - .5) * 1.1) * machine
           const radius = (.67 + Math.sin(t * Math.PI) * .06) * spine
             + (1.28 + Math.pow(Math.abs(t - .5) * 2, 4) * .55) * machine
             + (.28 + Math.pow(Math.sin(t * Math.PI), .85) * 1.50) * scales
           dummy.position.set(0, y * form, 0)
-          dummy.rotation.set(Math.PI / 2, 0, time * (.28 * spine + .04 * machine))
+          dummy.rotation.set(Math.PI / 2, 0, scrollTime * (.28 * spine + .04 * machine))
           dummy.scale.set(radius, radius, .48 + .5 * spine)
+          dummy.scale.multiplyScalar(1 - spine * (1 - edge))
           dummy.updateMatrix()
           joints.setMatrixAt(i, dummy.matrix)
-          dummy.position.set(Math.sin(i * 1.7) * .035, (t - .5) * 6.5 * form, 0)
-          dummy.rotation.set(Math.sin(i * .6) * .035, i * .23 + Math.sin(time * .3 + i) * .045, Math.sin(i) * .045)
-          dummy.scale.set(.86 + Math.sin(i * 1.3) * .07, 6.5 / rows * .82, .76)
+          dummy.position.set(Math.sin(i * 1.7) * .035, spineY * form, 0)
+          dummy.rotation.set(Math.sin(i * .6) * .035, i * .23 + Math.sin(scrollTime * .3 + i) * .045, Math.sin(i) * .045)
+          dummy.scale.set(.86 + Math.sin(i * 1.3) * .07, spineHeight / rows * .82, .76).multiplyScalar(edge)
           dummy.updateMatrix()
           vertebrae.setMatrixAt(i, dummy.matrix)
           for (let side = 0; side < 2; side++) {
-            dummy.position.set(0, (t - .5) * 6.5 * form, 0)
-            dummy.rotation.set(0, side * Math.PI + Math.sin(i * .8) * .4 + Math.sin(time * .5 + i) * .08,
+            dummy.position.set(0, spineY * form, 0)
+            dummy.rotation.set(0, side * Math.PI + Math.sin(i * .8) * .4 + Math.sin(scrollTime * .5 + i) * .08,
               Math.sin(i * 1.3) * .09)
-            dummy.scale.set(.88 + Math.sin(i * 1.2) * .23, .85, 1)
+            dummy.scale.set(.88 + Math.sin(i * 1.2) * .23, .85, 1).multiplyScalar(edge)
             dummy.updateMatrix()
             boneArms.setMatrixAt(i * 2 + side, dummy.matrix)
           }
@@ -593,9 +621,9 @@ export function createSceneWorlds(scene: THREE.Scene, software: boolean, mobile 
         boneArms.instanceMatrix.needsUpdate = true
         for (let i = 0; i < chainCount; i++) {
           const strand = i % 2
-          const t = ((i / chainCount) + time * (.15 * spine + .025 * machine + .035 * scales)) % 1
+          const t = THREE.MathUtils.euclideanModulo(i / chainCount + journey.chainPhase, 1)
           const angle = t * TAU * (2.2 * spine + .8 * machine + 1.5 * scales)
-            + strand * Math.PI + time * (.2 * spine + .08 * scales)
+            + strand * Math.PI + progress * TAU * 3
           const radius = 1.55 * spine + 1.9 * machine + (2.1 + Math.sin(t * Math.PI) * .7) * scales
           dummy.position.set(Math.sin(angle) * radius, (t - .5) * 8.4 * form, Math.cos(angle) * radius)
           dummy.rotation.set(.5 + (i % 2) * Math.PI / 2, angle + Math.PI / 2, Math.sin(angle) * .25)
@@ -606,11 +634,14 @@ export function createSceneWorlds(scene: THREE.Scene, software: boolean, mobile 
         links.instanceMatrix.needsUpdate = true
       }
       coreMaterial.uniforms.uTime.value = time
+      coreMaterial.uniforms.uScroll.value = scrollTime
       coreMaterial.uniforms.uWeights.value.set(spine, machine, scales)
       coreMaterial.uniforms.uOpacity.value = journey.core * (.48 + machine * .4)
 
-      const architectureWeight = smooth(.60, .69, progress) * (1 - journey.darkness * .77) * (1 - journey.scales * .60)
-      chamber.visible = architectureWeight > .001
+      const architectureWeight = smooth(.60, .69, progress) * (1 - journey.darkness * .77)
+        * (1 - journey.scales * .60) * (1 - smooth(.86, .94, progress) * .85)
+      space.visible = architectureWeight > .001
+      chamber.visible = journey.machine > .001 || journey.scales > .001
       architecture.opacity = architectureWeight
       causticMaterial.uniforms.uTime.value = time
       causticMaterial.uniforms.uOpacity.value = journey.scales * .4
@@ -666,10 +697,10 @@ export function createSceneWorlds(scene: THREE.Scene, software: boolean, mobile 
         const front = Math.cos(orbit)
         const panelScale = 1.05 + Math.max(0, front) * .92
         panels[i].position.set(Math.sin(orbit) * 3.65,
-          Math.sin(orbit * .7 + i * .65) * 1.35 + Math.sin(time * .35 + i) * .045,
+          Math.sin(orbit * .7 + i * .65) * 1.35,
           front * 2.15 - .15)
         panels[i].rotation.set(Math.sin(orbit + i) * .035,
-          -Math.sin(orbit) * .30 + Math.sin(time * .12 + i) * .025, Math.sin(orbit) * -.025)
+          -Math.sin(orbit) * .30, Math.sin(orbit) * -.025)
         panels[i].scale.setScalar(panelScale)
         films[i].uniforms.uTime.value = time
         films[i].uniforms.uOpacity.value = screensWeight

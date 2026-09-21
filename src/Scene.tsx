@@ -8,6 +8,7 @@ import { createSceneGlow } from './SceneGlow'
 
 type SceneProps = {
   reducedMotion: boolean
+  active: boolean
   onReady: () => void
 }
 
@@ -70,9 +71,11 @@ function seededRandom(seed: number) {
 }
 
 /** An original, entirely procedural scene. No downloaded models or textures. */
-export default function Scene({ reducedMotion, onReady }: SceneProps) {
+export default function Scene({ reducedMotion, active, onReady }: SceneProps) {
   const hostRef = useRef<HTMLDivElement>(null)
   const readyRef = useRef(onReady)
+  const activeRef = useRef(active)
+  const wakeRef = useRef<(() => void) | null>(null)
   // Motion preference changes rebuild the render budget, preserving the view
   // and time so pausing cannot snap a user's chosen angle back to the front.
   const preserved = useRef({ yaw: 0, pitch: 0, elapsed: 0 })
@@ -80,6 +83,11 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
   useEffect(() => {
     readyRef.current = onReady
   }, [onReady])
+
+  useEffect(() => {
+    activeRef.current = active
+    if (active) wakeRef.current?.()
+  }, [active])
 
   useEffect(() => {
     const host = hostRef.current
@@ -298,18 +306,18 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
             '#include <normal_fragment_maps>',
             `#include <normal_fragment_maps>
             float ridge = sin(vInsigniaPosition.y * 5.0 + vInsigniaPosition.x * 7.0);
-            normal = normalize(normal + vec3(ridge * 0.26, cos(vInsigniaPosition.y * 7.0) * 0.14, 0.0));
+            normal = normalize(normal + vec3(ridge * 0.055, cos(vInsigniaPosition.y * 7.0) * 0.025, 0.0));
           `,
           )
           .replace(
             '#include <opaque_fragment>',
             `#include <opaque_fragment>
             float sheen = smoothstep(-0.8, 0.9, sin(vInsigniaPosition.y * 7.0 + vInsigniaPosition.x * 3.0));
-            gl_FragColor.rgb *= mix(vec3(0.16, 0.35, 0.49), vec3(1.05, 1.16, 0.90), sheen);
+            gl_FragColor.rgb *= mix(vec3(0.43, 0.65, 0.67), vec3(1.02, 1.12, 0.95), sheen);
           `,
           )
       }
-      glyphChrome.customProgramCacheKey = () => 'aether-sculpted-chrome-v1'
+      glyphChrome.customProgramCacheKey = () => 'aether-sculpted-o-v2'
 
       const world = new THREE.Group()
       scene.add(world)
@@ -334,21 +342,21 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
       ringGlow.position.z = 0.026
       emblem.add(ring, ringInner, ringGlow)
 
-      // A cut, asymmetric A is our own mark, rather than the reference's logo.
+      // A tall, high-contrast capital O: thick vertical strokes and a generous
+      // counter distinguish the letter from the thin circular outer halo.
       const letter = new THREE.Shape()
-      letter.moveTo(-0.36, -0.32)
-      letter.lineTo(-0.06, 0.4)
-      letter.lineTo(0.08, 0.45)
-      letter.lineTo(0.4, -0.32)
-      letter.lineTo(0.22, -0.32)
-      letter.lineTo(0.13, -0.09)
-      letter.lineTo(-0.14, -0.09)
-      letter.lineTo(-0.23, -0.32)
+      letter.moveTo(0, .49)
+      letter.bezierCurveTo(.26, .49, .385, .30, .385, 0)
+      letter.bezierCurveTo(.385, -.30, .26, -.49, 0, -.49)
+      letter.bezierCurveTo(-.26, -.49, -.385, -.30, -.385, 0)
+      letter.bezierCurveTo(-.385, .30, -.26, .49, 0, .49)
       letter.closePath()
       const counter = new THREE.Path()
-      counter.moveTo(-0.09, 0.05)
-      counter.lineTo(0.08, 0.05)
-      counter.lineTo(0, 0.28)
+      counter.moveTo(0, .365)
+      counter.bezierCurveTo(-.14, .365, -.195, .21, -.195, 0)
+      counter.bezierCurveTo(-.195, -.21, -.14, -.365, 0, -.365)
+      counter.bezierCurveTo(.14, -.365, .195, -.21, .195, 0)
+      counter.bezierCurveTo(.195, .21, .14, .365, 0, .365)
       counter.closePath()
       letter.holes.push(counter)
       const glyph = new THREE.Mesh(
@@ -360,6 +368,7 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
             steps: 1,
             bevelSize: 0.014,
             bevelThickness: 0.013,
+            curveSegments: softwareRenderer ? 16 : 32,
           }),
         ),
         glyphChrome,
@@ -372,21 +381,25 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
       // must inherit the emblem's pointer tilt, bobbing and scroll transform.
       emblem.add(ribbons)
       const tailTime = { value: 0 }
+      const tailLift = { value: 0 }
       const tailChrome = material(chrome.clone())
       const tailDark = material(darkChrome.clone())
       for (const surface of [tailChrome, tailDark]) {
         surface.onBeforeCompile = (shader) => {
           shader.uniforms.uTailTime = tailTime
-          shader.vertexShader = `uniform float uTailTime;\n${shader.vertexShader}`.replace(
+          shader.uniforms.uTailLift = tailLift
+          shader.vertexShader = `uniform float uTailTime; uniform float uTailLift;\n${shader.vertexShader}`.replace(
             '#include <begin_vertex>',
             `#include <begin_vertex>
               float distanceFromRoot = max(0., -position.y);
               float flex = smoothstep(0., 1.2, distanceFromRoot);
               transformed.x += sin(distanceFromRoot * 1.3 - uTailTime * .5) * .18 * flex;
-              transformed.z += sin(distanceFromRoot * 1.7 - uTailTime * .4) * .23 * flex;`,
+              transformed.z += sin(distanceFromRoot * 1.7 - uTailTime * .4) * .23 * flex;
+              transformed.y = mix(position.y, -position.y * 1.35, uTailLift);
+              transformed.z += sin(distanceFromRoot * .38) * uTailLift * .7;`,
           )
         }
-        surface.customProgramCacheKey = () => 'aether-attached-tail-v2'
+        surface.customProgramCacheKey = () => 'aether-descending-tail-v3'
       }
       for (let strand = 0; strand < 2; strand += 1) {
         const points: THREE.Vector3[] = []
@@ -498,7 +511,7 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
       const distantPhases = new Float32Array(distantCount)
       for (let i = 0; i < distantCount; i += 1) {
         distantPositions.set(
-          [(random() - 0.5) * 28, (random() - 0.5) * 21, -4 - random() * 17],
+          [(random() - 0.5) * 28, 8 - random() * 80, -4 - random() * 17],
           i * 3,
         )
         particleColor.setHSL(0.34 + random() * 0.3, 0.5, 0.08 + random() * 0.12)
@@ -543,7 +556,7 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
       )
       for (
         let creatureIndex = 0;
-        creatureIndex < (softwareRenderer ? 1 : smallScreen ? 2 : 4);
+        creatureIndex < (softwareRenderer ? 4 : smallScreen ? 8 : 16);
         creatureIndex += 1
       ) {
         const group = new THREE.Group()
@@ -583,7 +596,9 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
           [5.5, -3.8, -5],
           [-4.4, 3.1, -8],
         ]
-        const anchor = new THREE.Vector3(...(anchors[creatureIndex] as [number, number, number]))
+        const anchor = new THREE.Vector3(...(anchors[creatureIndex % 4] as [number, number, number]))
+        const level = softwareRenderer ? creatureIndex : smallScreen ? Math.floor(creatureIndex / 2) : Math.floor(creatureIndex / 4)
+        anchor.y -= level * 20
         group.position.copy(anchor)
         const scale = creatureIndex === 0 ? 1 : 0.6 + random() * 0.5
         group.scale.setScalar(scale)
@@ -615,14 +630,15 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
           1,
         )
       }
-      // The same ring becomes a collar through the middle chapters. Nothing is
-      // sent behind the camera or scaled to zero to swap out the central focus.
+      // The ring travels down the same shaft as the camera. The architecture
+      // and distant life remain in world space, providing vertical parallax.
       const ringSurface = material(chrome.clone())
       const innerSurface = material(darkChrome.clone())
       ring.material = ringSurface
       ringInner.material = innerSurface
       const centre = new THREE.Vector3(0, 0, 0)
       const projectedCentre = new THREE.Vector3()
+      const modelCentre = new THREE.Vector3()
       const pointer = new THREE.Vector2()
       let targetProgress = readProgress()
       let progress = targetProgress
@@ -648,33 +664,38 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
         progress = reducedMotion
           ? targetProgress
           : THREE.MathUtils.damp(progress, targetProgress, 7, Math.min(wallDelta, 0.4))
+        if (Math.abs(progress - targetProgress) < .00001) progress = targetProgress
         const scroll = THREE.MathUtils.clamp(progress, 0, 1)
         const state = sampleJourney(scroll)
+        centre.set(0, state.height, 0)
         particlesMaterial.uniforms.uTime.value = elapsed
         tailTime.value = elapsed
+        tailLift.value = state.end
         atmosphere.update(elapsed, scroll, activeRenderer.getPixelRatio())
         worlds.update(elapsed, scroll)
+        interaction.setOrbitEnabled(state.orbitEnabled)
+        interaction.setFocus(centre)
         const input = interaction.update(delta || 0.016, elapsed, activeRenderer.getPixelRatio())
         preserved.current.yaw = input.yaw
         preserved.current.pitch = input.pitch
         preserved.current.elapsed = elapsed
         const fold = smooth(.205, .295, scroll) * (1 - state.end)
         world.rotation.set(0, 0, 0)
-        world.position.set(0, 0, 0)
-        emblem.position.copy(centre)
+        world.position.copy(centre)
+        emblem.position.set(0, 0, 0)
         emblem.scale.setScalar(1.15 + fold * .2)
-        emblem.rotation.set(fold * Math.PI / 2, Math.sin(elapsed * .15) * .04 * (1-fold), state.end * Math.PI)
+        emblem.rotation.set(fold * Math.PI / 2, 0, 0)
         ribbons.rotation.x = -fold * Math.PI / 2
         glyph.scale.setScalar(1 - fold * .92)
         glyphChrome.opacity = 1 - fold
         glyph.visible = glyphChrome.opacity > .005
         ringSurface.roughness = .12 + fold * .1
         const orbitRadius = state.radius + (innerWidth < 768 ? 4.8 : 0)
-        const azimuth = state.azimuth + input.yaw + pointer.x * .012
-        const elevation = THREE.MathUtils.clamp(state.elevation + input.pitch, -.72, .72)
+        const azimuth = state.azimuth + (input.yaw + pointer.x * .012) * state.orbitWeight
+        const elevation = THREE.MathUtils.clamp(state.elevation + input.pitch * state.orbitWeight, -.72, .72)
         camera.position.set(
           Math.sin(azimuth) * Math.cos(elevation) * orbitRadius,
-          Math.sin(elevation) * orbitRadius,
+          state.height + Math.sin(elevation) * orbitRadius,
           Math.cos(azimuth) * Math.cos(elevation) * orbitRadius,
         )
         activeRenderer.toneMappingExposure = state.exposure
@@ -684,6 +705,11 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
         rimLight.intensity = 22 + state.energy * 12 + input.burst * 10
         warmLight.color.setHSL(.16 + state.spine * .64, .7, .62)
         warmLight.intensity = 10 + state.spine * 14 + state.scales * 18
+        keyLight.position.y = state.height + 5
+        keyLight.target.position.copy(centre)
+        keyLight.target.updateMatrixWorld()
+        rimLight.position.y = state.height - 1
+        warmLight.position.y = state.height - 3
         scene.fog!.color.set(0x03090d)
         particlesMaterial.uniforms.uOpacity.value = .35 * (1-state.darkness*.6)
         for (const creature of creatures) {
@@ -707,6 +733,16 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
             canvas.dataset.focusX = projectedCentre.x.toFixed(4)
             canvas.dataset.focusY = projectedCentre.y.toFixed(4)
             canvas.dataset.orbitYaw = input.yaw.toFixed(4)
+            canvas.dataset.renderProgress = scroll.toFixed(6)
+            canvas.dataset.cameraY = camera.position.y.toFixed(4)
+            canvas.dataset.targetY = centre.y.toFixed(4)
+            canvas.dataset.modelY = emblem.getWorldPosition(modelCentre).y.toFixed(4)
+            canvas.dataset.viewAzimuth = azimuth.toFixed(4)
+            canvas.dataset.structureYaw = state.structureYaw.toFixed(4)
+            canvas.dataset.ringRoll = emblem.rotation.z.toFixed(4)
+            canvas.dataset.chainPhase = state.chainPhase.toFixed(6)
+            canvas.dataset.orbitEnabled = String(state.orbitEnabled)
+            canvas.dataset.chamberY = worlds.getChamberHeight().toFixed(4)
             canvas.dataset.frameMs = frameAverage.toFixed(1)
             canvas.dataset.drawCalls = String(activeRenderer.info.render.calls)
             canvas.dataset.quality = quality.toFixed(2)
@@ -737,7 +773,7 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
         } catch {
           failScene()
         }
-        if (!reducedMotion && !contextLost) {
+        if (!reducedMotion && !contextLost && activeRef.current) {
           if (softwareRenderer) {
             // An actual idle interval after each software frame leaves room for
             // pointer/scroll/focus events, even when one frame takes > 50 ms.
@@ -754,6 +790,12 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
       const requestRender = () => {
         if (!frame && frameTimer === undefined && !disposed && !contextLost && !document.hidden)
           frame = requestAnimationFrame(render)
+      }
+      // Hidden content views retain their last frame, releasing CPU/GPU time
+      // for cards and dialogs without rebuilding the scene on navigation.
+      wakeRef.current = () => {
+        previousTime = 0
+        requestRender()
       }
       const resize = () => {
         const width = window.innerWidth
@@ -824,6 +866,7 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
       canvas.addEventListener('webglcontextlost', lost)
       canvas.addEventListener('webglcontextrestored', restored)
       cleanup = () => {
+        wakeRef.current = null
         window.removeEventListener('resize', resize)
         window.removeEventListener('scroll', scroll)
         window.removeEventListener('hashchange', scroll)

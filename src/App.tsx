@@ -147,6 +147,7 @@ export default function App() {
       if (journey.current) {
         journey.current.dataset.stage = state.overlay
         journey.current.dataset.step = String(state.index + 1)
+        journey.current.dataset.orbitEnabled = String(state.orbitEnabled)
         journey.current.style.setProperty('--journey-progress', String(progress))
       }
     }
@@ -216,7 +217,7 @@ export default function App() {
       </div>
       <SceneBoundary onUnavailable={onReady}>
         <Suspense fallback={null}>
-          <Scene reducedMotion={reducedMotion} onReady={onReady} />
+          <Scene reducedMotion={reducedMotion} active={activeSection === 'home' && !project} onReady={onReady} />
         </Suspense>
       </SceneBoundary>
       <div className="film-grain" aria-hidden="true" />
@@ -380,6 +381,7 @@ export default function App() {
               <span className="pointer-hint">
                 DRAG TO ORBIT <span>·</span> DOUBLE CLICK TO RECENTER
               </span>
+              <span className="scroll-hint">SCROLL TO DESCEND <span>·</span> REVERSE TO ASCEND</span>
               <span className="touch-hint">SCROLL TO JOURNEY THROUGH</span>
             </div>
             <div className="journey-progress" aria-hidden="true">

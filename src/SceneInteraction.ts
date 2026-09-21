@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 
-/** Pointer input and a bounded, reusable pool of light particles. */
+/** Bounded world-space ribbons and pointer-controlled camera input. */
 export function createSceneInteraction(
   scene: THREE.Scene,
   camera: THREE.PerspectiveCamera,
@@ -9,61 +9,143 @@ export function createSceneInteraction(
   software: boolean,
   initialView = { yaw: 0, pitch: 0 },
 ) {
-  const count = software ? 100 : 360
+  const lifetime = 2.35
+  const capacity = software ? 96 : 176
+  const subdivisions = software ? 8 : 12
+  const maxQuads = (capacity - 1) * subdivisions
+  const history = new Float32Array(capacity * 3)
+  const historyBirths = new Float32Array(capacity)
+  const historyStrokes = new Uint32Array(capacity)
+  const historySeeds = new Float32Array(capacity)
+  const ribbonPositions = new Float32Array(maxQuads * 12)
+  const tangents = new Float32Array(maxQuads * 12)
+  const ribbonBirths = new Float32Array(maxQuads * 4)
+  const sides = new Float32Array(maxQuads * 4)
+  const strandIds = new Float32Array(maxQuads * 4)
+  const along = new Float32Array(maxQuads * 4)
+  const indices = new Uint16Array(maxQuads * 6)
+  for (let q = 0; q < maxQuads; q++) {
+    const v = q * 4
+    indices.set([v, v + 1, v + 2, v + 2, v + 1, v + 3], q * 6)
+    sides.set([-1, 1, -1, 1], v)
+  }
+  const ribbonGeometry = new THREE.BufferGeometry()
+  const dynamic = (array: Float32Array, size: number) =>
+    new THREE.BufferAttribute(array, size).setUsage(THREE.DynamicDrawUsage)
+  ribbonGeometry.setAttribute('position', dynamic(ribbonPositions, 3))
+  ribbonGeometry.setAttribute('aTangent', dynamic(tangents, 3))
+  ribbonGeometry.setAttribute('aBirth', dynamic(ribbonBirths, 1))
+  ribbonGeometry.setAttribute('aSide', new THREE.BufferAttribute(sides, 1))
+  ribbonGeometry.setAttribute('aStrand', dynamic(strandIds, 1))
+  ribbonGeometry.setAttribute('aAlong', new THREE.BufferAttribute(along, 1))
+  ribbonGeometry.setIndex(new THREE.BufferAttribute(indices, 1))
+  ribbonGeometry.setDrawRange(0, 0)
+  const ribbonMaterial = new THREE.ShaderMaterial({
+    transparent: true,
+    depthWrite: false,
+    depthTest: false,
+    side: THREE.DoubleSide,
+    blending: THREE.NormalBlending,
+    uniforms: { uTime: { value: 0 }, uHeight: { value: innerHeight } },
+    vertexShader: `
+      attribute vec3 aTangent;
+      attribute float aBirth; attribute float aSide; attribute float aStrand; attribute float aAlong;
+      uniform float uTime; uniform float uHeight;
+      varying float vSide; varying float vLife; varying float vAlong; varying float vSeed;
+      void main() {
+        float age = max(0., uTime - aBirth);
+        float life = clamp(1. - age / 2.35, 0., 1.);
+        vec4 mv = modelViewMatrix * vec4(position, 1.);
+        vec2 tangent = (modelViewMatrix * vec4(aTangent, 0.)).xy;
+        vec2 direction = tangent / max(length(tangent), .0001);
+        vec2 normal = vec2(-direction.y, direction.x);
+        float seed = fract(sin(aStrand * 12.9898) * 43758.5453);
+        float bendSeed = fract(sin(aStrand * 7.713) * 17293.183);
+        float growth = 1. - exp(-age * 3.2);
+        float trailLength = (50. + seed * 85.) * growth + age * 6.;
+        float t = aAlong;
+        // Each sampled point grows its own curved streamer. Different ages and
+        // seeds spread the trailing ends into a fan instead of parallel staff lines.
+        float bend = (bendSeed - .5) * 39. * growth;
+        vec2 offset = -direction * trailLength * t;
+        offset += normal * (sin(t * 3.14159) * bend + t * t * sin(aStrand * 1.7 + age * .65) * age * 8.);
+        offset += vec2(sin(aStrand) * age * 3., -age * age * 3.2) * t * t;
+        float taper = pow(max(0., 1. - t), .95);
+        float head = 1. - smoothstep(.025, .19, t);
+        // Only the leading reflection widens; the curved tail still narrows
+        // to a hairline rather than becoming a continuous neon beam.
+        float width = (1.35 + seed * .75) * pow(life, .4) * (.055 + taper * .9 + head * .95);
+        vec2 curveTangent = -direction * trailLength;
+        curveTangent += normal * (cos(t * 3.14159) * 3.14159 * bend + 2. * t * sin(aStrand * 1.7 + age * .65) * age * 8.);
+        vec2 edge = vec2(-curveTangent.y, curveTangent.x) / max(length(curveTangent), .0001);
+        offset += edge * aSide * width;
+        // CSS-pixel widths remain silky when the camera descends or orbits.
+        mv.xy += offset * (2. * max(.1, -mv.z) / (uHeight * projectionMatrix[1][1]));
+        gl_Position = projectionMatrix * mv;
+        vSide = aSide; vLife = life; vAlong = t; vSeed = seed;
+      }`,
+    fragmentShader: `
+      varying float vSide; varying float vLife; varying float vAlong; varying float vSeed;
+      void main() {
+        float head = 1. - smoothstep(.025, .19, vAlong);
+        float soft = exp(-vSide * vSide * 4.);
+        float silver = exp(-vSide * vSide * mix(9., 6., head));
+        float fade = smoothstep(0., .3, vLife) * pow(vLife, .4);
+        float tip = 1. - smoothstep(.76, 1., vAlong);
+        float reflection = .9 + .1 * sin(vAlong * 18. + vSeed * 9.);
+        vec3 reflectionColor = mix(vec3(.57,.72,.71), vec3(.97,.99,.90), head);
+        vec3 color = mix(vec3(.22,.39,.40), reflectionColor, silver);
+        float alpha = (soft * .15 + silver * (.4 + head * .42)) * fade * tip * reflection;
+        alpha *= .85 + vSeed * .15;
+        gl_FragColor = vec4(color, alpha);
+      }`,
+  })
+  const ribbon = new THREE.Mesh(ribbonGeometry, ribbonMaterial)
+  ribbon.name = 'aether-pointer-ribbons'
+  ribbon.frustumCulled = false
+  ribbon.renderOrder = 8
+  scene.add(ribbon)
+
+  // Sparse motes soften the edges without returning to a spray of bright dashes.
+  const count = software ? 40 : 100
   const positions = new Float32Array(count * 3)
   const births = new Float32Array(count).fill(-100)
   const seeds = new Float32Array(count)
-  const angles = new Float32Array(count)
   for (let i = 0; i < count; i++) seeds[i] = i * 2.399963
   const geometry = new THREE.BufferGeometry()
-  geometry.setAttribute(
-    'position',
-    new THREE.BufferAttribute(positions, 3).setUsage(THREE.DynamicDrawUsage),
-  )
-  geometry.setAttribute(
-    'aBirth',
-    new THREE.BufferAttribute(births, 1).setUsage(THREE.DynamicDrawUsage),
-  )
+  geometry.setAttribute('position', dynamic(positions, 3))
+  geometry.setAttribute('aBirth', dynamic(births, 1))
   geometry.setAttribute('aSeed', new THREE.BufferAttribute(seeds, 1))
-  geometry.setAttribute(
-    'aAngle',
-    new THREE.BufferAttribute(angles, 1).setUsage(THREE.DynamicDrawUsage),
-  )
   const material = new THREE.ShaderMaterial({
     transparent: true,
     depthWrite: false,
     depthTest: false,
-    blending: THREE.AdditiveBlending,
+    blending: THREE.NormalBlending,
     uniforms: { uTime: { value: 0 }, uRatio: { value: 1 } },
     vertexShader: `
-      attribute float aBirth; attribute float aSeed; attribute float aAngle;
+      attribute float aBirth; attribute float aSeed;
       uniform float uTime; uniform float uRatio;
-      varying float vLife; varying float vSeed; varying float vAngle;
+      varying float vLife;
       void main() {
         float age = max(0., uTime - aBirth);
-        vLife = max(0., 1. - age / 1.45); vSeed = aSeed; vAngle = aAngle;
-        vec3 p = position + vec3(sin(aSeed), cos(aSeed), sin(aSeed * 2.)) * age * .28;
-        p.y += age * age * .09;
+        vLife = max(0., 1. - age / 1.7);
+        vec3 p = position + vec3(sin(aSeed), cos(aSeed), sin(aSeed * 2.)) * age * .07;
         vec4 mv = modelViewMatrix * vec4(p, 1.);
         gl_Position = projectionMatrix * mv;
-        gl_PointSize = clamp((12. + 28. * fract(aSeed)) * uRatio * vLife * 10. / -mv.z, 0., 50.);
+        gl_PointSize = clamp((1.2 + 1.6 * fract(aSeed)) * uRatio * vLife, 0., 4.);
       }`,
     fragmentShader: `
-      varying float vLife; varying float vSeed; varying float vAngle;
+      varying float vLife;
       void main() {
         vec2 uv = (gl_PointCoord - .5) * 2.;
-        uv = mat2(cos(vAngle),-sin(vAngle),sin(vAngle),cos(vAngle)) * uv;
-        uv.y += sin(uv.x * 3. + vSeed) * .06;
-        float r = length(vec2(uv.x, uv.y * 8.));
+        float r = dot(uv, uv);
         if (r > 1. || vLife <= 0.) discard;
-        float glow = exp(-r * r * 5.) * .5 + pow(max(0., 1.-r), 6.);
-        vec3 c = mix(vec3(.35,.8,1.), vec3(1.,.97,.78), fract(vSeed));
-        gl_FragColor = vec4(c * 1.6, glow * vLife);
+        gl_FragColor = vec4(.65,.88,.88, exp(-r * 4.) * vLife * .4);
       }`,
   })
   const points = new THREE.Points(geometry, material)
   points.frustumCulled = false
-  points.renderOrder = 8
+  points.renderOrder = 9
   scene.add(points)
   const pointer = new THREE.Vector2()
   const last = new THREE.Vector2(-10, -10)
@@ -71,77 +153,141 @@ export function createSceneInteraction(
   const ray = new THREE.Vector3()
   const origin = new THREE.Vector3()
   const forward = new THREE.Vector3()
+  const focus = new THREE.Vector3()
+  const planeOffset = new THREE.Vector3()
+  const sample = new THREE.Vector3()
+  const sampleTangent = new THREE.Vector3()
   let time = 0
   let head = 0
+  let historyStart = 0
+  let historySize = 0
+  let stroke = 1
+  let nextSeed = 1
+  let lastSample = -Infinity
+  let lastMote = -Infinity
   let held = false
   let pointerId = -1
+  let orbitEnabled = true
   let targetYaw = initialView.yaw
   let targetPitch = initialView.pitch
   let yaw = initialView.yaw
   let pitch = initialView.pitch
-  let zoom = 0
   let burst = 0
   let dirty = false
-  let direction = 0
   let startYaw = 0
   let startPitch = 0
   let velocityYaw = 0
   let previousMove = 0
   let previousYaw = 0
+  let disposed = false
   canvas.dataset.cameraMode = 'idle'
+  canvas.dataset.orbitEnabled = 'true'
   const home = () => !location.hash || location.hash === '#home'
   const interactive = (target: EventTarget | null) =>
     target instanceof Element &&
     Boolean(target.closest('a,button,input,select,textarea,dialog,[data-no-camera]'))
+  const blocked = () => Boolean(document.querySelector('dialog[open]'))
   const pointAt = (x: number, y: number) => {
     ray.set(x, y, 0.5).unproject(camera).sub(camera.position).normalize()
-    // Intersect a camera-facing plane through the organism, including its back.
-    // A fixed z=0 plane becomes edge-on at a quarter turn.
     camera.getWorldDirection(forward)
     const denominator = ray.dot(forward)
-    const distance = denominator > 0.001 ? -camera.position.dot(forward) / denominator : 10
-    return origin.copy(camera.position).addScaledVector(ray, Math.max(1, distance))
+    const distance = denominator > 0.001
+      ? planeOffset.copy(focus).sub(camera.position).dot(forward) / denominator
+      : camera.position.distanceTo(focus)
+    return origin.copy(camera.position).addScaledVector(ray, Math.max(.1, distance))
   }
-  const emit = (x: number, y: number, amount: number) => {
+  const breakStroke = () => {
+    if (last.x !== -10) stroke++
+    last.set(-10, -10)
+    lastSample = -Infinity
+  }
+  const addSample = (x: number, y: number) => {
     const p = pointAt(x, y)
-    for (let i = 0; i < amount; i++) {
-      const n = head++ % count
-      positions[n * 3] = p.x + Math.sin(seeds[n]) * 0.03
-      positions[n * 3 + 1] = p.y + Math.cos(seeds[n]) * 0.03
-      positions[n * 3 + 2] = p.z + Math.sin(seeds[n] * 3) * 0.03
-      births[n] = time
-      angles[n] = direction + Math.sin(seeds[n]) * 0.35
+    if (historySize === capacity) {
+      historyStart = (historyStart + 1) % capacity
+      historySize--
     }
-    dirty = true
+    const index = (historyStart + historySize++) % capacity
+    history.set([p.x, p.y, p.z], index * 3)
+    historyBirths[index] = time
+    historyStrokes[index] = stroke
+    historySeeds[index] = nextSeed++
+    if (time - lastMote > (software ? .11 : .065)) {
+      const n = head++ % count
+      positions.set([p.x, p.y, p.z], n * 3)
+      births[n] = time
+      lastMote = time
+      dirty = true
+    }
   }
-  const move = (event: PointerEvent) => {
-    if (
-      reducedMotion ||
-      event.pointerType === 'touch' ||
-      !home() ||
-      document.querySelector('dialog[open]')
-    )
-      return
-    pointer.set((event.clientX / innerWidth) * 2 - 1, 1 - (event.clientY / innerHeight) * 2)
-    if (!interactive(event.target)) {
-      const distance = pointer.distanceTo(last)
-      if (distance > 0.004) {
-        direction = Math.atan2(pointer.y - last.y, pointer.x - last.x)
-        const steps = Math.min(8, Math.max(1, Math.ceil(distance * 70)))
-        for (let i = 1; i <= steps; i++) {
-          const t = distance > 1 ? 1 : i / steps
-          emit(
-            THREE.MathUtils.lerp(last.x, pointer.x, t),
-            THREE.MathUtils.lerp(last.y, pointer.y, t),
-            2,
-          )
+  // Catmull-Rom positions/tangents smooth the birth path. Each birth grows a
+  // separate streamer with an independent length, curvature and reflection.
+  const buildRibbon = () => {
+    while (historySize && time - historyBirths[historyStart] > lifetime) {
+      historyStart = (historyStart + 1) % capacity
+      historySize--
+    }
+    let quads = 0
+    for (let i = 0; i < historySize - 1; i++) {
+      const b = (historyStart + i) % capacity
+      const c = (b + 1) % capacity
+      if (historyStrokes[b] !== historyStrokes[c]) continue
+      const previous = (b + capacity - 1) % capacity
+      const next = (c + 1) % capacity
+      const a = i > 0 && historyStrokes[previous] === historyStrokes[b] ? previous : b
+      const d = i + 2 < historySize && historyStrokes[next] === historyStrokes[b] ? next : c
+      for (let axis = 0; axis < 3; axis++) {
+        const p0 = history[a * 3 + axis]
+        const p1 = history[b * 3 + axis]
+        const p2 = history[c * 3 + axis]
+        const p3 = history[d * 3 + axis]
+        const v0 = (p2 - p0) * .5
+        const v1 = (p3 - p1) * .5
+        const k2 = 3 * (p2 - p1) - 2 * v0 - v1
+        const k3 = 2 * (p1 - p2) + v0 + v1
+        sample.setComponent(axis, p1 + v0 * .5 + k2 * .25 + k3 * .125)
+        sampleTangent.setComponent(axis, v0 + k2 + k3 * .75)
+      }
+      for (let segment = 0; segment < subdivisions; segment++) {
+        for (let vertex = 0; vertex < 4; vertex++) {
+          const endpoint = vertex < 2 ? 0 : 1
+          const index = quads * 4 + vertex
+          sample.toArray(ribbonPositions, index * 3)
+          sampleTangent.toArray(tangents, index * 3)
+          ribbonBirths[index] = (historyBirths[b] + historyBirths[c]) * .5
+          strandIds[index] = historySeeds[b]
+          along[index] = (segment + endpoint) / subdivisions
         }
-        last.copy(pointer)
+        quads++
       }
     }
-    if (held && event.pointerId === pointerId) {
+    ribbonGeometry.setDrawRange(0, quads * 6)
+    if (quads) {
+      for (const name of ['position', 'aTangent', 'aBirth', 'aStrand', 'aAlong']) {
+        ribbonGeometry.getAttribute(name).needsUpdate = true
+      }
+    }
+  }
+  const move = (event: PointerEvent) => {
+    if (reducedMotion || event.pointerType === 'touch' || !home() || blocked()) {
+      breakStroke()
+      return
+    }
+    pointer.set((event.clientX / innerWidth) * 2 - 1, 1 - (event.clientY / innerHeight) * 2)
+    if (interactive(event.target)) {
+      breakStroke()
+    } else {
+      const distance = pointer.distanceTo(last)
+      if (last.x === -10 || (distance > .0025 && event.timeStamp - lastSample >= (software ? 24 : 14))) {
+        if (event.timeStamp - lastSample > 180) breakStroke()
+        addSample(pointer.x, pointer.y)
+        last.copy(pointer)
+        lastSample = event.timeStamp
+      }
+    }
+    if (orbitEnabled && held && event.pointerId === pointerId) {
       targetYaw = startYaw - (pointer.x - anchor.x) * 2.5
-      targetPitch = THREE.MathUtils.clamp(startPitch + (pointer.y - anchor.y) * 0.8, -.6, .6)
+      targetPitch = THREE.MathUtils.clamp(startPitch + (pointer.y - anchor.y) * .8, -.6, .6)
       const seconds = Math.max(.008, Math.min(.1, (event.timeStamp - previousMove) / 1000))
       velocityYaw = THREE.MathUtils.clamp((targetYaw - previousYaw) / seconds, -2.2, 2.2)
       previousYaw = targetYaw
@@ -149,14 +295,8 @@ export function createSceneInteraction(
     }
   }
   const down = (event: PointerEvent) => {
-    if (
-      reducedMotion ||
-      !home() ||
-      event.button !== 0 ||
-      event.pointerType === 'touch' ||
-      interactive(event.target)
-    )
-      return
+    if (reducedMotion || !orbitEnabled || !home() || blocked() || event.button !== 0 ||
+      event.pointerType === 'touch' || interactive(event.target)) return
     pointerId = event.pointerId
     held = true
     anchor.set((event.clientX / innerWidth) * 2 - 1, 1 - (event.clientY / innerHeight) * 2)
@@ -165,8 +305,7 @@ export function createSceneInteraction(
     previousYaw = targetYaw
     previousMove = event.timeStamp
     velocityYaw = 0
-    burst = 1
-    emit(anchor.x, anchor.y, software ? 12 : 40)
+    burst = .35
     canvas.dataset.cameraMode = 'orbit'
     document.documentElement.classList.add('scene-dragging')
   }
@@ -174,13 +313,12 @@ export function createSceneInteraction(
     if (event instanceof PointerEvent && event.pointerId !== pointerId) return
     held = false
     pointerId = -1
-    // Retain the chosen angle. Only angular velocity decays after release.
     if (event && (event.type === 'pointercancel' || event.timeStamp - previousMove > 100)) velocityYaw = 0
     canvas.dataset.cameraMode = 'idle'
     document.documentElement.classList.remove('scene-dragging')
   }
   const leave = () => {
-    last.set(-10, -10)
+    breakStroke()
     release()
     velocityYaw = 0
   }
@@ -189,15 +327,21 @@ export function createSceneInteraction(
     targetYaw = 0
     targetPitch = 0
   }
+  const navigate = () => {
+    historySize = 0
+    births.fill(-100)
+    dirty = true
+    reset()
+  }
   const doubleClick = (event: MouseEvent) => {
-    if (!reducedMotion && !interactive(event.target) && home()) reset()
+    if (!reducedMotion && orbitEnabled && !interactive(event.target) && !blocked() && home()) reset()
   }
   window.addEventListener('pointermove', move, { passive: true })
   window.addEventListener('pointerdown', down, { passive: true })
   window.addEventListener('pointerup', release)
   window.addEventListener('pointercancel', release)
   window.addEventListener('blur', leave)
-  window.addEventListener('hashchange', reset)
+  window.addEventListener('hashchange', navigate)
   window.addEventListener('dblclick', doubleClick)
   document.addEventListener('pointerleave', leave)
   const visibility = () => {
@@ -205,42 +349,60 @@ export function createSceneInteraction(
   }
   document.addEventListener('visibilitychange', visibility)
   return {
+    setOrbitEnabled(enabled: boolean) {
+      if (disposed || orbitEnabled === enabled) return
+      orbitEnabled = enabled
+      canvas.dataset.orbitEnabled = String(enabled)
+      if (!enabled) {
+        release()
+        velocityYaw = 0
+        targetYaw = yaw
+        targetPitch = pitch
+      }
+    },
+    setFocus(point: THREE.Vector3) {
+      if (!disposed) focus.copy(point)
+    },
     update(delta: number, elapsed: number, ratio: number) {
       time = elapsed
       material.uniforms.uTime.value = time
       material.uniforms.uRatio.value = ratio
-      points.visible = !reducedMotion && home()
+      ribbonMaterial.uniforms.uTime.value = time
+      ribbonMaterial.uniforms.uHeight.value = innerHeight
+      points.visible = ribbon.visible = !reducedMotion && home()
+      buildRibbon()
       if (dirty) {
         geometry.attributes.position.needsUpdate = true
         geometry.attributes.aBirth.needsUpdate = true
-        geometry.attributes.aAngle.needsUpdate = true
         dirty = false
       }
-      if (!held) {
+      if (orbitEnabled && !held) {
         targetYaw += velocityYaw * delta
         velocityYaw *= Math.exp(-7 * delta)
       }
       yaw = THREE.MathUtils.damp(yaw, targetYaw, held ? 5 : 3, delta)
       pitch = THREE.MathUtils.damp(pitch, targetPitch, held ? 5 : 3, delta)
-      // Orbit changes viewpoint, not camera distance. Pressing alone must not zoom.
-      zoom = 0
       burst = Math.max(0, burst - delta * 1.5)
-      return { yaw, pitch, zoom, burst }
+      return { yaw, pitch, zoom: 0, burst }
     },
     dispose() {
+      if (disposed) return
+      disposed = true
       release()
       window.removeEventListener('pointermove', move)
       window.removeEventListener('pointerdown', down)
       window.removeEventListener('pointerup', release)
       window.removeEventListener('pointercancel', release)
       window.removeEventListener('blur', leave)
-      window.removeEventListener('hashchange', reset)
+      window.removeEventListener('hashchange', navigate)
       window.removeEventListener('dblclick', doubleClick)
       document.removeEventListener('pointerleave', leave)
       document.removeEventListener('visibilitychange', visibility)
-      scene.remove(points)
+      scene.remove(points, ribbon)
       geometry.dispose()
       material.dispose()
+      ribbonGeometry.dispose()
+      ribbonMaterial.dispose()
     },
   }
 }

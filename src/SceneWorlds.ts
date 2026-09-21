@@ -1,6 +1,8 @@
 import * as THREE from 'three'
 import { Reflector } from 'three/addons/objects/Reflector.js'
-import { sampleJourney, smooth, windowWeight } from './Journey'
+import { createSpineAssembly } from './SceneSpine'
+import { createSceneMonitors } from './SceneMonitors'
+import { sampleJourney, smooth } from './Journey'
 
 const TAU = Math.PI * 2
 
@@ -59,98 +61,11 @@ function featherGeometry(segments: number) {
   return geometry
 }
 
-function roundedPanel(width: number, height: number, radius: number) {
-  const x = -width / 2, y = -height / 2
-  const shape = new THREE.Shape()
-  shape.moveTo(x + radius, y)
-  shape.lineTo(x + width - radius, y)
-  shape.quadraticCurveTo(x + width, y, x + width, y + radius)
-  shape.lineTo(x + width, y + height - radius)
-  shape.quadraticCurveTo(x + width, y + height, x + width - radius, y + height)
-  shape.lineTo(x + radius, y + height)
-  shape.quadraticCurveTo(x, y + height, x, y + height - radius)
-  shape.lineTo(x, y + radius)
-  shape.quadraticCurveTo(x, y, x + radius, y)
-  const geometry = new THREE.ShapeGeometry(shape, 8)
-  const positions = geometry.getAttribute('position')
-  const uv = geometry.getAttribute('uv')
-  for (let i = 0; i < positions.count; i++) {
-    uv.setXY(i, positions.getX(i) / width + .5, positions.getY(i) / height + .5)
-  }
-  return geometry
-}
-
 const screenVertex = /* glsl */ `
   varying vec2 vUv;
   void main() {
     vUv = uv;
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-  }
-`
-
-// Original, live generative films, animated on the GPU rather than static posters.
-const screenFragment = /* glsl */ `
-  uniform float uTime;
-  uniform float uFilm;
-  uniform float uOpacity;
-  varying vec2 vUv;
-  mat2 rotate(float a) { return mat2(cos(a), -sin(a), sin(a), cos(a)); }
-  float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
-  float noise(vec2 p) {
-    vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
-    return mix(mix(hash(i), hash(i + vec2(1,0)), f.x),
-      mix(hash(i + vec2(0,1)), hash(i + vec2(1,1)), f.x), f.y);
-  }
-  void main() {
-    vec2 p = (vUv - .5) * vec2(1.72, 1.0);
-    float t = uTime;
-    vec3 color = vec3(.008, .017, .028);
-    if (uFilm < .5) {
-      p *= rotate(-.3);
-      float wave = sin(p.x * 12.0 + sin(p.y * 7.0 + t * .8) * 2.8 - t * .6);
-      float folds = sin(p.y * 22.0 + wave * 2.1 + t);
-      float metal = pow(max(0.0, folds), 7.0);
-      color += mix(vec3(.025, .08, .11), vec3(.82, .63, .29), .5 + wave * .5) * (.15 + metal);
-      color += vec3(.68, .91, .96) * pow(max(0.0, folds), 36.0) * .6;
-    } else if (uFilm < 1.5) {
-      vec2 q = p * 3.2 + vec2(t * .07, -t * .04);
-      float cloud = noise(q + noise(q * 1.8 + t * .06) * 3.2);
-      cloud += noise(q * 3.7 - t * .13) * .32;
-      float filaments = pow(max(0., 1. - abs(cloud - .64) * 4.), 3.);
-      color += mix(vec3(.10,.2,.65), vec3(.12,.88,.76), cloud) * filaments;
-      color += vec3(.84,.18,.56) * pow(max(0.,cloud-.55)*2.0, 2.0);
-    } else if (uFilm < 2.5) {
-      vec2 globe = p - vec2(sin(t*.16)*.09, 0.);
-      float radius = length(globe);
-      float atmosphere = exp(-abs(radius-.31)*35.);
-      color += vec3(.12,.42,.85) * atmosphere * .65;
-      if(radius < .3) {
-        vec3 n = vec3(globe/.3, sqrt(max(0.,1.-radius*radius/.09)));
-        float terrain = noise(n.xy*6. + vec2(t*.11,0.));
-        float clouds = smoothstep(.56,.76,noise(n.xy*9. + vec2(t*.2,0.)));
-        vec3 surface = mix(vec3(.02,.09,.2),vec3(.05,.38,.30),smoothstep(.36,.62,terrain));
-        surface = mix(surface,vec3(.72,.87,.91),clouds*.8);
-        color = surface * (.12 + max(0.,dot(n,normalize(vec3(-.65,.4,1.)))));
-      }
-      vec2 moon = p - vec2(cos(t*.25)*.52,sin(t*.25)*.25);
-      color += vec3(.70,.75,.83) * (1.-smoothstep(.035,.039,length(moon)));
-      color += vec3(.2,.4,.8)*step(.996,hash(floor(p*250.)))*step(.34,radius);
-    } else {
-      color = mix(vec3(.11,.13,.26),vec3(.78,.35,.22),1.-vUv.y);
-      float sun = 1.-smoothstep(.06,.064,length(p-vec2(.24+sin(t*.08)*.08,.15)));
-      color += vec3(1.,.76,.37)*sun;
-      for(int i=0;i<4;i++) {
-        float layer=float(i);
-        float ridge=-.04-layer*.09+sin(p.x*(3.+layer)+t*.12+layer*1.7)*(.05+layer*.012);
-        float mask=1.-smoothstep(ridge-.003,ridge+.003,p.y);
-        color=mix(color,mix(vec3(.46,.25,.23),vec3(.06,.09,.15),layer/3.),mask);
-      }
-    }
-    color *= .86 + .14 * sin(vUv.y * 600.0);
-    color *= .6 + .4 * pow(16.0 * vUv.x * vUv.y * (1.0-vUv.x) * (1.0-vUv.y), .22);
-    gl_FragColor = vec4(color, uOpacity);
-    #include <tonemapping_fragment>
-    #include <colorspace_fragment>
   }
 `
 
@@ -164,7 +79,10 @@ export function createSceneWorlds(scene: THREE.Scene, software: boolean, mobile 
   const mat = <T extends THREE.Material>(m: T) => { materials.push(m); return m }
   const root = new THREE.Group()
   const matter = new THREE.Group()
-  const monitors = new THREE.Group()
+  const monitorAssembly = createSceneMonitors(software, mobile)
+  const monitors = monitorAssembly.group
+  const spineAssembly = createSpineAssembly(software, mobile)
+  matter.add(spineAssembly.group)
   const chamber = new THREE.Group()
   const space = new THREE.Group()
   matter.name = 'aether-matter'
@@ -191,10 +109,6 @@ export function createSceneWorlds(scene: THREE.Scene, software: boolean, mobile 
   metal.customProgramCacheKey = () => 'aether-continuous-armour-v2'
   const silver = mat(new THREE.MeshStandardMaterial({
     color: 0x8daeb8, metalness: software ? .35 : 1, roughness: software ? .4 : .28, envMapIntensity: 1.4, transparent: true,
-  }))
-  const boneMaterial = mat(new THREE.MeshPhysicalMaterial({
-    color: 0xa9bacb, metalness: software ? .35 : 1, roughness: software ? .4 : .27, envMapIntensity: 1.45,
-    iridescence: software ? 0 : .65, iridescenceThicknessRange: [150, 460], transparent: true,
   }))
   const chainsMaterial = mat(new THREE.MeshStandardMaterial({
     color: 0x91aca5, metalness: software ? .35 : 1, roughness: software ? .4 : .24, envMapIntensity: 1.4, transparent: true,
@@ -264,31 +178,10 @@ export function createSceneWorlds(scene: THREE.Scene, software: boolean, mobile 
   }
   const joints = instanced(matter,
     geo(new THREE.TorusGeometry(1, .09, software ? 5 : 8, software ? 20 : 36)), silver, rows)
-  const boneGeometry = geo(new THREE.LatheGeometry([
-    new THREE.Vector2(.64, -.5), new THREE.Vector2(.87, -.4),
-    new THREE.Vector2(.89, -.3), new THREE.Vector2(.60, -.18),
-    new THREE.Vector2(.51, .08), new THREE.Vector2(.69, .26),
-    new THREE.Vector2(.88, .36), new THREE.Vector2(.81, .5),
-  ], software ? 12 : 28))
-  const boneVertices = boneGeometry.getAttribute('position')
-  for (let i = 0; i < boneVertices.count; i++) {
-    const x = boneVertices.getX(i)
-    const y = boneVertices.getY(i)
-    const z = boneVertices.getZ(i)
-    const twist = 1 + Math.sin(Math.atan2(x, z) * 5 + y * 2.3) * .085
-    boneVertices.setXYZ(i, x * twist, y, z * twist)
-  }
-  boneGeometry.computeVertexNormals()
-  const vertebrae = instanced(matter, boneGeometry, boneMaterial, rows)
-  const boneArms = instanced(matter, geo(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([
-    new THREE.Vector3(.3, 0, 0), new THREE.Vector3(.62, .04, .03),
-    new THREE.Vector3(.92, -.12, .16), new THREE.Vector3(1.20, -.25, .13),
-    new THREE.Vector3(1.42, -.24, .08),
-  ]), software ? 8 : 16, .075, software ? 5 : 8, false)), boneMaterial, rows * 2)
   const chainCount = software ? 56 : mobile ? 100 : 152
   const links = instanced(matter,
     geo(new THREE.TorusGeometry(1, .18, 5, software ? 8 : 12)), chainsMaterial, chainCount)
-  links.name = 'aether-spine-chain'
+  links.name = 'aether-mechanical-chain'
 
   // The illuminated particles inhabit this same structure through every transformation.
   const pointCount = software ? 420 : mobile ? 1100 : 2300
@@ -474,62 +367,15 @@ export function createSceneWorlds(scene: THREE.Scene, software: boolean, mobile 
   reactorLight.position.set(0, -.8, 1.1)
   root.add(reactorLight)
 
-  const screenFrame = mat(new THREE.MeshStandardMaterial({
-    color: 0x304341, metalness: 1, roughness: .22, transparent: true, envMapIntensity: 1.5,
-  }))
-  const screenBacking = mat(new THREE.MeshStandardMaterial({
-    color: 0x07100f, metalness: .65, roughness: .3, transparent: true,
-  }))
-  const screenRim = mat(new THREE.MeshBasicMaterial({ color: 0x476c66, transparent: true }))
-  const panelGeometry = geo(roundedPanel(2.72, 1.58, .12))
-  const frameGeometry = geo(roundedPanel(2.78, 1.64, .14))
-  const rimGeometry = geo(roundedPanel(2.81, 1.67, .15))
-  const panels: THREE.Group[] = []
-  const films: THREE.ShaderMaterial[] = []
-  const labelMaterials: THREE.MeshBasicMaterial[] = []
-  const names = ['LIMINAL / 01', 'PULSE / 02', 'ORBITAL / 03', 'SOLSTICE / 04']
-  for (let i = 0; i < 4; i++) {
-    const panel = new THREE.Group()
-    mesh(panel, rimGeometry, screenRim, 0, 0, -.08)
-    mesh(panel, frameGeometry, screenFrame, 0, 0, -.045)
-    const back = mesh(panel, panelGeometry, screenBacking, 0, 0, -.09)
-    back.rotation.y = Math.PI
-    const film = mat(new THREE.ShaderMaterial({
-      uniforms: { uTime: { value: 0 }, uFilm: { value: i }, uOpacity: { value: 0 } },
-      vertexShader: screenVertex, fragmentShader: screenFragment,
-      transparent: true, side: THREE.FrontSide,
-    }))
-    mesh(panel, panelGeometry, film)
-    films.push(film)
-    const canvas = document.createElement('canvas')
-    canvas.width = 512
-    canvas.height = 48
-    const ctx = canvas.getContext('2d')
-    if (ctx) {
-      ctx.fillStyle = '#9eada6'
-      ctx.font = '17px monospace'
-      ctx.fillText(names[i], 1, 30)
-      ctx.fillStyle = '#65796f'
-      ctx.font = '13px monospace'
-      ctx.textAlign = 'right'
-      ctx.fillText('MOTION STUDY', 508, 30)
-      const texture = new THREE.CanvasTexture(canvas)
-      texture.colorSpace = THREE.SRGBColorSpace
-      textures.push(texture)
-      const labelMaterial = mat(new THREE.MeshBasicMaterial({ map: texture, transparent: true, depthWrite: false }))
-      labelMaterials.push(labelMaterial)
-      mesh(panel, geo(new THREE.PlaneGeometry(2.72, .255)), labelMaterial, 0, -.99, .015)
-    }
-    monitors.add(panel)
-    panels.push(panel)
-  }
-
   let lastMatterProgress = Number.NaN
   const chamberWorld = new THREE.Vector3()
   const scaleFloorHeight = sampleJourney(.83).height
   return {
     getChamberHeight() {
       return space.getWorldPosition(chamberWorld).y
+    },
+    capture(renderer: THREE.WebGLRenderer, camera: THREE.Camera) {
+      monitorAssembly.capture(renderer, scene, camera)
     },
     update(time: number, progress: number) {
       const journey = sampleJourney(progress)
@@ -547,17 +393,18 @@ export function createSceneWorlds(scene: THREE.Scene, software: boolean, mobile 
       const emergence = smooth(.20, .29, progress)
       const form = emergence
       matter.visible = journey.core > .001
-      metal.opacity = journey.core
-      silver.opacity = journey.core * (1 - scales)
-      boneMaterial.opacity = journey.core * spine
-      vertebrae.visible = boneArms.visible = spine > .001
-      joints.visible = scales < .999
+      metal.opacity = journey.core * (1 - spine)
+      feathers.visible = spine < .999
+      spineAssembly.update(progress, journey.core * spine, form)
+      silver.opacity = journey.core * (1 - scales) * (1 - spine)
+      joints.visible = scales < .999 && spine < .999
       armourMorph.value = scales
-      chainsMaterial.opacity = journey.core * (1 - machine * .55)
+      chainsMaterial.opacity = journey.core * (1 - machine * .55) * (1 - spine)
+      links.visible = spine < .999
       // Geometry travels and turns with scroll. Video and light keep a separate
       // ambient clock so resting on a project never drives its chains onwards.
       matter.rotation.y = journey.structureYaw + Math.sin(time * .16) * .09 * scales
-      if (matter.visible && (scales > .001 || progress !== lastMatterProgress)) {
+      if (matter.visible && spine < .999 && (scales > .001 || progress !== lastMatterProgress)) {
         lastMatterProgress = progress
         for (let i = 0; i < count; i++) {
           const k = i * 9
@@ -602,23 +449,8 @@ export function createSceneWorlds(scene: THREE.Scene, software: boolean, mobile 
           dummy.scale.multiplyScalar(1 - spine * (1 - edge))
           dummy.updateMatrix()
           joints.setMatrixAt(i, dummy.matrix)
-          dummy.position.set(Math.sin(i * 1.7) * .035, spineY * form, 0)
-          dummy.rotation.set(Math.sin(i * .6) * .035, i * .23 + Math.sin(scrollTime * .3 + i) * .045, Math.sin(i) * .045)
-          dummy.scale.set(.86 + Math.sin(i * 1.3) * .07, spineHeight / rows * .82, .76).multiplyScalar(edge)
-          dummy.updateMatrix()
-          vertebrae.setMatrixAt(i, dummy.matrix)
-          for (let side = 0; side < 2; side++) {
-            dummy.position.set(0, spineY * form, 0)
-            dummy.rotation.set(0, side * Math.PI + Math.sin(i * .8) * .4 + Math.sin(scrollTime * .5 + i) * .08,
-              Math.sin(i * 1.3) * .09)
-            dummy.scale.set(.88 + Math.sin(i * 1.2) * .23, .85, 1).multiplyScalar(edge)
-            dummy.updateMatrix()
-            boneArms.setMatrixAt(i * 2 + side, dummy.matrix)
-          }
         }
         joints.instanceMatrix.needsUpdate = true
-        vertebrae.instanceMatrix.needsUpdate = true
-        boneArms.instanceMatrix.needsUpdate = true
         for (let i = 0; i < chainCount; i++) {
           const strand = i % 2
           const t = THREE.MathUtils.euclideanModulo(i / chainCount + journey.chainPhase, 1)
@@ -688,26 +520,11 @@ export function createSceneWorlds(scene: THREE.Scene, software: boolean, mobile 
       }
       reactorLight.intensity = software ? 0 : journey.machine * (21 + Math.sin(time * 1.5) * 2)
         + journey.scales * 7
-      const screensWeight = windowWeight(progress, .265, .325, .60, .68)
-      monitors.visible = screensWeight > .001
-      screenFrame.opacity = screenBacking.opacity = screensWeight
-      screenRim.opacity = screensWeight * .58
-      for (let i = 0; i < panels.length; i++) {
-        const orbit = (progress - .30) * TAU * 2.8 + i * Math.PI / 2 + .35
-        const front = Math.cos(orbit)
-        const panelScale = 1.05 + Math.max(0, front) * .92
-        panels[i].position.set(Math.sin(orbit) * 3.65,
-          Math.sin(orbit * .7 + i * .65) * 1.35,
-          front * 2.15 - .15)
-        panels[i].rotation.set(Math.sin(orbit + i) * .035,
-          -Math.sin(orbit) * .30, Math.sin(orbit) * -.025)
-        panels[i].scale.setScalar(panelScale)
-        films[i].uniforms.uTime.value = time
-        films[i].uniforms.uOpacity.value = screensWeight
-        if (labelMaterials[i]) labelMaterials[i].opacity = screensWeight
-      }
+      monitorAssembly.update(time, progress)
     },
     dispose() {
+      spineAssembly.dispose()
+      monitorAssembly.dispose()
       scene.remove(root)
       floorReflection?.dispose()
       instances.forEach((item) => item.dispose())

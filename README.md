@@ -1,6 +1,6 @@
 # AETHER STUDIO
 
-[사이트 바로 보기](https://aether-studio-nu.vercel.app/) · [실제 스크롤·인터랙션 검증](docs/dynamic-motion.md) · [이전 24단계 비교](docs/continuous-journey.md)
+[사이트 바로 보기](https://aether-studio-nu.vercel.app/) · [척추·굴절 모니터 개선](docs/spine-monitors.md) · [실제 스크롤·인터랙션 검증](docs/dynamic-motion.md)
 
 [Active Theory](https://activetheory.net/)의 중앙 오브젝트, 연속된 공간 이동, 금속 반사와 움직이는 프로젝트 화면을 참고한 자체 3D 경험입니다. React + TypeScript + Three.js + Vite로 개발했습니다.
 
@@ -16,6 +16,7 @@
 - 초반·소개 로고·마지막 링에서 빈 공간 드래그: 중앙 오브젝트를 축으로 회전하고 놓은 뒤 선택한 시점을 유지합니다. 더블클릭하면 기본 시점으로 복귀합니다.
 - 척추·모니터·지하 장치·비늘 구간: 드래그 궤도를 잠그고 스크롤로 카메라를 제어합니다. 비늘이 사라지는 전환 끝까지 마우스 이동·드래그·더블클릭이 카메라를 바꾸지 않습니다. [잠금 경계 검증](docs/mechanical-camera.md)
 - 척추·사슬: 스크롤 위치에 따라 움직입니다. 입력이 멎으면 관성 정착 뒤 멈추고, 역스크롤하면 반대 방향으로 돌아갑니다. 모니터 영상과 조명은 계속 움직입니다.
+- 척추는 굵은 비대칭 관절·추궁·돌기와 교차 연결 사슬로 구성했습니다. 곡면 모니터 6장이 아래에서 들어와 전경을 거쳐 위로 지나갑니다. GPU 데스크톱에서는 실제 척추와 입자가 화면 안에서 굴절됩니다.
 - 마지막 비늘은 위층에 남고 링이 아래로 내려갑니다. 링 안의 대문자 O는 상하 반전되지 않습니다.
 - 모션 정지·재개: 선택한 시점과 애니메이션 위상을 보존합니다. OS reduced motion도 지원합니다.
 - Work / Contact와 dialog에서는 배경의 연속 렌더링을 쉬고 홈으로 돌아오면 재개합니다. 모바일은 기본 터치 스크롤을 유지하고 텍스트는 드래그 선택되지 않습니다.
@@ -28,13 +29,15 @@
 
 | 척추와 움직이는 모니터 | 지하 장치 |
 | --- | --- |
-| ![척추](docs/screenshots/motion/07-spine-stopped.jpg) | ![장치](docs/screenshots/motion/12-chamber.jpg) |
+| ![척추](docs/screenshots/spine/after-40.jpg) | ![장치](docs/screenshots/motion/12-chamber.jpg) |
 
 | 금속 비늘 | 하부 링 |
 | --- | --- |
 | ![비늘](docs/screenshots/motion/13-below-floor.jpg) | ![하부 링](docs/screenshots/motion/14-bottom-ring.jpg) |
 
-실제 production 빌드의 1440×900 GPU 캡처입니다. [동작 검증 문서](docs/dynamic-motion.md)에 원본의 실제 입력 관찰, 정지·역방향·드래그 검증과 남은 차이를 기록했습니다. 시각적 유사도를 백분율로 측정하거나 인증하지 않습니다. 모니터 내부 영상의 추가 고도화는 후속 범위입니다. [이전 5개 지점 비교](docs/visual-comparison.md)와 [24단계 비교](docs/continuous-journey.md)는 역사 기록입니다.
+실제 production 빌드의 1440×900 GPU 캡처입니다. [척추·모니터 검증 문서](docs/spine-monitors.md)에 원본의 입력 관찰, 전후 비교, 유리 굴절·자체 GPU 영상과 성능 경계를 기록했습니다. 모바일은 공유 배경 캡처 대신 가벼운 투명 영상으로 표시합니다. 시각적 유사도를 백분율로 측정하거나 인증하지 않습니다. [이전 5개 지점 비교](docs/visual-comparison.md)와 [24단계 비교](docs/continuous-journey.md)는 역사 기록입니다.
+
+![척추 구간 실제 스크롤](docs/screenshots/spine/scroll.gif)
 
 ## 콘텐츠 화면 · 초기 배포 기록
 
@@ -116,7 +119,9 @@ npx vercel deploy --prod --scope okorions-projects
 | HDR bloom | `src/SceneGlow.ts` |
 | 구체 입자·흐름 | `src/Atmosphere.ts` |
 | 은빛 곡선 흔적·구간별 카메라 입력 | `src/SceneInteraction.ts` |
-| 연속 금속 변형·영상 모니터·반사 바닥 | `src/SceneWorlds.ts` |
+| 연속 금속 변형·장면 통합·반사 바닥 | `src/SceneWorlds.ts` |
+| 척추·관절·교차 연결 사슬 | `src/SceneSpine.ts` |
+| 곡면 모니터·공유 굴절·자체 영상 | `src/SceneMonitors.ts` |
 | 프로젝트 비주얼 | `src/ProjectArt.tsx`, `src/styles.css` |
 | 합성 사운드 | `src/audio.ts` |
 
@@ -124,7 +129,7 @@ npx vercel deploy --prod --scope okorions-projects
 
 ## 검증
 
-Playwright 테스트 23개는 데스크톱 1440×900, 모바일 390×844, WebGL 비활성 환경을 사용합니다. 실제 wheel의 하강·역방향, 24개 렌더 상태의 높이·링 방향, 사슬의 정지·왕복, 모니터·장치·비늘과 전환 끝의 카메라 잠금, 탐색·상세 보기·초점·사운드·hash/history와 로딩 실패를 검증합니다. 격리된 실제 shader 캔버스에서 흔적의 픽셀 발생·잔존·소멸도 확인합니다. GitHub Actions에서는 lint·타입·빌드를 확인하고 production preview를 SwiftShader로 실행합니다.
+Playwright 테스트 24개는 데스크톱 1440×900, 모바일 390×844, WebGL 비활성 환경을 사용합니다. 실제 wheel의 하강·역방향, 24개 렌더 상태의 높이·링 방향, 척추·사슬·모니터의 정지·왕복, 중간 구간 카메라 잠금, 탐색·상세 보기·초점·사운드·hash/history와 로딩 실패를 검증합니다. DPR 1.5·2의 실제 WebGL 캡처·상태 복구·실패 시 대체 표현, 흔적의 픽셀 발생·잔존·소멸도 확인합니다. GitHub Actions에서는 lint·타입·빌드를 확인하고 production preview를 SwiftShader로 실행합니다.
 
 최신 시각 증거·성능 관측·리뷰 대응은 [동작 검증 문서](docs/dynamic-motion.md)에 정리했습니다. 초기 기록은 [검증 기록](docs/verification.md)에 보존합니다. WebGL 성능은 기기와 브라우저에 따라 달라질 수 있습니다. 실제 Safari/iOS 기기 검증은 수행하지 않았습니다.
 

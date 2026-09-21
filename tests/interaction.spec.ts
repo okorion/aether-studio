@@ -334,6 +334,31 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
     await page.evaluate(() => window.interactionHarness?.dispose())
   })
 
+  test('glass capture uses physical target pixels and restores renderer state at high DPR', async ({ page }) => {
+    for (const pixelRatio of [1.5, 2]) {
+      const capture = await page.evaluate((ratio) =>
+        window.interactionHarness.probeMonitorCapture(ratio, ratio === 2), pixelRatio)
+      expect(capture.observed).toHaveLength(1)
+      const draw = capture.observed[0]
+      expect(draw.targetSize).toEqual([720, 540])
+      expect(draw.glViewport).toEqual([0, 0, ...draw.targetSize])
+      expect(draw.currentViewport).toEqual(draw.glViewport)
+      expect(draw.visible).toBe(false)
+      expect(draw.autoClear).toBe(true)
+      expect(draw.xrEnabled).toBe(false)
+      expect(capture.before.pixelRatio).toBe(pixelRatio)
+      expect(capture.before.targetRestored).toBe(true)
+      expect(capture.before.visible).toBe(true)
+      expect(capture.after).toEqual(capture.before)
+      expect(capture.refraction).toBe('shared-render-target')
+      expect(capture.backgroundFlags).toEqual([1, 1, 1, 1, 1, 1])
+      expect(capture.failure.after).toEqual(capture.before)
+      expect(capture.failure.refraction).toBe('capture-failed-fallback')
+      expect(capture.failure.backgroundFlags).toEqual([0, 0, 0, 0, 0, 0])
+      expect(capture.failure.attempts).toBe(1)
+    }
+  })
+
   test('movement leaves a trail after 1.6 seconds and completely fades by 3 seconds', async ({
     page,
   }) => {
@@ -488,6 +513,8 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
     expect(idle).toEqual(first)
     const forward = await page.evaluate(() => window.interactionHarness.sampleWorld(12, .43))
     expect(forward.chain).not.toEqual(first.chain)
+    expect(forward.vertebrae).not.toEqual(first.vertebrae)
+    expect(forward.monitors).not.toEqual(first.monitors)
     expect(Math.abs(forward.structureYaw - first.structureYaw)).toBeGreaterThan(.01)
     expect(forward.modelY).toBeLessThan(first.modelY - .01)
     expect(forward.chamberY).toBeCloseTo(first.chamberY, 8)

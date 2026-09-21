@@ -634,6 +634,7 @@ export default function Scene({ reducedMotion, active, onReady }: SceneProps) {
       // and distant life remain in world space, providing vertical parallax.
       const ringSurface = material(chrome.clone())
       const innerSurface = material(darkChrome.clone())
+      for (const surface of [ringSurface, innerSurface, tailChrome, tailDark]) surface.transparent = true
       ring.material = ringSurface
       ringInner.material = innerSurface
       const centre = new THREE.Vector3(0, 0, 0)
@@ -680,6 +681,12 @@ export default function Scene({ reducedMotion, active, onReady }: SceneProps) {
         preserved.current.pitch = input.pitch
         preserved.current.elapsed = elapsed
         const fold = smooth(.205, .295, scroll) * (1 - state.end)
+        // The original organism unfolds into the spine. Keep its free tails
+        // from crossing the project screens after that transformation settles.
+        const emblemOpacity = 1 - state.spine
+        emblem.visible = emblemOpacity > .001
+        ringSurface.opacity = innerSurface.opacity = tailChrome.opacity = tailDark.opacity = emblemOpacity
+        luminous.opacity = .26 * emblemOpacity
         world.rotation.set(0, 0, 0)
         world.position.copy(centre)
         emblem.position.set(0, 0, 0)
@@ -724,6 +731,9 @@ export default function Scene({ reducedMotion, active, onReady }: SceneProps) {
 
         try {
           activeRenderer.info.reset()
+          // All glass screens share one bounded background capture. Refresh it
+          // at half the display cadence; paused/reduced-motion frames stay exact.
+          if (renderedFrames % 2 === 0 || reducedMotion) worlds.capture(activeRenderer, camera)
           if (glow && quality > .65 && innerWidth >= 768) glow.render(state.energy)
           else activeRenderer.render(scene, camera)
           renderedFrames++

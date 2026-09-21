@@ -31,6 +31,8 @@ html {
 body {
   margin: 0;
   min-width: 320px;
+  -webkit-user-select: none;
+  user-select: none;
 }
 button,
 a {

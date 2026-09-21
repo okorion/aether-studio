@@ -1,0 +1,470 @@
+[
+  {
+    "mobile": false,
+    "progress": 0,
+    "timing": {
+      "median": 16.69999999999891,
+      "p95": 16.799999999999272,
+      "frames": 120
+    },
+    "state": {
+      "engine": "three.js r186",
+      "renderProfile": "gpu",
+      "renderState": "ready",
+      "cameraMode": "idle",
+      "orbitEnabled": "true",
+      "journeyStep": "1",
+      "focusX": "0.0000",
+      "focusY": "0.0000",
+      "orbitYaw": "0.0000",
+      "renderProgress": "0.000000",
+      "cameraY": "0.3479",
+      "targetY": "0.0000",
+      "modelY": "0.0000",
+      "viewAzimuth": "0.0078",
+      "structureYaw": "0.0000",
+      "ringRoll": "0.0000",
+      "chainPhase": "0.000000",
+      "chamberY": "-40.4000",
+      "frameMs": "16.7",
+      "drawCalls": "73",
+      "quality": "1.00",
+      "geometries": "57",
+      "textures": "15"
+    },
+    "width": {
+      "viewport": 1440,
+      "document": 1440
+    }
+  },
+  {
+    "mobile": false,
+    "progress": 0.17,
+    "timing": {
+      "median": 16.69999999999891,
+      "p95": 16.700000000000728,
+      "frames": 121
+    },
+    "state": {
+      "engine": "three.js r186",
+      "renderProfile": "gpu",
+      "renderState": "ready",
+      "cameraMode": "idle",
+      "orbitEnabled": "true",
+      "journeyStep": "5",
+      "focusX": "-0.0000",
+      "focusY": "-0.0000",
+      "orbitYaw": "0.0000",
+      "renderProgress": "0.170000",
+      "cameraY": "-10.7137",
+      "targetY": "-10.7143",
+      "modelY": "-10.7143",
+      "viewAzimuth": "6.0565",
+      "structureYaw": "0.0000",
+      "ringRoll": "0.0000",
+      "chainPhase": "1.700000",
+      "chamberY": "-40.4000",
+      "frameMs": "16.7",
+      "drawCalls": "29",
+      "quality": "1.00",
+      "geometries": "57",
+      "textures": "15"
+    },
+    "width": {
+      "viewport": 1440,
+      "document": 1440
+    }
+  },
+  {
+    "mobile": false,
+    "progress": 0.4,
+    "timing": {
+      "median": 16.69999999999709,
+      "p95": 16.799999999999272,
+      "frames": 120
+    },
+    "state": {
+      "engine": "three.js r186",
+      "renderProfile": "gpu",
+      "renderState": "ready",
+      "cameraMode": "idle",
+      "orbitEnabled": "false",
+      "journeyStep": "10",
+      "focusX": "-0.0000",
+      "focusY": "-0.0000",
+      "orbitYaw": "0.0000",
+      "renderProgress": "0.400000",
+      "cameraY": "-23.7941",
+      "targetY": "-24.0000",
+      "modelY": "-24.0000",
+      "viewAzimuth": "6.2800",
+      "structureYaw": "4.1309",
+      "ringRoll": "0.0000",
+      "chainPhase": "4.000000",
+      "chamberY": "-40.4000",
+      "frameMs": "16.7",
+      "drawCalls": "98",
+      "quality": "0.85",
+      "geometries": "110",
+      "textures": "19"
+    },
+    "width": {
+      "viewport": 1440,
+      "document": 1440
+    }
+  },
+  {
+    "mobile": false,
+    "progress": 0.72,
+    "timing": {
+      "median": 16.69999999999709,
+      "p95": 16.799999999999272,
+      "frames": 121
+    },
+    "state": {
+      "engine": "three.js r186",
+      "renderProfile": "gpu",
+      "renderState": "ready",
+      "cameraMode": "idle",
+      "orbitEnabled": "false",
+      "journeyStep": "18",
+      "focusX": "-0.0000",
+      "focusY": "0.0000",
+      "orbitYaw": "0.0000",
+      "renderProgress": "0.720000",
+      "cameraY": "-40.9086",
+      "targetY": "-41.5893",
+      "modelY": "-41.5893",
+      "viewAzimuth": "6.9341",
+      "structureYaw": "12.5664",
+      "ringRoll": "0.0000",
+      "chainPhase": "7.200000",
+      "chamberY": "-40.4000",
+      "frameMs": "16.7",
+      "drawCalls": "120",
+      "quality": "0.95",
+      "geometries": "163",
+      "textures": "20"
+    },
+    "width": {
+      "viewport": 1440,
+      "document": 1440
+    }
+  },
+  {
+    "mobile": false,
+    "progress": 0.83,
+    "timing": {
+      "median": 16.700000000000728,
+      "p95": 16.799999999999272,
+      "frames": 120
+    },
+    "state": {
+      "engine": "three.js r186",
+      "renderProfile": "gpu",
+      "renderState": "ready",
+      "cameraMode": "idle",
+      "orbitEnabled": "false",
+      "journeyStep": "20",
+      "focusX": "0.0000",
+      "focusY": "0.0000",
+      "orbitYaw": "0.0000",
+      "renderProgress": "0.830000",
+      "cameraY": "-47.9548",
+      "targetY": "-47.7480",
+      "modelY": "-47.7480",
+      "viewAzimuth": "6.3041",
+      "structureYaw": "12.5664",
+      "ringRoll": "0.0000",
+      "chainPhase": "8.300000",
+      "chamberY": "-40.4000",
+      "frameMs": "16.7",
+      "drawCalls": "57",
+      "quality": "0.95",
+      "geometries": "164",
+      "textures": "20"
+    },
+    "width": {
+      "viewport": 1440,
+      "document": 1440
+    }
+  },
+  {
+    "mobile": false,
+    "progress": 1,
+    "timing": {
+      "median": 16.700000000000728,
+      "p95": 16.799999999999272,
+      "frames": 120
+    },
+    "state": {
+      "engine": "three.js r186",
+      "renderProfile": "gpu",
+      "renderState": "ready",
+      "cameraMode": "idle",
+      "orbitEnabled": "true",
+      "journeyStep": "24",
+      "focusX": "0.0000",
+      "focusY": "0.0000",
+      "orbitYaw": "0.0000",
+      "renderProgress": "1.000000",
+      "cameraY": "-60.3619",
+      "targetY": "-61.5000",
+      "modelY": "-61.5000",
+      "viewAzimuth": "12.2578",
+      "structureYaw": "12.5664",
+      "ringRoll": "0.0000",
+      "chainPhase": "10.000000",
+      "chamberY": "-40.4000",
+      "frameMs": "16.7",
+      "drawCalls": "77",
+      "quality": "1.00",
+      "geometries": "204",
+      "textures": "20"
+    },
+    "width": {
+      "viewport": 1440,
+      "document": 1440
+    }
+  },
+  {
+    "mobile": false,
+    "errors": [],
+    "contentViewPause": true,
+    "homeResumed": true
+  },
+  {
+    "mobile": true,
+    "progress": 0,
+    "timing": {
+      "median": 16.699999999999818,
+      "p95": 16.700000000000728,
+      "frames": 121
+    },
+    "state": {
+      "engine": "three.js r186",
+      "renderProfile": "gpu",
+      "renderState": "ready",
+      "cameraMode": "idle",
+      "orbitEnabled": "true",
+      "journeyStep": "1",
+      "focusX": "0.0000",
+      "focusY": "-0.0000",
+      "orbitYaw": "0.0000",
+      "renderProgress": "0.000000",
+      "cameraY": "0.4919",
+      "targetY": "0.0000",
+      "modelY": "0.0000",
+      "viewAzimuth": "0.0000",
+      "structureYaw": "0.0000",
+      "ringRoll": "0.0000",
+      "chainPhase": "0.000000",
+      "chamberY": "-40.4000",
+      "frameMs": "16.7",
+      "drawCalls": "29",
+      "quality": "1.00",
+      "geometries": "29",
+      "textures": "2"
+    },
+    "width": {
+      "viewport": 390,
+      "document": 390
+    }
+  },
+  {
+    "mobile": true,
+    "progress": 0.17,
+    "timing": {
+      "median": 16.69999999999891,
+      "p95": 16.799999999999272,
+      "frames": 121
+    },
+    "state": {
+      "engine": "three.js r186",
+      "renderProfile": "gpu",
+      "renderState": "ready",
+      "cameraMode": "idle",
+      "orbitEnabled": "true",
+      "journeyStep": "5",
+      "focusX": "0.0000",
+      "focusY": "0.0000",
+      "orbitYaw": "0.0000",
+      "renderProgress": "0.169989",
+      "cameraY": "-10.7123",
+      "targetY": "-10.7135",
+      "modelY": "-10.7135",
+      "viewAzimuth": "6.0486",
+      "structureYaw": "0.0000",
+      "ringRoll": "0.0000",
+      "chainPhase": "1.699888",
+      "chamberY": "-40.4000",
+      "frameMs": "16.7",
+      "drawCalls": "15",
+      "quality": "1.00",
+      "geometries": "36",
+      "textures": "2"
+    },
+    "width": {
+      "viewport": 390,
+      "document": 390
+    }
+  },
+  {
+    "mobile": true,
+    "progress": 0.4,
+    "timing": {
+      "median": 16.69999999999891,
+      "p95": 16.700000000000728,
+      "frames": 121
+    },
+    "state": {
+      "engine": "three.js r186",
+      "renderProfile": "gpu",
+      "renderState": "ready",
+      "cameraMode": "idle",
+      "orbitEnabled": "false",
+      "journeyStep": "10",
+      "focusX": "0.0000",
+      "focusY": "-0.0000",
+      "orbitYaw": "0.0000",
+      "renderProgress": "0.399986",
+      "cameraY": "-23.7072",
+      "targetY": "-23.9992",
+      "modelY": "-23.9992",
+      "viewAzimuth": "6.2800",
+      "structureYaw": "4.1303",
+      "ringRoll": "0.0000",
+      "chainPhase": "3.999861",
+      "chamberY": "-40.4000",
+      "frameMs": "16.7",
+      "drawCalls": "48",
+      "quality": "0.85",
+      "geometries": "57",
+      "textures": "6"
+    },
+    "width": {
+      "viewport": 390,
+      "document": 390
+    }
+  },
+  {
+    "mobile": true,
+    "progress": 0.72,
+    "timing": {
+      "median": 16.69999999999709,
+      "p95": 16.700000000000728,
+      "frames": 121
+    },
+    "state": {
+      "engine": "three.js r186",
+      "renderProfile": "gpu",
+      "renderState": "ready",
+      "cameraMode": "idle",
+      "orbitEnabled": "false",
+      "journeyStep": "18",
+      "focusX": "0.0000",
+      "focusY": "0.0000",
+      "orbitYaw": "0.0000",
+      "renderProgress": "0.720031",
+      "cameraY": "-40.5920",
+      "targetY": "-41.5907",
+      "modelY": "-41.5907",
+      "viewAzimuth": "6.9343",
+      "structureYaw": "12.5664",
+      "ringRoll": "0.0000",
+      "chainPhase": "7.200307",
+      "chamberY": "-40.4000",
+      "frameMs": "16.7",
+      "drawCalls": "42",
+      "quality": "0.95",
+      "geometries": "89",
+      "textures": "6"
+    },
+    "width": {
+      "viewport": 390,
+      "document": 390
+    }
+  },
+  {
+    "mobile": true,
+    "progress": 0.83,
+    "timing": {
+      "median": 16.700000000000728,
+      "p95": 16.799999999999272,
+      "frames": 120
+    },
+    "state": {
+      "engine": "three.js r186",
+      "renderProfile": "gpu",
+      "renderState": "ready",
+      "cameraMode": "idle",
+      "orbitEnabled": "false",
+      "journeyStep": "20",
+      "focusX": "0.0000",
+      "focusY": "0.0000",
+      "orbitYaw": "0.0000",
+      "renderProgress": "0.830011",
+      "cameraY": "-48.0406",
+      "targetY": "-47.7487",
+      "modelY": "-47.7487",
+      "viewAzimuth": "6.3041",
+      "structureYaw": "12.5664",
+      "ringRoll": "0.0000",
+      "chainPhase": "8.300112",
+      "chamberY": "-40.4000",
+      "frameMs": "16.7",
+      "drawCalls": "45",
+      "quality": "0.95",
+      "geometries": "100",
+      "textures": "6"
+    },
+    "width": {
+      "viewport": 390,
+      "document": 390
+    }
+  },
+  {
+    "mobile": true,
+    "progress": 1,
+    "timing": {
+      "median": 16.700000000000728,
+      "p95": 16.700000000000728,
+      "frames": 121
+    },
+    "state": {
+      "engine": "three.js r186",
+      "renderProfile": "gpu",
+      "renderState": "ready",
+      "cameraMode": "idle",
+      "orbitEnabled": "true",
+      "journeyStep": "24",
+      "focusX": "0.0000",
+      "focusY": "0.0000",
+      "orbitYaw": "0.0000",
+      "renderProgress": "1.000000",
+      "cameraY": "-59.8827",
+      "targetY": "-61.5000",
+      "modelY": "-61.5000",
+      "viewAzimuth": "12.2500",
+      "structureYaw": "12.5664",
+      "ringRoll": "0.0000",
+      "chainPhase": "10.000000",
+      "chamberY": "-40.4000",
+      "frameMs": "16.7",
+      "drawCalls": "30",
+      "quality": "1.00",
+      "geometries": "110",
+      "textures": "6"
+    },
+    "width": {
+      "viewport": 390,
+      "document": 390
+    }
+  },
+  {
+    "mobile": true,
+    "errors": [],
+    "contentViewPause": true,
+    "homeResumed": true
+  }
+]

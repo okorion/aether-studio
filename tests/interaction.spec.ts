@@ -81,7 +81,11 @@ test('@interaction production scene accepts background drag and excludes navigat
   await expect(page.locator('html')).toHaveClass(/scene-dragging/)
   // Allow the temporary click light to expire, leaving only the camera change.
   await expect
-    .poll(() => page.evaluate(() => window.cameraTestFrames))
+    // This counts render frames, not input latency. Linux SwiftShader delivered
+    // 32–43 frames in 10s; retain the same 80-frame visual proof on that runner.
+    .poll(() => page.evaluate(() => window.cameraTestFrames), {
+      timeout: process.env.CI ? 45_000 : 10_000,
+    })
     .toBeGreaterThan(framesBefore + 80)
   const held = await page.screenshot({ clip: region })
   expect(held.equals(before)).toBe(false)
@@ -196,32 +200,26 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
     expect(reduced).toEqual({ yaw: 0, pitch: 0, zoom: 0, burst: 0, illuminatedPixels: 0 })
     await page.mouse.up()
     await page.evaluate(() => window.interactionHarness.reset())
-    await page
-      .locator('#interaction-canvas')
-      .dispatchEvent('pointerdown', {
-        pointerType: 'touch',
-        button: 0,
-        pointerId: 2,
-        clientX: 300,
-        clientY: 200,
-      })
-    await page
-      .locator('#interaction-canvas')
-      .dispatchEvent('pointermove', {
-        pointerType: 'touch',
-        pointerId: 2,
-        clientX: 450,
-        clientY: 220,
-      })
-    await page
-      .getByRole('button', { name: 'UI control' })
-      .dispatchEvent('pointerdown', {
-        pointerType: 'mouse',
-        button: 0,
-        pointerId: 1,
-        clientX: 20,
-        clientY: 15,
-      })
+    await page.locator('#interaction-canvas').dispatchEvent('pointerdown', {
+      pointerType: 'touch',
+      button: 0,
+      pointerId: 2,
+      clientX: 300,
+      clientY: 200,
+    })
+    await page.locator('#interaction-canvas').dispatchEvent('pointermove', {
+      pointerType: 'touch',
+      pointerId: 2,
+      clientX: 450,
+      clientY: 220,
+    })
+    await page.getByRole('button', { name: 'UI control' }).dispatchEvent('pointerdown', {
+      pointerType: 'mouse',
+      button: 0,
+      pointerId: 1,
+      clientX: 20,
+      clientY: 15,
+    })
     const excluded = await page.evaluate(() => window.interactionHarness.step(0.5))
     expect(excluded).toEqual({ yaw: 0, pitch: 0, zoom: 0, burst: 0, illuminatedPixels: 0 })
     await expect(page.locator('#interaction-canvas')).toHaveAttribute('data-camera-mode', 'idle')

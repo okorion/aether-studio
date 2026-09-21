@@ -58,7 +58,8 @@ const currentField = /* glsl */ `
   vec3 currentColor(float lane, float t) {
     float variation = sin(lane * 39.0 + t * 5.0) * 0.5 + 0.5;
     vec3 gold = mix(vec3(0.28, 0.36, 0.08), vec3(0.95, 0.51, 0.10), variation);
-    vec3 violet = mix(vec3(0.10, 0.39, 0.96), vec3(0.96, 0.15, 0.54), variation);
+    vec3 violet = mix(vec3(0.22, 0.32, 0.91), vec3(0.96, 0.23, 0.59), variation);
+    violet = mix(violet, vec3(0.97, 0.61, 0.37), pow(variation, 7.0) * 0.65);
     vec3 cyan = mix(vec3(0.08, 0.87, 0.58), vec3(0.65, 0.24, 0.94), variation);
     vec3 iridescence = mix(vec3(0.08, 0.51, 0.55), vec3(0.77, 0.49, 0.18), variation);
     vec3 color = mix(gold, violet, uWeights.x);
@@ -83,7 +84,7 @@ const dustVertex = /* glsl */ `
     float t = fract(position.x + motionTime() * speed * (0.76 + lane * 0.48));
     vec3 p = current(t, lane);
     float cluster = 0.32 + 0.68 * pow(sin(t * 35.0 + lane * 8.0) * 0.5 + 0.5, 2.0);
-    float width = (0.13 + position.z * 0.72) * cluster;
+    float width = (0.13 + position.z * (0.72 + uWeights.x * 0.28)) * cluster;
     width *= 1.0 - uWeights.y * 0.52;
     float turn = phase + t * 37.0 + motionTime() * 0.6;
     p += vec3(cos(turn), sin(turn * 0.83) * 0.62, sin(turn)) * width;
@@ -96,14 +97,17 @@ const dustVertex = /* glsl */ `
     vec4 mv = modelViewMatrix * vec4(p, 1.0);
     gl_Position = projectionMatrix * mv;
     float perspective = 12.0 / max(2.0, -mv.z);
-    gl_PointSize = clamp(aDust.y * perspective * uPixelRatio, 0.65, 12.0 * uPixelRatio);
+    // Larger pearlescent grains fill the spine's turbulent clouds, while the
+    // ring and the lower chamber retain their original fine dust density.
+    float grainScale = 1.0 + uWeights.x * (0.30 + 0.28 * cluster);
+    gl_PointSize = clamp(aDust.y * grainScale * perspective * uPixelRatio, 0.65, 12.0 * uPixelRatio);
     vColor = currentColor(lane, t);
     vBokeh = bokeh;
     float shimmer = 0.73 + sin(uTime * 1.7 + phase * 7.0) * 0.2;
     float seam = smoothstep(0.0, 0.045, t) * (1.0 - smoothstep(0.94, 1.0, t));
     float distanceFade = exp(-max(0.0, -mv.z - 13.0) * 0.043);
     vAlpha = shimmer * seam * distanceFade * mix(0.72, 0.19, bokeh);
-    vAlpha *= 1.0 - uDarkness * 0.23;
+    vAlpha *= (1.0 - uDarkness * 0.23) * (1.0 + uWeights.x * 0.16);
   }
 `
 

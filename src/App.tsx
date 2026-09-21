@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import ProjectArt from './ProjectArt'
 import SceneBoundary from './SceneBoundary'
 import { projects } from './projects'
@@ -7,6 +7,13 @@ import type { Project } from './projects'
 const tracks = ['01 — Blue hour', '02 — Slow current', '03 — Afterlight']
 
 const Scene = lazy(() => import('./Scene'))
+
+type View = 'home' | 'work' | 'contact'
+
+function currentView(): View {
+  const hash = window.location.hash
+  return hash === '#work' ? 'work' : hash === '#contact' ? 'contact' : 'home'
+}
 
 function useReducedMotion() {
   const [reduced, setReduced] = useState(
@@ -100,28 +107,68 @@ export default function App() {
   const [motionPaused, setMotionPaused] = useState(false)
   const reducedMotion = systemReducedMotion || motionPaused
   const [ready, setReady] = useState(false)
-  const [activeSection, setActiveSection] = useState('home')
+  const [activeSection, setActiveSection] = useState<View>(currentView)
   const [project, setProject] = useState<Project | null>(null)
   const [audioEnabled, setAudioEnabled] = useState(false)
   const [audioBusy, setAudioBusy] = useState(false)
   const [audioError, setAudioError] = useState('')
   const [track, setTrack] = useState(0)
   const audio = useRef<ReturnType<(typeof import('./audio'))['createAmbientAudio']> | null>(null)
+  const journey = useRef<HTMLDivElement>(null)
   const onReady = useCallback(() => setReady(true), [])
 
   useEffect(() => {
-    const sections = Array.from(document.querySelectorAll<HTMLElement>('main > section'))
-    const observe = () => {
-      const marker = window.innerHeight * 0.45
-      const section = [...sections]
-        .reverse()
-        .find((item) => item.getBoundingClientRect().top <= marker)
-      setActiveSection(section?.id ?? 'home')
+    const navigate = () => {
+      setProject(null)
+      setActiveSection(currentView())
     }
-    window.addEventListener('scroll', observe, { passive: true })
-    observe()
-    return () => window.removeEventListener('scroll', observe)
+    const previousRestoration = window.history.scrollRestoration
+    window.history.scrollRestoration = 'manual'
+    window.addEventListener('hashchange', navigate)
+    return () => {
+      window.history.scrollRestoration = previousRestoration
+      window.removeEventListener('hashchange', navigate)
+    }
   }, [])
+
+  useLayoutEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' })
+  }, [activeSection])
+
+  useEffect(() => {
+    if (activeSection !== 'home') return
+    let frame = 0
+    const update = () => {
+      frame = 0
+      const maximum = document.documentElement.scrollHeight - window.innerHeight
+      const progress = maximum > 0 ? Math.min(1, Math.max(0, window.scrollY / maximum)) : 0
+      const stage =
+        progress < 0.075
+          ? 'entry'
+          : progress < 0.22
+            ? 'statement'
+            : progress < 0.62
+              ? 'work'
+              : progress < 0.87
+                ? 'machine'
+                : 'contact'
+      if (journey.current) {
+        journey.current.dataset.stage = stage
+        journey.current.style.setProperty('--journey-progress', String(progress))
+      }
+    }
+    const schedule = () => {
+      if (!frame) frame = requestAnimationFrame(update)
+    }
+    update()
+    window.addEventListener('scroll', schedule, { passive: true })
+    window.addEventListener('resize', schedule)
+    return () => {
+      cancelAnimationFrame(frame)
+      window.removeEventListener('scroll', schedule)
+      window.removeEventListener('resize', schedule)
+    }
+  }, [activeSection])
 
   useEffect(() => {
     const visibility = () => audio.current?.setVisible(!document.hidden)
@@ -165,6 +212,7 @@ export default function App() {
   return (
     <div
       className={`experience ${ready ? 'is-ready' : ''} ${reducedMotion ? 'motion-paused' : ''}`}
+      data-view={activeSection}
     >
       <a className="skip-link" href="#work">
         Skip to selected work
@@ -232,7 +280,7 @@ export default function App() {
         </div>
       </header>
 
-      <aside className="chapter-nav" aria-label="Page chapters">
+      <aside className="chapter-nav" aria-label="Page chapters" hidden={activeSection === 'home'}>
         {['home', 'work', 'contact'].map((section, i) => (
           <a
             key={section}
@@ -247,35 +295,108 @@ export default function App() {
       </aside>
 
       <main>
-        <section id="home" className="hero" aria-labelledby="hero-title">
-          <a href="#work" className="scroll-invitation">
-            <span>{ready ? 'SCROLL TO EXPLORE' : 'ENTERING AETHER'}</span>
-            <i />
-          </a>
-          <div className="hero-bottom">
-            <div>
-              <p className="eyebrow">INDEPENDENT CREATIVE STUDIO</p>
-              <h1 id="hero-title">
-                Digital worlds.
+        <section
+          id="home"
+          className="hero"
+          aria-labelledby="hero-title"
+          hidden={activeSection !== 'home'}
+        >
+          <div className="hero-stage" ref={journey} data-stage="entry">
+            <button
+              className="scroll-invitation"
+              onClick={() =>
+                window.scrollBy({
+                  top: window.innerHeight,
+                  behavior: reducedMotion ? 'instant' : 'smooth',
+                })
+              }
+              aria-label="Scroll through the 3D world"
+            >
+              <span>{ready ? 'SCROLL TO EXPLORE' : 'ENTERING AETHER'}</span>
+              <i />
+            </button>
+            <div className="hero-bottom">
+              <div>
+                <p className="eyebrow">INDEPENDENT CREATIVE STUDIO</p>
+                <h1 id="hero-title">
+                  Digital worlds.
+                  <br />
+                  <span>Human wonder.</span>
+                </h1>
+              </div>
+              <p className="hero-description">
+                At the intersection of art,
                 <br />
-                <span>Human wonder.</span>
-              </h1>
+                technology, and the unexpected.
+              </p>
+              <a className="round-link" href="#work" aria-label="Explore selected work">
+                ↓
+              </a>
             </div>
-            <p className="hero-description">
-              At the intersection of art,
-              <br />
-              technology, and the unexpected.
-            </p>
-            <a className="round-link" href="#work" aria-label="Explore selected work">
-              ↓
-            </a>
-          </div>
-          <div className="hero-coordinate" aria-hidden="true">
-            EXP. 001 <span>—</span> THE SPACE BETWEEN
+            <div className="journey-statement journey-overlay" aria-hidden="true">
+              <p className="journey-title">
+                IMAGINATION
+                <br />
+                IN
+                <br />
+                <span>MOTION.</span>
+              </p>
+              <p className="journey-description">
+                We shape worlds
+                <br />
+                at the edge of possibility.
+                <br />
+                Art, code, and human curiosity.
+              </p>
+            </div>
+            <div className="journey-work journey-overlay">
+              <p className="eyebrow">SELECTED EXPLORATIONS / 01 — 04</p>
+              <p>Liminal.</p>
+              <p className="journey-project-description">
+                An imagined world.
+                <br />A new way to feel.
+              </p>
+              <a href="#work" className="text-link">
+                Enter our work <Arrow />
+              </a>
+            </div>
+            <div className="journey-machine journey-overlay">
+              <p className="eyebrow">EXPLORATION 003 / ORBITAL</p>
+              <p>
+                Between matter
+                <br />
+                and imagination.
+              </p>
+            </div>
+            <div className="journey-contact journey-overlay">
+              <p className="eyebrow">THE NEXT WORLD IS OURS TO MAKE</p>
+              <p>
+                Let's make
+                <br />
+                <em>the unexpected.</em>
+              </p>
+              <a href="#contact" className="text-link">
+                Start a conversation <Arrow />
+              </a>
+            </div>
+            <div className="interaction-hint" aria-hidden="true">
+              <span className="pointer-hint">
+                MOVE TO LEAVE A TRACE <span>·</span> HOLD &amp; DRAG TO ORBIT
+              </span>
+              <span className="touch-hint">SCROLL TO JOURNEY THROUGH</span>
+            </div>
+            <div className="journey-progress" aria-hidden="true">
+              <span />
+            </div>
           </div>
         </section>
 
-        <section id="work" className="work-section" aria-labelledby="work-title">
+        <section
+          id="work"
+          className="work-section"
+          aria-labelledby="work-title"
+          hidden={activeSection !== 'work'}
+        >
           <div className="section-heading">
             <p className="eyebrow">01 / SELECTED EXPLORATIONS</p>
             <span className="eyebrow">2025 — 2026</span>
@@ -331,7 +452,12 @@ export default function App() {
           </div>
         </section>
 
-        <section id="contact" className="contact-section" aria-labelledby="contact-title">
+        <section
+          id="contact"
+          className="contact-section"
+          aria-labelledby="contact-title"
+          hidden={activeSection !== 'contact'}
+        >
           <div className="section-heading">
             <p className="eyebrow">02 / OPEN POSSIBILITIES</p>
             <span className="availability">

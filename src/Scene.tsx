@@ -1,5 +1,8 @@
 import { useEffect, useRef } from 'react'
 import * as THREE from 'three'
+import { createAtmosphere } from './Atmosphere'
+import { createSceneInteraction } from './SceneInteraction'
+import { createSceneWorlds } from './SceneWorlds'
 
 type SceneProps = {
   reducedMotion: boolean
@@ -84,6 +87,7 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
     let contextLost = false
     let ready = false
     let cleanup: (() => void) | undefined
+    const effectDisposers: Array<() => void> = []
     const geometries = new Set<THREE.BufferGeometry>()
     const materials = new Set<THREE.Material>()
     const renderTargets = new Set<THREE.WebGLRenderTarget>()
@@ -104,6 +108,7 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
     const releaseResources = () => {
       cleanup?.()
       cleanup = undefined
+      effectDisposers.splice(0).forEach((dispose) => dispose())
       geometries.forEach((item) => item.dispose())
       materials.forEach((item) => item.dispose())
       renderTargets.forEach((item) => item.dispose())
@@ -160,7 +165,7 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
       host.appendChild(canvas)
 
       const scene = new THREE.Scene()
-      scene.fog = new THREE.FogExp2(0x031011, 0.045)
+      scene.fog = new THREE.FogExp2(0x031011, 0.026)
       const camera = new THREE.PerspectiveCamera(
         42,
         window.innerWidth / window.innerHeight,
@@ -354,20 +359,33 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
       emblem.add(glyph)
 
       const ribbons = new THREE.Group()
-      world.add(ribbons)
+      // The ring and both tails are a single organism. Local attachment points
+      // must inherit the emblem's pointer tilt, bobbing and scroll transform.
+      emblem.add(ribbons)
+      const tailTime = { value: 0 }
+      const tailChrome = material(chrome.clone())
+      const tailDark = material(darkChrome.clone())
+      for (const surface of [tailChrome, tailDark]) {
+        surface.onBeforeCompile = (shader) => {
+          shader.uniforms.uTailTime = tailTime
+          shader.vertexShader = `uniform float uTailTime;\n${shader.vertexShader}`.replace(
+            '#include <begin_vertex>',
+            `#include <begin_vertex>
+              float distanceFromRoot = max(0., -position.y);
+              float flex = smoothstep(0., 1.2, distanceFromRoot);
+              transformed.x += sin(distanceFromRoot * 1.3 - uTailTime * .5) * .18 * flex;
+              transformed.z += sin(distanceFromRoot * 1.7 - uTailTime * .4) * .23 * flex;`,
+          )
+        }
+        surface.customProgramCacheKey = () => 'aether-attached-tail-v2'
+      }
       for (let strand = 0; strand < 2; strand += 1) {
         const points: THREE.Vector3[] = []
         for (let i = 0; i <= 100; i += 1) {
           const t = i / 100
           const theta = t * 5.5 + strand * Math.PI
-          const spread = 0.86 + Math.pow(t, 2) * 0.55
-          points.push(
-            new THREE.Vector3(
-              Math.cos(theta) * spread,
-              -0.03 - t * 7.3,
-              Math.sin(theta) * 0.5 - 0.025,
-            ),
-          )
+          const spread = 0.89 + Math.pow(t, 2) * 0.55
+          points.push(new THREE.Vector3(Math.cos(theta) * spread, -t * 7.3, Math.sin(theta) * 0.5))
         }
         const path = new THREE.CatmullRomCurve3(points)
         ribbons.add(
@@ -381,7 +399,7 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
                 false,
               ),
             ),
-            chrome,
+            tailChrome,
           ),
         )
         const edgePath = new THREE.CatmullRomCurve3(
@@ -398,13 +416,13 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
                 false,
               ),
             ),
-            darkChrome,
+            tailDark,
           ),
         )
       }
 
       const random = seededRandom(27182)
-      const count = softwareRenderer ? (smallScreen ? 1400 : 2000) : smallScreen ? 4200 : 12500
+      const count = softwareRenderer ? 140 : smallScreen ? 600 : 1700
       const positions = new Float32Array(count * 3)
       const colors = new Float32Array(count * 3)
       const sizes = new Float32Array(count)
@@ -564,8 +582,38 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
         creatures.push({ group, anchor, phase: random() * Math.PI * 2 })
       }
 
+      const atmosphere = createAtmosphere(scene, softwareRenderer, smallScreen)
+      effectDisposers.push(() => atmosphere.dispose())
+      const worlds = createSceneWorlds(scene, softwareRenderer)
+      effectDisposers.push(() => worlds.dispose())
+      const interaction = createSceneInteraction(
+        scene,
+        camera,
+        canvas,
+        reducedMotion,
+        softwareRenderer,
+      )
+      effectDisposers.push(() => interaction.dispose())
+      const readProgress = () => {
+        if (location.hash && location.hash !== '#home') return 0
+        return THREE.MathUtils.clamp(
+          window.scrollY / Math.max(1, document.documentElement.scrollHeight - innerHeight),
+          0,
+          1,
+        )
+      }
+      // Position, size and orientation are authored as one connected camera journey.
+      const poses = [
+        [0, 0, 0, 1.15, 0, 0, 0, 10.8],
+        [0.8, 0.1, 0, 2.65, 0.1, -0.55, -0.08, 10.8],
+        [0, 3, -4, 0.001, 0.2, 1.2, 0.25, 11.8],
+        [0, 3, -4, 0.001, 0.2, 1.2, 0.25, 11.8],
+        [0, 4, -5, 0.001, 0.1, 2, 1.6, 8.9],
+        [0, 0, 0, 0.95, 0.08, 0.45, Math.PI, 10.8],
+      ]
+      const stops = [0, 0.15, 0.25, 0.5, 0.75, 1]
       const pointer = new THREE.Vector2()
-      let targetProgress = Math.max(0, window.scrollY / window.innerHeight)
+      let targetProgress = readProgress()
       let progress = targetProgress
       let elapsed = 0
       let previousTime = 0
@@ -573,41 +621,46 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
       const render = (timestamp: number) => {
         frame = 0
         if (disposed || contextLost || document.hidden) return
-        const delta = previousTime ? Math.min((timestamp - previousTime) / 1000, 0.05) : 0
+        const wallDelta = previousTime ? (timestamp - previousTime) / 1000 : 0.016
+        const delta = Math.min(wallDelta, 0.05)
         previousTime = timestamp
         if (!reducedMotion) elapsed += delta
         progress = reducedMotion
           ? targetProgress
-          : THREE.MathUtils.damp(progress, targetProgress, 4, delta || 0.016)
-        const scroll = Math.min(progress, 3)
+          : THREE.MathUtils.damp(progress, targetProgress, 7, Math.min(wallDelta, 0.4))
+        const scroll = THREE.MathUtils.clamp(progress, 0, 1)
         particlesMaterial.uniforms.uTime.value = elapsed
-
-        if (!reducedMotion) {
-          world.rotation.y = Math.sin(elapsed * 0.09) * 0.05 + scroll * 0.24
-          world.rotation.z = Math.sin(elapsed * 0.07) * 0.014 - scroll * 0.055
-          emblem.rotation.y = Math.sin(elapsed * 0.18) * 0.14 + pointer.x * 0.16
-          emblem.rotation.x = Math.cos(elapsed * 0.15) * 0.05 - pointer.y * 0.09
-          emblem.position.y = Math.sin(elapsed * 0.4) * 0.035 + scroll * 1.9
-          ribbons.rotation.y = Math.sin(elapsed * 0.13) * 0.08
-          camera.position.x = THREE.MathUtils.damp(
-            camera.position.x,
-            pointer.x * 0.24 + scroll * 0.7,
-            2,
-            delta || 0.016,
-          )
-          camera.position.y = THREE.MathUtils.damp(
-            camera.position.y,
-            pointer.y * 0.16 - scroll * 0.25,
-            2,
-            delta || 0.016,
-          )
-        } else {
-          emblem.position.y = scroll * 1.9
-          world.rotation.y = scroll * 0.24
-          world.rotation.z = -scroll * 0.055
-        }
-        world.position.y = scroll * 0.4
-        particlesMaterial.uniforms.uOpacity.value = Math.max(0.38, 0.87 - scroll * 0.2)
+        tailTime.value = elapsed
+        atmosphere.update(elapsed, scroll)
+        worlds.update(elapsed, scroll)
+        const input = interaction.update(delta || 0.016, elapsed, activeRenderer.getPixelRatio())
+        const index = Math.min(4, Math.max(0, stops.findIndex((stop) => stop > scroll) - 1))
+        const keyIndex = scroll >= 1 ? 4 : index
+        const blend = THREE.MathUtils.smoothstep(
+          (scroll - stops[keyIndex]) / (stops[keyIndex + 1] - stops[keyIndex]),
+          0,
+          1,
+        )
+        const pose = poses[keyIndex].map((n, i) =>
+          THREE.MathUtils.lerp(n, poses[keyIndex + 1][i], blend),
+        )
+        world.rotation.set(0, 0, 0)
+        world.position.set(0, 0, 0)
+        emblem.position.set(pose[0], pose[1] + Math.sin(elapsed * 0.4) * 0.035, pose[2])
+        emblem.scale.setScalar(pose[3])
+        emblem.rotation.set(
+          pose[4] - pointer.y * 0.055,
+          pose[5] + Math.sin(elapsed * 0.18) * 0.1 + pointer.x * 0.12,
+          pose[6],
+        )
+        const orbitRadius = pose[7] + (innerWidth < 768 ? 4.5 : 0) - input.zoom * 1.7
+        camera.position.set(
+          Math.sin(input.yaw) * orbitRadius + pointer.x * 0.22,
+          Math.sin(input.pitch) * orbitRadius + pointer.y * 0.15,
+          Math.cos(input.yaw) * orbitRadius,
+        )
+        rimLight.intensity = 25 + input.burst * 25
+        particlesMaterial.uniforms.uOpacity.value = 0.5
         for (const creature of creatures) {
           creature.group.position.y =
             creature.anchor.y + Math.sin(elapsed * 0.24 + creature.phase) * 0.28
@@ -615,7 +668,7 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
             creature.anchor.x + Math.sin(elapsed * 0.1 + creature.phase) * 0.18
           creature.group.rotation.z = Math.sin(elapsed * 0.17 + creature.phase) * 0.13
         }
-        camera.lookAt(0, -scroll * 0.3, 0)
+        camera.lookAt(0, 0, 0)
 
         try {
           activeRenderer.render(scene, camera)
@@ -649,16 +702,20 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
         const width = window.innerWidth
         const height = window.innerHeight
         camera.aspect = width / height
-        camera.position.z = width < 768 ? 13.5 : 10.8
         camera.updateProjectionMatrix()
         activeRenderer.setPixelRatio(pixelRatio(width))
         activeRenderer.setSize(width, height)
         particlesMaterial.uniforms.uPixelRatio.value = activeRenderer.getPixelRatio()
-        targetProgress = Math.max(0, window.scrollY / height)
+        targetProgress = readProgress()
         requestRender()
       }
       const pointerMove = (event: PointerEvent) => {
-        if (reducedMotion || event.pointerType === 'touch') return
+        if (
+          reducedMotion ||
+          event.pointerType === 'touch' ||
+          (location.hash && location.hash !== '#home')
+        )
+          return
         pointer.set(
           (event.clientX / window.innerWidth) * 2 - 1,
           -(event.clientY / window.innerHeight) * 2 + 1,
@@ -666,7 +723,7 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
       }
       const pointerLeave = () => pointer.set(0, 0)
       const scroll = () => {
-        targetProgress = Math.max(0, window.scrollY / window.innerHeight)
+        targetProgress = readProgress()
         requestRender()
       }
       const visibilityChange = () => {
@@ -705,6 +762,7 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
       }
       window.addEventListener('resize', resize)
       window.addEventListener('scroll', scroll, { passive: true })
+      window.addEventListener('hashchange', scroll)
       window.addEventListener('pointermove', pointerMove, { passive: true })
       document.addEventListener('pointerleave', pointerLeave)
       document.addEventListener('visibilitychange', visibilityChange)
@@ -713,6 +771,7 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
       cleanup = () => {
         window.removeEventListener('resize', resize)
         window.removeEventListener('scroll', scroll)
+        window.removeEventListener('hashchange', scroll)
         window.removeEventListener('pointermove', pointerMove)
         document.removeEventListener('pointerleave', pointerLeave)
         document.removeEventListener('visibilitychange', visibilityChange)

@@ -26,13 +26,18 @@ export default defineConfig({
   projects: [
     {
       name: 'desktop',
-      grepInvert: /@fallback/,
+      grepInvert: /@fallback|@interaction/,
       use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
     },
     {
       name: 'mobile',
-      grepInvert: /@fallback/,
+      grepInvert: /@fallback|@interaction/,
       use: { ...devices['Pixel 7'], viewport: { width: 390, height: 844 } },
+    },
+    {
+      name: 'interaction',
+      grep: /@interaction/,
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
     },
     {
       name: 'no-webgl',

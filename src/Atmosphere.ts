@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { sampleJourney } from './Journey'
+import { sampleJourney, smooth } from './Journey'
 
 /** The same current deforms continuously around the journey's central axis. */
 const currentField = /* glsl */ `
@@ -8,6 +8,10 @@ const currentField = /* glsl */ `
   uniform vec4 uWeights;
   uniform float uEnergy;
   uniform float uDarkness;
+  uniform vec2 uPointer;
+  uniform float uPointerStrength;
+  uniform float uAspect;
+  uniform float uFieldOpacity;
   const float PI = 3.14159265359;
   float motionTime() { return mix(uTime, uScroll, uWeights.x); }
 
@@ -32,6 +36,8 @@ const currentField = /* glsl */ `
       (t - 0.5) * 13.5 + sin(t * 8.0 + armPhase) * 0.3,
       sin(angle) * radius * 0.72
     );
+    spine.y += -12.0 * (1.0 - smoothstep(.205, .29, uScroll / 55.0))
+      + 10.0 * smoothstep(.60, .67, uScroll / 55.0);
     float orbit = t * PI * 2.0 + uTime * 0.35;
     float cross = branch * PI * 2.0;
     float torusRadius = 1.30 + cos(cross) * 0.34;
@@ -96,18 +102,25 @@ const dustVertex = /* glsl */ `
     }
     vec4 mv = modelViewMatrix * vec4(p, 1.0);
     gl_Position = projectionMatrix * mv;
+    vec2 pointerDelta = gl_Position.xy / max(.01, gl_Position.w) - uPointer;
+    pointerDelta.x *= uAspect;
+    float touch = exp(-dot(pointerDelta, pointerDelta) * 7.0) * uPointerStrength;
+    mv.xy += vec2(pointerDelta.x / uAspect, pointerDelta.y) * touch * .26;
+    gl_Position = projectionMatrix * mv;
     float perspective = 12.0 / max(2.0, -mv.z);
     // Larger pearlescent grains fill the spine's turbulent clouds, while the
     // ring and the lower chamber retain their original fine dust density.
     float grainScale = 1.0 + uWeights.x * (0.30 + 0.28 * cluster);
     gl_PointSize = clamp(aDust.y * grainScale * perspective * uPixelRatio, 0.65, 12.0 * uPixelRatio);
     vColor = currentColor(lane, t);
+    vColor += mix(vec3(.28, .72, .29), vec3(.58, .53, .85), uWeights.x) * touch * 1.8;
     vBokeh = bokeh;
     float shimmer = 0.73 + sin(uTime * 1.7 + phase * 7.0) * 0.2;
     float seam = smoothstep(0.0, 0.045, t) * (1.0 - smoothstep(0.94, 1.0, t));
     float distanceFade = exp(-max(0.0, -mv.z - 13.0) * 0.043);
     vAlpha = shimmer * seam * distanceFade * mix(0.72, 0.19, bokeh);
     vAlpha *= (1.0 - uDarkness * 0.23) * (1.0 + uWeights.x * 0.16);
+    vAlpha *= uFieldOpacity;
   }
 `
 
@@ -159,7 +172,7 @@ const filamentVertex = /* glsl */ `
     vColor = currentColor(lane, t);
     float travel = fract(t * 3.0 - motionTime() * (0.13 + uEnergy * 0.16) + lane);
     float pulse = pow(max(0.0, 1.0 - abs(travel - 0.5) * 2.0), 7.0);
-    vAlpha = fan * (0.012 + pulse * 0.10) * (1.0 - uDarkness * 0.65);
+    vAlpha = fan * (0.012 + pulse * 0.10) * (1.0 - uDarkness * 0.65) * uFieldOpacity;
   }
 `
 
@@ -244,6 +257,10 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
     uEnergy: { value: 0 },
     uDarkness: { value: 0 },
     uPixelRatio: { value: 1 },
+    uPointer: { value: new THREE.Vector2() },
+    uPointerStrength: { value: 0 },
+    uAspect: { value: 1 },
+    uFieldOpacity: { value: 1 },
   }
   const dustGeometry = new THREE.BufferGeometry()
   dustGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
@@ -311,7 +328,8 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
 
   let disposed = false
   return {
-    update(time: number, progress: number, pixelRatio?: number) {
+    update(time: number, progress: number, pixelRatio?: number,
+      pointer?: { ndc: THREE.Vector2; strength: number; aspect: number }) {
       if (disposed) return
       const journey = sampleJourney(progress)
       uniforms.uTime.value = Number.isFinite(time) ? time : 0
@@ -320,6 +338,13 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
       uniforms.uWeights.value.set(journey.spine, journey.machine, journey.scales, journey.end)
       uniforms.uEnergy.value = journey.energy
       uniforms.uDarkness.value = journey.darkness
+      uniforms.uFieldOpacity.value = .06 * (1 - smooth(.10, .18, progress))
+        + journey.spine * smooth(.245, .31, progress) * (1 - smooth(.61, .67, progress))
+        + journey.machine * .10 + journey.scales * .05
+      if (pointer) uniforms.uPointer.value.copy(pointer.ndc)
+      else uniforms.uPointer.value.set(0, 0)
+      uniforms.uPointerStrength.value = pointer?.strength ?? 0
+      uniforms.uAspect.value = pointer?.aspect ?? 1
       const ratio = pixelRatio ?? window.devicePixelRatio ?? 1
       uniforms.uPixelRatio.value = THREE.MathUtils.clamp(Number.isFinite(ratio) ? ratio : 1, 0.4, 2)
     },

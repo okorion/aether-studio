@@ -5,6 +5,8 @@ import { createSceneInteraction } from './SceneInteraction'
 import { createSceneWorlds } from './SceneWorlds'
 import { sampleJourney, smooth } from './Journey'
 import { createSceneGlow } from './SceneGlow'
+import { createSceneForest } from './SceneForest'
+import { createSceneLayers } from './SceneLayers'
 
 type SceneProps = {
   reducedMotion: boolean
@@ -327,7 +329,7 @@ export default function Scene({ reducedMotion, active, onReady }: SceneProps) {
 
       const ringSegments = softwareRenderer ? 64 : 144
       const ring = new THREE.Mesh(
-        geometry(new THREE.TorusGeometry(0.89, 0.029, softwareRenderer ? 6 : 12, ringSegments)),
+        geometry(new THREE.TorusGeometry(0.89, 0.052, softwareRenderer ? 6 : 12, ringSegments)),
         chrome,
       )
       const ringInner = new THREE.Mesh(
@@ -610,6 +612,10 @@ export default function Scene({ reducedMotion, active, onReady }: SceneProps) {
       effectDisposers.push(() => atmosphere.dispose())
       const worlds = createSceneWorlds(scene, softwareRenderer, smallScreen)
       effectDisposers.push(() => worlds.dispose())
+      const forest = createSceneForest(scene, softwareRenderer, smallScreen)
+      effectDisposers.push(() => forest.dispose())
+      const layers = createSceneLayers(scene)
+      effectDisposers.push(() => layers.dispose())
       const glow = softwareRenderer || smallScreen ? undefined : createSceneGlow(activeRenderer, scene, camera)
       glow?.resize(innerWidth, innerHeight, activeRenderer.getPixelRatio())
       if (glow) effectDisposers.push(() => glow.dispose())
@@ -640,7 +646,6 @@ export default function Scene({ reducedMotion, active, onReady }: SceneProps) {
       const centre = new THREE.Vector3(0, 0, 0)
       const projectedCentre = new THREE.Vector3()
       const modelCentre = new THREE.Vector3()
-      const pointer = new THREE.Vector2()
       let targetProgress = readProgress()
       let progress = targetProgress
       let elapsed = preserved.current.elapsed
@@ -672,8 +677,6 @@ export default function Scene({ reducedMotion, active, onReady }: SceneProps) {
         particlesMaterial.uniforms.uTime.value = elapsed
         tailTime.value = elapsed
         tailLift.value = state.end
-        atmosphere.update(elapsed, scroll, activeRenderer.getPixelRatio())
-        worlds.update(elapsed, scroll)
         interaction.setOrbitEnabled(state.orbitEnabled)
         interaction.setFocus(centre)
         const input = interaction.update(delta || 0.016, elapsed, activeRenderer.getPixelRatio())
@@ -683,22 +686,26 @@ export default function Scene({ reducedMotion, active, onReady }: SceneProps) {
         const fold = smooth(.205, .295, scroll) * (1 - state.end)
         // The original organism unfolds into the spine. Keep its free tails
         // from crossing the project screens after that transformation settles.
-        const emblemOpacity = 1 - state.spine
+        const emblemOpacity = (1 - smooth(.24, .30, scroll)) + smooth(.88, .955, scroll)
         emblem.visible = emblemOpacity > .001
         ringSurface.opacity = innerSurface.opacity = tailChrome.opacity = tailDark.opacity = emblemOpacity
         luminous.opacity = .26 * emblemOpacity
         world.rotation.set(0, 0, 0)
         world.position.copy(centre)
         emblem.position.set(0, 0, 0)
-        emblem.scale.setScalar(1.15 + fold * .2)
-        emblem.rotation.set(fold * Math.PI / 2, 0, 0)
-        ribbons.rotation.x = -fold * Math.PI / 2
-        glyph.scale.setScalar(1 - fold * .92)
-        glyphChrome.opacity = 1 - fold
+        const statementScale = smooth(.10, .18, scroll) * (1 - smooth(.25, .31, scroll))
+        particles.visible = scroll < .12 || scroll > .93
+        emblem.scale.setScalar(1.15 + statementScale * .48)
+        emblem.rotation.set(0, smooth(.21, .30, scroll) * .7 * (1 - state.end), 0)
+        ribbons.rotation.x = 0
+        ribbons.visible = statementScale < .95
+        tailChrome.opacity = tailDark.opacity = emblemOpacity * (1 - statementScale)
+        glyph.scale.setScalar(1)
+        glyphChrome.opacity = emblemOpacity
         glyph.visible = glyphChrome.opacity > .005
         ringSurface.roughness = .12 + fold * .1
         const orbitRadius = state.radius + (innerWidth < 768 ? 4.8 : 0)
-        const azimuth = state.azimuth + (input.yaw + pointer.x * .012) * state.orbitWeight
+        const azimuth = state.azimuth + (input.yaw + input.field.ndc.x * .012 * input.field.strength) * state.orbitWeight
         const elevation = THREE.MathUtils.clamp(state.elevation + input.pitch * state.orbitWeight, -.72, .72)
         camera.position.set(
           Math.sin(azimuth) * Math.cos(elevation) * orbitRadius,
@@ -707,11 +714,11 @@ export default function Scene({ reducedMotion, active, onReady }: SceneProps) {
         )
         activeRenderer.toneMappingExposure = state.exposure
         ambient.intensity = 1.1 - state.darkness * .68
-        keyLight.intensity = 3.4 + state.scales * 2 - state.darkness * 1.8
+        keyLight.intensity = 3.4 - state.scales * .5 - state.darkness * 1.8
         rimLight.color.setHSL(.55 + state.spine * .19 + state.scales * .25, .8, .64)
         rimLight.intensity = 22 + state.energy * 12 + input.burst * 10
         warmLight.color.setHSL(.16 + state.spine * .64, .7, .62)
-        warmLight.intensity = 10 + state.spine * 14 + state.scales * 18
+        warmLight.intensity = 10 + state.spine * 14 + state.scales * 6
         keyLight.position.y = state.height + 5
         keyLight.target.position.copy(centre)
         keyLight.target.updateMatrixWorld()
@@ -728,6 +735,11 @@ export default function Scene({ reducedMotion, active, onReady }: SceneProps) {
         }
         camera.lookAt(centre)
         camera.updateMatrixWorld()
+        // Projection-based surface interaction must use this frame's camera.
+        worlds.update(elapsed, scroll, input.field, camera)
+        atmosphere.update(elapsed, scroll, activeRenderer.getPixelRatio(), input.field)
+        forest.update(elapsed, scroll, camera, input.field, activeRenderer.getPixelRatio())
+        layers.update(scroll, camera)
 
         try {
           activeRenderer.info.reset()
@@ -744,6 +756,7 @@ export default function Scene({ reducedMotion, active, onReady }: SceneProps) {
             canvas.dataset.focusY = projectedCentre.y.toFixed(4)
             canvas.dataset.orbitYaw = input.yaw.toFixed(4)
             canvas.dataset.renderProgress = scroll.toFixed(6)
+            canvas.dataset.pointerStrength = input.field.strength.toFixed(4)
             canvas.dataset.cameraY = camera.position.y.toFixed(4)
             canvas.dataset.targetY = centre.y.toFixed(4)
             canvas.dataset.modelY = emblem.getWorldPosition(modelCentre).y.toFixed(4)
@@ -817,19 +830,6 @@ export default function Scene({ reducedMotion, active, onReady }: SceneProps) {
         targetProgress = readProgress()
         requestRender()
       }
-      const pointerMove = (event: PointerEvent) => {
-        if (
-          reducedMotion ||
-          event.pointerType === 'touch' ||
-          (location.hash && location.hash !== '#home')
-        )
-          return
-        pointer.set(
-          (event.clientX / window.innerWidth) * 2 - 1,
-          -(event.clientY / window.innerHeight) * 2 + 1,
-        )
-      }
-      const pointerLeave = () => pointer.set(0, 0)
       const scroll = () => {
         targetProgress = readProgress()
         requestRender()
@@ -871,8 +871,6 @@ export default function Scene({ reducedMotion, active, onReady }: SceneProps) {
       window.addEventListener('resize', resize)
       window.addEventListener('scroll', scroll, { passive: true })
       window.addEventListener('hashchange', scroll)
-      window.addEventListener('pointermove', pointerMove, { passive: true })
-      document.addEventListener('pointerleave', pointerLeave)
       document.addEventListener('visibilitychange', visibilityChange)
       canvas.addEventListener('webglcontextlost', lost)
       canvas.addEventListener('webglcontextrestored', restored)
@@ -881,8 +879,6 @@ export default function Scene({ reducedMotion, active, onReady }: SceneProps) {
         window.removeEventListener('resize', resize)
         window.removeEventListener('scroll', scroll)
         window.removeEventListener('hashchange', scroll)
-        window.removeEventListener('pointermove', pointerMove)
-        document.removeEventListener('pointerleave', pointerLeave)
         document.removeEventListener('visibilitychange', visibilityChange)
         canvas.removeEventListener('webglcontextlost', lost)
         canvas.removeEventListener('webglcontextrestored', restored)

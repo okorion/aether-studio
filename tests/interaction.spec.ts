@@ -221,6 +221,86 @@ test('@interaction production scene accepts background drag and excludes navigat
   await page.mouse.up()
 })
 
+test('@interaction device and late scales reject pointer camera input until the lower ring', async ({ page }) => {
+  await page.addInitScript(() => {
+    const request = window.requestAnimationFrame.bind(window)
+    window.cameraTestFrames = 0
+    window.requestAnimationFrame = (callback) => request((timestamp) => {
+      window.cameraTestFrames++
+      callback(timestamp)
+    })
+  })
+  await readyScene(page)
+  const canvas = page.locator('.scene-canvas')
+  const moveToProgress = async (progress: number) => {
+    const expected = await page.evaluate((fraction) => {
+      const maximum = document.documentElement.scrollHeight - innerHeight
+      window.scrollTo({ top: maximum * fraction, behavior: 'instant' })
+      return (scrollY / maximum).toFixed(6)
+    }, progress)
+    // The stricter camera comparison needs the exact settled render position,
+    // not just the same chapter or the previous .0005 progress tolerance.
+    await expect(canvas).toHaveAttribute('data-render-progress', expected, {
+      timeout: process.env.CI ? 15_000 : 10_000,
+    })
+    return settledScene(page)
+  }
+  const freshCamera = async () => {
+    const before = await page.evaluate(() => window.cameraTestFrames)
+    // Scene telemetry is written every 15 rendered frames. Wait past a full
+    // interval so a stale diagnostic value cannot hide a pointer regression.
+    await expect.poll(() => page.evaluate(() => window.cameraTestFrames), {
+      timeout: process.env.CI ? 15_000 : 10_000,
+    }).toBeGreaterThan(before + 15)
+    return settledScene(page)
+  }
+  const unchangedCamera = async (before: Awaited<ReturnType<typeof settledScene>>) => {
+    const after = await freshCamera()
+    expect(Math.abs(after.viewAzimuth - before.viewAzimuth)).toBeLessThan(.0002)
+    expect(Math.abs(after.cameraY - before.cameraY)).toBeLessThan(.0002)
+    expect(Math.abs(after.targetY - before.targetY)).toBeLessThan(.0002)
+  }
+
+  for (const progress of [.72, .83, .90, .95]) {
+    const before = await moveToProgress(progress)
+    await expect(canvas).toHaveAttribute('data-orbit-enabled', 'false')
+    const savedYaw = Number(await canvas.getAttribute('data-orbit-yaw'))
+    await page.mouse.move(1100, 340, { steps: 8 })
+    await unchangedCamera(before)
+    await page.mouse.down()
+    await page.mouse.move(400, 390, { steps: 12 })
+    await expect(canvas).toHaveAttribute('data-camera-mode', 'idle')
+    await expect(page.locator('html')).not.toHaveClass(/scene-dragging/)
+    await unchangedCamera(before)
+    await page.mouse.up()
+    await page.mouse.dblclick(1100, 340)
+    await unchangedCamera(before)
+    expect(Math.abs(Number(await canvas.getAttribute('data-orbit-yaw')) - savedYaw)).toBeLessThan(.0002)
+  }
+
+  const lowerRing = await moveToProgress(1)
+  await expect(canvas).toHaveAttribute('data-orbit-enabled', 'true')
+  await page.mouse.move(1100, 340)
+  await page.mouse.down()
+  await page.mouse.move(650, 370, { steps: 12 })
+  await expect(canvas).toHaveAttribute('data-camera-mode', 'orbit')
+  const turned = await freshCamera()
+  expect(Math.abs(turned.viewAzimuth - lowerRing.viewAzimuth)).toBeGreaterThan(.2)
+
+  // Returning into the visible scale curtain cancels an already-held drag.
+  const lockedAgain = await moveToProgress(.95)
+  await expect(canvas).toHaveAttribute('data-orbit-enabled', 'false')
+  await expect(canvas).toHaveAttribute('data-camera-mode', 'idle')
+  await expect(page.locator('html')).not.toHaveClass(/scene-dragging/)
+  const retainedYaw = Number(await canvas.getAttribute('data-orbit-yaw'))
+  await page.mouse.move(1000, 420, { steps: 10 })
+  await unchangedCamera(lockedAgain)
+  await page.mouse.up()
+  await page.mouse.dblclick(1100, 340)
+  await unchangedCamera(lockedAgain)
+  expect(Math.abs(Number(await canvas.getAttribute('data-orbit-yaw')) - retainedYaw)).toBeLessThan(.0002)
+})
+
 test.describe('@interaction isolated rendered trail and input lifecycle', () => {
   let harnessCode = ''
 
@@ -345,6 +425,22 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
   })
 
   test('orbit locks preserve the chosen view and mechanical scroll can stop and reverse', async ({ page }) => {
+    const lockedBoundaries = await page.evaluate(() =>
+      [.235, .24, .45, .72, .83, .86, .89, .90, .94, .95, .96]
+        .map((progress) => window.interactionHarness.sampleJourney(progress)),
+    )
+    for (const state of lockedBoundaries) {
+      expect(state.orbitEnabled).toBe(false)
+      expect(state.orbitWeight).toBe(0)
+    }
+    const returningOrbit = await page.evaluate(() =>
+      [0, .97, 1].map((progress) => window.interactionHarness.sampleJourney(progress)),
+    )
+    for (const state of returningOrbit) {
+      expect(state.orbitEnabled).toBe(true)
+      expect(state.orbitWeight).toBeGreaterThan(0)
+    }
+    expect(returningOrbit[2].orbitWeight).toBe(1)
     for (let turn = 0; turn < 4; turn++) {
       await page.mouse.move(540, 220)
       await page.mouse.down()

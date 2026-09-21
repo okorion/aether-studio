@@ -59,6 +59,30 @@ export function createSceneWorlds(scene: THREE.Scene, software: boolean) {
   const panelGeometry = geo(new THREE.PlaneGeometry(2.65, 1.75))
   const panels: THREE.Group[] = []
   const names = ['LIMINAL', 'PULSE', 'ORBITAL', 'SOLSTICE']
+  for (let strand = 0; strand < 3; strand++) {
+    const points: THREE.Vector3[] = []
+    for (let i = 0; i <= 100; i++) {
+      const t = i / 100
+      const angle = t * 23 + (strand * Math.PI * 2) / 3
+      const width = 0.35 + Math.pow(Math.sin(t * Math.PI * 4), 2) * 0.5
+      points.push(
+        new THREE.Vector3(Math.cos(angle) * width, (t - 0.5) * 12, Math.sin(angle) * width - 1),
+      )
+    }
+    mesh(
+      gallery,
+      geo(
+        new THREE.TubeGeometry(
+          new THREE.CatmullRomCurve3(points),
+          software ? 70 : 180,
+          strand === 0 ? 0.13 : 0.075,
+          software ? 5 : 8,
+          false,
+        ),
+      ),
+      silver,
+    )
+  }
   for (let i = 0; i < 4; i++) {
     const canvas = document.createElement('canvas')
     canvas.width = 640
@@ -198,6 +222,37 @@ export function createSceneWorlds(scene: THREE.Scene, software: boolean) {
   const chamberLight = new THREE.PointLight(0x41ffd5, 28, 9, 2)
   chamberLight.position.set(0, -1.3, 2)
   chamber.add(chamberLight)
+  const groundMaterial = mat(
+    new THREE.MeshStandardMaterial({
+      color: 0x040e12,
+      metalness: 0.5,
+      roughness: 0.3,
+      envMapIntensity: 0.4,
+    }),
+  )
+  const groundGeometry = geo(new THREE.PlaneGeometry(18, 14, 36, 28))
+  const groundVertices = groundGeometry.attributes.position
+  for (let i = 0; i < groundVertices.count; i++) {
+    const x = groundVertices.getX(i)
+    const y = groundVertices.getY(i)
+    groundVertices.setZ(i, Math.sin(x * 3 + y) * Math.cos(y * 2.8) * 0.06)
+  }
+  groundGeometry.computeVertexNormals()
+  const ground = mesh(chamber, groundGeometry, groundMaterial, 0, -2.49, 0)
+  ground.rotation.x = -Math.PI / 2
+  const rockGeometry = geo(new THREE.IcosahedronGeometry(1, 1))
+  const rocks = new THREE.InstancedMesh(rockGeometry, groundMaterial, software ? 14 : 42)
+  const dummy = new THREE.Object3D()
+  for (let i = 0; i < rocks.count; i++) {
+    const angle = i * 2.39996
+    const radius = 2.6 + (i % 7) * 0.37
+    dummy.position.set(Math.cos(angle) * radius, -2.36, Math.sin(angle) * radius)
+    dummy.rotation.set(i * 0.7, i * 1.2, i * 0.5)
+    dummy.scale.set(0.22 + (i % 3) * 0.17, 0.08 + (i % 4) * 0.05, 0.17 + (i % 5) * 0.13)
+    dummy.updateMatrix()
+    rocks.setMatrixAt(i, dummy.matrix)
+  }
+  chamber.add(rocks)
   return {
     update(time: number, progress: number) {
       const g = envelope(progress, 0.19, 0.25, 0.56, 0.66)
@@ -236,6 +291,7 @@ export function createSceneWorlds(scene: THREE.Scene, software: boolean) {
     },
     dispose() {
       scene.remove(gallery, chamber)
+      rocks.dispose()
       geometries.forEach((g) => g.dispose())
       materials.forEach((m) => m.dispose())
       textures.forEach((t) => t.dispose())

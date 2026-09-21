@@ -351,7 +351,7 @@ export default function App() {
             </div>
             <div className="journey-work journey-overlay">
               <p className="eyebrow">SELECTED EXPLORATIONS / 01 — 04</p>
-              <p>Liminal.</p>
+              <p>Selected worlds.</p>
               <p className="journey-project-description">
                 An imagined world.
                 <br />A new way to feel.

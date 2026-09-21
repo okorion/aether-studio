@@ -239,7 +239,8 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
     fragmentShader: dustFragment,
     transparent: true,
     depthWrite: false,
-    blending: THREE.AdditiveBlending,
+    // Reflections retain their gold/teal surfaces even when many spheres overlap.
+    blending: THREE.NormalBlending,
   })
   const particles = new THREE.Points(dustGeometry, dustMaterial)
   particles.name = 'aether-current-particles'

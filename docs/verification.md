@@ -25,6 +25,8 @@
 
 `WEBGL_lose_context`를 사용한 실제 컨텍스트 손실에서는 fallback이 표시되고, 복구 후 canvas가 하나만 유지되며 3D 화면으로 복귀하는 것을 확인했습니다. 여러 WebGL 브라우저와 캡처를 동시에 실행한 최종 검수 중 timeout이 발생해 테스트 worker를 1개로 고정했습니다. 후속 서버 로그에서 Playwright HTML 산출물이 Vite 전체 새로고침을 유발하는 것도 확인해 `.qa/`를 파일 감시에서 제외했습니다.
 
+Linux CI의 WebGL 입력 시간 초과는 별도로 조사했습니다. SwiftShader와 CPU 12배 제한 재현에서 개발 서버의 첫 클릭은 시간 초과됐고 production preview의 동일 흐름은 통과했습니다. CI는 명시적 SwiftShader와 이미 생성된 production 빌드를 사용하며, assertion·timeout은 그대로 유지합니다. 실패 시 trace와 보고서를 GitHub artifact로 보존합니다.
+
 ## 검증 범위와 한계
 
 Chromium 및 Chromium 모바일 에뮬레이션으로 검증했습니다. 실제 휴대폰, Safari, Firefox와 저사양 GPU 장기 성능은 미검증입니다. GPU fallback은 단순한 정적 장면이며 3D 효과를 대신하지 않습니다. 브랜드·프로젝트·연락처는 초기 콘셉트이므로 실제 서비스 콘텐츠로 교체해야 합니다.

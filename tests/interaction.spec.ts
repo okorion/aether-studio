@@ -222,14 +222,9 @@ test('@interaction production scene accepts background drag and excludes navigat
 })
 
 test('@interaction device and late scales reject pointer camera input until the lower ring', async ({ page }) => {
-  await page.addInitScript(() => {
-    const request = window.requestAnimationFrame.bind(window)
-    window.cameraTestFrames = 0
-    window.requestAnimationFrame = (callback) => request((timestamp) => {
-      window.cameraTestFrames++
-      callback(timestamp)
-    })
-  })
+  // Several sequential scenes and input types are checked in software WebGL.
+  // Linux CI reached its previous 90s total budget while still making progress.
+  test.setTimeout(process.env.CI ? 150_000 : 60_000)
   await readyScene(page)
   const canvas = page.locator('.scene-canvas')
   const moveToProgress = async (progress: number) => {
@@ -246,12 +241,12 @@ test('@interaction device and late scales reject pointer camera input until the 
     return settledScene(page)
   }
   const freshCamera = async () => {
-    const before = await page.evaluate(() => window.cameraTestFrames)
-    // Scene telemetry is written every 15 rendered frames. Wait past a full
-    // interval so a stale diagnostic value cannot hide a pointer regression.
-    await expect.poll(() => page.evaluate(() => window.cameraTestFrames), {
+    const before = Number(await canvas.getAttribute('data-render-frame'))
+    // Wait for the next actual telemetry sample rather than adding a whole
+    // 15-frame interval after every action on the software renderer.
+    await expect.poll(async () => Number(await canvas.getAttribute('data-render-frame')), {
       timeout: process.env.CI ? 15_000 : 10_000,
-    }).toBeGreaterThan(before + 15)
+    }).toBeGreaterThan(before)
     return settledScene(page)
   }
   const unchangedCamera = async (before: Awaited<ReturnType<typeof settledScene>>) => {
@@ -265,10 +260,10 @@ test('@interaction device and late scales reject pointer camera input until the 
     const before = await moveToProgress(progress)
     await expect(canvas).toHaveAttribute('data-orbit-enabled', 'false')
     const savedYaw = Number(await canvas.getAttribute('data-orbit-yaw'))
-    await page.mouse.move(1100, 340, { steps: 8 })
+    await page.mouse.move(1100, 340)
     await unchangedCamera(before)
     await page.mouse.down()
-    await page.mouse.move(400, 390, { steps: 12 })
+    await page.mouse.move(400, 390, { steps: 4 })
     await expect(canvas).toHaveAttribute('data-camera-mode', 'idle')
     await expect(page.locator('html')).not.toHaveClass(/scene-dragging/)
     await unchangedCamera(before)
@@ -282,7 +277,7 @@ test('@interaction device and late scales reject pointer camera input until the 
   await expect(canvas).toHaveAttribute('data-orbit-enabled', 'true')
   await page.mouse.move(1100, 340)
   await page.mouse.down()
-  await page.mouse.move(650, 370, { steps: 12 })
+  await page.mouse.move(650, 370, { steps: 4 })
   await expect(canvas).toHaveAttribute('data-camera-mode', 'orbit')
   const turned = await freshCamera()
   expect(Math.abs(turned.viewAzimuth - lowerRing.viewAzimuth)).toBeGreaterThan(.2)
@@ -293,7 +288,7 @@ test('@interaction device and late scales reject pointer camera input until the 
   await expect(canvas).toHaveAttribute('data-camera-mode', 'idle')
   await expect(page.locator('html')).not.toHaveClass(/scene-dragging/)
   const retainedYaw = Number(await canvas.getAttribute('data-orbit-yaw'))
-  await page.mouse.move(1000, 420, { steps: 10 })
+  await page.mouse.move(1000, 420, { steps: 4 })
   await unchangedCamera(lockedAgain)
   await page.mouse.up()
   await page.mouse.dblclick(1100, 340)

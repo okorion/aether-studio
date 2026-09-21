@@ -354,18 +354,20 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
       emblem.add(glyph)
 
       const ribbons = new THREE.Group()
-      world.add(ribbons)
+      // The ring and both tails are a single organism. Local attachment points
+      // must inherit the emblem's pointer tilt, bobbing and scroll transform.
+      emblem.add(ribbons)
       for (let strand = 0; strand < 2; strand += 1) {
         const points: THREE.Vector3[] = []
         for (let i = 0; i <= 100; i += 1) {
           const t = i / 100
           const theta = t * 5.5 + strand * Math.PI
-          const spread = 0.86 + Math.pow(t, 2) * 0.55
+          const spread = 0.89 + Math.pow(t, 2) * 0.55
           points.push(
             new THREE.Vector3(
               Math.cos(theta) * spread,
-              -0.03 - t * 7.3,
-              Math.sin(theta) * 0.5 - 0.025,
+              -t * 7.3,
+              Math.sin(theta) * 0.5,
             ),
           )
         }
@@ -588,7 +590,6 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
           emblem.rotation.y = Math.sin(elapsed * 0.18) * 0.14 + pointer.x * 0.16
           emblem.rotation.x = Math.cos(elapsed * 0.15) * 0.05 - pointer.y * 0.09
           emblem.position.y = Math.sin(elapsed * 0.4) * 0.035 + scroll * 1.9
-          ribbons.rotation.y = Math.sin(elapsed * 0.13) * 0.08
           camera.position.x = THREE.MathUtils.damp(
             camera.position.x,
             pointer.x * 0.24 + scroll * 0.7,

@@ -13,12 +13,18 @@ async function readyScene(page: Page) {
   await expect(page.locator('.scene-canvas')).toHaveAttribute('data-render-state', 'ready')
 }
 
-test('five scroll checkpoints keep the immersive scene visible and content views separate', async ({
+test('24 scroll checkpoints keep the central focus and content views separate', async ({
   page,
 }) => {
   await readyScene(page)
-  const expectedStages = ['entry', 'work', 'work', 'machine', 'contact']
-  for (const [index, fraction] of [0, 0.25, 0.5, 0.75, 1].entries()) {
+  const expectedStages = [
+    'entry', 'entry', 'entry', 'statement', 'statement', 'statement',
+    'work', 'work', 'work', 'work', 'work', 'work', 'work', 'work', 'work',
+    'machine', 'machine', 'machine', 'scales', 'scales', 'scales',
+    'contact', 'contact', 'contact',
+  ]
+  for (let index = 0; index < 24; index++) {
+    const fraction = index / 23
     await page.evaluate(
       (progress) =>
         window.scrollTo({
@@ -28,8 +34,15 @@ test('five scroll checkpoints keep the immersive scene visible and content views
       fraction,
     )
     await expect(page.locator('.hero-stage')).toHaveAttribute('data-stage', expectedStages[index])
+    await expect(page.locator('.hero-stage')).toHaveAttribute('data-step', String(index + 1))
     await expect(page.locator('.scene-canvas')).toBeInViewport()
     await expect(page.locator('.scene-canvas')).toHaveAttribute('data-render-state', 'ready')
+    for (const axis of ['x', 'y']) {
+      const value = await page.locator('.scene-canvas').getAttribute(`data-focus-${axis}`)
+      expect(value).not.toBeNull()
+      const centre = Number(value)
+      expect(Math.abs(centre)).toBeLessThan(.001)
+    }
     await expect(page.locator('#work')).toBeHidden()
     await expect(page.locator('#contact')).toBeHidden()
     const sizes = await page.evaluate(() => ({
@@ -96,6 +109,22 @@ test('@interaction production scene accepts background drag and excludes navigat
   await page.mouse.up()
   await expect(canvas).toHaveAttribute('data-camera-mode', 'idle')
   await expect(page.locator('html')).not.toHaveClass(/scene-dragging/)
+  // A pause rebuilds GPU resources, but must preserve the selected orbit.
+  const releaseFrames = await page.evaluate(() => window.cameraTestFrames)
+  await expect.poll(() => page.evaluate(() => window.cameraTestFrames), {
+    timeout: process.env.CI ? 45_000 : 10_000,
+  }).toBeGreaterThan(releaseFrames + 80)
+  await expect.poll(async () => Math.abs(Number(await canvas.getAttribute('data-orbit-yaw'))))
+    .toBeGreaterThan(.2)
+  const chosenYaw = Number(await canvas.getAttribute('data-orbit-yaw'))
+  await page.getByRole('button', { name: 'Pause motion' }).click()
+  await expect(canvas).toHaveAttribute('data-render-state', 'ready')
+  await expect.poll(async () => Math.abs(Number(await canvas.getAttribute('data-orbit-yaw')) - chosenYaw))
+    .toBeLessThan(.08)
+  await page.getByRole('button', { name: 'Motion reduced' }).click()
+  await expect(canvas).toHaveAttribute('data-render-state', 'ready')
+  await expect.poll(async () => Math.abs(Number(await canvas.getAttribute('data-orbit-yaw')) - chosenYaw))
+    .toBeLessThan(.08)
   const sound = page.getByRole('button', { name: 'Enable ambient sound' })
   const bounds = await sound.boundingBox()
   expect(bounds).not.toBeNull()
@@ -229,5 +258,24 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
     const excluded = await page.evaluate(() => window.interactionHarness.step(0.5))
     expect(excluded).toEqual({ yaw: 0, pitch: 0, zoom: 0, burst: 0, illuminatedPixels: 0 })
     await expect(page.locator('#interaction-canvas')).toHaveAttribute('data-camera-mode', 'idle')
+  })
+
+  test('successive drags accumulate beyond a full turn without snapping back', async ({ page }) => {
+    for (let turn = 0; turn < 4; turn++) {
+      await page.mouse.move(540, 220)
+      await page.mouse.down()
+      await page.mouse.move(150, 220, { steps: 8 })
+      await page.evaluate(() => window.interactionHarness.step(.5))
+      await page.mouse.up()
+      await page.evaluate(() => window.interactionHarness.step(2))
+    }
+    const orbit = await page.evaluate(() => window.interactionHarness.step(2))
+    expect(orbit.yaw).toBeGreaterThan(Math.PI * 2)
+    expect(Math.abs(orbit.pitch)).toBeLessThan(.001)
+    expect(orbit.zoom).toBe(0)
+    await page.mouse.move(320, 240)
+    await page.mouse.move(420, 280, { steps: 6 })
+    const trace = await page.evaluate(() => window.interactionHarness.step(.15))
+    expect(trace.illuminatedPixels).toBeGreaterThan(20)
   })
 })

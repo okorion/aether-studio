@@ -114,7 +114,7 @@ npx vercel deploy --prod --scope okorions-projects
 
 Playwright 테스트 22개는 데스크톱 1440×900, 모바일 390×844, WebGL 비활성 환경을 사용합니다. 탐색, 상세 보기, 초점, 사운드, 모션, 24개 스크롤 지점, hash/history, 로딩 실패와 카메라 입력을 포함합니다. 격리된 실제 shader 캔버스에서 흔적의 픽셀 발생·소멸도 확인합니다. GitHub Actions에서는 lint·타입·빌드를 확인하고 production preview를 SwiftShader로 실행합니다.
 
-시각 증거와 검수 내역은 [검증 기록](docs/verification.md)에 정리했습니다. WebGL 성능은 기기와 브라우저에 따라 달라질 수 있습니다. 실제 Safari/iOS 기기 검증은 수행하지 않았습니다.
+최신 시각 증거·성능 관측·리뷰 대응은 [24단계 검증 문서](docs/continuous-journey.md)에 정리했습니다. 초기 기록은 [검증 기록](docs/verification.md)에 보존합니다. WebGL 성능은 기기와 브라우저에 따라 달라질 수 있습니다. 실제 Safari/iOS 기기 검증은 수행하지 않았습니다.
 
 ## 주요 파일
 

@@ -347,6 +347,7 @@ export function createSceneWorlds(scene: THREE.Scene, software: boolean, mobile 
   // Architecture appears around the centre and remains behind the final ring.
   const architecture = mat(new THREE.MeshStandardMaterial({
     color: 0x0a171b, metalness: .7, roughness: .37, envMapIntensity: .75, transparent: true,
+    depthWrite: false,
   }))
   const floorGeometry = geo(new THREE.PlaneGeometry(24, 24, 22, 22))
   const vertices = floorGeometry.getAttribute('position')
@@ -525,6 +526,7 @@ export function createSceneWorlds(scene: THREE.Scene, software: boolean, mobile 
 
   let lastMatterProgress = Number.NaN
   const chamberWorld = new THREE.Vector3()
+  const scaleFloorHeight = sampleJourney(.83).height
   return {
     getChamberHeight() {
       return space.getWorldPosition(chamberWorld).y
@@ -533,15 +535,17 @@ export function createSceneWorlds(scene: THREE.Scene, software: boolean, mobile 
       const journey = sampleJourney(progress)
       root.position.y = journey.height
       space.position.y = -40.4 - journey.height
+      // The scale curtain stays on its own floor. We travel underneath it,
+      // rather than shrinking it into a replacement ring at the screen centre.
+      matter.position.y = (scaleFloorHeight - journey.height) * smooth(.83, .87, progress)
       const scrollTime = progress * 55
       const spineTravel = progress * 1.4
       const sum = journey.spine + journey.machine + journey.scales
-      const spine = sum > .001 ? journey.spine / sum : 1
-      const machine = sum > .001 ? journey.machine / sum : 0
-      const scales = sum > .001 ? journey.scales / sum : 0
+      const spine = progress > .83 ? 0 : sum > .001 ? journey.spine / sum : 1
+      const machine = progress > .83 ? 0 : sum > .001 ? journey.machine / sum : 0
+      const scales = progress > .83 ? 1 : sum > .001 ? journey.scales / sum : 0
       const emergence = smooth(.20, .29, progress)
-      const returnToRing = smooth(.88, .96, progress)
-      const form = emergence * (1 - returnToRing)
+      const form = emergence
       matter.visible = journey.core > .001
       metal.opacity = journey.core
       silver.opacity = journey.core * (1 - scales)
@@ -634,7 +638,8 @@ export function createSceneWorlds(scene: THREE.Scene, software: boolean, mobile 
       coreMaterial.uniforms.uWeights.value.set(spine, machine, scales)
       coreMaterial.uniforms.uOpacity.value = journey.core * (.48 + machine * .4)
 
-      const architectureWeight = smooth(.60, .69, progress) * (1 - journey.darkness * .77) * (1 - journey.scales * .60)
+      const architectureWeight = smooth(.60, .69, progress) * (1 - journey.darkness * .77)
+        * (1 - journey.scales * .60) * (1 - smooth(.86, .94, progress) * .85)
       space.visible = architectureWeight > .001
       chamber.visible = journey.machine > .001 || journey.scales > .001
       architecture.opacity = architectureWeight

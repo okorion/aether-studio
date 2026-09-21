@@ -62,7 +62,7 @@ export function createSceneInteraction(
         float seed = fract(sin(aStrand * 12.9898) * 43758.5453);
         float bendSeed = fract(sin(aStrand * 7.713) * 17293.183);
         float growth = 1. - exp(-age * 3.2);
-        float trailLength = (42. + seed * 75.) * growth + age * 5.;
+        float trailLength = (50. + seed * 85.) * growth + age * 6.;
         float t = aAlong;
         // Each sampled point grows its own curved streamer. Different ages and
         // seeds spread the trailing ends into a fan instead of parallel staff lines.
@@ -70,8 +70,11 @@ export function createSceneInteraction(
         vec2 offset = -direction * trailLength * t;
         offset += normal * (sin(t * 3.14159) * bend + t * t * sin(aStrand * 1.7 + age * .65) * age * 8.);
         offset += vec2(sin(aStrand) * age * 3., -age * age * 3.2) * t * t;
-        float taper = pow(max(0., 1. - t), 1.3);
-        float width = (1.05 + seed * .9) * sqrt(life) * (.045 + taper);
+        float taper = pow(max(0., 1. - t), .95);
+        float head = 1. - smoothstep(.025, .19, t);
+        // Only the leading reflection widens; the curved tail still narrows
+        // to a hairline rather than becoming a continuous neon beam.
+        float width = (1.35 + seed * .75) * pow(life, .4) * (.055 + taper * .9 + head * .95);
         vec2 curveTangent = -direction * trailLength;
         curveTangent += normal * (cos(t * 3.14159) * 3.14159 * bend + 2. * t * sin(aStrand * 1.7 + age * .65) * age * 8.);
         vec2 edge = vec2(-curveTangent.y, curveTangent.x) / max(length(curveTangent), .0001);
@@ -84,15 +87,16 @@ export function createSceneInteraction(
     fragmentShader: `
       varying float vSide; varying float vLife; varying float vAlong; varying float vSeed;
       void main() {
-        float soft = exp(-vSide * vSide * 4.5);
-        float silver = exp(-vSide * vSide * 20.);
-        float fade = smoothstep(0., .28, vLife) * pow(vLife, .65);
-        float head = exp(-vAlong * 22.);
-        float tip = 1. - smoothstep(.68, 1., vAlong);
-        float reflection = .78 + .22 * sin(vAlong * 18. + vSeed * 9.);
-        vec3 color = mix(vec3(.14,.31,.33), vec3(.80,.94,.89), silver * (.42 + head * .58));
-        float alpha = (soft * .18 + silver * (.3 + head * .35)) * fade * tip * reflection;
-        alpha *= .68 + vSeed * .32;
+        float head = 1. - smoothstep(.025, .19, vAlong);
+        float soft = exp(-vSide * vSide * 4.);
+        float silver = exp(-vSide * vSide * mix(9., 6., head));
+        float fade = smoothstep(0., .3, vLife) * pow(vLife, .4);
+        float tip = 1. - smoothstep(.76, 1., vAlong);
+        float reflection = .9 + .1 * sin(vAlong * 18. + vSeed * 9.);
+        vec3 reflectionColor = mix(vec3(.57,.72,.71), vec3(.97,.99,.90), head);
+        vec3 color = mix(vec3(.22,.39,.40), reflectionColor, silver);
+        float alpha = (soft * .15 + silver * (.4 + head * .42)) * fade * tip * reflection;
+        alpha *= .85 + vSeed * .15;
         gl_FragColor = vec4(color, alpha);
       }`,
   })

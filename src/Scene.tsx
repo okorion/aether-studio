@@ -8,6 +8,7 @@ import { createSceneGlow } from './SceneGlow'
 
 type SceneProps = {
   reducedMotion: boolean
+  active: boolean
   onReady: () => void
 }
 
@@ -70,9 +71,11 @@ function seededRandom(seed: number) {
 }
 
 /** An original, entirely procedural scene. No downloaded models or textures. */
-export default function Scene({ reducedMotion, onReady }: SceneProps) {
+export default function Scene({ reducedMotion, active, onReady }: SceneProps) {
   const hostRef = useRef<HTMLDivElement>(null)
   const readyRef = useRef(onReady)
+  const activeRef = useRef(active)
+  const wakeRef = useRef<(() => void) | null>(null)
   // Motion preference changes rebuild the render budget, preserving the view
   // and time so pausing cannot snap a user's chosen angle back to the front.
   const preserved = useRef({ yaw: 0, pitch: 0, elapsed: 0 })
@@ -80,6 +83,11 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
   useEffect(() => {
     readyRef.current = onReady
   }, [onReady])
+
+  useEffect(() => {
+    activeRef.current = active
+    if (active) wakeRef.current?.()
+  }, [active])
 
   useEffect(() => {
     const host = hostRef.current
@@ -765,7 +773,7 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
         } catch {
           failScene()
         }
-        if (!reducedMotion && !contextLost) {
+        if (!reducedMotion && !contextLost && activeRef.current) {
           if (softwareRenderer) {
             // An actual idle interval after each software frame leaves room for
             // pointer/scroll/focus events, even when one frame takes > 50 ms.
@@ -782,6 +790,12 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
       const requestRender = () => {
         if (!frame && frameTimer === undefined && !disposed && !contextLost && !document.hidden)
           frame = requestAnimationFrame(render)
+      }
+      // Hidden content views retain their last frame, releasing CPU/GPU time
+      // for cards and dialogs without rebuilding the scene on navigation.
+      wakeRef.current = () => {
+        previousTime = 0
+        requestRender()
       }
       const resize = () => {
         const width = window.innerWidth
@@ -852,6 +866,7 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
       canvas.addEventListener('webglcontextlost', lost)
       canvas.addEventListener('webglcontextrestored', restored)
       cleanup = () => {
+        wakeRef.current = null
         window.removeEventListener('resize', resize)
         window.removeEventListener('scroll', scroll)
         window.removeEventListener('hashchange', scroll)

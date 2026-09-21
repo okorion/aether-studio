@@ -217,7 +217,7 @@ export default function App() {
       </div>
       <SceneBoundary onUnavailable={onReady}>
         <Suspense fallback={null}>
-          <Scene reducedMotion={reducedMotion} onReady={onReady} />
+          <Scene reducedMotion={reducedMotion} active={activeSection === 'home' && !project} onReady={onReady} />
         </Suspense>
       </SceneBoundary>
       <div className="film-grain" aria-hidden="true" />

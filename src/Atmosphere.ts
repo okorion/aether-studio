@@ -44,7 +44,11 @@ const currentField = /* glsl */ `
     );
     vec3 ending = arrival;
     ending.y = -arrival.y + 0.35;
-    ending.x *= 0.9;
+    // Unequal tributary lengths and depth break up the flat slab that a mirrored
+    // planar plume presents while the camera turns into the lower chamber.
+    ending.y *= 0.72 + branch * 0.67;
+    ending.x = ending.x * 0.9 + sin(lane * 29.0 + t * 5.0) * 0.34;
+    ending.z += sin(lane * 32.0 + t * 10.0) * 1.25;
     vec3 p = mix(arrival, spine, uWeights.x);
     p = mix(p, reactor, uWeights.y);
     p = mix(p, scales, uWeights.z);

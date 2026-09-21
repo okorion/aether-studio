@@ -6,6 +6,7 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
+  maxFailures: process.env.CI ? 1 : undefined,
   // Isolate WebGL contexts: concurrent GPU scenes can starve software renderers.
   workers: 1,
   timeout: 30_000,
@@ -16,6 +17,9 @@ export default defineConfig({
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     actionTimeout: 10_000,
+    launchOptions: process.env.CI
+      ? { args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] }
+      : undefined,
   },
   projects: [
     {

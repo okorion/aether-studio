@@ -21,3 +21,10 @@ jobs:
       - run: npm run build
       - run: npx playwright install --with-deps chromium
       - run: npm test
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: browser-test-diagnostics
+          path: .qa/test/
+          include-hidden-files: true
+          retention-days: 7

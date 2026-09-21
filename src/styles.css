@@ -119,7 +119,7 @@ main > section {
   transform: translate(-50%, -50%);
 }
 .fallback-ring::before {
-  content: 'A';
+  content: 'O';
   position: absolute;
   inset: 0;
   display: grid;
@@ -1576,4 +1576,10 @@ html:has(.motion-paused) {
 .scene-dragging * {
   cursor: grabbing !important;
   user-select: none;
+}
+
+.scroll-hint { display: none; }
+.hero-stage[data-orbit-enabled='false'] .pointer-hint { display: none; }
+@media (hover: hover) and (pointer: fine) {
+  .hero-stage[data-orbit-enabled='false'] .scroll-hint { display: inline; }
 }

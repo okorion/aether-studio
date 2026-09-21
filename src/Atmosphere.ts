@@ -4,10 +4,12 @@ import { sampleJourney } from './Journey'
 /** The same current deforms continuously around the journey's central axis. */
 const currentField = /* glsl */ `
   uniform float uTime;
+  uniform float uScroll;
   uniform vec4 uWeights;
   uniform float uEnergy;
   uniform float uDarkness;
   const float PI = 3.14159265359;
+  float motionTime() { return mix(uTime, uScroll, uWeights.x); }
 
   vec3 current(float t, float lane) {
     float side = lane < 0.5 ? -1.0 : 1.0;
@@ -22,7 +24,7 @@ const currentField = /* glsl */ `
     // changing radii read as turbulent clouds, not a constant-width cylinder.
     float arm = floor(lane * 6.0);
     float armPhase = arm * 2.39996;
-    float angle = t * 8.0 + armPhase + sin(t * 15.0 + armPhase) * 0.38 + uTime * 0.22;
+    float angle = t * 8.0 + armPhase + sin(t * 15.0 + armPhase) * 0.38 + uScroll * 0.22;
     float radius = 0.72 + pow(sin(t * 12.0 + armPhase) * 0.5 + 0.5, 1.2) * 2.85;
     radius += fract(lane * 6.0) * 0.28;
     vec3 spine = vec3(
@@ -74,12 +76,12 @@ const dustVertex = /* glsl */ `
     float phase = position.y;
     // Phase advection travels the full current. Faded ends hide loop wrapping.
     float speed = 0.028 + uWeights.x * 0.074 + uWeights.y * 0.055 + uWeights.z * 0.038;
-    float t = fract(position.x + uTime * speed * (0.76 + lane * 0.48));
+    float t = fract(position.x + motionTime() * speed * (0.76 + lane * 0.48));
     vec3 p = current(t, lane);
     float cluster = 0.32 + 0.68 * pow(sin(t * 35.0 + lane * 8.0) * 0.5 + 0.5, 2.0);
     float width = (0.13 + position.z * 0.72) * cluster;
     width *= 1.0 - uWeights.y * 0.52;
-    float turn = phase + t * 37.0 + uTime * 0.6;
+    float turn = phase + t * 37.0 + motionTime() * 0.6;
     p += vec3(cos(turn), sin(turn * 0.83) * 0.62, sin(turn)) * width;
     p.z += aDust.z * (0.18 + (1.0 - uWeights.y) * 0.38);
     float bokeh = aDust.w;
@@ -143,11 +145,11 @@ const filamentVertex = /* glsl */ `
     float lane = position.y;
     vec3 p = current(t, lane);
     float fan = sin(t * PI);
-    p.x += sin(t * 32.0 + position.z + uTime * 0.4) * 0.11 * fan;
+    p.x += sin(t * 32.0 + position.z + motionTime() * 0.4) * 0.11 * fan;
     p.z += cos(t * 32.0 + position.z) * 0.11 * fan;
     gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
     vColor = currentColor(lane, t);
-    float travel = fract(t * 3.0 - uTime * (0.13 + uEnergy * 0.16) + lane);
+    float travel = fract(t * 3.0 - motionTime() * (0.13 + uEnergy * 0.16) + lane);
     float pulse = pow(max(0.0, 1.0 - abs(travel - 0.5) * 2.0), 7.0);
     vAlpha = fan * (0.012 + pulse * 0.10) * (1.0 - uDarkness * 0.65);
   }
@@ -229,6 +231,7 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
 
   const uniforms = {
     uTime: { value: 0 },
+    uScroll: { value: 0 },
     uWeights: { value: new THREE.Vector4() },
     uEnergy: { value: 0 },
     uDarkness: { value: 0 },
@@ -304,6 +307,8 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
       if (disposed) return
       const journey = sampleJourney(progress)
       uniforms.uTime.value = Number.isFinite(time) ? time : 0
+      uniforms.uScroll.value = journey.progress * 55
+      particles.position.y = filaments.position.y = shafts.position.y = journey.height
       uniforms.uWeights.value.set(journey.spine, journey.machine, journey.scales, journey.end)
       uniforms.uEnergy.value = journey.energy
       uniforms.uDarkness.value = journey.darkness

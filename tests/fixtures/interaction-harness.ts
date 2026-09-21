@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { createSceneInteraction } from '../../src/SceneInteraction'
+import { createSceneWorlds } from '../../src/SceneWorlds'
 
 type Snapshot = {
   yaw: number
@@ -12,6 +13,13 @@ type Snapshot = {
 export type InteractionHarness = {
   step: (seconds: number) => Snapshot
   reset: (reducedMotion?: boolean) => void
+  setOrbitEnabled: (enabled: boolean) => void
+  sampleWorld: (elapsed: number, progress: number) => {
+    chain: number[]
+    modelY: number
+    chamberY: number
+    structureYaw: number
+  }
   dispose: () => void
 }
 
@@ -38,6 +46,11 @@ camera.updateMatrixWorld()
 let time = 0
 let interaction = createSceneInteraction(scene, camera, canvas, false, true)
 const pixels = new Uint8Array(innerWidth * innerHeight * 4)
+// This scene is never rendered. Inspect the real instance transforms without
+// another WebGL context or a costly production-scene screenshot per sample.
+const worldScene = new THREE.Scene()
+let worlds: ReturnType<typeof createSceneWorlds> | undefined
+const worldPosition = new THREE.Vector3()
 
 window.interactionHarness = {
   step(seconds) {
@@ -61,8 +74,30 @@ window.interactionHarness = {
     time = 0
     interaction = createSceneInteraction(scene, camera, canvas, reducedMotion, true)
   },
+  setOrbitEnabled(enabled) {
+    interaction.setOrbitEnabled(enabled)
+  },
+  sampleWorld(elapsed, progress) {
+    worlds ??= createSceneWorlds(worldScene, true)
+    worlds.update(elapsed, progress)
+    worldScene.updateMatrixWorld(true)
+    const chain = worldScene.getObjectByName('aether-spine-chain')
+    const matter = worldScene.getObjectByName('aether-matter')
+    const chamber = worldScene.getObjectByName('aether-chamber-space')
+    if (!(chain instanceof THREE.InstancedMesh) || !matter || !chamber)
+      throw new Error('The real chain, matter, and chamber must be present')
+    const modelY = matter.getWorldPosition(worldPosition).y
+    const chamberY = chamber.getWorldPosition(worldPosition).y
+    return {
+      chain: Array.from(chain.instanceMatrix.array),
+      modelY,
+      chamberY,
+      structureYaw: matter.rotation.y,
+    }
+  },
   dispose() {
     interaction.dispose()
+    worlds?.dispose()
     renderer.dispose()
     renderer.forceContextLoss()
     canvas.remove()

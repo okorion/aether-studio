@@ -5,6 +5,7 @@ import type {} from './fixtures/interaction-harness'
 declare global {
   interface Window {
     cameraTestFrames: number
+    cameraTestFrozen: boolean
   }
 }
 
@@ -13,16 +14,66 @@ async function readyScene(page: Page) {
   await expect(page.locator('.scene-canvas')).toHaveAttribute('data-render-state', 'ready')
 }
 
-test('24 scroll checkpoints keep the central focus and content views separate', async ({
+async function settledScene(page: Page) {
+  const expectedProgress = await page.evaluate(() =>
+    scrollY / Math.max(1, document.documentElement.scrollHeight - innerHeight),
+  )
+  await expect.poll(async () => {
+    const rendered = await page.locator('.scene-canvas').getAttribute('data-render-progress')
+    return rendered === null ? Infinity : Math.abs(Number(rendered) - expectedProgress)
+  }, { timeout: process.env.CI ? 15_000 : 10_000 }).toBeLessThan(.0005)
+  const snapshot = await page.locator('.scene-canvas').evaluate((canvas) => {
+    const data = (canvas as HTMLCanvasElement).dataset
+    return {
+      cameraY: Number(data.cameraY),
+      targetY: Number(data.targetY),
+      modelY: Number(data.modelY),
+      viewAzimuth: Number(data.viewAzimuth),
+      structureYaw: Number(data.structureYaw),
+      ringRoll: Number(data.ringRoll),
+      chainPhase: Number(data.chainPhase),
+      chamberY: Number(data.chamberY),
+    }
+  })
+  for (const value of Object.values(snapshot)) expect(Number.isFinite(value)).toBe(true)
+  return snapshot
+}
+
+test('wheel input descends and reverses before 24 settled scroll checkpoints', async ({
   page,
 }) => {
   await readyScene(page)
+  const startingView = await settledScene(page)
+  let previous = startingView
+  for (let input = 0; input < 3; input++) {
+    const beforeScroll = await page.evaluate(() => scrollY)
+    await page.mouse.wheel(0, 900)
+    await expect.poll(() => page.evaluate(() => scrollY)).toBeGreaterThan(beforeScroll)
+    const next = await settledScene(page)
+    expect(next.cameraY).toBeLessThan(previous.cameraY - .01)
+    expect(next.targetY).toBeLessThan(previous.targetY - .01)
+    expect(Math.abs(next.modelY - next.targetY)).toBeLessThan(.001)
+    previous = next
+  }
+  expect(Math.abs(previous.viewAzimuth - startingView.viewAzimuth)).toBeGreaterThan(.01)
+  await page.mouse.wheel(0, -2700)
+  await expect.poll(() => page.evaluate(() => scrollY)).toBeLessThan(1)
+  const restored = await settledScene(page)
+  expect(Math.abs(restored.cameraY - startingView.cameraY)).toBeLessThan(.05)
+  expect(Math.abs(restored.targetY - startingView.targetY)).toBeLessThan(.05)
+
+  // Scroll still renders the exact requested state with motion paused. This
+  // checks all 24 real scene transforms without 24 software-animation waits.
+  await page.getByRole('button', { name: 'Pause motion' }).click()
+  await expect(page.locator('.scene-canvas')).toHaveAttribute('data-render-state', 'ready')
   const expectedStages = [
     'entry', 'entry', 'entry', 'statement', 'statement', 'statement',
     'work', 'work', 'work', 'work', 'work', 'work', 'work', 'work', 'work',
     'machine', 'machine', 'machine', 'scales', 'scales', 'scales',
     'contact', 'contact', 'contact',
   ]
+  let previousHeight = startingView.targetY
+  let fixedChamberY: number | undefined
   for (let index = 0; index < 24; index++) {
     const fraction = index / 23
     await page.evaluate(
@@ -37,6 +88,13 @@ test('24 scroll checkpoints keep the central focus and content views separate', 
     await expect(page.locator('.hero-stage')).toHaveAttribute('data-step', String(index + 1))
     await expect(page.locator('.scene-canvas')).toBeInViewport()
     await expect(page.locator('.scene-canvas')).toHaveAttribute('data-render-state', 'ready')
+    const rendered = await settledScene(page)
+    expect(Math.abs(rendered.modelY - rendered.targetY)).toBeLessThan(.001)
+    expect(rendered.targetY).toBeLessThanOrEqual(previousHeight + .001)
+    expect(Math.abs(rendered.ringRoll)).toBeLessThan(.001)
+    fixedChamberY ??= rendered.chamberY
+    expect(Math.abs(rendered.chamberY - fixedChamberY)).toBeLessThan(.001)
+    previousHeight = rendered.targetY
     for (const axis of ['x', 'y']) {
       const value = await page.locator('.scene-canvas').getAttribute(`data-focus-${axis}`)
       expect(value).not.toBeNull()
@@ -71,10 +129,11 @@ test('@interaction production scene accepts background drag and excludes navigat
   await page.addInitScript(() => {
     const request = window.requestAnimationFrame.bind(window)
     window.cameraTestFrames = 0
+    window.cameraTestFrozen = true
     window.requestAnimationFrame = (callback) =>
-      request(() => {
+      request((timestamp) => {
         window.cameraTestFrames++
-        callback(1000)
+        callback(window.cameraTestFrozen ? 1000 : timestamp)
       })
   })
   await readyScene(page)
@@ -125,6 +184,29 @@ test('@interaction production scene accepts background drag and excludes navigat
   await expect(canvas).toHaveAttribute('data-render-state', 'ready')
   await expect.poll(async () => Math.abs(Number(await canvas.getAttribute('data-orbit-yaw')) - chosenYaw))
     .toBeLessThan(.08)
+  await page.evaluate(() => {
+    window.cameraTestFrozen = false
+    window.scrollTo({
+      top: (document.documentElement.scrollHeight - innerHeight) * .45,
+      behavior: 'instant',
+    })
+  })
+  const spineView = await settledScene(page)
+  await expect(canvas).toHaveAttribute('data-orbit-enabled', 'false')
+  const spineYaw = Number(await canvas.getAttribute('data-orbit-yaw'))
+  await page.mouse.move(850, 340)
+  await page.mouse.down()
+  await page.mouse.move(1150, 410, { steps: 8 })
+  await expect(canvas).toHaveAttribute('data-camera-mode', 'idle')
+  await expect(page.locator('html')).not.toHaveClass(/scene-dragging/)
+  await page.mouse.up()
+  const lockedFrames = await page.evaluate(() => window.cameraTestFrames)
+  await expect.poll(() => page.evaluate(() => window.cameraTestFrames), {
+    timeout: process.env.CI ? 15_000 : 10_000,
+  }).toBeGreaterThan(lockedFrames + 15)
+  const retainedSpineView = await settledScene(page)
+  expect(Math.abs(retainedSpineView.viewAzimuth - spineView.viewAzimuth)).toBeLessThan(.01)
+  expect(Math.abs(Number(await canvas.getAttribute('data-orbit-yaw')) - spineYaw)).toBeLessThan(.001)
   const sound = page.getByRole('button', { name: 'Enable ambient sound' })
   const bounds = await sound.boundingBox()
   expect(bounds).not.toBeNull()
@@ -177,7 +259,7 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
     await page.evaluate(() => window.interactionHarness?.dispose())
   })
 
-  test('movement produces luminous trail pixels that completely fade while idle', async ({
+  test('movement leaves a trail after 1.6 seconds and completely fades by 3 seconds', async ({
     page,
   }) => {
     const baseline = await page.evaluate(() => window.interactionHarness.step(0))
@@ -186,7 +268,9 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
     await page.mouse.move(440, 290, { steps: 12 })
     const active = await page.evaluate(() => window.interactionHarness.step(0.15))
     expect(active.illuminatedPixels).toBeGreaterThan(20)
-    const faded = await page.evaluate(() => window.interactionHarness.step(1.6))
+    const lingering = await page.evaluate(() => window.interactionHarness.step(1.45))
+    expect(lingering.illuminatedPixels).toBeGreaterThan(0)
+    const faded = await page.evaluate(() => window.interactionHarness.step(1.4))
     expect(faded.illuminatedPixels).toBe(0)
   })
 
@@ -260,7 +344,7 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
     await expect(page.locator('#interaction-canvas')).toHaveAttribute('data-camera-mode', 'idle')
   })
 
-  test('successive drags accumulate beyond a full turn without snapping back', async ({ page }) => {
+  test('orbit locks preserve the chosen view and mechanical scroll can stop and reverse', async ({ page }) => {
     for (let turn = 0; turn < 4; turn++) {
       await page.mouse.move(540, 220)
       await page.mouse.down()
@@ -277,5 +361,46 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
     await page.mouse.move(420, 280, { steps: 6 })
     const trace = await page.evaluate(() => window.interactionHarness.step(.15))
     expect(trace.illuminatedPixels).toBeGreaterThan(20)
+
+    // Disable orbit while held, then try movement, a new drag, and double click.
+    // None may queue a hidden yaw change; pointer trails must still be allowed.
+    const retained = await page.evaluate(() => window.interactionHarness.step(4))
+    await page.mouse.down()
+    await expect(page.locator('#interaction-canvas')).toHaveAttribute('data-camera-mode', 'orbit')
+    await page.evaluate(() => window.interactionHarness.setOrbitEnabled(false))
+    await expect(page.locator('#interaction-canvas')).toHaveAttribute('data-camera-mode', 'idle')
+    await expect(page.locator('html')).not.toHaveClass(/scene-dragging/)
+    await page.mouse.move(160, 190, { steps: 6 })
+    await page.mouse.up()
+    await page.mouse.down()
+    await page.mouse.move(460, 250, { steps: 6 })
+    await page.mouse.up()
+    await page.mouse.dblclick(320, 240)
+    const locked = await page.evaluate(() => window.interactionHarness.step(.15))
+    expect(Math.abs(locked.yaw - retained.yaw)).toBeLessThan(.001)
+    expect(Math.abs(locked.pitch - retained.pitch)).toBeLessThan(.001)
+    expect(locked.illuminatedPixels).toBeGreaterThan(20)
+    await page.evaluate(() => window.interactionHarness.setOrbitEnabled(true))
+    const unlocked = await page.evaluate(() => window.interactionHarness.step(4))
+    expect(Math.abs(unlocked.yaw - retained.yaw)).toBeLessThan(.001)
+    await page.mouse.move(460, 240)
+    await page.mouse.down()
+    await page.mouse.move(300, 240, { steps: 6 })
+    const newOrbit = await page.evaluate(() => window.interactionHarness.step(.5))
+    expect(newOrbit.yaw).toBeGreaterThan(unlocked.yaw + .2)
+    await page.mouse.up()
+
+    // These are the actual InstancedMesh matrices, not another copy of the
+    // phase formula. Time advances independently of the scroll position.
+    const first = await page.evaluate(() => window.interactionHarness.sampleWorld(10, .4))
+    const idle = await page.evaluate(() => window.interactionHarness.sampleWorld(12, .4))
+    expect(idle).toEqual(first)
+    const forward = await page.evaluate(() => window.interactionHarness.sampleWorld(12, .43))
+    expect(forward.chain).not.toEqual(first.chain)
+    expect(Math.abs(forward.structureYaw - first.structureYaw)).toBeGreaterThan(.01)
+    expect(forward.modelY).toBeLessThan(first.modelY - .01)
+    expect(forward.chamberY).toBeCloseTo(first.chamberY, 8)
+    const reverse = await page.evaluate(() => window.interactionHarness.sampleWorld(15, .4))
+    expect(reverse).toEqual(first)
   })
 })

@@ -77,6 +77,7 @@ test('@interaction production scene accepts background drag and excludes navigat
   expect(await page.screenshot({ clip: region })).toEqual(before)
   const framesBefore = await page.evaluate(() => window.cameraTestFrames)
   await page.mouse.down()
+  await page.mouse.move(900, 380, { steps: 8 })
   await expect(canvas).toHaveAttribute('data-camera-mode', 'orbit')
   await expect(page.locator('html')).toHaveClass(/scene-dragging/)
   // Allow the temporary click light to expire, leaving only the camera change.
@@ -160,18 +161,18 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
     expect(faded.illuminatedPixels).toBe(0)
   })
 
-  test('hold and drag changes the orbit, then cancel, blur, and hidden tab restore it', async ({
+  test('drag retains its viewpoint after release, cancel, blur, and hidden tab; double click resets', async ({
     page,
   }) => {
-    for (const ending of ['pointercancel', 'blur', 'hidden'] as const) {
+    for (const ending of ['pointerup', 'pointercancel', 'blur', 'hidden'] as const) {
       await page.evaluate(() => window.interactionHarness.reset())
       await page.mouse.move(300, 220)
       await page.mouse.down()
       await page.mouse.move(500, 130, { steps: 6 })
       const orbit = await page.evaluate(() => window.interactionHarness.step(0.8))
-      expect(orbit.yaw).toBeGreaterThan(0.2)
+      expect(orbit.yaw).toBeLessThan(-0.2)
       expect(orbit.pitch).toBeGreaterThan(0.1)
-      expect(orbit.zoom).toBeGreaterThan(0.8)
+      expect(orbit.zoom).toBe(0)
       await expect(page.locator('#interaction-canvas')).toHaveAttribute('data-camera-mode', 'orbit')
       await page.evaluate((ending) => {
         if (ending === 'hidden') {
@@ -181,11 +182,16 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
         } else window.dispatchEvent(new Event(ending))
       }, ending)
       await expect(page.locator('#interaction-canvas')).toHaveAttribute('data-camera-mode', 'idle')
-      const restored = await page.evaluate(() => window.interactionHarness.step(3))
-      expect(Math.abs(restored.yaw)).toBeLessThan(0.001)
-      expect(Math.abs(restored.pitch)).toBeLessThan(0.001)
-      expect(restored.zoom).toBeLessThan(0.001)
+      const settled = await page.evaluate(() => window.interactionHarness.step(3))
+      expect(settled.yaw).toBeLessThan(-0.2)
+      expect(settled.pitch).toBeGreaterThan(0.1)
+      expect(settled.zoom).toBe(0)
+      const retained = await page.evaluate(() => window.interactionHarness.step(3))
+      expect(Math.abs(retained.yaw - settled.yaw)).toBeLessThan(0.001)
       await page.mouse.up()
+      await page.mouse.dblclick(320, 200)
+      const reset = await page.evaluate(() => window.interactionHarness.step(4))
+      expect(Math.abs(reset.yaw)).toBeLessThan(0.001)
     }
   })
 

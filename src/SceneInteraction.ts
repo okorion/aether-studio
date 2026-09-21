@@ -69,6 +69,7 @@ export function createSceneInteraction(
   const anchor = new THREE.Vector2()
   const ray = new THREE.Vector3()
   const origin = new THREE.Vector3()
+  const forward = new THREE.Vector3()
   let time = 0
   let head = 0
   let held = false
@@ -81,6 +82,11 @@ export function createSceneInteraction(
   let burst = 0
   let dirty = false
   let direction = 0
+  let startYaw = 0
+  let startPitch = 0
+  let velocityYaw = 0
+  let previousMove = 0
+  let previousYaw = 0
   canvas.dataset.cameraMode = 'idle'
   const home = () => !location.hash || location.hash === '#home'
   const interactive = (target: EventTarget | null) =>
@@ -88,7 +94,11 @@ export function createSceneInteraction(
     Boolean(target.closest('a,button,input,select,textarea,dialog,[data-no-camera]'))
   const pointAt = (x: number, y: number) => {
     ray.set(x, y, 0.5).unproject(camera).sub(camera.position).normalize()
-    const distance = Math.abs(ray.z) > 0.001 ? -camera.position.z / ray.z : 10
+    // Intersect a camera-facing plane through the organism, including its back.
+    // A fixed z=0 plane becomes edge-on at a quarter turn.
+    camera.getWorldDirection(forward)
+    const denominator = ray.dot(forward)
+    const distance = denominator > 0.001 ? -camera.position.dot(forward) / denominator : 10
     return origin.copy(camera.position).addScaledVector(ray, Math.max(1, distance))
   }
   const emit = (x: number, y: number, amount: number) => {
@@ -129,12 +139,12 @@ export function createSceneInteraction(
       }
     }
     if (held && event.pointerId === pointerId) {
-      targetYaw = THREE.MathUtils.clamp((pointer.x - anchor.x) * 2.2 + anchor.x * 0.22, -1.7, 1.7)
-      targetPitch = THREE.MathUtils.clamp(
-        (pointer.y - anchor.y) * 0.85 + anchor.y * 0.12,
-        -0.55,
-        0.55,
-      )
+      targetYaw = startYaw - (pointer.x - anchor.x) * 2.5
+      targetPitch = THREE.MathUtils.clamp(startPitch + (pointer.y - anchor.y) * 0.8, -.6, .6)
+      const seconds = Math.max(.008, Math.min(.1, (event.timeStamp - previousMove) / 1000))
+      velocityYaw = THREE.MathUtils.clamp((targetYaw - previousYaw) / seconds, -2.2, 2.2)
+      previousYaw = targetYaw
+      previousMove = event.timeStamp
     }
   }
   const down = (event: PointerEvent) => {
@@ -149,31 +159,45 @@ export function createSceneInteraction(
     pointerId = event.pointerId
     held = true
     anchor.set((event.clientX / innerWidth) * 2 - 1, 1 - (event.clientY / innerHeight) * 2)
-    targetYaw = anchor.x * 0.22 + 0.07
-    targetPitch = anchor.y * 0.12
+    startYaw = targetYaw
+    startPitch = targetPitch
+    previousYaw = targetYaw
+    previousMove = event.timeStamp
+    velocityYaw = 0
     burst = 1
     emit(anchor.x, anchor.y, software ? 12 : 40)
     canvas.dataset.cameraMode = 'orbit'
     document.documentElement.classList.add('scene-dragging')
   }
-  const release = () => {
+  const release = (event?: PointerEvent) => {
+    if (event instanceof PointerEvent && event.pointerId !== pointerId) return
     held = false
     pointerId = -1
-    targetYaw = 0
-    targetPitch = 0
+    // Retain the chosen angle. Only angular velocity decays after release.
+    if (event && (event.type === 'pointercancel' || event.timeStamp - previousMove > 100)) velocityYaw = 0
     canvas.dataset.cameraMode = 'idle'
     document.documentElement.classList.remove('scene-dragging')
   }
   const leave = () => {
     last.set(-10, -10)
     release()
+    velocityYaw = 0
+  }
+  const reset = () => {
+    leave()
+    targetYaw = 0
+    targetPitch = 0
+  }
+  const doubleClick = (event: MouseEvent) => {
+    if (!interactive(event.target) && home()) reset()
   }
   window.addEventListener('pointermove', move, { passive: true })
   window.addEventListener('pointerdown', down, { passive: true })
   window.addEventListener('pointerup', release)
   window.addEventListener('pointercancel', release)
   window.addEventListener('blur', leave)
-  window.addEventListener('hashchange', leave)
+  window.addEventListener('hashchange', reset)
+  window.addEventListener('dblclick', doubleClick)
   document.addEventListener('pointerleave', leave)
   const visibility = () => {
     if (document.hidden) leave()
@@ -191,9 +215,14 @@ export function createSceneInteraction(
         geometry.attributes.aAngle.needsUpdate = true
         dirty = false
       }
+      if (!held) {
+        targetYaw += velocityYaw * delta
+        velocityYaw *= Math.exp(-7 * delta)
+      }
       yaw = THREE.MathUtils.damp(yaw, targetYaw, held ? 5 : 3, delta)
       pitch = THREE.MathUtils.damp(pitch, targetPitch, held ? 5 : 3, delta)
-      zoom = THREE.MathUtils.damp(zoom, held ? 1 : 0, 4, delta)
+      // Orbit changes viewpoint, not camera distance. Pressing alone must not zoom.
+      zoom = 0
       burst = Math.max(0, burst - delta * 1.5)
       return { yaw, pitch, zoom, burst }
     },
@@ -204,7 +233,8 @@ export function createSceneInteraction(
       window.removeEventListener('pointerup', release)
       window.removeEventListener('pointercancel', release)
       window.removeEventListener('blur', leave)
-      window.removeEventListener('hashchange', leave)
+      window.removeEventListener('hashchange', reset)
+      window.removeEventListener('dblclick', doubleClick)
       document.removeEventListener('pointerleave', leave)
       document.removeEventListener('visibilitychange', visibility)
       scene.remove(points)

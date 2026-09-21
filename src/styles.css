@@ -521,11 +521,10 @@ main > section {
   visibility: visible;
   opacity: 1;
 }
-/* These flat wrappers are composited behind/within 3D in the healthy renderer.
-   The DOM copies remain available when WebGL cannot run. */
+/* Keep the active DOM copy in the accessibility tree while the ready canvas
+   supplies its visual presentation. Fallback keeps the normal visible copy. */
 body:has(.scene-canvas[data-render-state='ready']) .journey-statement,
 body:has(.scene-canvas[data-render-state='ready']) .journey-scales {
-  visibility: hidden;
   opacity: 0;
 }
 .journey-progress {

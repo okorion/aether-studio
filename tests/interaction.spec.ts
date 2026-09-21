@@ -89,6 +89,12 @@ test('wheel input descends and reverses before 24 settled scroll checkpoints', a
     await expect(page.locator('.scene-canvas')).toBeInViewport()
     await expect(page.locator('.scene-canvas')).toHaveAttribute('data-render-state', 'ready')
     const rendered = await settledScene(page)
+    if (expectedStages[index] === 'scales') {
+      // Canvas text is aria-hidden: the active DOM equivalent must remain in
+      // the accessibility tree even when its visual presentation is transparent.
+      expect(await page.locator('.journey-scales').ariaSnapshot()).toContain('MATTER / IN CONSTANT CHANGE')
+      await expect(page.locator('.journey-scales')).toHaveCSS('opacity', '0')
+    }
     expect(Math.abs(rendered.modelY - rendered.targetY)).toBeLessThan(.001)
     expect(rendered.targetY).toBeLessThanOrEqual(previousHeight + .001)
     expect(Math.abs(rendered.ringRoll)).toBeLessThan(.001)
@@ -143,8 +149,32 @@ test('@interaction production scene accepts background drag and excludes navigat
   const canvas = page.locator('.scene-canvas')
   // Exclude the pointer's trail/burst area from the comparison.
   const region = { x: 80, y: 100, width: 650, height: 650 }
-  const before = await page.screenshot({ clip: region })
-  expect(await page.screenshot({ clip: region })).toEqual(before)
+  const captureCamera = async () => {
+    // Linux SwiftShader can stall consecutive CDP captures of an unchanged
+    // compositor surface. Repaint one pixel outside the crop during capture;
+    // the production scene, frozen clock, crop, and strict equality stay intact.
+    const paintTimer = await page.evaluate(() => {
+      const marker = document.createElement('i')
+      marker.id = 'camera-capture-repaint'
+      marker.style.cssText = 'position:fixed;left:0;top:0;width:1px;height:1px;z-index:2147483647;pointer-events:none;background:#010101'
+      document.body.appendChild(marker)
+      let alternate = false
+      return window.setInterval(() => {
+        alternate = !alternate
+        marker.style.backgroundColor = alternate ? '#020202' : '#010101'
+      }, 100)
+    })
+    try {
+      return await page.screenshot({ clip: region })
+    } finally {
+      await page.evaluate(timer => {
+        clearInterval(timer)
+        document.getElementById('camera-capture-repaint')?.remove()
+      }, paintTimer)
+    }
+  }
+  const before = await captureCamera()
+  expect(await captureCamera()).toEqual(before)
   // Establish the still baseline before hover starts the damped lighting field.
   await page.mouse.move(1100, 350)
   const framesBefore = await page.evaluate(() => window.cameraTestFrames)
@@ -160,7 +190,7 @@ test('@interaction production scene accepts background drag and excludes navigat
       timeout: process.env.CI ? 45_000 : 10_000,
     })
     .toBeGreaterThan(framesBefore + 80)
-  const held = await page.screenshot({ clip: region })
+  const held = await captureCamera()
   expect(held.equals(before)).toBe(false)
   await test.info().attach('camera-before', { body: before, contentType: 'image/png' })
   await test.info().attach('camera-held', { body: held, contentType: 'image/png' })

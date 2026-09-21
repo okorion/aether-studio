@@ -79,6 +79,7 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
 
     let renderer: THREE.WebGLRenderer | undefined
     let frame = 0
+    let frameTimer: number | undefined
     let disposed = false
     let contextLost = false
     let ready = false
@@ -117,6 +118,8 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
     const failScene = () => {
       contextLost = true
       cancelAnimationFrame(frame)
+      window.clearTimeout(frameTimer)
+      frameTimer = undefined
       frame = 0
       if (renderer) renderer.domElement.dataset.renderState = 'lost'
       releaseResources()
@@ -132,7 +135,17 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
         failIfMajorPerformanceCaveat: false,
       })
       const activeRenderer = renderer
-      activeRenderer.setPixelRatio(Math.min(window.devicePixelRatio, smallScreen ? 1.4 : 1.7))
+      const gl = activeRenderer.getContext()
+      const debugInfo = gl.getExtension('WEBGL_debug_renderer_info')
+      const rendererName = String(
+        gl.getParameter(debugInfo ? debugInfo.UNMASKED_RENDERER_WEBGL : gl.RENDERER),
+      )
+      // Software WebGL competes with input and layout for CPU time. Keep the
+      // same scene, but use a bounded budget rather than starving navigation.
+      const softwareRenderer = /swiftshader|llvmpipe|softpipe|software/i.test(rendererName)
+      const pixelRatio = (width: number) =>
+        Math.min(window.devicePixelRatio, softwareRenderer ? 0.75 : width < 768 ? 1.4 : 1.7)
+      activeRenderer.setPixelRatio(pixelRatio(window.innerWidth))
       activeRenderer.setSize(window.innerWidth, window.innerHeight)
       activeRenderer.setClearColor(0x020809, 0)
       activeRenderer.outputColorSpace = THREE.SRGBColorSpace
@@ -140,6 +153,7 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
       activeRenderer.toneMappingExposure = 1.45
       const canvas = activeRenderer.domElement
       canvas.className = 'scene-canvas'
+      canvas.dataset.renderProfile = softwareRenderer ? 'software' : 'gpu'
       canvas.dataset.renderState = 'loading'
       canvas.setAttribute('aria-hidden', 'true')
       canvas.style.cssText = 'display:block;width:100%;height:100%;transition:opacity 600ms ease;'
@@ -183,6 +197,7 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
       addLightCard(0x91c6bc, 1.2, new THREE.Vector3(0.7, 0.2, 6), new THREE.Vector2(3.5, 5))
       let envMap: THREE.WebGLRenderTarget | undefined
       const refreshEnvironment = () => {
+        if (softwareRenderer) return
         if (envMap) {
           envMap.dispose()
           renderTargets.delete(envMap)
@@ -232,6 +247,15 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
           iridescence: 0.7,
         }),
       )
+      if (softwareRenderer) {
+        for (const surface of [chrome, darkChrome]) {
+          surface.clearcoat = 0
+          surface.iridescence = 0
+          surface.metalness = 0.25
+          surface.roughness = 0.5
+          surface.emissive.copy(surface.color).multiplyScalar(0.16)
+        }
+      }
       const luminous = material(
         new THREE.MeshBasicMaterial({
           color: 0x9bfff0,
@@ -244,7 +268,7 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
       const glyphChrome = material(chrome.clone())
       glyphChrome.color.set(0xb9e4d3)
       glyphChrome.roughness = 0.25
-      glyphChrome.metalness = 0.87
+      glyphChrome.metalness = softwareRenderer ? 0.25 : 0.87
       glyphChrome.emissive.set(0x163b35)
       glyphChrome.emissiveIntensity = 0.18
       glyphChrome.envMapIntensity = 2.4
@@ -279,14 +303,18 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
       emblem.position.set(0, 0, 0)
       world.add(emblem)
 
-      const ring = new THREE.Mesh(geometry(new THREE.TorusGeometry(0.89, 0.029, 12, 144)), chrome)
+      const ringSegments = softwareRenderer ? 64 : 144
+      const ring = new THREE.Mesh(
+        geometry(new THREE.TorusGeometry(0.89, 0.029, softwareRenderer ? 6 : 12, ringSegments)),
+        chrome,
+      )
       const ringInner = new THREE.Mesh(
-        geometry(new THREE.TorusGeometry(0.84, 0.009, 8, 144)),
+        geometry(new THREE.TorusGeometry(0.84, 0.009, softwareRenderer ? 4 : 8, ringSegments)),
         darkChrome,
       )
       ringInner.position.z = -0.035
       const ringGlow = new THREE.Mesh(
-        geometry(new THREE.TorusGeometry(0.89, 0.006, 6, 144)),
+        geometry(new THREE.TorusGeometry(0.89, 0.006, softwareRenderer ? 4 : 6, ringSegments)),
         luminous,
       )
       ringGlow.position.z = 0.026
@@ -343,21 +371,40 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
         }
         const path = new THREE.CatmullRomCurve3(points)
         ribbons.add(
-          new THREE.Mesh(geometry(new THREE.TubeGeometry(path, 180, 0.015, 6, false)), chrome),
+          new THREE.Mesh(
+            geometry(
+              new THREE.TubeGeometry(
+                path,
+                softwareRenderer ? 64 : 180,
+                0.015,
+                softwareRenderer ? 4 : 6,
+                false,
+              ),
+            ),
+            chrome,
+          ),
         )
         const edgePath = new THREE.CatmullRomCurve3(
           points.map((p) => p.clone().add(new THREE.Vector3(0.025, 0, -0.017))),
         )
         ribbons.add(
           new THREE.Mesh(
-            geometry(new THREE.TubeGeometry(edgePath, 180, 0.007, 5, false)),
+            geometry(
+              new THREE.TubeGeometry(
+                edgePath,
+                softwareRenderer ? 64 : 180,
+                0.007,
+                softwareRenderer ? 3 : 5,
+                false,
+              ),
+            ),
             darkChrome,
           ),
         )
       }
 
       const random = seededRandom(27182)
-      const count = smallScreen ? 4200 : 12500
+      const count = softwareRenderer ? (smallScreen ? 1400 : 2000) : smallScreen ? 4200 : 12500
       const positions = new Float32Array(count * 3)
       const colors = new Float32Array(count * 3)
       const sizes = new Float32Array(count)
@@ -365,7 +412,7 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
       const particleColor = new THREE.Color()
       for (let i = 0; i < count; i += 1) {
         const side = random() > 0.5 ? 1 : -1
-        const foreground = i < (smallScreen ? 90 : 260)
+        const foreground = i < (softwareRenderer ? 45 : smallScreen ? 90 : 260)
         const peripheral = foreground || random() < 0.13
         const cloud = random() + random() + random() - 1.5
         // Gaussian-height plumes avoid a flat upper edge; foreground motes stay
@@ -417,7 +464,7 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
       particles.frustumCulled = false
       world.add(particles)
 
-      const distantCount = smallScreen ? 220 : 700
+      const distantCount = softwareRenderer ? 100 : smallScreen ? 220 : 700
       const distantPositions = new Float32Array(distantCount * 3)
       const distantColors = new Float32Array(distantCount * 3)
       const distantSizes = new Float32Array(distantCount)
@@ -453,6 +500,11 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
           envMapIntensity: 1.7,
         }),
       )
+      if (softwareRenderer) {
+        bellMaterial.metalness = 0.1
+        bellMaterial.roughness = 0.6
+        bellMaterial.emissive.set(0x152927)
+      }
       const threadMaterial = material(
         new THREE.LineBasicMaterial({
           color: 0x58968c,
@@ -462,7 +514,11 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
           depthWrite: false,
         }),
       )
-      for (let creatureIndex = 0; creatureIndex < (smallScreen ? 2 : 4); creatureIndex += 1) {
+      for (
+        let creatureIndex = 0;
+        creatureIndex < (softwareRenderer ? 1 : smallScreen ? 2 : 4);
+        creatureIndex += 1
+      ) {
         const group = new THREE.Group()
         const bell = new THREE.Mesh(
           geometry(new THREE.SphereGeometry(0.23, 20, 10, 0, Math.PI * 2, 0, Math.PI * 0.5)),
@@ -473,8 +529,9 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
         const lip = new THREE.Mesh(geometry(new THREE.TorusGeometry(0.23, 0.006, 5, 40)), chrome)
         lip.rotation.x = Math.PI * 0.5
         group.add(lip)
-        for (let strand = 0; strand < 8; strand += 1) {
-          const theta = (strand / 8) * Math.PI * 2
+        const strandCount = softwareRenderer ? 4 : 8
+        for (let strand = 0; strand < strandCount; strand += 1) {
+          const theta = (strand / strandCount) * Math.PI * 2
           const points: THREE.Vector3[] = []
           for (let p = 0; p <= 20; p += 1) {
             const t = p / 20
@@ -562,17 +619,30 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
 
         try {
           activeRenderer.render(scene, camera)
-          canvas.dataset.renderState = 'ready'
-          canvas.style.opacity = '1'
+          if (canvas.dataset.renderState !== 'ready') {
+            canvas.dataset.renderState = 'ready'
+            canvas.style.opacity = '1'
+          }
           markReady()
         } catch {
           failScene()
         }
-        if (!reducedMotion && !contextLost) frame = requestAnimationFrame(render)
+        if (!reducedMotion && !contextLost) {
+          if (softwareRenderer) {
+            // An actual idle interval after each software frame leaves room for
+            // pointer/scroll/focus events, even when one frame takes > 50 ms.
+            frameTimer = window.setTimeout(() => {
+              frameTimer = undefined
+              requestRender()
+            }, 50)
+          } else {
+            frame = requestAnimationFrame(render)
+          }
+        }
       }
 
       const requestRender = () => {
-        if (!frame && !disposed && !contextLost && !document.hidden)
+        if (!frame && frameTimer === undefined && !disposed && !contextLost && !document.hidden)
           frame = requestAnimationFrame(render)
       }
       const resize = () => {
@@ -581,7 +651,7 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
         camera.aspect = width / height
         camera.position.z = width < 768 ? 13.5 : 10.8
         camera.updateProjectionMatrix()
-        activeRenderer.setPixelRatio(Math.min(window.devicePixelRatio, width < 768 ? 1.4 : 1.7))
+        activeRenderer.setPixelRatio(pixelRatio(width))
         activeRenderer.setSize(width, height)
         particlesMaterial.uniforms.uPixelRatio.value = activeRenderer.getPixelRatio()
         targetProgress = Math.max(0, window.scrollY / height)
@@ -602,6 +672,8 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
       const visibilityChange = () => {
         if (document.hidden) {
           cancelAnimationFrame(frame)
+          window.clearTimeout(frameTimer)
+          frameTimer = undefined
           frame = 0
         } else {
           previousTime = 0
@@ -613,6 +685,8 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
         contextLost = true
         canvas.dataset.renderState = 'lost'
         cancelAnimationFrame(frame)
+        window.clearTimeout(frameTimer)
+        frameTimer = undefined
         frame = 0
         canvas.style.opacity = '0'
         markReady()
@@ -653,6 +727,7 @@ export default function Scene({ reducedMotion, onReady }: SceneProps) {
     return () => {
       disposed = true
       cancelAnimationFrame(frame)
+      window.clearTimeout(frameTimer)
       releaseResources()
     }
   }, [reducedMotion])

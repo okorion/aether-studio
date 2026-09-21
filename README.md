@@ -1,10 +1,24 @@
 # AETHER STUDIO
 
+[사이트 바로 보기](https://aether-studio-nu.vercel.app/) · [검증 기록](docs/verification.md) · [초기 구현 PR](https://github.com/okorion/aether-studio/pull/1)
+
 [Active Theory](https://activetheory.net/)의 어두운 몰입형 공간, 크롬 링, 입자, 얇은 곡선, 미니멀 내비게이션을 참고한 초기 구현입니다. React + TypeScript + Three.js + Vite로 개발했습니다.
 
 원본의 소스·로고·모델·이미지·음악을 복제하지 않았습니다. AETHER STUDIO 브랜드, 문구, 4개 가상 프로젝트와 시각 요소는 이 프로젝트용으로 작성했습니다. 원본의 전체 연출을 그대로 복제한 완성품은 아니며, 자체 절차적 3D 장면으로 구현한 초기 버전입니다.
 
-![데스크톱 첫 화면](docs/screenshots/desktop-home.png)
+![배포 사이트의 데스크톱 첫 화면](docs/screenshots/production/desktop-home.png)
+
+## 화면 미리보기
+
+아래 이미지는 2026-09-21 공개 배포 주소에서 직접 캡처했습니다. 데스크톱은 1440×900, 모바일은 390×844입니다. 실시간 3D 장면은 시간과 포인터에 따라 달라집니다.
+
+| 프로젝트 목록 | 프로젝트 상세 |
+| --- | --- |
+| ![Work](docs/screenshots/production/desktop-work.png) | ![프로젝트 상세](docs/screenshots/production/desktop-project.png) |
+
+| Contact | 모바일 홈 |
+| --- | --- |
+| ![Contact](docs/screenshots/production/desktop-contact.png) | <img src="docs/screenshots/production/mobile-home.png" alt="모바일 홈" width="240" /> |
 
 ## 실행
 
@@ -26,7 +40,23 @@ npm test
 npm run preview
 ```
 
-`npm run build` 결과인 `dist/`를 정적 호스팅에 사용할 수 있습니다. 현재 작업 범위는 GitHub private 저장소이며 운영 배포는 포함하지 않습니다.
+`npm run build` 결과인 `dist/`를 정적 호스팅에 사용할 수 있습니다.
+
+## 배포
+
+- 운영 주소: **https://aether-studio-nu.vercel.app/**
+- 호스팅: Vercel · Vite 정적 사이트 · `npm run build` → `dist/`
+- GitHub의 `okorion/aether-studio` 비공개 저장소와 연결되어 있으며, production 브랜치는 `main`입니다.
+- 소스 저장소는 비공개이고 배포 사이트는 공개 데모입니다. 별도의 서버·DB·환경변수는 필요하지 않습니다.
+
+저장소 접근 권한과 Vercel 프로젝트 권한이 있는 환경에서 수동 배포하려면:
+
+```sh
+npx vercel link --project aether-studio --scope okorions-projects
+npx vercel deploy --prod --scope okorions-projects
+```
+
+`.vercel/`과 `.env*`는 Git에서 제외합니다. Git 연결에 따른 Vercel 배포와 GitHub Actions 검증은 독립적으로 실행되므로 CI 통과가 배포의 필수 게이트로 설정된 상태는 아닙니다.
 
 ## 구현 범위
 
@@ -51,7 +81,7 @@ npm run preview
 | 프로젝트 비주얼 | `src/ProjectArt.tsx`, `src/styles.css` |
 | 합성 사운드 | `src/audio.ts` |
 
-`hello@aether.example`은 예약된 예시 도메인입니다. 공개 운영 전에 실제 연락처로 바꿔야 합니다. 모든 프로젝트는 가상 콘셉트이며 실제 고객 실적을 의미하지 않습니다. Contact 링크는 이메일 앱을 열며, 서버 전송 기능은 없습니다.
+`hello@aether.example`은 예약된 예시 도메인입니다. 현재 배포는 콘셉트 데모이며 실제 문의를 받을 때는 연락처를 교체해야 합니다. 모든 프로젝트는 가상 콘셉트이며 실제 고객 실적을 의미하지 않습니다. Contact 링크는 이메일 앱을 열며, 서버 전송 기능은 없습니다.
 
 ## 검증
 

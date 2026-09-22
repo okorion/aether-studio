@@ -26,11 +26,13 @@ const currentField = /* glsl */ `
   uniform float uDarkness;
   uniform vec2 uPointer;
   uniform float uPointerStrength;
+  uniform float uDevicePointerStrength;
   uniform float uAspect;
   uniform float uFieldOpacity;
   varying vec4 vFieldClip;
   const float PI = 3.14159265359;
-  // Position is a function of scroll alone. Time is reserved for luminance.
+  // The base field follows scroll alone. Only the device's local pointer bend
+  // is reversible at rest; time itself still changes luminance, not the flow.
   float motionTime() { return uScroll; }
 
   vec3 current(float t, float lane, float scrollPhase) {
@@ -139,6 +141,21 @@ const dustVertex = /* glsl */ `
       vec3 localPush = flowTangent / max(length(flowTangent), .001)
         * uScrollStep * touch * .9;
       mv.xyz += (modelViewMatrix * vec4(localPush, 0.0)).xyz;
+    }
+    // The machine must react even with zero scroll delta, including anchored
+    // grains. Work in view space so the cursor reaches the visible arc at any
+    // depth/aspect. Nearby grains share a smooth bend, preserving the O away
+    // from the pointer rather than translating or rotating the entire field.
+    if (uDevicePointerStrength > .0001 && gl_Position.w > 0.0) {
+      float distanceSquared = dot(pointerDelta, pointerDelta);
+      float influence = (1.0 - smoothstep(.0016, .1764, distanceSquared))
+        * uDevicePointerStrength;
+      vec2 away = pointerDelta / max(sqrt(distanceSquared), .06);
+      vec2 bend = (away * .135 + vec2(-away.y, away.x) * .038) * influence;
+      bend.x /= uAspect;
+      mv.xy += bend * max(.01, gl_Position.w)
+        / vec2(projectionMatrix[0][0], projectionMatrix[1][1]);
+      mv.z += influence * .16;
     }
     gl_Position = projectionMatrix * mv;
     vFieldClip = gl_Position;
@@ -320,6 +337,7 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
     uPixelRatio: { value: 1 },
     uPointer: { value: new THREE.Vector2() },
     uPointerStrength: { value: 0 },
+    uDevicePointerStrength: { value: 0 },
     uAspect: { value: 1 },
     uFieldOpacity: { value: 1 },
     uEntryEdge: { value: -0.25 },
@@ -341,7 +359,7 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
   const particles = new THREE.Points(dustGeometry, dustMaterial)
   particles.name = 'aether-current-particles'
   particles.frustumCulled = false
-  particles.userData.motion = 'scroll-only; time changes luminance'
+  particles.userData.motion = 'scroll-only base; local device pointer bend recovers with input decay'
   particles.userData.fixedCount = count - advectedCount
   particles.userData.advectedCount = advectedCount
 
@@ -397,7 +415,7 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
   let previousProgress = Number.NaN
   return {
     update(time: number, progress: number, pixelRatio?: number,
-      pointer?: { ndc: THREE.Vector2; strength: number; aspect: number }) {
+      pointer?: { ndc: THREE.Vector2; strength: number; aspect: number; active?: boolean }) {
       if (disposed) return
       const journey = sampleJourney(progress)
       const p = journey.progress
@@ -418,11 +436,17 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
         + smooth(.245, .31, p) * (1 - smooth(.75, .81, p))
       uniforms.uEntryEdge.value = sampleLayers(p).monitorEntry
       uniforms.uEntryWipe.value = p >= .20 ? 1 : 0
-      const validPointer = pointer && Number.isFinite(pointer.ndc.x) && Number.isFinite(pointer.ndc.y)
+      const validPointer = pointer && pointer.active !== false
+        && Number.isFinite(pointer.ndc.x) && Number.isFinite(pointer.ndc.y)
       if (validPointer) uniforms.uPointer.value.copy(pointer.ndc)
       else uniforms.uPointer.value.set(0, 0)
       uniforms.uPointerStrength.value = validPointer && Number.isFinite(pointer.strength)
         ? THREE.MathUtils.clamp(pointer.strength, 0, 1) : 0
+      // Input strength already eases after mouse motion. Threshold its tail so
+      // a stopped pointer restores the exact scroll shape, without an extra
+      // spring/integration loop or deformation leaking into the spine.
+      uniforms.uDevicePointerStrength.value = smooth(.64, .70, p)
+        * smooth(.035, .82, uniforms.uPointerStrength.value)
       uniforms.uAspect.value = pointer && Number.isFinite(pointer.aspect)
         ? THREE.MathUtils.clamp(pointer.aspect, .25, 5) : 1
       const ratio = pixelRatio ?? window.devicePixelRatio ?? 1
@@ -432,6 +456,7 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
       particles.userData.scrollStep = signedStep
       particles.userData.morph = morph
       particles.userData.fieldY = fieldY
+      particles.userData.devicePointerStrength = uniforms.uDevicePointerStrength.value
     },
     dispose() {
       if (disposed) return

@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import { createSceneInteraction } from '../../src/SceneInteraction'
 import { createSceneWorlds } from '../../src/SceneWorlds'
 import { createSceneMonitors } from '../../src/SceneMonitors'
+import { createAtmosphere } from '../../src/Atmosphere'
 import { sampleJourney } from '../../src/Journey'
 import { createSceneLayers, sampleLayers } from '../../src/SceneLayers'
 
@@ -23,6 +24,7 @@ export type InteractionHarness = {
   sampleEditorial: typeof sampleEditorial
   stepField: typeof stepField
   probeScalePointer: typeof probeScalePointer
+  probeDevicePointer: typeof probeDevicePointer
   probeMonitorCapture: typeof probeMonitorCapture
   probeMonitorOcclusion: typeof probeMonitorOcclusion
   sampleWorld: (elapsed: number, progress: number) => {
@@ -156,6 +158,78 @@ function probeScalePointer() {
     renderer.autoClear = previousAutoClear
     probeScene.clear()
     assembly.dispose()
+    target.dispose()
+  }
+}
+
+function probeDevicePointer() {
+  const width = 320, height = 200, progress = .72, elapsed = 10
+  const probeScene = new THREE.Scene()
+  const atmosphere = createAtmosphere(probeScene, false, false)
+  const particles = probeScene.getObjectByName('aether-current-particles') as THREE.Points<THREE.BufferGeometry, THREE.ShaderMaterial>
+  const initialSeeds = new Float32Array(particles.geometry.attributes.position.array)
+  const state = sampleJourney(progress)
+  const probeCamera = new THREE.PerspectiveCamera(42, width / height, .1, 90)
+  probeCamera.position.set(
+    Math.sin(state.azimuth) * Math.cos(state.elevation) * state.radius,
+    state.height + Math.sin(state.elevation) * state.radius,
+    Math.cos(state.azimuth) * Math.cos(state.elevation) * state.radius,
+  )
+  probeCamera.lookAt(0, state.height, 0)
+  probeCamera.updateMatrixWorld()
+  // A world-space point on the device's right arc locates the actual cursor;
+  // all deformation remains in the production vertex shader.
+  const projectedArc = new THREE.Vector3(1.47, -40.4, 0).project(probeCamera)
+  const pointer = { ndc: new THREE.Vector2(projectedArc.x, projectedArc.y), strength: 0, aspect: width / height, active: true }
+  const target = new THREE.WebGLRenderTarget(width, height)
+  const saved = {
+    target: renderer.getRenderTarget(), face: renderer.getActiveCubeFace(), mip: renderer.getActiveMipmapLevel(),
+    autoClear: renderer.autoClear, clearColor: renderer.getClearColor(new THREE.Color()), clearAlpha: renderer.getClearAlpha(),
+  }
+  const scrollSteps: number[] = []
+  const draw = (strength: number) => {
+    pointer.strength = strength
+    atmosphere.update(elapsed, progress, 1, pointer)
+    atmosphere.update(elapsed, progress, 1, pointer)
+    scrollSteps.push(particles.material.uniforms.uScrollStep.value as number)
+    renderer.setRenderTarget(target)
+    renderer.render(probeScene, probeCamera)
+    const bytes = new Uint8Array(width * height * 4)
+    renderer.readRenderTargetPixels(target, 0, 0, width, height, bytes)
+    return bytes
+  }
+  const difference = (base: Uint8Array, image: Uint8Array) => {
+    let changedBytes = 0, changedRgbPixels = 0, changedAlphaPixels = 0, addedCoverage = 0
+    for (let i = 0; i < base.length; i++) if (base[i] !== image[i]) changedBytes++
+    for (let i = 0; i < base.length; i += 4) {
+      const rgb = Math.abs(base[i] - image[i]) + Math.abs(base[i + 1] - image[i + 1]) + Math.abs(base[i + 2] - image[i + 2])
+      if (rgb > 12) changedRgbPixels++
+      // Pointer lighting changes RGB but not fragment alpha. Changed alpha
+      // coverage therefore verifies actual projected geometry displacement.
+      if (Math.abs(base[i + 3] - image[i + 3]) > 2) changedAlphaPixels++
+      if (base[i + 3] <= 1 && image[i + 3] > 3) addedCoverage++
+    }
+    return { changedBytes, changedRgbPixels, changedAlphaPixels, addedCoverage }
+  }
+  try {
+    renderer.autoClear = true
+    renderer.setClearColor(0x000000, 0)
+    const baseline = draw(0)
+    const moved = draw(1)
+    const restored = draw(0)
+    let illuminatedPixels = 0
+    for (let i = 0; i < baseline.length; i += 4)
+      if (baseline[i] + baseline[i + 1] + baseline[i + 2] > 10) illuminatedPixels++
+    return {
+      illuminatedPixels, moved: difference(baseline, moved), restored: difference(baseline, restored),
+      scrollSteps, fieldY: particles.position.y, pointer: pointer.ndc.toArray(),
+      seedsUnchanged: initialSeeds.every((value, index) => value === particles.geometry.attributes.position.array[index]),
+    }
+  } finally {
+    renderer.setRenderTarget(saved.target, saved.face, saved.mip)
+    renderer.setClearColor(saved.clearColor, saved.clearAlpha)
+    renderer.autoClear = saved.autoClear
+    atmosphere.dispose()
     target.dispose()
   }
 }
@@ -369,6 +443,7 @@ window.interactionHarness = {
   sampleEditorial,
   stepField,
   probeScalePointer,
+  probeDevicePointer,
   probeMonitorCapture,
   probeMonitorOcclusion,
   sampleWorld(elapsed, progress) {

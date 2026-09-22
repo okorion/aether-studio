@@ -1,0 +1,317 @@
+{
+  "capturedAt": "2026-09-22T02:07:41.042Z",
+  "viewport": [
+    1440,
+    900
+  ],
+  "deviceScaleFactor": 1,
+  "source": "과거 6개 merge SHA의 수정 없는 git archive 재빌드와 현재 da14095 production 빌드의 실제 GPU 화면",
+  "versions": [
+    {
+      "id": "pr01",
+      "sha": "4ba178dba238455102b4731323488fe40d51c443",
+      "images": [
+        {
+          "file": "scroll-000.jpg",
+          "progress": 0,
+          "bytes": 136675,
+          "sha256": "52e89b126cf7f1740be1825ab5439555b33c3b5665d1be8d88ec15a09e479870"
+        },
+        {
+          "file": "scroll-020.jpg",
+          "progress": 0.2,
+          "bytes": 114347,
+          "sha256": "6eb9cc6c82797aea4aee0aa063ec569381effbe5cf4b51614988b128e9b1e7d2"
+        },
+        {
+          "file": "scroll-040.jpg",
+          "progress": 0.4,
+          "bytes": 131273,
+          "sha256": "f4a3190236e053e95d0c97d170b1db8e3965dcc940a21f3647a90575ba0eb109"
+        },
+        {
+          "file": "scroll-060.jpg",
+          "progress": 0.6,
+          "bytes": 119925,
+          "sha256": "4ca599eb026dab9a5d487e177914fda6a47509fbd8f34e3b942dbfec54f4a465"
+        },
+        {
+          "file": "scroll-080.jpg",
+          "progress": 0.8,
+          "bytes": 109126,
+          "sha256": "7b1b35226da62f6e6cbfe1337118bc72c492cb7a818bffa51be2280e60f85ca5"
+        },
+        {
+          "file": "scroll-098.jpg",
+          "progress": 0.98,
+          "bytes": 113255,
+          "sha256": "bb56fdeb3668ec5203980bd2ba95347ba5fd7ea63dda9d6ad932f6668d97871c"
+        }
+      ],
+      "bytes": 724601
+    },
+    {
+      "id": "pr02",
+      "sha": "a950b50d186f225e900747263b1634ea9cb41451",
+      "images": [
+        {
+          "file": "scroll-000.jpg",
+          "progress": 0,
+          "bytes": 191564,
+          "sha256": "c8246a6ed1f18384f275423aadeab3931755b285a3cc460e20637a8b8d13009e"
+        },
+        {
+          "file": "scroll-020.jpg",
+          "progress": 0.2,
+          "bytes": 178220,
+          "sha256": "cf2dee53bbfa7cd86b37204846ed1ed45fea5cb8f282940ac527dffd55a383b0"
+        },
+        {
+          "file": "scroll-040.jpg",
+          "progress": 0.4,
+          "bytes": 152647,
+          "sha256": "e493402a8c4f0a1aac8cb38263436a82af1e37ba9fe1d5162757bd62d140508e"
+        },
+        {
+          "file": "scroll-060.jpg",
+          "progress": 0.6,
+          "bytes": 128709,
+          "sha256": "1194a156f9c93fc1a24a6eb797e5392fdc3263f1ed1ae4e065f8094fa88b9769"
+        },
+        {
+          "file": "scroll-080.jpg",
+          "progress": 0.8,
+          "bytes": 212986,
+          "sha256": "5952c38a373e35206f024987e88c5058dc0cdbf6b3f27a1db8cf248dcc6153a0"
+        },
+        {
+          "file": "scroll-098.jpg",
+          "progress": 0.98,
+          "bytes": 195508,
+          "sha256": "854d43824edc985005361efbce3e8e144007b52b0af15bac29397c994e9cdd56"
+        }
+      ],
+      "bytes": 1059634
+    },
+    {
+      "id": "pr04",
+      "sha": "31ffdee24d8c0ce17692f46870650b9fd09922e3",
+      "images": [
+        {
+          "file": "scroll-000.jpg",
+          "progress": 0,
+          "bytes": 160542,
+          "sha256": "0ef6050e082db145f1216d17027e5708ef54598d1257b6a59a2ae5bcf1d4dee4"
+        },
+        {
+          "file": "scroll-020.jpg",
+          "progress": 0.2,
+          "bytes": 205480,
+          "sha256": "f9db66e4f6df562fe4e57454e47ad319ea2d5d41986ca3e843d7b27d3032379b"
+        },
+        {
+          "file": "scroll-040.jpg",
+          "progress": 0.4,
+          "bytes": 252338,
+          "sha256": "a4a413f54ed6c5db64f5edfb222d38c6a12dfe048bfb221a794fd938ee3e9c0e"
+        },
+        {
+          "file": "scroll-060.jpg",
+          "progress": 0.6,
+          "bytes": 252254,
+          "sha256": "b7b1b8411ed27993a44f1877a875d093f4a53e5a9f8811b6b90c3c28230a8406"
+        },
+        {
+          "file": "scroll-080.jpg",
+          "progress": 0.8,
+          "bytes": 261553,
+          "sha256": "6597f1023c388144c2c279353ca575fc462f6e98bbf30f68652621cd396153a2"
+        },
+        {
+          "file": "scroll-098.jpg",
+          "progress": 0.98,
+          "bytes": 182986,
+          "sha256": "34bfe1c58a8646f8f884034bc315f3718e440b0abcd5394d8ce9a4959590dac4"
+        }
+      ],
+      "bytes": 1315153
+    },
+    {
+      "id": "pr06",
+      "sha": "f40a58fd07a6bf98fcb0184797b1d4dfcb280d33",
+      "images": [
+        {
+          "file": "scroll-000.jpg",
+          "progress": 0,
+          "bytes": 160621,
+          "sha256": "7a0a1e266761daa3d627d53e2987453b85276e65940a768cc4ea469ae3c66072"
+        },
+        {
+          "file": "scroll-020.jpg",
+          "progress": 0.2,
+          "bytes": 205525,
+          "sha256": "83879f21a14ed710d8714a39d7741ed04738424373f7dc788a7226662815c521"
+        },
+        {
+          "file": "scroll-040.jpg",
+          "progress": 0.4,
+          "bytes": 303061,
+          "sha256": "5f1d859a6fd686e16f0a7d66273dec18710cdb584209779b1642da679f55409a"
+        },
+        {
+          "file": "scroll-060.jpg",
+          "progress": 0.6,
+          "bytes": 299093,
+          "sha256": "f788295b8a05565f4e419b3fb710b5cc4dba9b3c5466e7cbb34afaeff6b0fde8"
+        },
+        {
+          "file": "scroll-080.jpg",
+          "progress": 0.8,
+          "bytes": 305992,
+          "sha256": "a5bc960eabdae6bbf2dcb776c9068db814527e5dfb2d971b3587084a87027bd8"
+        },
+        {
+          "file": "scroll-098.jpg",
+          "progress": 0.98,
+          "bytes": 208850,
+          "sha256": "8959cf9ea8909a0e274f07c912a40d85d12f02ad626e6b94130ce544e18d4188"
+        }
+      ],
+      "bytes": 1483142
+    },
+    {
+      "id": "pr08",
+      "sha": "ec640daeef447b32a6df024739cae2851f4a7c5f",
+      "images": [
+        {
+          "file": "scroll-000.jpg",
+          "progress": 0,
+          "bytes": 297769,
+          "sha256": "8e59966328dac31a375f1a84071c9d112eb778ef6ac6ac0c88023bfcb41df853"
+        },
+        {
+          "file": "scroll-020.jpg",
+          "progress": 0.2,
+          "bytes": 130200,
+          "sha256": "008503380a9dc380a8c0c5cb96d69db9430df5f03fe3d6f4286b591aa76ea926"
+        },
+        {
+          "file": "scroll-040.jpg",
+          "progress": 0.4,
+          "bytes": 275848,
+          "sha256": "ff963da429b7e5e5697cf6075f1b484e7720167eea89bf708c016c6584d929c2"
+        },
+        {
+          "file": "scroll-060.jpg",
+          "progress": 0.6,
+          "bytes": 280393,
+          "sha256": "85f16e5a6be4d09698a820470aa00b6dfd00eb7e5ddfadcd041dc3a776069250"
+        },
+        {
+          "file": "scroll-080.jpg",
+          "progress": 0.8,
+          "bytes": 236504,
+          "sha256": "58d7da38cc33a3a6cfb3abfdbe19afe0882a8545551d10f374b8f86360ee41e6"
+        },
+        {
+          "file": "scroll-098.jpg",
+          "progress": 0.98,
+          "bytes": 213721,
+          "sha256": "01264c90494f86d1278c0808746e8a8dc8c3687822ffcdd5429507b4077bfca8"
+        }
+      ],
+      "bytes": 1434435
+    },
+    {
+      "id": "pr09",
+      "sha": "af57c8788ea7b068d57c5f59d619963c65def51c",
+      "images": [
+        {
+          "file": "scroll-000.jpg",
+          "progress": 0,
+          "bytes": 286603,
+          "sha256": "59763f934913219cf9052b0929029eeb84e529af7f7f3b314c8922577fd1f669"
+        },
+        {
+          "file": "scroll-020.jpg",
+          "progress": 0.2,
+          "bytes": 133976,
+          "sha256": "57ff7fa0354f1b7ecd711156940125d49e3a9ef9ba2c358abfc13de9bab8fa8d"
+        },
+        {
+          "file": "scroll-040.jpg",
+          "progress": 0.4,
+          "bytes": 289637,
+          "sha256": "b2752293dc664c0e928f4e2f492d8bca76d86c0b974c84b03f0eb0e07675dec2"
+        },
+        {
+          "file": "scroll-060.jpg",
+          "progress": 0.6,
+          "bytes": 249928,
+          "sha256": "6c0c593723e189dbb4d1d7bb12b6fe81acaa4adda3eeca5c756e7d4f0da9e7c0"
+        },
+        {
+          "file": "scroll-080.jpg",
+          "progress": 0.8,
+          "bytes": 233634,
+          "sha256": "8d9148421158a7d6e253c6feba3385db49003e3967142d5f1e6c0e5dd4ea50fb"
+        },
+        {
+          "file": "scroll-098.jpg",
+          "progress": 0.98,
+          "bytes": 182857,
+          "sha256": "fd56b8897a19a22cd5ad0bee0b072c880b0479b5f1c993d258a378eb075ef72f"
+        }
+      ],
+      "bytes": 1376635
+    },
+    {
+      "id": "pr10",
+      "sha": "da140951e28c4dd4e211eda76570962eabecd7c4",
+      "source": "커밋된 현재 production 빌드의 기본 카메라·포인터 입력 전 실제 GPU 화면",
+      "images": [
+        {
+          "file": "scroll-000.jpg",
+          "progress": 0,
+          "bytes": 286710,
+          "sha256": "b786050c8c5554d89aec68b4ebe971f2eb07e674929ab6cd1dbad1b3aff9aa77"
+        },
+        {
+          "file": "scroll-020.jpg",
+          "progress": 0.2,
+          "bytes": 133921,
+          "sha256": "89941486760f13b61345a52344d9a15cad38e78411c8646acd570ba39bfa373f"
+        },
+        {
+          "file": "scroll-040.jpg",
+          "progress": 0.4,
+          "bytes": 326863,
+          "sha256": "adbc0a994013b39d92c23e03d09e61ea8eeda77bd29d21e85ea8488b7388b5df"
+        },
+        {
+          "file": "scroll-060.jpg",
+          "progress": 0.6,
+          "bytes": 275802,
+          "sha256": "f012e08fa2e9a71a81c0d393c42d2d2dc102704a7c80b7fddd1fb0371b2280b0"
+        },
+        {
+          "file": "scroll-080.jpg",
+          "progress": 0.8,
+          "bytes": 321735,
+          "sha256": "f788b9e1edcf623691f6c89e41e5730ca44a75aaad382eb4dd0c4955f911dfb4"
+        },
+        {
+          "file": "scroll-098.jpg",
+          "progress": 0.98,
+          "bytes": 220464,
+          "sha256": "36d256323e9c25bee2451ffcc0732b4d16c7f8922cd4e90975303c88f35576db"
+        }
+      ],
+      "bytes": 1565495
+    }
+  ],
+  "updatedAt": "2026-09-22T02:20:28.658Z",
+  "versionCount": 7,
+  "imageCount": 42,
+  "totalImageBytes": 8959095
+}

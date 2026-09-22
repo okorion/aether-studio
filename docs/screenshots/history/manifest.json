@@ -5,7 +5,7 @@
     900
   ],
   "deviceScaleFactor": 1,
-  "source": "과거 6개 merge SHA의 수정 없는 git archive 재빌드와 현재 da14095 production 빌드의 실제 GPU 화면",
+  "source": "과거 6개 merge SHA의 수정 없는 git archive 재빌드와 현재 da14095 production 빌드의 실제 GPU 화면; PR11 b9b61fc 확정 소스 production 빌드 추가",
   "versions": [
     {
       "id": "pr01",
@@ -308,10 +308,53 @@
         }
       ],
       "bytes": 1565495
+    },
+    {
+      "id": "pr11",
+      "sha": "b9b61fc",
+      "images": [
+        {
+          "file": "scroll-000.jpg",
+          "progress": 0,
+          "bytes": 333931,
+          "sha256": "3adb46c02ddec0a4fb730b76d13fc8310b5622f1068149af3dcd923b742c593f"
+        },
+        {
+          "file": "scroll-020.jpg",
+          "progress": 0.2,
+          "bytes": 139125,
+          "sha256": "ba899bc1147c456560b12379eadece6bafda63c961e9bd16b725968040f5c219"
+        },
+        {
+          "file": "scroll-040.jpg",
+          "progress": 0.4,
+          "bytes": 347384,
+          "sha256": "9b648d6fd50ec508b9934229d8c3941ed63797399b0a1d7c48e9ad4b97877af4"
+        },
+        {
+          "file": "scroll-060.jpg",
+          "progress": 0.6,
+          "bytes": 294692,
+          "sha256": "6432c3f4047581be900377e34e149eab01e970a254fd36c25645500d85b5ccb9"
+        },
+        {
+          "file": "scroll-080.jpg",
+          "progress": 0.8,
+          "bytes": 315920,
+          "sha256": "4fa831133f990b3377abe41bad51ebaca02341ab6497f7c4da5caa5249723c9f"
+        },
+        {
+          "file": "scroll-098.jpg",
+          "progress": 0.98,
+          "bytes": 254299,
+          "sha256": "9a26c16d34281d1398ff36152fb999b064a6f0d852c3ec3edcfbb59b2c679758"
+        }
+      ],
+      "bytes": 1685351
     }
   ],
-  "updatedAt": "2026-09-22T02:20:28.658Z",
-  "versionCount": 7,
-  "imageCount": 42,
-  "totalImageBytes": 8959095
+  "updatedAt": "2026-09-22T04:11:28.943Z",
+  "versionCount": 8,
+  "imageCount": 48,
+  "totalImageBytes": 10644446
 }

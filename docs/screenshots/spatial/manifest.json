@@ -1,0 +1,262 @@
+{
+  "sourceBefore": "e995f12394998d2d748904bdc325fc38b5bead2e",
+  "sourceAfter": "b9b61fc",
+  "viewport": [
+    1440,
+    900
+  ],
+  "dpr": 1,
+  "mobileViewport": [
+    390,
+    844
+  ],
+  "notes": "실제 production 빌드 캡처. 기본 카메라·동일 progress. 영상·광원 위상은 동기화하지 않음. 09bcdcf는 화면 준비 전 샘플링만 변경하며 최종 성능 측정에 별도 기록.",
+  "files": [
+    {
+      "file": "before/scroll-000.jpg",
+      "bytes": 304660,
+      "sha256": "786a7ebca09bd24c89d92f6e55084b1c48ba41051e1f9974feb9c0bdd8ba432b",
+      "capturedAt": "2026-09-22T03:49:45.367Z"
+    },
+    {
+      "file": "before/scroll-635.jpg",
+      "bytes": 242560,
+      "sha256": "d3878e50eff412616799a6b2ef49b7d71c3055ac89dc6634df63b0fca21116d9",
+      "capturedAt": "2026-09-22T03:49:47.725Z"
+    },
+    {
+      "file": "before/scroll-660.jpg",
+      "bytes": 227105,
+      "sha256": "cdd58d46fca9c1b626495e2902893b010308f6eca2758c932d2e35b052889af1",
+      "capturedAt": "2026-09-22T03:49:50.080Z"
+    },
+    {
+      "file": "before/scroll-685.jpg",
+      "bytes": 240503,
+      "sha256": "9d5ad4dd3a73296ef61d7dfa756dee685b62af50b1e5f4eea738dc1213176ca5",
+      "capturedAt": "2026-09-22T03:49:52.443Z"
+    },
+    {
+      "file": "before/scroll-720.jpg",
+      "bytes": 235610,
+      "sha256": "547c1b36d6992d9f89497dc2c59f35168629b27cbc5d0cce26d0bebcf9ff3080",
+      "capturedAt": "2026-09-22T03:49:54.812Z"
+    },
+    {
+      "file": "before/scroll-765.jpg",
+      "bytes": 243430,
+      "sha256": "71d4675f3d058ec8d28588df91bf46c5b7ede913d9f81739a2759eaf8f1d0260",
+      "capturedAt": "2026-09-22T03:49:57.183Z"
+    },
+    {
+      "file": "before/scroll-785.jpg",
+      "bytes": 316276,
+      "sha256": "8582c17c7d9f92575569831c044317315af240c7da762b6a97950a56cff7229d",
+      "capturedAt": "2026-09-22T03:49:59.565Z"
+    },
+    {
+      "file": "before/scroll-810.jpg",
+      "bytes": 350372,
+      "sha256": "9f47fdcd69798a31e52a1c88a74f4d61663bb138d864bd75c3e78714272f1bef",
+      "capturedAt": "2026-09-22T03:50:01.936Z"
+    },
+    {
+      "file": "before/scroll-865.jpg",
+      "bytes": 217308,
+      "sha256": "cf438937959c79f9d3b602ffd078a17f79f309a9d10e3baf697de43fdbc01a6f",
+      "capturedAt": "2026-09-22T03:50:04.303Z"
+    },
+    {
+      "file": "before/scroll-890.jpg",
+      "bytes": 195103,
+      "sha256": "b0730aec64c73632e80e5cea0cfab7d3a5d4dfd39600e3fbe43d9fa581965703",
+      "capturedAt": "2026-09-22T03:50:06.675Z"
+    },
+    {
+      "file": "before/scroll-915.jpg",
+      "bytes": 155856,
+      "sha256": "ffd083e2e62f463d1b08e70260c65fae1b1b63dcf0411c6fc273a4846d386e8c",
+      "capturedAt": "2026-09-22T03:50:09.051Z"
+    },
+    {
+      "file": "before/scroll-980.jpg",
+      "bytes": 235913,
+      "sha256": "b603a76e1a2af5fbddb99736d5247f5ca3a25c73eae9ac8f2b7caa0bd4d902f1",
+      "capturedAt": "2026-09-22T03:50:11.413Z"
+    },
+    {
+      "file": "after/light-0-a.jpg",
+      "bytes": 342704,
+      "sha256": "343d0af41545cc5df16fc269dacbe4809e8d008c77873e18ef56e8d012ee1402",
+      "capturedAt": "2026-09-22T04:05:08.120Z"
+    },
+    {
+      "file": "after/light-0-b.jpg",
+      "bytes": 338259,
+      "sha256": "c3d84bad03a99c14dc017a720dc1e02aaed3fd12281a477d10ef8c3c8486ecc7",
+      "capturedAt": "2026-09-22T04:05:12.179Z"
+    },
+    {
+      "file": "after/light-0.72-a.jpg",
+      "bytes": 228843,
+      "sha256": "95c8cf6991c5e34344007b76f446eb3fa181779d92159411d6d686738f77574e",
+      "capturedAt": "2026-09-22T04:05:14.543Z"
+    },
+    {
+      "file": "after/light-0.72-b.jpg",
+      "bytes": 232176,
+      "sha256": "b32e5cb753f28425c1fdb5df800558efe608fa2a138a310cf9a6523670ec7149",
+      "capturedAt": "2026-09-22T04:05:18.611Z"
+    },
+    {
+      "file": "after/light-0.98-a.jpg",
+      "bytes": 262155,
+      "sha256": "e1f1926a5013fb7c86c4798a07dfcb84b531896dcef78e9923070f1eefb7516b",
+      "capturedAt": "2026-09-22T04:05:20.984Z"
+    },
+    {
+      "file": "after/light-0.98-b.jpg",
+      "bytes": 266957,
+      "sha256": "dc1e9976b63aeb3ed5309731deacf6bd1499efb1c7bd155ec406b4a41c6c5e34",
+      "capturedAt": "2026-09-22T04:05:25.044Z"
+    },
+    {
+      "file": "after/mobile-660.jpg",
+      "bytes": 77176,
+      "sha256": "c57d665fb52740880f61ed8a387f67e53259c834516db24ad1d9dc86817568e3",
+      "capturedAt": "2026-09-22T04:05:46.667Z"
+    },
+    {
+      "file": "after/mobile-720.jpg",
+      "bytes": 72708,
+      "sha256": "0dc1d8f460ff32c7b84a00c70e07f1fe040fd866afbed3a2e8c6bf92782dd3e7",
+      "capturedAt": "2026-09-22T04:05:49.018Z"
+    },
+    {
+      "file": "after/mobile-765.jpg",
+      "bytes": 80539,
+      "sha256": "5b2572dc4531c3a2e9f5b9cd2d09f72f8befd53abe9d0c48354d1077d58618f1",
+      "capturedAt": "2026-09-22T04:05:51.359Z"
+    },
+    {
+      "file": "after/mobile-785.jpg",
+      "bytes": 68205,
+      "sha256": "a561adaaed6ea9d587f5cc43532dc0caf94afc91347e5ca4fae22eb6b5b91133",
+      "capturedAt": "2026-09-22T04:05:53.712Z"
+    },
+    {
+      "file": "after/mobile-890.jpg",
+      "bytes": 68153,
+      "sha256": "c4ace0a29bf1e7abd0b9e151cbbccd3dd50dc86bdc9091d34301a846d3a4e3d2",
+      "capturedAt": "2026-09-22T04:05:56.062Z"
+    },
+    {
+      "file": "after/mobile-980.jpg",
+      "bytes": 49567,
+      "sha256": "45ea42b7971a9d6ee2ee6ae788ec3edbe4a884fee6f2d7d989e8278695d38549",
+      "capturedAt": "2026-09-22T04:05:58.412Z"
+    },
+    {
+      "file": "after/restored-light-context.jpg",
+      "bytes": 219146,
+      "sha256": "e449f3679efc11a2cc32b84d574d33124e5ff96611cee722b109524c147ea0af",
+      "capturedAt": "2026-09-22T04:05:43.119Z"
+    },
+    {
+      "file": "after/scroll-000.jpg",
+      "bytes": 333931,
+      "sha256": "3adb46c02ddec0a4fb730b76d13fc8310b5622f1068149af3dcd923b742c593f",
+      "capturedAt": "2026-09-22T04:04:30.178Z"
+    },
+    {
+      "file": "after/scroll-200.jpg",
+      "bytes": 139125,
+      "sha256": "ba899bc1147c456560b12379eadece6bafda63c961e9bd16b725968040f5c219",
+      "capturedAt": "2026-09-22T04:04:32.566Z"
+    },
+    {
+      "file": "after/scroll-400.jpg",
+      "bytes": 347384,
+      "sha256": "9b648d6fd50ec508b9934229d8c3941ed63797399b0a1d7c48e9ad4b97877af4",
+      "capturedAt": "2026-09-22T04:04:34.928Z"
+    },
+    {
+      "file": "after/scroll-600.jpg",
+      "bytes": 294692,
+      "sha256": "6432c3f4047581be900377e34e149eab01e970a254fd36c25645500d85b5ccb9",
+      "capturedAt": "2026-09-22T04:04:37.298Z"
+    },
+    {
+      "file": "after/scroll-635.jpg",
+      "bytes": 248288,
+      "sha256": "fb2fc0121ff3737f83dd42fd660b882ecffb7139d5f5a85a7511da2a03c147c5",
+      "capturedAt": "2026-09-22T04:04:39.659Z"
+    },
+    {
+      "file": "after/scroll-660.jpg",
+      "bytes": 243277,
+      "sha256": "7adfcd0de1aeba3fd0ac8e9532824857fe8d1d9f6e0c90d508c98e8cd7657270",
+      "capturedAt": "2026-09-22T04:04:42.025Z"
+    },
+    {
+      "file": "after/scroll-685.jpg",
+      "bytes": 238596,
+      "sha256": "b72a105c5bc85bfc014394fe07a2ca841966c944322e7dba58428a78a4b4e1c4",
+      "capturedAt": "2026-09-22T04:04:44.393Z"
+    },
+    {
+      "file": "after/scroll-720.jpg",
+      "bytes": 227118,
+      "sha256": "8c439b44a316a2e80610450234a87d1a2b13e2d26a2029975c9cbe27bc4beeaf",
+      "capturedAt": "2026-09-22T04:04:46.761Z"
+    },
+    {
+      "file": "after/scroll-765.jpg",
+      "bytes": 308361,
+      "sha256": "4ca48092ef03a6691cb3658d452ed680fd4268e82fe5a9fe6a23ab09a437a1bf",
+      "capturedAt": "2026-09-22T04:04:49.131Z"
+    },
+    {
+      "file": "after/scroll-785.jpg",
+      "bytes": 283499,
+      "sha256": "05ff1d29cd3cb0ffc3f63098bddb9b902d0a40a38ebb69b71a8de6798a4c084c",
+      "capturedAt": "2026-09-22T04:04:51.496Z"
+    },
+    {
+      "file": "after/scroll-800.jpg",
+      "bytes": 315920,
+      "sha256": "4fa831133f990b3377abe41bad51ebaca02341ab6497f7c4da5caa5249723c9f",
+      "capturedAt": "2026-09-22T04:04:53.871Z"
+    },
+    {
+      "file": "after/scroll-810.jpg",
+      "bytes": 325402,
+      "sha256": "f00dfb2487941a083e2569ce145848f6437177c46f99ccbd5d10c2039fab1de9",
+      "capturedAt": "2026-09-22T04:04:56.243Z"
+    },
+    {
+      "file": "after/scroll-865.jpg",
+      "bytes": 211149,
+      "sha256": "c0a017e57795c388d1f719e6e24b22ada0c4db5ac6cdd42511e3c639386bea79",
+      "capturedAt": "2026-09-22T04:04:58.611Z"
+    },
+    {
+      "file": "after/scroll-890.jpg",
+      "bytes": 261160,
+      "sha256": "d3000ab5e173fcce92629c4398cfe0ab8e4a92c965df04347ed5f85bb2ed0e63",
+      "capturedAt": "2026-09-22T04:05:00.991Z"
+    },
+    {
+      "file": "after/scroll-915.jpg",
+      "bytes": 263654,
+      "sha256": "b733577159a6c564b6064422bef53d94bdef0ec3f4dce305caa5b3860f2c0d3b",
+      "capturedAt": "2026-09-22T04:05:03.359Z"
+    },
+    {
+      "file": "after/scroll-980.jpg",
+      "bytes": 254299,
+      "sha256": "9a26c16d34281d1398ff36152fb999b064a6f0d852c3ec3edcfbb59b2c679758",
+      "capturedAt": "2026-09-22T04:05:05.741Z"
+    }
+  ]
+}

@@ -1,0 +1,82 @@
+{
+  "before": "7fcebb4ef6f6a456205b1decda84f94b44db6393",
+  "after": "8f4e430",
+  "viewport": [
+    1440,
+    900
+  ],
+  "dpr": 1,
+  "notes": "Same actual pointer gesture at each scroll position. Lighting/video/leaf time phase not synchronized. Screenshots support composition; alpha coverage tests separately prove displacement.",
+  "files": [
+    {
+      "file": "before/000-move.jpg",
+      "bytes": 340769,
+      "sha256": "34121022958f7128f852656f11c54aa12cdca17886a493f48657ce8f85cf7be7"
+    },
+    {
+      "file": "before/145-move.jpg",
+      "bytes": 252337,
+      "sha256": "66e15d97543d140d58ce36f15a37497aacc21e492415826ccaafe19f0a519355"
+    },
+    {
+      "file": "before/720-move.jpg",
+      "bytes": 217166,
+      "sha256": "7b1971100893929b33a2681f5ebf70c8d046c3b1884d6a262fa14172ee43b13d"
+    },
+    {
+      "file": "before/875-move.jpg",
+      "bytes": 190545,
+      "sha256": "99dc4078d67cff0a8d76482b19fa3653030e9576d7fd58cf2b17f5bedaafbb6a"
+    },
+    {
+      "file": "before/900-move.jpg",
+      "bytes": 299819,
+      "sha256": "a2930fabd763ea4eb4eb44683d1d2bfb8ee9ff4c43aef951bfef02680d4f4142"
+    },
+    {
+      "file": "before/980-move.jpg",
+      "bytes": 261103,
+      "sha256": "9eb2635fef1df60cac1004cb202835b9da2313fed9d8ed8a9358e9c0d90c5c28"
+    },
+    {
+      "file": "before/1000-move.jpg",
+      "bytes": 272203,
+      "sha256": "17131ee63aca1c5b98897bba51cf495220fcea83d251bcb01c05c34993d8dbe4"
+    },
+    {
+      "file": "after/000-move.jpg",
+      "bytes": 340768,
+      "sha256": "bb622a4c8a9f80de3d5797e78a2be84ea62062fb100d3cf174cd029b77ac227a"
+    },
+    {
+      "file": "after/145-move.jpg",
+      "bytes": 251105,
+      "sha256": "32910c86e994ef1985b7fc66a9f4598b732276d55d134a7abab5b60f9eaed241"
+    },
+    {
+      "file": "after/720-move.jpg",
+      "bytes": 230907,
+      "sha256": "0d5e07e850069ffb3a6604e4bfa5bbec2fd85526c6bf03b49e0150f1ae208cb1"
+    },
+    {
+      "file": "after/875-move.jpg",
+      "bytes": 190899,
+      "sha256": "e0d156b32b2948d223e24d81f3b07f8e12ee669a69e22b4f58ead81b2b2f8ad9"
+    },
+    {
+      "file": "after/900-move.jpg",
+      "bytes": 300260,
+      "sha256": "4d93349f68e2b389c99a0762b1c7dca3311dbd5a5a31ef7d46fc8717d1df7124"
+    },
+    {
+      "file": "after/980-move.jpg",
+      "bytes": 260667,
+      "sha256": "184996d95fb3c075cae1e7224a8ea99cd42cb6e6ba17f27e0925824fe7c4d023"
+    },
+    {
+      "file": "after/1000-move.jpg",
+      "bytes": 273156,
+      "sha256": "ee5cfae40108c3d0a562dd4e693fcdbb6aa1287ec0a9fb9ab07f3e21c567c05e"
+    }
+  ]
+}

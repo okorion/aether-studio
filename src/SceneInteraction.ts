@@ -62,7 +62,7 @@ export function createSceneInteraction(
         float seed = fract(sin(aStrand * 12.9898) * 43758.5453);
         float bendSeed = fract(sin(aStrand * 7.713) * 17293.183);
         float growth = 1. - exp(-age * 3.2);
-        float trailLength = (50. + seed * 85.) * growth + age * 6.;
+        float trailLength = (95. + seed * 155.) * growth + age * 12.;
         float t = aAlong;
         // Each sampled point grows its own curved streamer. Different ages and
         // seeds spread the trailing ends into a fan instead of parallel staff lines.
@@ -74,7 +74,7 @@ export function createSceneInteraction(
         float head = 1. - smoothstep(.025, .19, t);
         // Only the leading reflection widens; the curved tail still narrows
         // to a hairline rather than becoming a continuous neon beam.
-        float width = (1.35 + seed * .75) * pow(life, .4) * (.055 + taper * .9 + head * .95);
+        float width = (1.7 + seed * 1.3) * pow(life, .4) * (.08 + taper * .9 + head * .65);
         vec2 curveTangent = -direction * trailLength;
         curveTangent += normal * (cos(t * 3.14159) * 3.14159 * bend + 2. * t * sin(aStrand * 1.7 + age * .65) * age * 8.);
         vec2 edge = vec2(-curveTangent.y, curveTangent.x) / max(length(curveTangent), .0001);
@@ -95,7 +95,7 @@ export function createSceneInteraction(
         float reflection = .9 + .1 * sin(vAlong * 18. + vSeed * 9.);
         vec3 reflectionColor = mix(vec3(.57,.72,.71), vec3(.97,.99,.90), head);
         vec3 color = mix(vec3(.22,.39,.40), reflectionColor, silver);
-        float alpha = (soft * .15 + silver * (.4 + head * .42)) * fade * tip * reflection;
+        float alpha = (soft * .12 + silver * (.3 + head * .28)) * fade * tip * reflection;
         alpha *= .85 + vSeed * .15;
         gl_FragColor = vec4(color, alpha);
       }`,
@@ -180,6 +180,9 @@ export function createSceneInteraction(
   let previousMove = 0
   let previousYaw = 0
   let disposed = false
+  // Shared lighting input stays independent of the scene's orbit permission.
+  const field = { ndc: new THREE.Vector2(), strength: 0, aspect: innerWidth / innerHeight }
+  let fieldTarget = 0
   canvas.dataset.cameraMode = 'idle'
   canvas.dataset.orbitEnabled = 'true'
   const home = () => !location.hash || location.hash === '#home'
@@ -270,13 +273,16 @@ export function createSceneInteraction(
   }
   const move = (event: PointerEvent) => {
     if (reducedMotion || event.pointerType === 'touch' || !home() || blocked()) {
+      fieldTarget = field.strength = 0
       breakStroke()
       return
     }
     pointer.set((event.clientX / innerWidth) * 2 - 1, 1 - (event.clientY / innerHeight) * 2)
     if (interactive(event.target)) {
+      fieldTarget = field.strength = 0
       breakStroke()
     } else {
+      fieldTarget = 1
       const distance = pointer.distanceTo(last)
       if (last.x === -10 || (distance > .0025 && event.timeStamp - lastSample >= (software ? 24 : 14))) {
         if (event.timeStamp - lastSample > 180) breakStroke()
@@ -318,6 +324,7 @@ export function createSceneInteraction(
     document.documentElement.classList.remove('scene-dragging')
   }
   const leave = () => {
+    fieldTarget = field.strength = 0
     breakStroke()
     release()
     velocityYaw = 0
@@ -370,6 +377,11 @@ export function createSceneInteraction(
       ribbonMaterial.uniforms.uTime.value = time
       ribbonMaterial.uniforms.uHeight.value = innerHeight
       points.visible = ribbon.visible = !reducedMotion && home()
+      if (reducedMotion || !home() || blocked() || document.hidden) fieldTarget = field.strength = 0
+      field.ndc.lerp(pointer, 1 - Math.exp(-10 * delta))
+      field.strength = THREE.MathUtils.damp(field.strength, fieldTarget, 9, delta)
+      fieldTarget *= Math.exp(-1.35 * delta)
+      field.aspect = innerWidth / Math.max(1, innerHeight)
       buildRibbon()
       if (dirty) {
         geometry.attributes.position.needsUpdate = true
@@ -383,7 +395,7 @@ export function createSceneInteraction(
       yaw = THREE.MathUtils.damp(yaw, targetYaw, held ? 5 : 3, delta)
       pitch = THREE.MathUtils.damp(pitch, targetPitch, held ? 5 : 3, delta)
       burst = Math.max(0, burst - delta * 1.5)
-      return { yaw, pitch, zoom: 0, burst }
+      return { yaw, pitch, zoom: 0, burst, field }
     },
     dispose() {
       if (disposed) return

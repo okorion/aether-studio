@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { smooth, windowWeight } from './Journey'
+import { sampleLayers } from './SceneLayers'
 
 const vertexShader = /* glsl */ `
   varying vec2 vUv;
@@ -26,6 +27,8 @@ const fragmentShader = /* glsl */ `
   uniform float uTime;
   uniform float uFilm;
   uniform float uOpacity;
+  uniform float uEntryEdge;
+  uniform float uExitEdge;
   uniform vec3 uTint;
   varying vec2 vUv;
   varying vec4 vClip;
@@ -114,6 +117,11 @@ const fragmentShader = /* glsl */ `
       cos(panel.x * 103. + liquid * 5. - t * .19)) * .00035;
 
     vec2 screenUv = vClip.xy / max(vClip.w, .0001) * .5 + .5;
+    float boundary = screenUv.y - (screenUv.x - .5) * .20;
+    float grain = (hash(floor(screenUv * vec2(1700., 1100.))) - .5) * .009;
+    float passageMask = (1. - smoothstep(uEntryEdge - .006, uEntryEdge + .006, boundary + grain))
+      * smoothstep(uExitEdge - .006, uExitEdge + .006, boundary + grain);
+    if (passageMask < .001) discard;
     vec2 refractedUv = clamp(screenUv + ripple, vec2(.001), vec2(.999));
     vec3 image = film(panel, t);
     vec3 color = image * .68 + uTint * .025;
@@ -138,7 +146,7 @@ const fragmentShader = /* glsl */ `
     color = mix(color, vec3(.88, .94, .93), titleWeight);
     float alpha = mix(.66, .97, uHasBackground);
     alpha = max(alpha, titleWeight);
-    gl_FragColor = vec4(color, alpha * uOpacity * mask);
+    gl_FragColor = vec4(color, alpha * uOpacity * mask * passageMask);
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
   }
@@ -206,6 +214,7 @@ export function createSceneMonitors(software: boolean, mobile: boolean) {
       uBackground: { value: fallback }, uTitle: { value: texture },
       uHasBackground: { value: 0 }, uTime: { value: 0 },
       uFilm: { value: i }, uOpacity: { value: 0 },
+      uEntryEdge: { value: 1.5 }, uExitEdge: { value: -.5 },
       uTint: { value: new THREE.Color(tints[i]) },
     },
     transparent: true, depthWrite: false, depthTest: true,
@@ -245,7 +254,13 @@ export function createSceneMonitors(software: boolean, mobile: boolean) {
     update(time: number, progress: number) {
       if (disposed) return
       const p = Number.isFinite(progress) ? THREE.MathUtils.clamp(progress, 0, 1) : 0
-      const weight = windowWeight(p, .265, .325, .60, .68)
+      const weight = windowWeight(p, .23, .27, .675, .70)
+      const layers = sampleLayers(p)
+      for (const material of materials) {
+        material.uniforms.uEntryEdge.value = layers.monitorEntry
+        material.uniforms.uExitEdge.value = layers.monitorExit
+      }
+      group.position.y = -5 * (1 - smooth(.23, .305, p)) + 3 * smooth(.615, .69, p)
       group.visible = weight > .001
       for (const material of materials) material.uniforms.uTime.value = Number.isFinite(time) ? time : 0
       if (p === lastProgress) return

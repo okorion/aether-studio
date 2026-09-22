@@ -521,6 +521,12 @@ main > section {
   visibility: visible;
   opacity: 1;
 }
+/* Keep the active DOM copy in the accessibility tree while the ready canvas
+   supplies its visual presentation. Fallback keeps the normal visible copy. */
+body:has(.scene-canvas[data-render-state='ready']) .journey-statement,
+body:has(.scene-canvas[data-render-state='ready']) .journey-scales {
+  opacity: 0;
+}
 .journey-progress {
   position: absolute;
   right: 27px;

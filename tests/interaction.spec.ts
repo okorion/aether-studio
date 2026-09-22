@@ -6,6 +6,7 @@ declare global {
   interface Window {
     cameraTestFrames: number
     cameraTestFrozen: boolean
+    cameraTestCapture?: () => void
   }
 }
 
@@ -89,6 +90,12 @@ test('wheel input descends and reverses before 24 settled scroll checkpoints', a
     await expect(page.locator('.scene-canvas')).toBeInViewport()
     await expect(page.locator('.scene-canvas')).toHaveAttribute('data-render-state', 'ready')
     const rendered = await settledScene(page)
+    if (expectedStages[index] === 'scales') {
+      // Canvas text is aria-hidden: the active DOM equivalent must remain in
+      // the accessibility tree even when its visual presentation is transparent.
+      expect(await page.locator('.journey-scales').ariaSnapshot()).toContain('MATTER / IN CONSTANT CHANGE')
+      await expect(page.locator('.journey-scales')).toHaveCSS('opacity', '0')
+    }
     expect(Math.abs(rendered.modelY - rendered.targetY)).toBeLessThan(.001)
     expect(rendered.targetY).toBeLessThanOrEqual(previousHeight + .001)
     expect(Math.abs(rendered.ringRoll)).toBeLessThan(.001)
@@ -124,6 +131,7 @@ test('wheel input descends and reverses before 24 settled scroll checkpoints', a
 test('@interaction production scene accepts background drag and excludes navigation buttons', async ({
   page,
 }) => {
+  test.setTimeout(process.env.CI ? 150_000 : 45_000)
   // Freeze ambient animation time while allowing input and camera interpolation
   // to render. A changed image can then be attributed to the held camera.
   await page.addInitScript(() => {
@@ -133,7 +141,10 @@ test('@interaction production scene accepts background drag and excludes navigat
     window.requestAnimationFrame = (callback) =>
       request((timestamp) => {
         window.cameraTestFrames++
+        const capture = window.cameraTestCapture
+        const beforeFrame = capture ? document.querySelector('.scene-canvas')?.getAttribute('data-render-frame') : null
         callback(window.cameraTestFrozen ? 1000 : timestamp)
+        if (capture && beforeFrame !== document.querySelector('.scene-canvas')?.getAttribute('data-render-frame')) capture()
       })
   })
   await readyScene(page)
@@ -141,12 +152,59 @@ test('@interaction production scene accepts background drag and excludes navigat
     content: '*,*::before,*::after{animation:none!important;transition:none!important}',
   })
   const canvas = page.locator('.scene-canvas')
-  await page.mouse.move(1100, 350)
-  await page.waitForTimeout(250)
   // Exclude the pointer's trail/burst area from the comparison.
   const region = { x: 80, y: 100, width: 650, height: 650 }
-  const before = await page.screenshot({ clip: region })
-  expect(await page.screenshot({ clip: region })).toEqual(before)
+  const captureCamera = async () => {
+    // Read the completed production WebGL frame before presentation clears its
+    // buffer. This avoids the Linux CDP frozen-frame capture stall while keeping
+    // the actual scene, crop, frozen clock, and strict pixel equality intact.
+    const png = await page.evaluate((crop) => new Promise<string>((resolve, reject) => {
+      const surface = document.querySelector<HTMLCanvasElement>('.scene-canvas')!
+      const previousFrame = surface.dataset.renderFrame
+      const timer = window.setTimeout(() => {
+        window.cameraTestCapture = undefined
+        reject(new Error('No completed WebGL frame became available for camera capture'))
+      }, 15_000)
+      window.cameraTestCapture = () => {
+        // Scene diagnostics advance after rendering. Other RAF callbacks must
+        // not capture a previously presented/cleared drawing buffer.
+        if (surface.dataset.renderFrame === previousFrame) return
+        window.cameraTestCapture = undefined
+        clearTimeout(timer)
+        try {
+          const gl = surface.getContext('webgl2')!
+          const bounds = surface.getBoundingClientRect()
+          const ratioX = gl.drawingBufferWidth / bounds.width
+          const ratioY = gl.drawingBufferHeight / bounds.height
+          const x = Math.round((crop.x - bounds.x) * ratioX)
+          const y = Math.round((crop.y - bounds.y) * ratioY)
+          const width = Math.round(crop.width * ratioX)
+          const height = Math.round(crop.height * ratioY)
+          if (gl.isContextLost() || gl.getParameter(gl.FRAMEBUFFER_BINDING) !== null)
+            throw new Error('Camera capture requires a live default framebuffer')
+          if (x < 0 || y < 0 || width < 1 || height < 1 || x + width > gl.drawingBufferWidth || y + height > gl.drawingBufferHeight)
+            throw new Error('Camera crop falls outside the drawing buffer')
+          const pixels = new Uint8Array(width * height * 4)
+          gl.readPixels(x, gl.drawingBufferHeight - y - height, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels)
+          if (gl.getError() !== gl.NO_ERROR || !pixels.some((value, index) => index % 4 !== 3 && value > 16))
+            throw new Error('Camera capture returned invalid or empty scene pixels')
+          const output = document.createElement('canvas')
+          output.width = width; output.height = height
+          const context = output.getContext('2d')!
+          const image = context.createImageData(width, height)
+          for (let row = 0; row < height; row++)
+            image.data.set(pixels.subarray((height - 1 - row) * width * 4, (height - row) * width * 4), row * width * 4)
+          context.putImageData(image, 0, 0)
+          resolve(output.toDataURL('image/png').split(',')[1])
+        } catch (error) { reject(error) }
+      }
+    }), region)
+    return Buffer.from(png, 'base64')
+  }
+  const before = await captureCamera()
+  expect(await captureCamera()).toEqual(before)
+  // Establish the still baseline before hover starts the damped lighting field.
+  await page.mouse.move(1100, 350)
   const framesBefore = await page.evaluate(() => window.cameraTestFrames)
   await page.mouse.down()
   await page.mouse.move(900, 380, { steps: 8 })
@@ -160,7 +218,7 @@ test('@interaction production scene accepts background drag and excludes navigat
       timeout: process.env.CI ? 45_000 : 10_000,
     })
     .toBeGreaterThan(framesBefore + 80)
-  const held = await page.screenshot({ clip: region })
+  const held = await captureCamera()
   expect(held.equals(before)).toBe(false)
   await test.info().attach('camera-before', { body: before, contentType: 'image/png' })
   await test.info().attach('camera-held', { body: held, contentType: 'image/png' })
@@ -332,6 +390,125 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
 
   test.afterEach(async ({ page }) => {
     await page.evaluate(() => window.interactionHarness?.dispose())
+  })
+
+  test('pointer lighting survives orbit locks, decays, and clears on excluded input', async ({ page }) => {
+    const result = await page.evaluate(() => {
+      const harness = window.interactionHarness
+      const canvas = document.getElementById('interaction-canvas')!
+      const move = (target: Element = canvas, pointerType = 'mouse') => target.dispatchEvent(
+        new PointerEvent('pointermove', { bubbles: true, pointerType, clientX: 480, clientY: 120 }),
+      )
+      const activate = () => {
+        harness.reset()
+        harness.setOrbitEnabled(false)
+        move()
+        return harness.stepField(.2)
+      }
+      const active = activate()
+      const idle = harness.stepField(3)
+      const cleared = []
+      for (const reason of ['ui', 'touch', 'leave', 'blur', 'hidden', 'hash', 'dialog']) {
+        const before = activate()
+        let dialog: HTMLDialogElement | undefined
+        if (reason === 'ui') move(document.querySelector('button')!)
+        if (reason === 'touch') move(canvas, 'touch')
+        if (reason === 'leave') document.dispatchEvent(new Event('pointerleave'))
+        if (reason === 'blur') window.dispatchEvent(new Event('blur'))
+        if (reason === 'hidden') {
+          Object.defineProperty(document, 'hidden', { value: true, configurable: true })
+          document.dispatchEvent(new Event('visibilitychange'))
+        }
+        if (reason === 'hash') {
+          history.replaceState(null, '', '#work')
+          window.dispatchEvent(new HashChangeEvent('hashchange'))
+        }
+        if (reason === 'dialog') {
+          dialog = document.createElement('dialog')
+          document.body.appendChild(dialog)
+          dialog.showModal()
+        }
+        cleared.push({ reason, before, after: harness.stepField(.1) })
+        if (reason === 'hidden') Reflect.deleteProperty(document, 'hidden')
+        if (reason === 'hash') {
+          history.replaceState(null, '', '#home')
+          window.dispatchEvent(new HashChangeEvent('hashchange'))
+        }
+        dialog?.close()
+        dialog?.remove()
+      }
+      harness.reset(true)
+      move()
+      return { active, idle, cleared, reduced: harness.stepField(.2) }
+    })
+    expect(result.active.strength).toBeGreaterThan(.4)
+    expect(result.active.strength).toBeLessThanOrEqual(1)
+    expect(result.active.ndc[0]).toBeGreaterThan(.4)
+    expect(result.active.ndc[1]).toBeGreaterThan(.4)
+    expect(result.active.aspect).toBeCloseTo(4 / 3)
+    expect(result.active.yaw).toBe(0)
+    expect(result.active.pitch).toBe(0)
+    expect(result.idle.strength).toBeLessThan(result.active.strength / 10)
+    for (const sample of result.cleared) {
+      expect(sample.before.strength, sample.reason).toBeGreaterThan(.4)
+      expect(sample.after.strength, sample.reason).toBe(0)
+      expect(sample.after.yaw, sample.reason).toBe(0)
+    }
+    expect(result.reduced.strength).toBe(0)
+  })
+
+  test('layer wipes are finite and reversible while device, floor, and scales keep separate heights', async ({ page }) => {
+    const result = await page.evaluate(() => {
+      const harness = window.interactionHarness
+      const states = Array.from({ length: 201 }, (_, i) => harness.sampleLayers(i / 200))
+      const invalid = [NaN, Infinity, -Infinity, -1].map(value => harness.sampleLayers(value))
+      const first = harness.sampleEditorial(.125)
+      const same = harness.sampleEditorial(.125)
+      const forward = harness.sampleEditorial(.175)
+      const reverse = harness.sampleEditorial(.125)
+      const fixed = [.70, .74, .78, .83, .93, .78].map(progress => harness.sampleWorld(10, progress))
+      return { states, invalid, end: harness.sampleLayers(2), first, same, forward, reverse, fixed }
+    })
+    for (const state of result.states) {
+      expect(Object.values(state).every(Number.isFinite)).toBe(true)
+      expect(state.statement).toBeGreaterThanOrEqual(0)
+      expect(state.statement).toBeLessThanOrEqual(1)
+      expect(state.scaleCopy).toBeGreaterThanOrEqual(0)
+      expect(state.scaleCopy).toBeLessThanOrEqual(1)
+    }
+    for (const edge of ['forestExit', 'forestEntry', 'monitorEntry', 'monitorExit'] as const) {
+      expect(result.states[0][edge]).toBeLessThan(0)
+      expect(result.states.at(-1)![edge]).toBeGreaterThan(1)
+      for (let i = 1; i < result.states.length; i++)
+        expect(result.states[i][edge]).toBeGreaterThanOrEqual(result.states[i - 1][edge])
+    }
+    for (const invalid of result.invalid) expect(invalid).toEqual(result.states[0])
+    expect(result.end).toEqual(result.states.at(-1))
+    expect(result.same).toEqual(result.first)
+    expect(result.forward[0].matrix).not.toEqual(result.first[0].matrix)
+    expect(result.reverse).toEqual(result.first)
+    expect(result.first[0].visible).toBe(true)
+    for (const state of result.fixed) {
+      expect(state.fixed.machineY).toBeCloseTo(-40.4, 8)
+      expect(state.fixed.floorY).toBeCloseTo(-44.1, 8)
+      expect(state.fixed.scaleY).toBeCloseTo(-48, 8)
+      expect(state.scaleTiles).toEqual(result.fixed[0].scaleTiles)
+    }
+    expect(result.fixed[2].fixed.machineVisible).toBe(true)
+    expect(result.fixed[2].fixed.scaleVisible).toBe(true)
+    expect(result.fixed[5]).toEqual(result.fixed[2])
+  })
+
+  test('scale surface pixels respond locally to pointer position and recover without CPU matrix changes', async ({ page }) => {
+    const pixels = await page.evaluate(() => window.interactionHarness.probeScalePointer())
+    expect(pixels.left.changed).toBeGreaterThan(20)
+    expect(pixels.right.changed).toBeGreaterThan(20)
+    expect(pixels.left.changed).toBeLessThan(160 * 120 / 2)
+    expect(pixels.right.changed).toBeLessThan(160 * 120 / 2)
+    expect(pixels.left.centroidX).toBeLessThan(.45)
+    expect(pixels.right.centroidX).toBeGreaterThan(.55)
+    expect(pixels.reset.changed).toBe(0)
+    expect(pixels.matricesUnchanged).toBe(true)
   })
 
   test('glass capture uses physical target pixels and restores renderer state at high DPR', async ({ page }) => {

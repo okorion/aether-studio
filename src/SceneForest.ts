@@ -1,331 +1,277 @@
 import * as THREE from 'three'
+import { sampleJourney } from './Journey'
+import { sampleLayers } from './SceneLayers'
+import { createForestGeometry } from './ForestGeometry'
 
 type ForestPointer = { ndc: THREE.Vector2; strength: number; aspect: number }
 
-const field = /* glsl */ `
+const sharedShader = /* glsl */ `
   uniform float uTime;
-  uniform float uProgress;
   uniform float uAspect;
-  uniform float uPixelRatio;
-  uniform vec2 uParallax;
+  uniform float uExit;
+  uniform float uEntry;
+  uniform float uDarkness;
   uniform vec2 uPointer;
   uniform float uPointerStrength;
-  uniform sampler2D uCanopyMap;
-  float forestHash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
-  float forestNoise(vec2 p) {
-    vec2 i = floor(p), f = fract(p);
-    f = f * f * (3. - 2. * f);
-    return mix(mix(forestHash(i), forestHash(i + vec2(1., 0.)), f.x),
-      mix(forestHash(i + vec2(0., 1.)), forestHash(i + vec2(1.)), f.x), f.y);
+  varying vec4 vClip;
+  varying vec3 vWorld;
+  varying vec3 vNormal;
+  varying vec3 vSeed;
+  varying vec2 vUv;
+  varying float vDepth;
+  float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+  float noise(vec2 p) {
+    vec2 i=floor(p), f=fract(p); f=f*f*(3.-2.*f);
+    return mix(mix(hash(i),hash(i+vec2(1.,0.)),f.x),mix(hash(i+vec2(0.,1.)),hash(i+1.),f.x),f.y);
   }
-  float forestWipe(vec2 p) {
-    vec2 uv = p * .5 + .5;
-    float edgeNoise = (forestNoise(p * 43.) - .5) * .008;
-    float entry = smoothstep(.10, .20, uProgress);
-    float exit = smoothstep(.855, .925, uProgress);
-    float entryEdge = mix(-.35, 1.35, entry) + (uv.x - .5) * .20;
-    float exitEdge = mix(-.35, 1.35, exit) + (uv.x - .5) * .20;
-    float top = smoothstep(entryEdge - .012, entryEdge + .012, uv.y + edgeNoise);
-    float bottom = 1. - smoothstep(exitEdge - .012, exitEdge + .012, uv.y + edgeNoise);
-    return max(top, bottom);
+  float wipe() {
+    vec2 screen=vClip.xy/vClip.w*.5+.5;
+    float y=screen.y-(screen.x-.5)*.20+(noise(screen*230.)-.5)*.006;
+    float top=smoothstep(uExit-.006,uExit+.006,y);
+    float bottom=1.-smoothstep(uEntry-.006,uEntry+.006,y);
+    return max(top,bottom);
   }
-  float forestOpening(vec2 p) {
-    // An uneven valley crosses the crowns; it is not a circular border of dust.
-    float valley = abs(p.x * .78 - p.y * .29 + sin(p.y * 3.7) * .10);
-    float valleyMask = .28 + .72 * smoothstep(.035, .17, valley);
-    float central = length(p * vec2(uAspect, 1.));
-    float ringClearance = .08 + .92 * smoothstep(.13, .34, central);
-    return valleyMask * ringClearance;
+  float pointerLight() {
+    vec2 delta=(vClip.xy/vClip.w-uPointer)*vec2(uAspect,1.);
+    return exp(-dot(delta,delta)*13.)*uPointerStrength;
   }
-  float pointerLight(vec2 p) {
-    vec2 delta = (p - uPointer) * vec2(uAspect, 1.);
-    return exp(-dot(delta, delta) * 18.) * uPointerStrength;
+  float groveCoverage() {
+    float nearFade=smoothstep(2.4,5.2,vDepth);
+    vec2 p=vClip.xy/vClip.w*vec2(uAspect,1.);
+    float clearing=.025+.975*smoothstep(.20,.43,length(p));
+    return wipe()*nearFade*clearing;
   }
-  float forestTravel(float depth) {
-    float descent = uProgress < .5 ? smoothstep(0., .10, uProgress) * .26
-      : smoothstep(.87, 1., uProgress) * .32;
-    return descent * (1.2 - depth * .022);
+  vec3 finishForest(vec3 color) {
+    float fog=1.-exp(-max(0.,vDepth-6.)*.035);
+    return mix(color*(1.-uDarkness*.2),vec3(.002,.006,.005),fog*.72);
   }
 `
 
-const crownVertex = /* glsl */ `
-  ${field}
-  attribute vec4 aLeaf;
-  attribute float aCrownLight;
-  uniform float uForeground;
-  varying vec3 vColor;
-  varying float vAlpha;
-  varying float vSeed;
-  varying float vSoft;
-  varying vec2 vScreen;
+const forestVertex = /* glsl */ `
+  ${sharedShader}
+  uniform float uLeaf;
   void main() {
-    float depth = position.z;
-    vec2 p = position.xy;
-    p += uParallax * (1. - depth / 21.);
-    p.y += forestTravel(depth);
-    p += vec2(sin(uTime * .13 + aLeaf.w * 21.), cos(uTime * .11 + aLeaf.w * 31.)) * .0024;
-    float illumination = pointerLight(p);
-    vec2 away = p - uPointer;
-    p += away / max(.12, length(away)) * illumination * .022 * (1. - depth / 26.);
-    // A view-space volume has genuine perspective/depth testing, while its
-    // broad canopy distribution stays in frame through the authored orbit.
-    vec3 view = vec3(p.x * depth / projectionMatrix[0][0],
-      p.y * depth / projectionMatrix[1][1], -depth);
-    gl_Position = projectionMatrix * vec4(view, 1.);
-    float size = aLeaf.x * (10. / depth) * uPixelRatio;
-    gl_PointSize = clamp(size, .8, mix(14., 44., uForeground) * uPixelRatio);
-    float hue = aLeaf.z;
-    vec3 olive = mix(vec3(.027, .037, .011), vec3(.18, .24, .048), hue);
-    vec3 green = mix(vec3(.012, .051, .019), vec3(.15, .33, .085), hue);
-    vec3 pigment = mix(olive, green, smoothstep(.25, .9, fract(hue * 2.73)));
-    float crown = .24 + pow(aCrownLight, 1.65) * 1.04;
-    float sparkle = pow(aLeaf.y, 12.) * aCrownLight;
-    vColor = pigment * crown + vec3(.34, .37, .15) * sparkle * .44;
-    vColor += vec3(.30, .52, .29) * illumination * (.38 + aCrownLight * .62);
-    vColor = mix(vColor, vec3(.53, .69, .60), illumination * sparkle * .6);
-    float distanceFog = exp(-max(0., depth - 8.) * .07);
-    vColor = mix(vec3(.024, .043, .039), vColor, distanceFog);
-    vAlpha = mix(.91, .22, uForeground) * forestOpening(p);
-    vAlpha *= .83 + aLeaf.y * .17;
-    vSeed = aLeaf.w;
-    vSoft = uForeground;
-    vScreen = p;
+    vSeed=instanceColor;
+    vUv=uv;
+    vec3 p=position;
+    // Only leaf tips flex; trunks, roots and anchors remain in world space.
+    p.z+=uLeaf*position.y*position.y*sin(uTime*.62+instanceColor.y*29.+instanceMatrix[3].y*.17)*.045;
+    vec4 world=modelMatrix*instanceMatrix*vec4(p,1.);
+    vec4 view=viewMatrix*world;
+    vec4 projected=projectionMatrix*view;
+    vec2 proximity=(projected.xy/max(.001,projected.w)-uPointer)*vec2(uAspect,1.);
+    float response=exp(-dot(proximity,proximity)*13.)*uPointerStrength*uLeaf;
+    // Pointer pressure bends tips in their existing world-space plane. It
+    // never rebuilds a camera-facing volume or moves the grove's anchors.
+    world.xyz+=normalize(vec3(world.x,.2,world.z))*response*position.y*.06;
+    view=viewMatrix*world;
+    vWorld=world.xyz;
+    vDepth=-view.z;
+    mat3 axes=mat3(instanceMatrix);
+    vec3 corrected=normal/vec3(dot(axes[0],axes[0]),dot(axes[1],axes[1]),dot(axes[2],axes[2]));
+    vNormal=normalize(mat3(modelMatrix)*axes*corrected);
+    vClip=projectionMatrix*view;
+    gl_Position=vClip;
   }
 `
 
-const crownFragment = /* glsl */ `
-  ${field}
-  varying vec3 vColor;
-  varying float vAlpha;
-  varying float vSeed;
-  varying float vSoft;
-  varying vec2 vScreen;
+const barkFragment = /* glsl */ `
+  ${sharedShader}
   void main() {
-    vec2 p = gl_PointCoord * 2. - 1.;
-    float angle = vSeed * 6.283185;
-    p = mat2(cos(angle), -sin(angle), sin(angle), cos(angle)) * p;
-    p.x *= mix(1., 1.45, step(.55, vSeed) * (1. - vSoft));
-    float rr = dot(p, p);
-    if (rr >= 1.) discard;
-    float z = sqrt(max(0., 1. - rr));
-    float light = max(0., dot(vec3(p, z), normalize(vec3(-.42, .58, .72))));
-    float glint = pow(light, 18.);
-    float edge = 1. - smoothstep(.57, 1., rr);
-    vec3 color = vColor * (.52 + light * .68);
-    color += vec3(.32, .43, .23) * glint * .22;
-    if (vSoft > .5) {
-      edge = exp(-rr * 3.8) * .7 + exp(-abs(rr - .49) * 9.) * .14;
-      color = vColor * .78;
-    }
-    float alpha = edge * vAlpha * forestWipe(vScreen);
-    if (alpha < .002) discard;
-    gl_FragColor = vec4(color, alpha);
+    if(groveCoverage()<hash(gl_FragCoord.xy)) discard;
+    vec3 n=normalize(vNormal);
+    float light=max(0.,dot(n,normalize(vec3(-.45,.8,.3))));
+    float ridge=pow(.5+.5*sin(vUv.x*83.+noise(vUv*vec2(11.,23.))*3.4),5.);
+    float grain=noise(vUv*vec2(120.,34.)+vSeed.y*19.);
+    float moss=smoothstep(.38,.8,noise(vWorld.xz*2.+vWorld.y*.3))*max(0.,n.y+.38);
+    vec3 bark=mix(vec3(.004,.007,.005),vec3(.014,.020,.007),vSeed.x);
+    bark*=.33+light*.4;
+    bark*=.83+ridge*.06+grain*.08;
+    bark+=vec3(.004,.009,.003)*moss;
+    bark+=vec3(.016,.033,.021)*pointerLight()*(.3+light*.7);
+    gl_FragColor=vec4(finishForest(bark),1.);
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
   }
 `
 
-const veilVertex = /* glsl */ `
-  varying vec2 vScreen;
+const leafFragment = /* glsl */ `
+  ${sharedShader}
   void main() {
-    vScreen = position.xy;
-    float depth = 17.;
-    gl_Position = projectionMatrix * vec4(position.x * depth / projectionMatrix[0][0],
-      position.y * depth / projectionMatrix[1][1], -depth, 1.);
-  }
-`
-
-const veilFragment = /* glsl */ `
-  ${field}
-  varying vec2 vScreen;
-  void main() {
-    vec2 p = vScreen - uParallax * .48;
-    p.y -= forestTravel(10.9);
-    // The same authored crowns supply the dark mass beneath their micro-leaves.
-    // Unrelated low-frequency noise would look like a blurred green wallpaper.
-    vec3 canopy = texture2D(uCanopyMap, p / 2.8 + .5).rgb;
-    float detail = forestNoise(p * 76.);
-    float mounds = canopy.r;
-    float opening = forestOpening(vScreen);
-    float valley = 1. - smoothstep(.025, .25, abs(p.x * .78 - p.y * .29 + sin(p.y * 3.7) * .10));
-    float cloud = forestNoise(p * 7. + vec2(uTime * .022, -uTime * .013));
-    float mist = (valley * .8 + (1. - mounds) * .22) * pow(cloud, 1.5);
-    float rim = canopy.g * (1. - smoothstep(.62, .98, mounds));
-    vec3 color = mix(vec3(.004, .010, .008), vec3(.019, .031, .010), canopy.g);
-    color *= .76 + detail * .24;
-    color += vec3(.067, .098, .040) * rim * .6;
-    color += vec3(.080, .16, .13) * mist;
-    color += vec3(.055, .12, .065) * pointerLight(vScreen) * (.4 + mounds * .6);
-    float alpha = (.22 + mounds * .70 + mist * .15) * (.45 + opening * .55) * forestWipe(vScreen);
-    gl_FragColor = vec4(color, alpha);
+    if(groveCoverage()<hash(gl_FragCoord.xy)) discard;
+    vec3 n=normalize(vNormal)*(gl_FrontFacing?1.:-1.);
+    vec3 key=normalize(vec3(-.45,.8,.3));
+    float diffuse=.20+max(0.,dot(n,key))*.65+max(0.,dot(-n,key))*.27;
+    float vein=exp(-abs(vUv.x-.5)*52.)*.035;
+    float rib=pow(.5+.5*sin(vUv.y*77.+abs(vUv.x-.5)*22.),10.)*.025;
+    vec3 olive=mix(vec3(.008,.019,.003),vec3(.085,.12,.013),vSeed.x);
+    vec3 green=mix(vec3(.004,.019,.008),vec3(.018,.073,.025),vSeed.x);
+    vec3 pigment=mix(olive,green,smoothstep(.27,.75,vSeed.z));
+    vec3 color=pigment*(diffuse+vein+rib)*2.;
+    vec3 viewDir=normalize(cameraPosition-vWorld);
+    float reflection=pow(max(0.,dot(n,normalize(key+viewDir))),24.);
+    float rim=pow(1.-max(0.,dot(n,viewDir)),3.);
+    color+=vec3(.019,.043,.014)*rim*(.25+diffuse);
+    color+=vec3(.34,.43,.18)*reflection*(.10+vSeed.y*.17);
+    color+=vec3(.16,.38,.24)*pointerLight()*(.3+reflection);
+    gl_FragColor=vec4(finishForest(color),1.);
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
   }
 `
 
-function randomSource() {
-  let state = 721659
-  return () => {
-    state = (Math.imul(state, 1664525) + 1013904223) >>> 0
-    return state / 4294967296
+const microVertex = /* glsl */ `
+  ${sharedShader}
+  attribute vec3 aSeed;
+  attribute float aSize;
+  uniform float uViewportHeight;
+  uniform float uPixelRatio;
+  void main() {
+    vec3 p=position;
+    p.y+=sin(uTime*.62+aSeed.y*29.)*.008;
+    vec4 world=modelMatrix*vec4(p,1.);
+    vec4 view=viewMatrix*world;
+    vWorld=world.xyz;
+    vDepth=-view.z;
+    vClip=projectionMatrix*view;
+    vSeed=aSeed;
+    vNormal=vec3(0.,1.,0.);
+    vUv=vec2(.5);
+    gl_Position=vClip;
+    gl_PointSize=clamp(aSize*uViewportHeight*projectionMatrix[1][1]*.5/max(.1,vDepth),.8,6.*uPixelRatio);
   }
-}
+`
 
-/** Screen-filling, depth-tested canopy; three draws and no CPU particle animation. */
+const microFragment = /* glsl */ `
+  ${sharedShader}
+  void main() {
+    vec2 p=gl_PointCoord*2.-1.;
+    float r=dot(p,p);
+    if(r>1.)discard;
+    float edge=1.-smoothstep(.64,1.,r);
+    if(groveCoverage()*edge<hash(gl_FragCoord.xy))discard;
+    vec3 n=vec3(p,sqrt(max(0.,1.-r)));
+    float light=max(0.,dot(n,normalize(vec3(-.4,.65,.65))));
+    vec3 olive=mix(vec3(.014,.028,.003),vec3(.17,.22,.026),vSeed.x);
+    vec3 green=mix(vec3(.006,.026,.009),vec3(.036,.13,.046),vSeed.x);
+    vec3 color=mix(olive,green,smoothstep(.27,.75,vSeed.z))*(.3+light*.65);
+    color+=vec3(.24,.31,.10)*pow(light,16.)*(.12+vSeed.y*.3);
+    color+=vec3(.14,.35,.23)*pointerLight()*(.3+light*.4);
+    gl_FragColor=vec4(finishForest(color),1.);
+    #include <tonemapping_fragment>
+    #include <colorspace_fragment>
+  }
+`
+
+/** Fixed groves share geometry; foliage and fine grain retain one total budget. */
 export function createSceneForest(scene: THREE.Scene, software: boolean, mobile: boolean) {
-  const group = new THREE.Group()
-  group.name = 'aether-forest'
+  const group=new THREE.Group()
+  group.name='aether-forest'
   scene.add(group)
-  const random = randomSource()
-  const budget = software ? 3500 : mobile ? 12000 : 35000
-  const foregroundCount = software ? 60 : mobile ? 140 : 240
-  const materials: THREE.ShaderMaterial[] = []
-  const geometries: THREE.BufferGeometry[] = []
-  // Compact crowns overlap within larger uneven stands. They do not distribute
-  // individual leaves evenly over the screen or along a hollow spherical rim.
-  const stands = Array.from({ length: 24 }, (_, i) => ({
-    x: -1.16 + i % 6 * .47 + (random() - .5) * .25,
-    y: -1.03 + Math.floor(i / 6) * .69 + (random() - .5) * .26,
-    depth: random() < .4 ? 5.9 + random() * 2.8 : 9.2 + random() * 5.8,
-    hue: random(),
+  const budget=software?4500:mobile?18000:60000
+  const assets=createForestGeometry(budget,software,mobile)
+  const shared={
+    uTime:{value:0}, uAspect:{value:1.6}, uExit:{value:-.35}, uEntry:{value:-.35},
+    uDarkness:{value:0}, uPointer:{value:new THREE.Vector2(3,3)}, uPointerStrength:{value:0},
+    uViewportHeight:{value:900},uPixelRatio:{value:1},
+  }
+  const materials=[barkFragment,leafFragment].map((fragmentShader,i)=>new THREE.ShaderMaterial({
+    uniforms:{...shared,uLeaf:{value:i}},vertexShader:forestVertex,fragmentShader,
+    side:i?THREE.DoubleSide:THREE.FrontSide,depthWrite:true,depthTest:true,
   }))
-  const crowns = Array.from({ length: 192 }, (_, i) => {
-    const stand = stands[Math.floor(i / 8)]
-    const angle = i % 8 * 2.399963 + stand.hue * 5
-    const radius = .35 + random() * .65
-    return {
-      x: stand.x + Math.cos(angle) * .21 * radius,
-      y: stand.y + Math.sin(angle) * .28 * radius,
-      radiusX: .058 + random() * .047,
-      radiusY: .081 + random() * .066,
-      depth: stand.depth + (random() - .5) * 1.6,
-      hue: stand.hue * .75 + random() * .25,
-      size: 3.7 + random() * 1.4,
-    }
+  const makeMesh=(leaves:boolean)=>{
+    const matrices=leaves?assets.leafMatrices:assets.barkMatrices
+    const colors=leaves?assets.leafColors:assets.barkColors
+    const mesh=new THREE.InstancedMesh(leaves?assets.leafGeometry:assets.barkGeometry,materials[leaves?1:0],matrices.length/16)
+    mesh.instanceMatrix.array.set(matrices)
+    mesh.instanceMatrix.needsUpdate=true
+    mesh.instanceColor=new THREE.InstancedBufferAttribute(colors,3)
+    if(leaves)mesh.count=Math.floor(budget*.20)
+    mesh.name=leaves?'aether-forest-leaf-fronds':'aether-forest-branches-roots'
+    mesh.computeBoundingSphere()
+    return mesh
+  }
+  const meshLeafCount=Math.floor(budget*.20)
+  const microCount=budget-meshLeafCount
+  const microPositions=new Float32Array(microCount*3)
+  const microSizes=new Float32Array(microCount)
+  for(let i=0;i<microCount;i++) {
+    const start=(meshLeafCount+i)*16
+    microPositions.set(assets.leafMatrices.subarray(start+12,start+15),i*3)
+    microSizes[i]=Math.hypot(assets.leafMatrices[start+4],assets.leafMatrices[start+5],assets.leafMatrices[start+6])*.38
+  }
+  const microGeometry=new THREE.BufferGeometry()
+  microGeometry.setAttribute('position',new THREE.BufferAttribute(microPositions,3))
+  microGeometry.setAttribute('aSize',new THREE.BufferAttribute(microSizes,1))
+  microGeometry.setAttribute('aSeed',new THREE.BufferAttribute(assets.leafColors.slice(meshLeafCount*3),3))
+  microGeometry.computeBoundingSphere()
+  const microMaterial=new THREE.ShaderMaterial({
+    uniforms:shared,vertexShader:microVertex,fragmentShader:microFragment,depthWrite:true,depthTest:true,
   })
-  const mapWidth = 256, mapHeight = 160
-  const mapData = new Uint8Array(mapWidth * mapHeight * 4)
-  for (let i = 3; i < mapData.length; i += 4) mapData[i] = 255
-  for (const crown of crowns) {
-    const x0 = Math.max(0, Math.floor((crown.x - crown.radiusX) / 2.8 * mapWidth + mapWidth / 2))
-    const x1 = Math.min(mapWidth - 1, Math.ceil((crown.x + crown.radiusX) / 2.8 * mapWidth + mapWidth / 2))
-    const y0 = Math.max(0, Math.floor((crown.y - crown.radiusY) / 2.8 * mapHeight + mapHeight / 2))
-    const y1 = Math.min(mapHeight - 1, Math.ceil((crown.y + crown.radiusY) / 2.8 * mapHeight + mapHeight / 2))
-    for (let y = y0; y <= y1; y++) {
-      for (let x = x0; x <= x1; x++) {
-        const nx = ((x + .5) / mapWidth * 2.8 - 1.4 - crown.x) / crown.radiusX
-        const ny = ((y + .5) / mapHeight * 2.8 - 1.4 - crown.y) / crown.radiusY
-        const radius = Math.sqrt(nx * nx + ny * ny)
-        if (radius >= 1) continue
-        const density = Math.min(1, (1 - radius) * 5)
-        const light = Math.max(.05, -.32 * nx + .64 * ny + Math.sqrt(1 - radius * radius) * .42)
-        const index = (y * mapWidth + x) * 4
-        mapData[index] = Math.max(mapData[index], Math.round(density * 255))
-        mapData[index + 1] = Math.max(mapData[index + 1], Math.round(light * density * 255))
-      }
+  materials.push(microMaterial)
+  const renderViewport=new THREE.Vector4()
+  const groves=[0,1].map(index=>{
+    const grove=new THREE.Group()
+    grove.name=index?'aether-forest-lower':'aether-forest-upper'
+    // Fixed anchors span the two forest clearings. They never copy camera
+    // orientation or follow its orbit; scrolling travels through these trees.
+    grove.position.y=sampleJourney(index?1:0).height
+    grove.rotation.y=index?.83:0
+    const micro=new THREE.Points(microGeometry,microMaterial)
+    micro.name='aether-forest-microfoliage'
+    micro.onBeforeRender=renderer=>{
+      // Point diameters use the actual target viewport, including the lower
+      // resolution glow pass, rather than accidentally enlarging its sprites.
+      renderer.getCurrentViewport(renderViewport)
+      shared.uViewportHeight.value=renderViewport.w
+      shared.uPixelRatio.value=renderViewport.w/(typeof window==='undefined'?900:Math.max(1,window.innerHeight))
     }
-  }
-  const canopyMap = new THREE.DataTexture(mapData, mapWidth, mapHeight, THREE.RGBAFormat)
-  canopyMap.minFilter = THREE.LinearFilter
-  canopyMap.magFilter = THREE.LinearFilter
-  canopyMap.generateMipmaps = false
-  canopyMap.needsUpdate = true
-  const shared = {
-    uTime: { value: 0 }, uProgress: { value: 0 }, uAspect: { value: 1.6 },
-    uPixelRatio: { value: 1 }, uParallax: { value: new THREE.Vector2() },
-    uPointer: { value: new THREE.Vector2(3, 3) }, uPointerStrength: { value: 0 },
-    uCanopyMap: { value: canopyMap },
-  }
-  const makeCrowns = (count: number, foreground: boolean) => {
-    const positions = new Float32Array(count * 3)
-    const leaves = new Float32Array(count * 4)
-    const lights = new Float32Array(count)
-    for (let i = 0; i < count; i++) {
-      const crown = crowns[Math.floor(random() * crowns.length)]
-      const azimuth = random() * Math.PI * 2
-      const radius = Math.sqrt(random())
-      const nx = Math.cos(azimuth) * radius
-      const ny = Math.sin(azimuth) * radius
-      const normalZ = Math.sqrt(1 - radius * radius)
-      const smallLobe = 1 + Math.sin(azimuth * 3 + crown.hue * 9) * .085
-      const x = crown.x + nx * crown.radiusX * smallLobe
-      const y = crown.y + ny * crown.radiusY * smallLobe
-      positions.set([x, y, foreground ? 2.6 + random() * 2.7 : crown.depth - normalZ * .85], i * 3)
-      leaves.set([
-        foreground ? 3.5 + random() * 6.5 : crown.size * (.76 + random() * .49),
-        random(), (crown.hue * .75 + random() * .25), random(),
-      ], i * 4)
-      lights[i] = Math.max(.025, nx * -.36 + ny * .64 + normalZ * .63)
-    }
-    const geometry = new THREE.BufferGeometry()
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
-    geometry.setAttribute('aLeaf', new THREE.BufferAttribute(leaves, 4))
-    geometry.setAttribute('aCrownLight', new THREE.BufferAttribute(lights, 1))
-    geometries.push(geometry)
-    const material = new THREE.ShaderMaterial({
-      uniforms: { ...shared, uForeground: { value: foreground ? 1 : 0 } },
-      vertexShader: crownVertex, fragmentShader: crownFragment,
-      transparent: true, depthWrite: false, depthTest: true,
-      blending: THREE.NormalBlending,
-    })
-    materials.push(material)
-    const points = new THREE.Points(geometry, material)
-    points.name = foreground ? 'aether-forest-foreground' : 'aether-forest-canopies'
-    points.frustumCulled = false
-    points.renderOrder = foreground ? 5 : 4
-    group.add(points)
-  }
-  const veilGeometry = new THREE.PlaneGeometry(2, 2)
-  const veilMaterial = new THREE.ShaderMaterial({
-    uniforms: shared, vertexShader: veilVertex, fragmentShader: veilFragment,
-    transparent: true, depthWrite: false, depthTest: true,
-    blending: THREE.NormalBlending,
+    grove.add(makeMesh(false),makeMesh(true),micro)
+    group.add(grove)
+    return grove
   })
-  geometries.push(veilGeometry)
-  materials.push(veilMaterial)
-  const veil = new THREE.Mesh(veilGeometry, veilMaterial)
-  veil.name = 'aether-forest-valleys'
-  veil.frustumCulled = false
-  veil.renderOrder = 1
-  group.add(veil)
-  makeCrowns(budget - foregroundCount, false)
-  makeCrowns(foregroundCount, true)
-  group.userData.particleBudget = budget
-  let disposed = false
-
+  group.userData.particleBudget=budget
+  group.userData.worldSpace=true
+  group.userData.treeCount=assets.treeCount
+  group.userData.foliageClusterCount=assets.foliageClusterCount
+  group.userData.drawCalls=3
+  let disposed=false
   return {
-    update(time: number, progress: number, camera: THREE.Camera, pointer?: ForestPointer, pixelRatio?: number) {
-      if (disposed) return
-      const p = Number.isFinite(progress) ? THREE.MathUtils.clamp(progress, 0, 1) : 0
-      group.visible = p < .201 || p > .854
-      if (!group.visible) return
-      shared.uTime.value = Number.isFinite(time) ? time : 0
-      shared.uProgress.value = p
-      const projection = camera.projectionMatrix.elements
-      const cameraAspect = Math.abs(projection[5] / projection[0])
-      shared.uAspect.value = pointer && Number.isFinite(pointer.aspect) && pointer.aspect > 0
-        ? pointer.aspect : Number.isFinite(cameraAspect) ? cameraAspect : 1.6
-      const fallbackRatio = typeof window === 'undefined' ? 1 : Math.min(1.5, window.devicePixelRatio || 1)
-      shared.uPixelRatio.value = pixelRatio !== undefined && Number.isFinite(pixelRatio)
-        ? THREE.MathUtils.clamp(pixelRatio, .4, 2) : fallbackRatio
-      shared.uParallax.value.set(camera.position.x * -.018,
-        camera.position.z * .004 + camera.position.y * .0007)
-      const hasPointer = pointer && Number.isFinite(pointer.ndc.x) && Number.isFinite(pointer.ndc.y)
-        && Number.isFinite(pointer.strength)
-      if (hasPointer) {
+    update(time:number,progress:number,camera:THREE.Camera,pointer?:ForestPointer,pixelRatio?:number) {
+      if(disposed)return
+      const p=Number.isFinite(progress)?THREE.MathUtils.clamp(progress,0,1):0
+      group.visible=p<.201||p>.854
+      groves[0].visible=p<.201
+      groves[1].visible=p>.854
+      if(!group.visible)return
+      const layers=sampleLayers(p)
+      shared.uExit.value=layers.forestExit
+      shared.uEntry.value=layers.forestEntry
+      shared.uTime.value=Number.isFinite(time)?time:0
+      shared.uDarkness.value=sampleJourney(p).darkness
+      const projection=camera.projectionMatrix.elements
+      const aspect=Math.abs(projection[5]/projection[0])
+      shared.uAspect.value=Number.isFinite(aspect)&&aspect>0?aspect:1.6
+      // Geometric leaves scale naturally with resolution; DPR does not resize
+      // their world-space geometry. Preserve the existing renderer API.
+      const ratio=Number.isFinite(pixelRatio)?THREE.MathUtils.clamp(pixelRatio!, .4, 2):1
+      group.userData.pixelRatio=ratio
+      shared.uPixelRatio.value=ratio
+      shared.uViewportHeight.value=(typeof window==='undefined'?900:window.innerHeight)*ratio
+      if(pointer&&Number.isFinite(pointer.ndc.x)&&Number.isFinite(pointer.ndc.y)&&Number.isFinite(pointer.strength)) {
         shared.uPointer.value.copy(pointer.ndc)
-        shared.uPointerStrength.value = THREE.MathUtils.clamp(pointer.strength, 0, 1)
-      } else {
-        shared.uPointerStrength.value = 0
-      }
+        shared.uPointerStrength.value=THREE.MathUtils.clamp(pointer.strength,0,1)
+      } else shared.uPointerStrength.value=0
     },
     dispose() {
-      if (disposed) return
-      disposed = true
+      if(disposed)return
+      disposed=true
       group.removeFromParent()
-      geometries.forEach((geometry) => geometry.dispose())
-      materials.forEach((material) => material.dispose())
-      canopyMap.dispose()
+      groves.forEach(grove=>grove.children.forEach(mesh=>{if(mesh instanceof THREE.InstancedMesh)mesh.dispose()}))
+      assets.barkGeometry.dispose()
+      assets.leafGeometry.dispose()
+      microGeometry.dispose()
+      materials.forEach(material=>material.dispose())
       group.clear()
     },
   }

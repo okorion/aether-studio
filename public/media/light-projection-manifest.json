@@ -1,20 +1,41 @@
 {
   "file": "light-projection.mp4",
-  "bytes": 218188,
+  "bytes": 218586,
   "codec": "H.264 Main",
   "pixel_format": "yuv420p",
   "width": 256,
   "height": 160,
   "fps": 12,
-  "seconds": 10,
-  "frames": 120,
+  "seconds": 14,
+  "frames": 168,
   "audio": false,
   "faststart": true,
   "full_decode_verified": true,
-  "sha256": "d9e3d0e570671e73ff044b10029e921fc78c1c0c82094c25275905ef5a2bfc52",
-  "source": "chrome-current.mp4",
-  "source_sha256": "546f31b436c2c094a119ecd7b76be7f93661b4c2b9cf62f56decc61e211ed123",
-  "authorship": "Derived only from Aether's mathematical chrome-current film; no external footage",
+  "sha256": "36b9720b2d1cce38bde73f661b1cf71ae6212da4713d0dcc21c8cdde982f83bd",
+  "sources": [
+    {
+      "file": "chrome-current.mp4",
+      "sha256": "546f31b436c2c094a119ecd7b76be7f93661b4c2b9cf62f56decc61e211ed123",
+      "seconds": 10
+    },
+    {
+      "file": "aurora-bloom.mp4",
+      "sha256": "8e1f7e6839d5a91932e7a287865171d769c0f59015bc6dda2ed9b237e308f903",
+      "seconds": 10
+    }
+  ],
+  "source_hashes_verified_before_and_after": true,
+  "authorship": "Derived only from Aether's mathematical chrome-current and aurora-bloom films; no external footage",
+  "sequence": "chrome 0-2s; cosine crossfade 2-5s; aurora 5-9s; cosine crossfade 9-12s; chrome 12-14s",
+  "source_period_seconds": 10,
+  "source_time_scale": 1.4,
+  "loop_join": {
+    "verified": true,
+    "method": "decoded last-to-first mean absolute RGB difference versus sampled adjacent frames",
+    "mean_abs_rgb": 16.39636,
+    "adjacent_p95_mean_abs_rgb": 26.04698,
+    "maximum_allowed_mean_abs_rgb": 42.97752
+  },
   "generator": "scripts/generate-light-video.py",
   "crf": 28,
   "maxrate": "160k",

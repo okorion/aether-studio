@@ -46,6 +46,12 @@ const currentField = /* glsl */ `
   // is reversible at rest; time itself still changes luminance, not the flow.
   float motionTime() { return uScroll; }
 
+  vec3 rotateSpineField(vec3 p) {
+    float angle = uScroll * .20;
+    float c = cos(angle), s = sin(angle);
+    return vec3(c * p.x - s * p.z, p.y, s * p.x + c * p.z);
+  }
+
   vec3 current(float t, float lane, float scrollPhase) {
     float side = lane < 0.5 ? -1.0 : 1.0;
     float branch = fract(lane * 2.0);
@@ -55,11 +61,11 @@ const currentField = /* glsl */ `
       -6.6 + t * 6.9,
       -1.4 + sin(t * 8.0 + branch * 6.0) * 1.15
     );
-    // Two coherent currents wrap the spine in depth; quieter anchored grains
-    // use the same envelope without the scroll-advection phase.
+    // Both populations share one rotating envelope. Advection only chooses
+    // the position along it; anchors keep that position as the field turns.
     float arm = floor(lane * 2.0);
     float armPhase = arm * PI;
-    float angle = t * PI * 2.65 + armPhase + sin(t * 8.0 + armPhase) * .42 + scrollPhase * .20;
+    float angle = t * PI * 2.65 + armPhase + sin(t * 8.0 + armPhase) * .42;
     float radius = 2.2 + sin(t * 10.0 + armPhase) * .45 + fract(lane * 2.0) * .65;
     vec3 spine = vec3(
       cos(angle) * radius + sin(t * 9.0) * 0.16,
@@ -67,6 +73,7 @@ const currentField = /* glsl */ `
       sin(angle) * radius
     );
     spine.y += -12.0 * (1.0 - smoothstep(.205, .29, uScroll / 55.0));
+    spine = rotateSpineField(spine);
     float orbit = t * PI * 2.0 + scrollPhase * 0.35;
     float cross = branch * PI * 2.0;
     vec3 reactor = vec3(cos(orbit) * (1.47 + cos(cross) * .12),
@@ -124,9 +131,11 @@ const dustVertex = /* glsl */ `
     float cluster = 0.32 + 0.68 * pow(sin(t * 35.0 + lane * 8.0) * 0.5 + 0.5, 2.0);
     float width = (0.13 + position.z * (0.72 + uWeights.x * .73)) * cluster;
     width *= 1.0 - uWeights.y * 0.90;
-    float turn = phase + t * 37.0 + phaseScroll * 0.6;
-    p += vec3(cos(turn), sin(turn * 0.83) * 0.62, sin(turn)) * width;
-    p.z += aDust.z * (0.18 + (1.0 - uWeights.y) * 0.38);
+    float spineWeight = uWeights.x * (1.0 - uWeights.y) * (1.0 - uWeights.z) * (1.0 - uWeights.w);
+    float turn = phase + t * 37.0 + phaseScroll * 0.6 * (1.0 - spineWeight);
+    vec3 scatter = vec3(cos(turn), sin(turn * 0.83) * 0.62, sin(turn)) * width;
+    scatter.z += aDust.z * (0.18 + (1.0 - uWeights.y) * 0.38);
+    p += mix(scatter, rotateSpineField(scatter), spineWeight);
     // Most device grains spread across a fine radial cloud, with a few smaller
     // strays. This is still the same field, without a second opaque ring.
     float stray = step(.94, position.z);
@@ -137,6 +146,7 @@ const dustVertex = /* glsl */ `
     float bokeh = aDust.w;
     if (bokeh > 0.5) {
       vec3 anchored = vec3((lane - 0.5) * 14.0, (position.x - 0.5) * 13.0 + uWeights.w * 3.0, -2.0 + aDust.z * 6.0);
+      anchored = mix(anchored, rotateSpineField(anchored), uWeights.x);
       p = mix(anchored, p, uWeights.y);
     }
     // Scale the complete ring, including its diffuse rim, about its own centre.

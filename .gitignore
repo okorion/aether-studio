@@ -10,3 +10,12 @@ playwright-report/
 .qa/
 
 .vercel
+
+# 로컬 인증 자료와 개인 키
+.npmrc
+.netrc
+*.pem
+*.key
+*.p12
+*.pfx
+*recovery-codes*

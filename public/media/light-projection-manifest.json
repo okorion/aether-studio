@@ -1,0 +1,23 @@
+{
+  "file": "light-projection.mp4",
+  "bytes": 218188,
+  "codec": "H.264 Main",
+  "pixel_format": "yuv420p",
+  "width": 256,
+  "height": 160,
+  "fps": 12,
+  "seconds": 10,
+  "frames": 120,
+  "audio": false,
+  "faststart": true,
+  "full_decode_verified": true,
+  "sha256": "d9e3d0e570671e73ff044b10029e921fc78c1c0c82094c25275905ef5a2bfc52",
+  "source": "chrome-current.mp4",
+  "source_sha256": "546f31b436c2c094a119ecd7b76be7f93661b4c2b9cf62f56decc61e211ed123",
+  "authorship": "Derived only from Aether's mathematical chrome-current film; no external footage",
+  "generator": "scripts/generate-light-video.py",
+  "crf": 28,
+  "maxrate": "160k",
+  "gop": 24,
+  "ffmpeg_version": "ffmpeg version 7.1-essentials_build-www.gyan.dev Copyright (c) 2000-2024 the FFmpeg developers"
+}

@@ -392,6 +392,7 @@ export function createSceneInteraction(
   const leaveViewport = () => {
     // Keep the surface response alive while it decays. Re-entry starts a new
     // flow stroke, so crossing the window edge cannot inject a long segment.
+    field.active = false
     fieldTarget = 0
     flow.release()
     breakStroke()

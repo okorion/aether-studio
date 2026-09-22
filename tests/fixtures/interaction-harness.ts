@@ -107,7 +107,7 @@ function stepField(seconds: number) {
   const bytes=field.flowTexture.image.data as Uint8Array
   let flowEnergy=0
   for(let i=0;i<bytes.length;i+=4)flowEnergy+=Math.abs(bytes[i]-128)+Math.abs(bytes[i+1]-128)
-  return { yaw, pitch, ndc: field.ndc.toArray(), strength: field.strength, aspect: field.aspect, flowEnergy }
+  return { yaw, pitch, active: field.active, ndc: field.ndc.toArray(), strength: field.strength, aspect: field.aspect, flowEnergy }
 }
 
 function probePointerForestPixels() {

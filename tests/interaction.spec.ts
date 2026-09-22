@@ -446,6 +446,7 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
       return { active, idle, cleared, reduced: harness.stepField(.2) }
     })
     expect(result.active.strength).toBeGreaterThan(.4)
+    expect(result.active.active).toBe(true)
     expect(result.active.flowEnergy).toBeGreaterThan(0)
     expect(result.idle.flowEnergy).toBe(0)
     expect(result.reduced.flowEnergy).toBe(0)
@@ -464,6 +465,7 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
     expect(result.active.pitch).toBe(0)
     expect(result.idle.strength).toBeLessThan(result.active.strength / 10)
     for (const sample of result.cleared) {
+      expect(sample.after.active, sample.reason).toBe(false)
       expect(sample.before.strength, sample.reason).toBeGreaterThan(.4)
       if (sample.reason === 'leave' || sample.reason === 'blur') {
         expect(sample.after.strength, sample.reason).toBeGreaterThan(0)

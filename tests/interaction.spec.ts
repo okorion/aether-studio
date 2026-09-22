@@ -396,24 +396,27 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
     const result = await page.evaluate(() => {
       const harness = window.interactionHarness
       const canvas = document.getElementById('interaction-canvas')!
-      const move = (target: Element = canvas, pointerType = 'mouse') => target.dispatchEvent(
-        new PointerEvent('pointermove', { bubbles: true, pointerType, clientX: 480, clientY: 120 }),
+      const move = (target: Element = canvas, pointerType = 'mouse', x=480) => target.dispatchEvent(
+        new PointerEvent('pointermove', { bubbles: true, pointerType, clientX: x, clientY: 120 }),
       )
       const activate = () => {
         harness.reset()
         harness.setOrbitEnabled(false)
         move()
+        harness.stepField(1/60)
+        move(canvas,'mouse',510)
         return harness.stepField(.2)
       }
       const active = activate()
       const idle = harness.stepField(3)
       const cleared = []
-      for (const reason of ['ui', 'touch', 'leave', 'blur', 'hidden', 'hash', 'dialog']) {
+      for (const reason of ['ui', 'touch', 'leave', 'cancel', 'blur', 'hidden', 'hash', 'dialog']) {
         const before = activate()
         let dialog: HTMLDialogElement | undefined
         if (reason === 'ui') move(document.querySelector('button')!)
         if (reason === 'touch') move(canvas, 'touch')
         if (reason === 'leave') document.dispatchEvent(new Event('pointerleave'))
+        if (reason === 'cancel') canvas.dispatchEvent(new PointerEvent('pointercancel',{bubbles:true}))
         if (reason === 'blur') window.dispatchEvent(new Event('blur'))
         if (reason === 'hidden') {
           Object.defineProperty(document, 'hidden', { value: true, configurable: true })
@@ -442,6 +445,13 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
       return { active, idle, cleared, reduced: harness.stepField(.2) }
     })
     expect(result.active.strength).toBeGreaterThan(.4)
+    expect(result.active.flowEnergy).toBeGreaterThan(0)
+    expect(result.idle.flowEnergy).toBe(0)
+    expect(result.reduced.flowEnergy).toBe(0)
+    for(const entry of result.cleared){
+      expect(entry.before.flowEnergy,entry.reason).toBeGreaterThan(0)
+      expect(entry.after.flowEnergy,entry.reason).toBe(0)
+    }
     expect(result.active.strength).toBeLessThanOrEqual(1)
     expect(result.active.ndc[0]).toBeGreaterThan(.4)
     expect(result.active.ndc[1]).toBeGreaterThan(.4)
@@ -550,6 +560,25 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
     expect(pixels.moved.addedCoverage).toBeGreaterThan(6)
     expect(pixels.restored.changedBytes).toBe(0)
     expect(pixels.seedsUnchanged).toBe(true)
+  })
+
+  test('forest grains move at both endpoints and visible curtain boundaries without moving their anchors', async ({ page }) => {
+    for(const progress of [0,.145,.875,.90,.98,1]) {
+      const pixels=await page.evaluate(p=>window.interactionHarness.probeForestPointer(p),progress)
+      expect(pixels.baseline.count,`visible forest at ${progress}`).toBeGreaterThan(25)
+      expect(pixels.pointerLight).toBe(0)
+      expect(pixels.moved.changed,`geometry coverage at ${progress}`).toBeGreaterThan(20)
+      expect(pixels.moved.added).toBeGreaterThan(5)
+      expect(pixels.restored.changed).toBe(0)
+      expect(pixels.excluded.changed).toBe(0)
+      expect(pixels.geometryUnchanged).toBe(true)
+      expect(pixels.worldUnchanged).toBe(true)
+      // The curtain may crop the moved cloud; endpoint views isolate direction.
+      if(progress===0||progress===1){
+        expect(pixels.right.x).toBeGreaterThan(pixels.left.x)
+        expect(pixels.up.y).toBeGreaterThan(pixels.baseline.y)
+      }
+    }
   })
 
   test('glass capture uses physical target pixels and restores renderer state at high DPR', async ({ page }) => {

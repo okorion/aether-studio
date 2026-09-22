@@ -5,7 +5,7 @@ import { createForestGeometry } from './ForestGeometry'
 import { createLightFilmUniforms, lightChoreographyGLSL, sampleLightChoreography } from './SceneLighting'
 import type { LightFilmUniforms } from './SceneLighting'
 
-type ForestPointer = { ndc: THREE.Vector2; strength: number; aspect: number }
+type ForestPointer = { ndc: THREE.Vector2; strength: number; aspect: number; active?: boolean; flowTexture?: THREE.Texture }
 
 const sharedShader = /* glsl */ `
   uniform float uTime;
@@ -51,8 +51,33 @@ const sharedShader = /* glsl */ `
   }
 `
 
+// Screen-space flow is projected back onto the camera plane, so the lower
+// grove's rotation and an orbit never reverse the visible pointer direction.
+// This runs before the same curtain coverage as the resting foliage: the
+// transition masks what is visible, rather than switching interaction off.
+const forestFlowVertex = /* glsl */ `
+  uniform sampler2D uPointerFlow;
+  uniform float uFlowActive;
+  vec3 forestFlow(vec4 view, vec3 seed) {
+    if(view.z>=-.1)return vec3(0.);
+    vec4 clip=projectionMatrix*view;
+    vec2 uv=clip.xy/clip.w*.5+.5;
+    vec2 inside=smoothstep(vec2(0.),vec2(.04),uv)
+      *(1.-smoothstep(vec2(.96),vec2(1.),uv));
+    vec2 flow=(texture2D(uPointerFlow,clamp(uv,0.,1.)).rg-vec2(128./255.))*(255./127.);
+    float depth=smoothstep(2.4,5.2,-view.z);
+    vec2 shift=flow*(.045+seed.x*.02)*inside.x*inside.y*depth*uFlowActive;
+    shift.x/=uAspect;
+    vec2 offset=shift*clip.w/vec2(projectionMatrix[0][0],projectionMatrix[1][1]);
+    vec3 cameraRight=vec3(viewMatrix[0][0],viewMatrix[1][0],viewMatrix[2][0]);
+    vec3 cameraUp=vec3(viewMatrix[0][1],viewMatrix[1][1],viewMatrix[2][1]);
+    return cameraRight*offset.x+cameraUp*offset.y;
+  }
+`
+
 const forestVertex = /* glsl */ `
   ${sharedShader}
+  ${forestFlowVertex}
   uniform float uLeaf;
   void main() {
     vSeed=instanceColor;
@@ -62,12 +87,8 @@ const forestVertex = /* glsl */ `
     p.z+=uLeaf*position.y*position.y*sin(uTime*.62+instanceColor.y*29.+instanceMatrix[3].y*.17)*.045;
     vec4 world=modelMatrix*instanceMatrix*vec4(p,1.);
     vec4 view=viewMatrix*world;
-    vec4 projected=projectionMatrix*view;
-    vec2 proximity=(projected.xy/max(.001,projected.w)-uPointer)*vec2(uAspect,1.);
-    float response=exp(-dot(proximity,proximity)*13.)*uPointerStrength*uLeaf;
-    // Pointer pressure bends tips in their existing world-space plane. It
-    // never rebuilds a camera-facing volume or moves the grove's anchors.
-    world.xyz+=normalize(vec3(world.x,.2,world.z))*response*position.y*.06;
+    // Leaves share the fine grains' delayed wake; woody anchors stay fixed.
+    world.xyz+=forestFlow(view,instanceColor)*uLeaf*.6;
     view=viewMatrix*world;
     vWorld=world.xyz;
     vDepth=-view.z;
@@ -132,6 +153,7 @@ const leafFragment = /* glsl */ `
 
 const microVertex = /* glsl */ `
   ${sharedShader}
+  ${forestFlowVertex}
   attribute vec3 aSeed;
   attribute float aSize;
   uniform float uViewportHeight;
@@ -141,6 +163,8 @@ const microVertex = /* glsl */ `
     p.y+=sin(uTime*.62+aSeed.y*29.)*.008;
     vec4 world=modelMatrix*vec4(p,1.);
     vec4 view=viewMatrix*world;
+    world.xyz+=forestFlow(view,aSeed);
+    view=viewMatrix*world;
     vWorld=world.xyz;
     vDepth=-view.z;
     vClip=projectionMatrix*view;
@@ -186,11 +210,14 @@ export function createSceneForest(scene: THREE.Scene, software: boolean, mobile:
   const fallback=sharedFilm?null:new THREE.DataTexture(new Uint8Array([0,0,0,255]),1,1)
   if(fallback){fallback.colorSpace=THREE.LinearSRGBColorSpace;fallback.needsUpdate=true}
   const film=sharedFilm??createLightFilmUniforms(fallback!)
+  const neutralFlow=new THREE.DataTexture(new Uint8Array([128,128,0,255]),1,1)
+  neutralFlow.needsUpdate=true
   const shared={
     uTime:{value:0}, uAspect:{value:1.6}, uExit:{value:-.35}, uEntry:{value:-.35},
     uDarkness:{value:0}, uPointer:{value:new THREE.Vector2(3,3)}, uPointerStrength:{value:0},
     uLightDepth:{value:0},uLightStrength:{value:1},
     uLightFilm:film.map,uLightFilmReady:film.ready,
+    uPointerFlow:{value:neutralFlow as THREE.Texture},uFlowActive:{value:0},
     uViewportHeight:{value:900},uPixelRatio:{value:1},
   }
   const materials=[barkFragment,leafFragment].map((fragmentShader,i)=>new THREE.ShaderMaterial({
@@ -281,10 +308,17 @@ export function createSceneForest(scene: THREE.Scene, software: boolean, mobile:
       group.userData.pixelRatio=ratio
       shared.uPixelRatio.value=ratio
       shared.uViewportHeight.value=(typeof window==='undefined'?900:window.innerHeight)*ratio
-      if(pointer&&Number.isFinite(pointer.ndc.x)&&Number.isFinite(pointer.ndc.y)&&Number.isFinite(pointer.strength)) {
+      // Bind the small neutral flow even before first input so preparation
+      // executes the sampler path instead of discovering it on mouse move.
+      shared.uPointerFlow.value=pointer?.flowTexture??neutralFlow
+      if(pointer&&pointer.active!==false&&Number.isFinite(pointer.ndc.x)&&Number.isFinite(pointer.ndc.y)&&Number.isFinite(pointer.strength)) {
         shared.uPointer.value.copy(pointer.ndc)
         shared.uPointerStrength.value=THREE.MathUtils.clamp(pointer.strength,0,1)
-      } else shared.uPointerStrength.value=0
+        shared.uFlowActive.value=pointer.flowTexture?1:0
+      } else {
+        shared.uPointerStrength.value=0
+        shared.uFlowActive.value=0
+      }
     },
     dispose() {
       if(disposed)return
@@ -296,6 +330,7 @@ export function createSceneForest(scene: THREE.Scene, software: boolean, mobile:
       microGeometry.dispose()
       materials.forEach(material=>material.dispose())
       fallback?.dispose()
+      neutralFlow.dispose()
       group.clear()
     },
   }

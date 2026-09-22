@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { createPointerFlow } from './PointerFlow'
+import { pointerStreakCanSpawn, pointerStreakScopeGLSL, samplePointerStreakScope } from './SceneInteractionScope'
 
 /** Bounded world-space ribbons and pointer-controlled camera input. */
 export function createSceneInteraction(
@@ -10,6 +11,7 @@ export function createSceneInteraction(
   software: boolean,
   initialView = { yaw: 0, pitch: 0 },
 ) {
+  let streakScope = samplePointerStreakScope(0)
   const lifetime = 2.35
   const capacity = software ? 64 : 112
   const subdivisions = software ? 10 : 16
@@ -47,12 +49,17 @@ export function createSceneInteraction(
     depthTest: false,
     side: THREE.DoubleSide,
     blending: THREE.NormalBlending,
-    uniforms: { uTime: { value: 0 }, uHeight: { value: innerHeight } },
+    uniforms: {
+      uTime: { value: 0 }, uHeight: { value: innerHeight },
+      uStreakForestExit: { value: streakScope.exit },
+      uStreakForestEntry: { value: streakScope.entry },
+    },
     vertexShader: `
       attribute vec3 aTangent;
       attribute float aBirth; attribute float aSide; attribute float aStrand; attribute float aAlong;
       uniform float uTime; uniform float uHeight;
       varying float vSide; varying float vLife; varying float vAlong; varying float vSeed;
+      varying vec4 vStreakClip;
       vec2 flight(float age, vec2 direction, vec2 normal, float seed) {
         float turn = (seed - .5) * .72;
         float speed = 42. + seed * 38.;
@@ -82,11 +89,15 @@ export function createSceneInteraction(
         // CSS-pixel widths remain silky when the camera descends or orbits.
         mv.xy += offset * (2. * max(.1, -mv.z) / (uHeight * projectionMatrix[1][1]));
         gl_Position = projectionMatrix * mv;
+        vStreakClip = gl_Position;
         vSide = aSide; vLife = life; vAlong = t; vSeed = seed;
       }`,
     fragmentShader: `
+      ${pointerStreakScopeGLSL}
       varying float vSide; varying float vLife; varying float vAlong; varying float vSeed;
       void main() {
+        float forestCoverage = streakForestCoverage();
+        if (forestCoverage < .003) discard;
         float head = exp(-vAlong * vAlong * 430.);
         float soft = exp(-vSide * vSide * 3.);
         float silver = exp(-vSide * vSide * mix(5., 13., head));
@@ -97,7 +108,7 @@ export function createSceneInteraction(
         vec3 color = mix(vec3(.22,.39,.40), reflectionColor, silver);
         float alpha = (soft * (.13 + head * .32) + silver * (.45 + head * .6)) * fade * tip * reflection;
         alpha *= .85 + vSeed * .15;
-        gl_FragColor = vec4(color, alpha);
+        gl_FragColor = vec4(color, alpha * forestCoverage);
       }`,
   })
   const ribbon = new THREE.Mesh(ribbonGeometry, ribbonMaterial)
@@ -216,17 +227,23 @@ export function createSceneInteraction(
   }
   let ribbonDirty = true
   const addSample = (x: number, y: number) => {
-    ribbonDirty = true
     const p = pointAt(x, y)
-    if (historySize === capacity) {
-      historyStart = (historyStart + 1) % capacity
-      historySize--
+    if (pointerStreakCanSpawn(streakScope, x, y)) {
+      ribbonDirty = true
+      if (historySize === capacity) {
+        historyStart = (historyStart + 1) % capacity
+        historySize--
+      }
+      const index = (historyStart + historySize++) % capacity
+      history.set([p.x, p.y, p.z], index * 3)
+      historyBirths[index] = time
+      historyStrokes[index] = stroke
+      historySeeds[index] = nextSeed++
+    } else {
+      // Preserve small motes and their sampling cadence, but never bridge
+      // a streak across pointer samples that belonged to another scene.
+      stroke++
     }
-    const index = (historyStart + historySize++) % capacity
-    history.set([p.x, p.y, p.z], index * 3)
-    historyBirths[index] = time
-    historyStrokes[index] = stroke
-    historySeeds[index] = nextSeed++
     if (time - lastMote > (software ? .11 : .065)) {
       const n = head++ % count
       positions.set([p.x, p.y, p.z], n * 3)
@@ -403,13 +420,24 @@ export function createSceneInteraction(
     setFocus(point: THREE.Vector3) {
       if (!disposed) focus.copy(point)
     },
-    update(delta: number, elapsed: number, ratio: number) {
+    update(delta: number, elapsed: number, ratio: number, progress = 0) {
       time = elapsed
+      streakScope = samplePointerStreakScope(progress)
+      ribbonMaterial.uniforms.uStreakForestExit.value = streakScope.exit
+      ribbonMaterial.uniforms.uStreakForestEntry.value = streakScope.entry
+      if (!streakScope.visible && historySize) {
+        // Once both groves are gone, do not resurrect their old world-space
+        // trails if the camera quickly returns from a different floor.
+        historySize = 0
+        stroke++
+        ribbonDirty = true
+      }
       material.uniforms.uTime.value = time
       material.uniforms.uRatio.value = ratio
       ribbonMaterial.uniforms.uTime.value = time
       ribbonMaterial.uniforms.uHeight.value = innerHeight
-      points.visible = ribbon.visible = enabled && !reducedMotion && home() && !blocked()
+      points.visible = enabled && !reducedMotion && home() && !blocked()
+      ribbon.visible = points.visible && streakScope.visible
       if (!enabled || reducedMotion || !home() || blocked() || document.hidden) {
         clearField()
       }

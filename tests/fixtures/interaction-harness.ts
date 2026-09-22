@@ -790,12 +790,14 @@ function probeScalePointer() {
     const wake = draw(.9, 0, flow.texture)
     for (let i = 0; i < 150; i++) flow.update(1 / 60)
     const wakeReset = draw(.9, 0, flow.texture)
-    const wave = draw(.9, 0, flow.texture, 11)
+    const wave = draw(.9, 0, flow.texture, 10.3)
+    const nextBeat = draw(.9, 0, flow.texture, 11)
     return {
       left: difference(baseline, left), right: difference(baseline, right),
       reset: difference(baseline, reset),
       wake: difference(baseline, wake), wakeReset: difference(baseline, wakeReset),
       wave: difference(baseline, wave),
+      nextBeat: difference(baseline, nextBeat),
       matricesUnchanged: originalMatrices.every((value, index) => value === tiles.instanceMatrix.array[index]),
     }
   } finally {

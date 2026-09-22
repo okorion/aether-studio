@@ -157,6 +157,8 @@ export function createPointerFlow() {
       }
       publish()
     },
+    // Stop connecting new input to the old stroke without erasing its wake.
+    release() { anchored = false },
     clear,
     dispose() {
       if (disposed) return

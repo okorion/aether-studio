@@ -279,8 +279,10 @@ export function createSceneWorlds(
   ceiling.visible = false
   // The scale room owns its ceiling and light, on the incoming side of
   // the same screen edge that clips every upper-room object.
-  const undersideMaterial = mat(new THREE.MeshStandardMaterial({
-    color: 0x090d12, metalness: .43, roughness: .57, envMapIntensity: .42,
+  // Keep the ceiling and its depth boundary, without the broad environment
+  // reflection that appeared abruptly when the eye crossed the floor.
+  const undersideMaterial = mat(new THREE.MeshBasicMaterial({
+    color: 0x090d12,
     depthWrite: true,
   }))
   const underside = mesh(lowerSpace, geo(new THREE.PlaneGeometry(64, 64)), undersideMaterial, 0, -3.755, platformZ)
@@ -368,9 +370,8 @@ export function createSceneWorlds(
   floorMaterial.bumpMap = ruins.relief
   floorMaterial.bumpScale = .018
   floorMaterial.roughness = .42
-  ceilingMaterial.bumpMap = undersideMaterial.bumpMap = ruins.relief
+  ceilingMaterial.bumpMap = ruins.relief
   ceilingMaterial.bumpScale = .014
-  undersideMaterial.bumpScale = .009
   machineMetal.bumpMap = ruins.relief
   machineMetal.bumpScale = .008
   const wallGeometry = geo(new THREE.BoxGeometry(1, 1, 1))

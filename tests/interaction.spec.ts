@@ -511,6 +511,19 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
     expect(pixels.matricesUnchanged).toBe(true)
   })
 
+  test('stationary device particles change pixel coverage under the pointer and exactly recover', async ({ page }) => {
+    const pixels = await page.evaluate(() => window.interactionHarness.probeDevicePointer())
+    expect(pixels.illuminatedPixels).toBeGreaterThan(100)
+    expect(pixels.scrollSteps).toEqual([0, 0, 0])
+    expect(pixels.fieldY).toBeCloseTo(-40.4, 8)
+    expect(pixels.pointer.every(value => Math.abs(value) < 1)).toBe(true)
+    expect(pixels.moved.changedRgbPixels).toBeGreaterThan(20)
+    expect(pixels.moved.changedAlphaPixels).toBeGreaterThan(20)
+    expect(pixels.moved.addedCoverage).toBeGreaterThan(6)
+    expect(pixels.restored.changedBytes).toBe(0)
+    expect(pixels.seedsUnchanged).toBe(true)
+  })
+
   test('glass capture uses physical target pixels and restores renderer state at high DPR', async ({ page }) => {
     for (const pixelRatio of [1.5, 2]) {
       const capture = await page.evaluate((ratio) =>

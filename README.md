@@ -1,5 +1,7 @@
 # AETHER STUDIO
 
+[트러블슈팅 7편·전체 이슈 색인](docs/troubleshooting/index.md) · [다음 3D 프로젝트 구현·검증 가이드](docs/troubleshooting/runbook.md) · [이미지 내장 문서·Velog 원고 보관 안내](docs/troubleshooting/README.md)
+
 [사이트 바로 보기](https://aether-studio-nu.vercel.app/) · [장면 용어표](docs/scene-glossary.md) · [리액터 챔버·새 영상 비교](docs/chamber-art-direction.md) · [첫 모니터·겹침 성능](docs/monitor-transition-performance.md) · [장면 차폐·영상 조명](docs/scene-occlusion-light.md) · [입자 마우스 반응](docs/particle-pointer-flow.md) · [공간 전환·빛](docs/spatial-transitions.md) · [시각 변천: 8개 버전·48장](docs/visual-history.md) · [초기 전환 성능](docs/transition-performance.md) · [메타데이터](docs/metadata.md) · [다음 개선](docs/next-improvements.md)
 
 [Active Theory](https://activetheory.net/)의 중앙 오브젝트, 연속된 공간 이동, 금속 반사와 움직이는 프로젝트 화면을 참고한 자체 3D 경험입니다. React + TypeScript + Three.js + Vite로 개발했습니다.
@@ -8,7 +10,7 @@
 
 ![최신 상단 포레스트와 O 심벌](docs/screenshots/chamber-art/after/scroll-000.jpg)
 
-최근 3D 변경은 리액터 덮개에 맞닿는 얇은 천장, 중앙 수면을 비운 양측 서비스 설비, 동심원 소용돌이를 제거한 스케일 패널 표면, 어두운 사틴 조명 영상입니다. [14개 스크롤 지점의 전후 28장](docs/chamber-art-direction.md)에서 비교할 수 있습니다. 이후 아이콘을 티타늄 O 심벌로 다듬고 문서 명칭을 정리했습니다. [아이콘 전후 비교](docs/metadata.md) · [장면 용어표](docs/scene-glossary.md)
+최근 변경은 각 공간의 3D를 유지하는 공통 화면 경계, 더 높고 적은 본 세그먼트, 모니터 방향 고정과 바깥쪽 호버 이동, 스케일 반사 재질, 포레스트에 한정한 섬광과 하단 리본 부착입니다. [13개 스크롤 지점의 전후 26장·검증 기록](docs/scene-continuity.md)에서 비교할 수 있습니다. 리액터의 작은 덮개와 접점은 유지하고, 전환을 가리던 넓은 천장은 렌더하지 않습니다. [이전 챔버 변경](docs/chamber-art-direction.md) · [아이콘 전후 비교](docs/metadata.md) · [장면 용어표](docs/scene-glossary.md)
 
 초기 구현부터 PR #11까지 대표 소스 8개를 다시 빌드하고, 같은 뷰포트의 0·20·40·60·80·98% 스크롤 위치에서 촬영했습니다. [시각 변천 기록](docs/visual-history.md)에서 48장의 실제 화면과 기준 커밋·캡처 조건을 함께 비교할 수 있습니다. 이후의 바닥·빛·상부 수관 변경은 [최신 공간 전환 비교](docs/spatial-transitions.md)에 정리했습니다.
 
@@ -87,8 +89,8 @@ npm run preview
 
 - 운영 주소: **https://aether-studio-nu.vercel.app/**
 - 호스팅: Vercel · Vite 정적 사이트 · `npm run build` → `dist/`
-- GitHub의 `okorion/aether-studio` 비공개 저장소와 연결되어 있으며, production 브랜치는 `main`입니다.
-- 소스 저장소는 비공개이고 배포 사이트는 공개 데모입니다. 별도의 서버·DB·환경변수는 필요하지 않습니다.
+- GitHub의 `okorion/aether-studio` 공개 저장소와 연결되어 있으며, production 브랜치는 `main`입니다.
+- 소스 저장소와 배포 데모는 공개되어 있습니다. 초기 비공개 배포 기록은 당시 이력으로 보존합니다. 별도의 서버·DB·환경변수는 필요하지 않습니다.
 
 저장소 접근 권한과 Vercel 프로젝트 권한이 있는 환경에서 수동 배포하려면:
 

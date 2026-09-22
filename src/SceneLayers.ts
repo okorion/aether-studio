@@ -9,6 +9,7 @@ export function sampleLayers(progress: number) {
     forestEntry: -0.35 + 1.7 * smooth(.855, .925, p),
     monitorEntry: -0.25 + 1.5 * smooth(.23, .31, p),
     monitorExit: -0.25 + 1.5 * smooth(.61, .69, p),
+    deviceExit: -0.25 + 1.5 * smooth(.725, .805, p),
     statement: windowWeight(p, .095, .12, .265, .305),
     statementY: -1.15 * (1 - smooth(.10, .175, p)) + 1.5 * smooth(.22, .305, p),
     scaleCopy: windowWeight(p, .765, .805, .89, .93),
@@ -122,7 +123,7 @@ export function createSceneLayers(scene: THREE.Scene) {
         panel.quaternion.copy(camera.quaternion)
         panel.scale.set(halfHeight * aspect, halfHeight, 1)
         materials[i].uniforms.uOpacity.value = i ? state.scaleCopy : state.statement
-        materials[i].uniforms.uTop.value = i ? 1.5 : state.forestExit
+        materials[i].uniforms.uTop.value = i ? state.deviceExit : state.forestExit
         materials[i].uniforms.uBottom.value = i ? state.forestEntry : state.monitorEntry
         panel.visible = materials[i].uniforms.uOpacity.value > .001
       }

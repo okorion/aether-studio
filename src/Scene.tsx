@@ -427,7 +427,7 @@ export default function Scene({ reducedMotion, active, onReady, onSelectProject 
               transformed.z += sin(distanceFromRoot * .38) * uTailLift * .7;`,
           )
         }
-        surface.customProgramCacheKey = () => 'aether-descending-tail-v3'
+        surface.customProgramCacheKey = () => 'aether-descending-tail-v4'
       }
       for (let strand = 0; strand < 2; strand += 1) {
         const points: THREE.Vector3[] = []
@@ -793,10 +793,11 @@ export default function Scene({ reducedMotion, active, onReady, onSelectProject 
         centre.set(0, state.height, 0)
         particlesMaterial.uniforms.uTime.value = elapsed
         tailTime.value = elapsed
-        tailLift.value = state.end
+        // Set the hidden ribbon pose before the lower forest reveals it.
+        tailLift.value = scroll > .5 ? 1 : 0
         interaction.setOrbitEnabled(state.orbitEnabled)
         interaction.setFocus(centre)
-        const input = interaction.update(delta || 0.016, elapsed, activeRenderer.getPixelRatio())
+        const input = interaction.update(delta || 0.016, elapsed, activeRenderer.getPixelRatio(), scroll)
         preserved.current.yaw = input.yaw
         preserved.current.pitch = input.pitch
         preserved.current.elapsed = elapsed

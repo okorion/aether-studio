@@ -476,7 +476,7 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
       const same = harness.sampleEditorial(.125)
       const forward = harness.sampleEditorial(.175)
       const reverse = harness.sampleEditorial(.125)
-      const fixed = [.70, .74, .78, .83, .93, .78].map(progress => harness.sampleWorld(10, progress))
+      const fixed = [.70, .76, .82, .86, .93, .82].map(progress => harness.sampleWorld(10, progress))
       return { states, invalid, end: harness.sampleLayers(2), first, same, forward, reverse, fixed }
     })
     for (const state of result.states) {
@@ -486,7 +486,7 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
       expect(state.scaleCopy).toBeGreaterThanOrEqual(0)
       expect(state.scaleCopy).toBeLessThanOrEqual(1)
     }
-    for (const edge of ['forestExit', 'forestEntry', 'monitorEntry', 'monitorExit'] as const) {
+    for (const edge of ['forestExit', 'forestEntry', 'monitorEntry', 'monitorExit', 'deviceExit'] as const) {
       expect(result.states[0][edge]).toBeLessThan(0)
       expect(result.states.at(-1)![edge]).toBeGreaterThan(1)
       for (let i = 1; i < result.states.length; i++)
@@ -505,6 +505,7 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
       expect(state.scaleTiles).toEqual(result.fixed[0].scaleTiles)
     }
     expect(result.fixed[0].fixed.machineVisible).toBe(true)
+    expect(result.fixed[1].fixed.machineVisible).toBe(true)
     expect(result.fixed[2].fixed.machineVisible).toBe(false)
     expect(result.fixed[2].fixed.scaleVisible).toBe(true)
     expect(result.fixed[5]).toEqual(result.fixed[2])
@@ -523,15 +524,19 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
     expect(contact.capFilmDefine).toBe(1)
     expect(contact.ceilingY).toBeCloseTo(contact.capTop, 5)
     expect(contact.ceilingTop - contact.ceilingY).toBeCloseTo(.18, 5)
+    expect(contact.ceilingVisible).toBe(false)
     expect(contact.scaleCorePresent).toBe(false)
     expect(contact.ceilingWidth).toBeCloseTo(64, 5)
     expect(contact.undersideY).toBeLessThan(contact.floorMin)
     expect(contact.undersideWidth).toBeCloseTo(64, 5)
     expect(surfaces.visibility[0]).toMatchObject({ machine: true, ruins: true, upperStructure: true, underside: false })
-    expect(surfaces.visibility[1]).toMatchObject({ machine: false, ruins: false, upperStructure: false, underside: true })
-    expect(surfaces.visibility[1].eyeY).toBeLessThan(-44.13)
-    expect(surfaces.visibility[2]).toEqual(surfaces.visibility[0])
-    expect(surfaces.cases).toHaveLength(4)
+    // The partial wrapper overlap retains the upper room after the eye has
+    // crossed its floor; only the shared screen edge decides its coverage.
+    expect(surfaces.visibility[1]).toMatchObject({ machine: true, ruins: true, upperStructure: true })
+    expect(surfaces.visibility[2]).toMatchObject({ machine: false, ruins: false, upperStructure: false, underside: true })
+    expect(surfaces.visibility[2].eyeY).toBeLessThan(-44.13)
+    expect(surfaces.visibility[3]).toEqual(surfaces.visibility[0])
+    expect(surfaces.cases).toHaveLength(3)
     for (const surface of surfaces.cases) {
       expect(surface.effectivelyVisible, surface.name).toBe(true)
       expect(surface.depthWrite, surface.name).toBe(true)
@@ -540,6 +545,82 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
       expect(surface.checkedOccluded + surface.exposedMarker + surface.outsideCurtain, surface.name).toBe(surface.markerPixels)
       expect(surface.leakedPixels, surface.name).toBe(0)
     }
+  })
+
+  test('monitor facing stays fixed on scroll while hover moves outward and screens remain ahead of chains', async ({ page }) => {
+    const result = await page.evaluate(() => window.interactionHarness.probeMonitorMotion())
+    const initial = result.scroll[0]
+    for (const sample of result.scroll) for (const [index, panel] of sample.entries()) {
+      expect(panel.quaternion).toEqual(initial[index].quaternion)
+      expect(panel.scale).toEqual(initial[index].scale)
+      expect(panel.position[0]).toBe(initial[index].position[0])
+      expect(panel.position[2]).toBe(initial[index].position[2])
+    }
+    expect(result.scroll[1][1].position[1]).not.toBe(initial[1].position[1])
+    expect(result.scroll.at(-1)).toEqual(initial)
+    for (const sample of result.hover) {
+      expect(sample.selected).toBe(sample.index)
+      expect(sample.after.quaternion).toEqual(sample.before.quaternion)
+      expect(Math.abs(sample.after.position[0]) - Math.abs(sample.before.position[0])).toBeGreaterThan(.2)
+      expect(sample.after.position[2] - sample.before.position[2]).toBeGreaterThan(.1)
+      expect(sample.after.position[1]).toBe(sample.before.position[1])
+      expect(sample.restored).toEqual(sample.before)
+    }
+    expect(result.chainDepth.reduce((sum, sample) => sum + sample.overlaps, 0)).toBeGreaterThan(5)
+    for (const sample of result.chainDepth) {
+      expect(sample.inFront, `scroll ${sample.progress}`).toBe(sample.overlaps)
+      if (sample.overlaps) expect(sample.minimumGap!).toBeGreaterThan(0)
+    }
+  })
+
+  test('production bone, device and scale shaders obey their own adjacent screen regions', async ({ page }) => {
+    const cases = await page.evaluate(() => window.interactionHarness.probeProductionBoundaryPixels())
+    expect(cases).toHaveLength(13)
+    for (const result of cases) {
+      const label = `${result.name} at ${result.progress}`
+      expect(result.checkedOutside, label).toBeGreaterThan(1000)
+      expect(result.leakedOutside, label).toBe(0)
+      expect(result.missingInside, label).toBe(0)
+      if (result.progress !== .82) expect(result.checkedInside, label).toBeGreaterThan(500)
+      else expect(result.checkedInside, label).toBe(0)
+    }
+  })
+
+  test('outgoing bone grains keep their scroll shape above the chamber and restore after reverse', async ({ page }) => {
+    const result = await page.evaluate(() => window.interactionHarness.probeOutgoingBonePixels())
+    expect(result.geometryShared).toBe(true)
+    expect(result.cases).toHaveLength(3)
+    for (const sample of result.cases) {
+      const label = `outgoing grains at ${sample.progress}`
+      expect(sample.visibleAbove, label).toBeGreaterThan(20)
+      expect(sample.hiddenBaseline, label).toBeGreaterThan(20)
+      expect(sample.changedAbove, label).toBe(0)
+      expect(sample.leakedBelow, label).toBe(0)
+    }
+    expect(result.idleChanged).toBe(0)
+    expect(result.forwardChanged).toBeGreaterThan(100)
+    expect(result.reverseChanged).toBe(0)
+    expect(result.closed).toEqual([false, false])
+
+    const transforms = await page.evaluate(() => {
+      const harness = window.interactionHarness
+      const first = harness.sampleWorld(10, .635)
+      const idle = harness.sampleWorld(12, .635)
+      const forward = harness.sampleWorld(12, .67)
+      const reverse = harness.sampleWorld(15, .635)
+      const exited = harness.sampleWorld(15, .70)
+      return { first, idle, forward, reverse, exited }
+    })
+    expect(transforms.idle).toEqual(transforms.first)
+    expect(transforms.reverse).toEqual(transforms.first)
+    for (const state of [transforms.first, transforms.forward]) {
+      expect(state.boneLocalY).toBeCloseTo(0, 8)
+      expect(state.boneWorldY).toBeCloseTo(state.modelY, 8)
+      expect(state.boneVisible).toBe(true)
+    }
+    expect(transforms.forward.boneWorldY).toBeLessThan(transforms.first.boneWorldY)
+    expect(transforms.forward.vertebrae).not.toEqual(transforms.first.vertebrae)
+    expect(transforms.exited.boneVisible).toBe(false)
   })
 
   test('screen curtains clip standard and custom shaders at the same edge without hidden depth leaks', async ({ page }) => {
@@ -625,7 +706,7 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
       expect(entry.changedBelow, label).toBe(0)
     }
     expect(pixels.chamberEntry[1].visibleBelow).toBeGreaterThan(20)
-    expect(pixels.roomVisibility).toEqual([[true, true, true], [false, false, false], [true, true, true]])
+    expect(pixels.roomVisibility).toEqual([[true, true, true], [true, true, true], [false, false, false], [true, true, true]])
   })
 
   test('forest grains move at both endpoints and visible curtain boundaries without moving their anchors', async ({ page }) => {

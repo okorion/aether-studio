@@ -1,0 +1,220 @@
+{
+  "beforeRef": "cfee1e1036f50482fd24e2e2c3239c67b1d2bb4d",
+  "afterRef": "6654c71",
+  "viewport": [
+    1440,
+    900
+  ],
+  "dpr": 1,
+  "conditions": "Same scroll sequence, 270 controlled 60 Hz clock increments per position; video seek to 2 s; no pointer input. Production render screenshots, not performance samples. Multiple visual changes included.",
+  "frames": [
+    {
+      "phase": "before",
+      "progress": 0,
+      "file": "before/scroll-000.jpg",
+      "clock": 5500.000000000012,
+      "sha256": "0562bbec8fb4d6003d9ee74361297fb9e8a2d8e803aaa09e15127abcfe7f208f",
+      "bytes": 330856
+    },
+    {
+      "phase": "before",
+      "progress": 0.285,
+      "file": "before/scroll-285.jpg",
+      "clock": 9999.999999999995,
+      "sha256": "2a773074fee261b21e60590006c597ffaea9707cd543eea3dbaa3f7efb4e4070",
+      "bytes": 302113
+    },
+    {
+      "phase": "before",
+      "progress": 0.5,
+      "file": "before/scroll-500.jpg",
+      "clock": 14499.99999999983,
+      "sha256": "cba8644f62a87788511855a2952290782fcafc9d1ef56e76a408196396806da9",
+      "bytes": 332528
+    },
+    {
+      "phase": "before",
+      "progress": 0.63,
+      "file": "before/scroll-630.jpg",
+      "clock": 18999.999999999953,
+      "sha256": "9293d7d49a32b53aa6d5e773139c4acc4e28d493e9f69057a51effa3e262b614",
+      "bytes": 215469
+    },
+    {
+      "phase": "before",
+      "progress": 0.65,
+      "file": "before/scroll-650.jpg",
+      "clock": 23500.00000000028,
+      "sha256": "b7b652943bee4d7173fb2ae9b38e792b8346169ae1e8cda56271ec918f62e1c9",
+      "bytes": 134602
+    },
+    {
+      "phase": "before",
+      "progress": 0.675,
+      "file": "before/scroll-675.jpg",
+      "clock": 28000.000000000608,
+      "sha256": "5a4624f4b15e07649d9b9d920806af61320102ac7168df65032aab148b688a50",
+      "bytes": 249573
+    },
+    {
+      "phase": "before",
+      "progress": 0.7,
+      "file": "before/scroll-700.jpg",
+      "clock": 32500.000000000935,
+      "sha256": "a111d739b18b873b900741d4b2ef30697d8a40d68bba2cbbfe78acf82b02a1f3",
+      "bytes": 266513
+    },
+    {
+      "phase": "before",
+      "progress": 0.75,
+      "file": "before/scroll-750.jpg",
+      "clock": 37000.00000000034,
+      "sha256": "a5c0d1e6482ebbd20f93b7794184da1f4c5294669d7e7ea93af4dc91873556de",
+      "bytes": 263092
+    },
+    {
+      "phase": "before",
+      "progress": 0.765,
+      "file": "before/scroll-765.jpg",
+      "clock": 41499.99999999969,
+      "sha256": "2fea6cc45843f2dbb8195d333e393fcba188665b6dbbc6eec90d24822c935bec",
+      "bytes": 324695
+    },
+    {
+      "phase": "before",
+      "progress": 0.8,
+      "file": "before/scroll-800.jpg",
+      "clock": 45999.99999999903,
+      "sha256": "c451369f77e6713142b3a800a29791aa9de5c6f6c2254c2e206130fdb2e2e631",
+      "bytes": 325472
+    },
+    {
+      "phase": "before",
+      "progress": 0.85,
+      "file": "before/scroll-850.jpg",
+      "clock": 50499.99999999838,
+      "sha256": "9ef32bf0d9c0a0025de09962065d6cdb13504159c26af6b43de2a7d7bb237234",
+      "bytes": 280673
+    },
+    {
+      "phase": "before",
+      "progress": 0.9,
+      "file": "before/scroll-900.jpg",
+      "clock": 54999.99999999772,
+      "sha256": "fce7d5ab9271b0fcb891ed6e7e557df9199d3d30b4cfa5840fb75a1c3f31b647",
+      "bytes": 308496
+    },
+    {
+      "phase": "before",
+      "progress": 0.98,
+      "file": "before/scroll-980.jpg",
+      "clock": 59499.99999999707,
+      "sha256": "dce03c14eee10612ebcd25b7158549c964b68d14310456be2315a6f66ce1f5ac",
+      "bytes": 259642
+    },
+    {
+      "phase": "after",
+      "progress": 0,
+      "file": "after/scroll-000.jpg",
+      "clock": 5500.000000000012,
+      "sha256": "0562bbec8fb4d6003d9ee74361297fb9e8a2d8e803aaa09e15127abcfe7f208f",
+      "bytes": 330856
+    },
+    {
+      "phase": "after",
+      "progress": 0.285,
+      "file": "after/scroll-285.jpg",
+      "clock": 9999.999999999995,
+      "sha256": "9d4881e3e44e4d995f6f6dd328b49956c343624d8938d94e172d96533f0fa6bc",
+      "bytes": 269770
+    },
+    {
+      "phase": "after",
+      "progress": 0.5,
+      "file": "after/scroll-500.jpg",
+      "clock": 14499.99999999983,
+      "sha256": "baf65f978caa0499f7c362578a7810bd15cdaadcf7ffd26edc4d6889521f2258",
+      "bytes": 340059
+    },
+    {
+      "phase": "after",
+      "progress": 0.63,
+      "file": "after/scroll-630.jpg",
+      "clock": 18999.999999999953,
+      "sha256": "b85ff51ddc5f9a5f6f8e51757cea525e37eda6c59c065844086a374245c1d52c",
+      "bytes": 330511
+    },
+    {
+      "phase": "after",
+      "progress": 0.65,
+      "file": "after/scroll-650.jpg",
+      "clock": 23500.00000000028,
+      "sha256": "c9d0fe6d9251cf494a59b30b54868f3006db95054751131e0f655e12de4879fe",
+      "bytes": 343103
+    },
+    {
+      "phase": "after",
+      "progress": 0.675,
+      "file": "after/scroll-675.jpg",
+      "clock": 28000.000000000608,
+      "sha256": "65718ae55f7948af3580cb3e831bae61e5c5e6cbc8adcc14d23a52859c491e02",
+      "bytes": 249714
+    },
+    {
+      "phase": "after",
+      "progress": 0.7,
+      "file": "after/scroll-700.jpg",
+      "clock": 32500.000000000935,
+      "sha256": "a8f2d110cfe271b538e1108c0978315f97a4b68c74c7a49d0e76665a7332a6cc",
+      "bytes": 265849
+    },
+    {
+      "phase": "after",
+      "progress": 0.75,
+      "file": "after/scroll-750.jpg",
+      "clock": 37000.00000000034,
+      "sha256": "cc455247fc7efe9c74e3b527fb45d70f2c5799476ddfb19c6c2cf2fcd0adb0aa",
+      "bytes": 259711
+    },
+    {
+      "phase": "after",
+      "progress": 0.765,
+      "file": "after/scroll-765.jpg",
+      "clock": 41499.99999999969,
+      "sha256": "6ea83e3444842cdfd7586f7560df091808f48eb532b3c15cfae49b715cf6c74a",
+      "bytes": 240990
+    },
+    {
+      "phase": "after",
+      "progress": 0.8,
+      "file": "after/scroll-800.jpg",
+      "clock": 45999.99999999903,
+      "sha256": "639ae454aebff7edf9c52c3d15f0e77526cc46e1bc7ad79f5f90dcc5e3531391",
+      "bytes": 265197
+    },
+    {
+      "phase": "after",
+      "progress": 0.85,
+      "file": "after/scroll-850.jpg",
+      "clock": 50499.99999999838,
+      "sha256": "9f1a99c63d03844185b78b7f12c525fd30acc7ced028fa0b5475836701fe3973",
+      "bytes": 220380
+    },
+    {
+      "phase": "after",
+      "progress": 0.9,
+      "file": "after/scroll-900.jpg",
+      "clock": 54999.99999999772,
+      "sha256": "8e9fae0c6b5a8910a4125e0bf30c2facac893067e2b81ebc0b0c538b210fff4a",
+      "bytes": 296573
+    },
+    {
+      "phase": "after",
+      "progress": 0.98,
+      "file": "after/scroll-980.jpg",
+      "clock": 59499.99999999707,
+      "sha256": "dce03c14eee10612ebcd25b7158549c964b68d14310456be2315a6f66ce1f5ac",
+      "bytes": 259642
+    }
+  ]
+}

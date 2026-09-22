@@ -499,6 +499,34 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
     expect(result.fixed[5]).toEqual(result.fixed[2])
   })
 
+  test('screen curtains clip standard and custom shaders at the same edge without hidden depth leaks', async ({ page }) => {
+    const cases = await page.evaluate(() => window.interactionHarness.probeCurtainPixels())
+    expect(cases).toHaveLength(12)
+    for (const result of cases) {
+      const label = `${result.size.join('x')} ${result.state}`
+      const area = result.size[0] * result.size[1]
+      // Identical stochastic silhouettes also prove both shader-hook paths
+      // use the same normalized edge at every resolution and aspect ratio.
+      expect(result.maskMismatch, label).toBe(0)
+      for (const sample of result.samples) {
+        expect(sample.unknown, label).toBe(0)
+        expect(sample.wrongInside, label).toBe(0)
+        expect(sample.wrongOutside, label).toBe(0)
+        expect(sample.checkedOutside, label).toBeGreaterThan(1000)
+        if (result.state.startsWith('hidden')) {
+          // Check EVERY pixel, including locations where the dither hash is 0.
+          expect(sample.foreground, label).toBe(0)
+          expect(sample.background, label).toBe(area)
+          expect(sample.checkedOutside, label).toBe(area)
+        } else {
+          expect(sample.checkedInside, label).toBeGreaterThan(1000)
+          expect(sample.foreground, label).toBeGreaterThan(1000)
+          expect(sample.background, label).toBeGreaterThan(1000)
+        }
+      }
+    }
+  })
+
   test('scale surface pixels respond locally to pointer position and recover without CPU matrix changes', async ({ page }) => {
     const pixels = await page.evaluate(() => window.interactionHarness.probeScalePointer())
     expect(pixels.left.changed).toBeGreaterThan(20)

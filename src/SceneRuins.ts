@@ -41,11 +41,12 @@ export function createSceneRuins(parent: THREE.Group, software: boolean, mobile:
     envMapIntensity: .85 })
   for (const m of [stone, wetStone, steel]) {
     m.onBeforeCompile = shader => {
-      shader.vertexShader = 'varying vec3 vRuinsWorld;\n' + shader.vertexShader
+      shader.vertexShader = 'varying vec3 vRuinsWorld; varying float vRuinsDepth;\n' + shader.vertexShader
       shader.vertexShader = shader.vertexShader.replace('#include <project_vertex>', `
         #include <project_vertex>
-        vRuinsWorld = (modelMatrix * instanceMatrix * vec4(transformed, 1.)).xyz;`)
-      shader.fragmentShader = `varying vec3 vRuinsWorld;
+        vRuinsWorld = (modelMatrix * instanceMatrix * vec4(transformed, 1.)).xyz;
+        vRuinsDepth = -mvPosition.z;`)
+      shader.fragmentShader = `varying vec3 vRuinsWorld; varying float vRuinsDepth;
         float ruinHash(vec3 p) {return fract(sin(dot(p,vec3(127.1,311.7,74.7)))*43758.5453);}
         float ruinNoise(vec3 p) {
           vec3 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
@@ -54,6 +55,11 @@ export function createSceneRuins(parent: THREE.Group, software: boolean, mobile:
             mix(mix(ruinHash(i+vec3(0,0,1)),ruinHash(i+vec3(1,0,1)),f.x),
             mix(ruinHash(i+vec3(0,1,1)),ruinHash(i+vec3(1,1,1)),f.x),f.y),f.z);
         }\n` + shader.fragmentShader
+      // Wet foreground debris must dissolve before the descending camera
+      // intersects its triangles; distant banks keep their full silhouettes.
+      shader.fragmentShader = shader.fragmentShader.replace('void main() {', `void main() {
+        float nearCoverage = smoothstep(1.4, 3.6, vRuinsDepth);
+        if(nearCoverage < .003 || nearCoverage < ruinHash(vec3(floor(gl_FragCoord.xy),0.))) discard;`)
       shader.fragmentShader = shader.fragmentShader.replace('#include <color_fragment>', `
         #include <color_fragment>
         float erosion=ruinNoise(vRuinsWorld*3.7)*.58+ruinNoise(vRuinsWorld*21.)*.29+ruinNoise(vRuinsWorld*89.)*.13;
@@ -71,7 +77,7 @@ export function createSceneRuins(parent: THREE.Group, software: boolean, mobile:
         normal=normalize(normal+vec3(ruinNoise(vRuinsWorld*54.)-.5,
           ruinNoise(vRuinsWorld.zxy*54.+11.)-.5,0.)*.18);`)
     }
-    m.customProgramCacheKey = () => 'aether-eroded-ruins-wet-v2'
+    m.customProgramCacheKey = () => 'aether-eroded-ruins-wet-v3'
   }
   const create = (geometry: THREE.BufferGeometry, m: THREE.Material, count: number, name: string) => {
     geometries.push(geometry)

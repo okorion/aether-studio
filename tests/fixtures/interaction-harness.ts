@@ -381,8 +381,9 @@ function probeWorldSurfaceDepth() {
     const underside = new THREE.Box3().setFromObject(required('aether-floor-underside'))
     const contact = { plinthBottom: plinth.min.y, floorMin: floor.min.y, floorMax: floor.max.y,
       capBottom: cap.min.y, capTop: cap.max.y, socketTop: socket.max.y,
+      scaleCorePresent: Boolean(worldScene.getObjectByName('aether-scale-core')),
       capFilmDefine: capMesh.material.defines?.AETHER_LIGHT_FILM as number | undefined,
-      ceilingY: ceiling.max.y, ceilingWidth: ceiling.max.x - ceiling.min.x,
+      ceilingY: ceiling.min.y, ceilingTop: ceiling.max.y, ceilingWidth: ceiling.max.x - ceiling.min.x,
       undersideY: underside.max.y, undersideWidth: underside.max.x - underside.min.x }
     const visibility = [.70, .79, .70].map(progress => {
       atProgress(progress)

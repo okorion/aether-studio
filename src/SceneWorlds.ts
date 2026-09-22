@@ -103,12 +103,12 @@ export function createSceneWorlds(
           * vec2(uSurfaceAspect, 1.0);
         vSurfaceHeat = exp(-dot(tileDelta, tileDelta) * 20.0) * uSurfaceStrength
           * step(.001, tileClip.w);
-        vec2 radialDirection = normalize(tileCentre.xy + vec2(.001));
-        float tileRadius = length(tileCentre.xy * vec2(.85, 1.1));
-        float tilePhase = tileRadius * 2.55 - uSurfaceTime * .42;
-        float tileEnvelope = .5 + .5 * exp(-tileRadius * .12);
-        float tileAngle = cos(tilePhase) * .75 * tileEnvelope;
-        vec3 tileAxis = vec3(-radialDirection.y, radialDirection.x, 0.0);
+        // Broad travelling folds have no centre or concentric diamond rings.
+        // Pointer lift remains local to each tile's actual projected position.
+        float tilePhase = tileCentre.x * .48 + tileCentre.y * .31 - uSurfaceTime * .13;
+        float tileAngle = cos(tilePhase) * .18
+          + sin(tileCentre.y * .63 + uSurfaceTime * .09) * .07;
+        vec3 tileAxis = normalize(vec3(-.31, .48, 0.0));
         float tileCos = cos(tileAngle);
         float tileSin = sin(tileAngle);
         objectNormal = aArmourNormal * tileCos + cross(tileAxis, aArmourNormal) * tileSin
@@ -119,8 +119,8 @@ export function createSceneWorlds(
       vec3 transformed = aArmour * tileCos + cross(tileAxis, aArmour) * tileSin
         + tileAxis * dot(tileAxis, aArmour) * (1.0 - tileCos);
       vTilePoint = aArmour;
-      float tileRipple = sin(tilePhase) * .46 * tileEnvelope
-        + sin(tileCentre.x * .55 + uSurfaceTime * .22) * .14;
+      float tileRipple = sin(tilePhase) * .18
+        + sin(tileCentre.y * .63 + uSurfaceTime * .09) * .07;
       transformed.z += (tileRipple + vSurfaceHeat * .36) / tileUnit;
       transformed.y += sin(uSurfaceTime * 1.4 + tileCentre.x * 2.0) * vSurfaceHeat * .045;
     `)
@@ -138,7 +138,7 @@ export function createSceneWorlds(
     shader.fragmentShader = shader.fragmentShader.replace('#include <emissivemap_fragment>',
       '#include <emissivemap_fragment>\ntotalEmissiveRadiance += vec3(.06, .25, .32) * vSurfaceHeat;')
   }
-  metal.customProgramCacheKey = () => 'aether-radial-hex-pointer-v4'
+  metal.customProgramCacheKey = () => 'aether-folded-hex-pointer-v5'
   const silver = mat(new THREE.MeshStandardMaterial({
     color: 0x929197, metalness: software ? .45 : .96, roughness: .24, envMapIntensity: 1.25, transparent: true,
   }))
@@ -284,103 +284,6 @@ export function createSceneWorlds(
     joints.setColorAt(i, color.setScalar(.74 + (i % 3) * .13))
   }
 
-  // Scale highlights only. Atmosphere owns the single masked spine current
-  // that gathers into the machine O; no duplicate spine or reactor cloud.
-  const pointCount = software ? 420 : mobile ? 1100 : 2300
-  const seeds = new Float32Array(pointCount * 3)
-  for (let i = 0; i < pointCount; i++) seeds.set([i / pointCount, (i * .61803398875) % 1, (i * .754877666) % 1], i * 3)
-  const pointGeometry = geo(new THREE.BufferGeometry())
-  pointGeometry.setAttribute('position', new THREE.BufferAttribute(seeds, 3))
-  const coreMaterial = mat(new THREE.ShaderMaterial({
-    uniforms: {
-      uTime: { value: 0 }, uScroll: { value: 0 }, uWeights: { value: new THREE.Vector3(1, 0, 0) },
-      uOpacity: { value: 0 }, uSize: { value: software ? 28 : mobile ? 25 : 19 },
-      uPointMax: { value: 5 }, uPearl: { value: 0 },
-      uPointer: pointerNdc, uPointerStrength: pointerStrength, uPointerAspect: pointerAspect,
-    },
-    transparent: true, blending: THREE.AdditiveBlending, depthWrite: false,
-    vertexShader: /* glsl */ `
-      uniform float uTime;
-      uniform float uScroll;
-      uniform vec3 uWeights;
-      uniform float uSize;
-      uniform float uPointMax;
-      uniform vec2 uPointer;
-      uniform float uPointerStrength;
-      uniform float uPointerAspect;
-      varying float vBrightness;
-      varying float vPointerHeat;
-      varying float vPearlTone;
-      void main() {
-        float flow = fract(position.x + mix(uTime, uScroll, uWeights.x) * .085);
-        float a = position.y * 6.283185 + uTime * .7;
-        float spineAngle = position.y * 6.283185 + uScroll * .7;
-        float r = .16 + position.z * .47;
-        vec3 spine = vec3(sin(spineAngle + flow * 15.0) * r, (flow - .5) * 6.3, cos(spineAngle + flow * 15.0) * r);
-        float latitude = position.x * 6.283185;
-        float mr = 1.06 + cos(latitude) * (.16 + position.z * .14);
-        vec3 machine = vec3(sin(a) * mr, cos(a) * mr, sin(latitude) * (.16 + position.z * .14));
-        float sr = .25 + sin(flow * 3.14159) * 1.7;
-        vec3 scales = vec3(sin(a + flow * 18.0) * sr, (flow - .5) * 6.3, cos(a + flow * 18.0) * sr);
-        vec3 p = spine * uWeights.x + machine * uWeights.y + scales * uWeights.z;
-        vec4 view = modelViewMatrix * vec4(p, 1.0);
-        vec4 clip = projectionMatrix * view;
-        vec2 delta = (clip.xy / max(clip.w, .001) - uPointer) * vec2(uPointerAspect, 1.0);
-        vPointerHeat = exp(-dot(delta, delta) * 22.0) * uPointerStrength
-          * (1.0 - uWeights.x) * step(.001, clip.w);
-        view.xy += normalize(delta + vec2(.0001)) * vPointerHeat * .32;
-        gl_Position = projectionMatrix * view;
-        gl_PointSize = clamp(uSize / max(.1, -view.z) * (1.0 + vPointerHeat * .45), 1.0, uPointMax);
-        vBrightness = .35 + .65 * position.z + vPointerHeat * .9;
-        vPearlTone = position.y;
-      }
-    `,
-    fragmentShader: /* glsl */ `
-      uniform float uOpacity;
-      uniform vec3 uWeights;
-      uniform float uPearl;
-      varying float vBrightness;
-      varying float vPointerHeat;
-      varying float vPearlTone;
-      void main() {
-        float r = length(gl_PointCoord - .5) * 2.0;
-        if (r > 1.0) discard;
-        vec3 tint = vec3(.65, .30, .83) * uWeights.x + vec3(.22, 1.0, .83) * uWeights.y + vec3(1.0, .66, .24) * uWeights.z;
-        tint += vec3(.10, .22, .24) * vPointerHeat;
-        float alpha = pow(1.0 - r, 1.8) * uOpacity * vBrightness;
-        if (uPearl > .5) {
-          vec2 xy = (gl_PointCoord - .5) * 2.0;
-          vec3 pearlNormal = vec3(xy, sqrt(max(0.0, 1.0 - r * r)));
-          vec3 lightDirection = normalize(vec3(-.45, .65, .72));
-          float diffuse = .28 + .72 * max(0.0, dot(pearlNormal, lightDirection));
-          float specular = pow(max(0.0, dot(pearlNormal, lightDirection)), 22.0);
-          vec3 body = mix(vec3(.16, .23, .29), vec3(.39, .44, .51), vPearlTone);
-          body = mix(body, vec3(.40, .27, .47), pow(1.0 - pearlNormal.z, 2.0) * .55);
-          tint = body * diffuse + vec3(.67, .78, .91) * specular * .60;
-          tint += vec3(.06, .15, .21) * vPointerHeat;
-          alpha = (1.0 - smoothstep(.84, 1.0, r)) * uOpacity;
-        }
-        gl_FragColor = vec4(tint, alpha);
-        #include <tonemapping_fragment>
-        #include <colorspace_fragment>
-      }
-    `,
-  }))
-  const createLayerCore = (parent: THREE.Group, weights: THREE.Vector3, name: string,
-    geometry = pointGeometry) => {
-    const material = mat(coreMaterial.clone())
-    material.uniforms.uWeights.value.copy(weights)
-    material.uniforms.uPointer = pointerNdc
-    material.uniforms.uPointerStrength = pointerStrength
-    material.uniforms.uPointerAspect = pointerAspect
-    const points = new THREE.Points(geometry, material)
-    points.name = name
-    points.frustumCulled = false
-    parent.add(points)
-    return { material, points }
-  }
-  const scaleCore = createLayerCore(scaleWall, new THREE.Vector3(0, 0, 1), 'aether-scale-core')
-
   // Architecture appears around the centre and remains behind the final ring.
   const architecture = mat(new THREE.MeshStandardMaterial({
     color: 0x0a171b, metalness: .7, roughness: .37, envMapIntensity: .75, transparent: true,
@@ -421,13 +324,18 @@ export function createSceneWorlds(
   space.add(water.surface)
   // Unlike the translucent wall dressing, the room ceiling seals the next
   // chamber while the incoming current is still converging behind it.
+  // One shared interface: the machine lid touches the slab's underside.
+  const capThickness = .26
+  const capCentreY = 3.15
+  const ceilingY = capCentreY + capThickness * .5
+  const ceilingThickness = .18
   const ceilingMaterial = mat(new THREE.MeshStandardMaterial({
     color: 0x101217, metalness: .55, roughness: .56, envMapIntensity: .55,
     side: THREE.DoubleSide, depthWrite: true,
   }))
-  const ceiling = mesh(space, geo(new THREE.PlaneGeometry(64, 64)), ceilingMaterial, 0, 5.8, platformZ)
+  const ceiling = mesh(space, geo(new THREE.BoxGeometry(64, ceilingThickness, 64)),
+    ceilingMaterial, 0, ceilingY + ceilingThickness * .5, platformZ)
   ceiling.name = 'aether-chamber-ceiling'
-  ceiling.rotation.x = Math.PI / 2
   ceiling.renderOrder = -2
   // A separate, opaque underside keeps the device behind the lower room's
   // ceiling. Its extent covers the camera path beyond the finite flooded bed.
@@ -526,15 +434,16 @@ export function createSceneWorlds(
   machineMetal.bumpMap = ruins.relief
   machineMetal.bumpScale = .008
   const wallGeometry = geo(new THREE.BoxGeometry(1, 1, 1))
-  const architectureBars = instanced(space, wallGeometry, architecture, 28, false)
+  const architectureBars = instanced(space, wallGeometry, architecture, 22, false)
   architectureBars.name = 'aether-upper-room-structure'
-  for (let i = 0; i < 28; i++) {
-    const side = i % 2 === 0 ? -1 : 1
-    const row = Math.floor(i / 2)
-    dummy.position.set(side * (row < 8 ? 7.5 : 3.3), row < 8 ? -7 : 5.2,
-      row < 8 ? 4 - row * 2.2 : 5 - (row - 8) * 3.4)
+  for (let i = 0; i < architectureBars.count; i++) {
+    const upright = i < 16
+    const row = upright ? Math.floor(i / 2) : i - 16
+    dummy.position.set(upright ? (i % 2 === 0 ? -7.5 : 7.5) : 0,
+      upright ? (ceilingY + floor.position.y) * .5 : ceilingY - .14,
+      upright ? 4 - row * 2.2 : 5 - row * 3.4)
     dummy.rotation.set(0, 0, 0)
-    dummy.scale.set(row < 8 ? .34 : 15, row < 8 ? 28 : .36, .3)
+    dummy.scale.set(upright ? .34 : 15, upright ? ceilingY - floor.position.y : .28, .3)
     dummy.updateMatrix()
     architectureBars.setMatrixAt(i, dummy.matrix)
   }
@@ -572,7 +481,7 @@ export function createSceneWorlds(
   capMaterial.onBeforeCompile = machineMetal.onBeforeCompile
   capMaterial.customProgramCacheKey = machineMetal.customProgramCacheKey
   const closedCap = mesh(chamber,
-    geo(new THREE.CylinderGeometry(1.93, 1.93, .26, software ? 32 : 64)), capMaterial, 0, 3.15)
+    geo(new THREE.CylinderGeometry(1.93, 1.93, capThickness, software ? 32 : 64)), capMaterial, 0, capCentreY)
   closedCap.name = 'aether-machine-closed-cap'
   closedCap.renderOrder = -1
   const bolts = instanced(chamber, geo(new THREE.CylinderGeometry(.037, .041, .055, 6)), silver,
@@ -637,8 +546,8 @@ export function createSceneWorlds(
       polar(angle, 1.71, 2.87 + (i % 3) * .065),
       polar(angle + lean * .3, 2.20, 1.98 + Math.sin(i * 1.3) * .3),
       polar(angle + lean, 3.15, 1.45 + Math.cos(i * 1.9) * .72),
-      polar(angle - lean * .25, 4.45, 2.43 + Math.sin(i * 1.7) * .85),
-      polar(angle - lean * .6, 6.35, 5.35 + Math.cos(i * 1.5)),
+      polar(angle - lean * .25, 4.45, 2.38 + Math.sin(i * 1.7) * .30),
+      polar(angle - lean * .6, 6.35, ceilingY),
     ])
     cableParts.push(new THREE.TubeGeometry(path, software ? 18 : 38,
       i % 4 === 0 ? .065 : .021 + (i % 3) * .009, software ? 5 : 7, false))
@@ -749,8 +658,6 @@ export function createSceneWorlds(
       pointerAspect.value = pointer && Number.isFinite(pointer.aspect)
         ? Math.max(.25, Math.min(5, pointer.aspect)) : 1
       surfaceTime.value = time
-      scaleCore.material.uniforms.uTime.value = time
-      scaleCore.material.uniforms.uOpacity.value = scaleWeight * .40
 
       const architectureWeight = smooth(.59, .615, progress) * (1 - journey.darkness * .77)
         * (1 - journey.scales * .35) * (1 - smooth(.86, .94, progress) * .85)

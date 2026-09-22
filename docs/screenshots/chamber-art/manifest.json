@@ -1,0 +1,792 @@
+{
+  "baseline": "9dfb89209ba842fbad6946140e40ecda1581b0ba",
+  "viewport": [
+    1440,
+    900
+  ],
+  "dpr": 1,
+  "method": "Same production builds, no pointer input, 270 fixed 60Hz clock steps at each progress, decoded videos paused at 2 seconds. Static evidence, not frame-rate measurement.",
+  "frames": [
+    {
+      "phase": "before",
+      "progress": 0,
+      "file": "docs/screenshots/chamber-art/before/scroll-000.jpg",
+      "sha256": "df3af9272e2f4dcd2a44cfba5d7cca0e1c1e35f4ccd900b0d7413de5c8b25c79",
+      "clock": 5500.000000000012,
+      "videoTimes": [
+        {
+          "file": "light-projection.mp4",
+          "time": 2,
+          "paused": true
+        }
+      ],
+      "camera": {
+        "y": "0.3479",
+        "azimuth": "0.0000",
+        "orbitYaw": "0.0000"
+      },
+      "drawCalls": 78
+    },
+    {
+      "phase": "before",
+      "progress": 0.145,
+      "file": "docs/screenshots/chamber-art/before/scroll-145.jpg",
+      "sha256": "237320f922fe2cd8e1c72ea144cf549e4296fdeba4bd82b9f06118490ab8461f",
+      "clock": 9999.999999999995,
+      "videoTimes": [
+        {
+          "file": "light-projection.mp4",
+          "time": 2,
+          "paused": true
+        }
+      ],
+      "camera": {
+        "y": "-8.7815",
+        "azimuth": "5.0351",
+        "orbitYaw": "0.0000"
+      },
+      "drawCalls": 42
+    },
+    {
+      "phase": "before",
+      "progress": 0.24,
+      "file": "docs/screenshots/chamber-art/before/scroll-240.jpg",
+      "sha256": "d361ab83c4e494c124457bf2ea13dcb9825576f6fde5ed611fa8326a54ba2795",
+      "clock": 14499.99999999983,
+      "videoTimes": [
+        {
+          "file": "light-projection.mp4",
+          "time": 2,
+          "paused": true
+        }
+      ],
+      "camera": {
+        "y": "-15.1179",
+        "azimuth": "6.2800",
+        "orbitYaw": "0.0000"
+      },
+      "drawCalls": 47
+    },
+    {
+      "phase": "before",
+      "progress": 0.285,
+      "file": "docs/screenshots/chamber-art/before/scroll-285.jpg",
+      "sha256": "59651d7ecf7365c88954e19863dc668f81c3a5617263e51b6f36c281d8a27e9e",
+      "clock": 18999.999999999953,
+      "videoTimes": [
+        {
+          "file": "light-projection.mp4",
+          "time": 2,
+          "paused": true
+        },
+        {
+          "file": "chrome-current.webm",
+          "time": 2,
+          "paused": true
+        },
+        {
+          "file": "aurora-bloom.webm",
+          "time": 2,
+          "paused": true
+        }
+      ],
+      "camera": {
+        "y": "-17.2775",
+        "azimuth": "6.2800",
+        "orbitYaw": "0.0000"
+      },
+      "drawCalls": 144
+    },
+    {
+      "phase": "before",
+      "progress": 0.63,
+      "file": "docs/screenshots/chamber-art/before/scroll-630.jpg",
+      "sha256": "1f88a9eb9ace190d4cb63ad7bb9f7248635368baa9899aee58ac8e49ea9e949e",
+      "clock": 23500.00000000028,
+      "videoTimes": [
+        {
+          "file": "light-projection.mp4",
+          "time": 2,
+          "paused": true
+        },
+        {
+          "file": "chrome-current.webm",
+          "time": 2,
+          "paused": true
+        },
+        {
+          "file": "aurora-bloom.webm",
+          "time": 2,
+          "paused": true
+        }
+      ],
+      "camera": {
+        "y": "-35.6799",
+        "azimuth": "6.4340",
+        "orbitYaw": "0.0000"
+      },
+      "drawCalls": 207
+    },
+    {
+      "phase": "before",
+      "progress": 0.65,
+      "file": "docs/screenshots/chamber-art/before/scroll-650.jpg",
+      "sha256": "6f5022cedb244f029091bb2418486d0565ad77dfcd96ff899ea1c6b1e1f40b43",
+      "clock": 28000.000000000608,
+      "videoTimes": [
+        {
+          "file": "light-projection.mp4",
+          "time": 2,
+          "paused": true
+        },
+        {
+          "file": "chrome-current.webm",
+          "time": 2,
+          "paused": true
+        },
+        {
+          "file": "aurora-bloom.webm",
+          "time": 2,
+          "paused": true
+        }
+      ],
+      "camera": {
+        "y": "-36.7416",
+        "azimuth": "6.5391",
+        "orbitYaw": "0.0000"
+      },
+      "drawCalls": 207
+    },
+    {
+      "phase": "before",
+      "progress": 0.675,
+      "file": "docs/screenshots/chamber-art/before/scroll-675.jpg",
+      "sha256": "1709d60439e2d8254d0071811b403b5ff90d064cc1396c83b7c22b5f2de315aa",
+      "clock": 32500.000000000935,
+      "videoTimes": [
+        {
+          "file": "light-projection.mp4",
+          "time": 2,
+          "paused": true
+        },
+        {
+          "file": "chrome-current.webm",
+          "time": 2,
+          "paused": true
+        },
+        {
+          "file": "aurora-bloom.webm",
+          "time": 2,
+          "paused": true
+        }
+      ],
+      "camera": {
+        "y": "-38.1138",
+        "azimuth": "6.6697",
+        "orbitYaw": "0.0000"
+      },
+      "drawCalls": 214
+    },
+    {
+      "phase": "before",
+      "progress": 0.7,
+      "file": "docs/screenshots/chamber-art/before/scroll-700.jpg",
+      "sha256": "4577a1ea6830976c9df8dbba20d52a57e245f21ff235beebf823bd0831257e0b",
+      "clock": 37000.00000000034,
+      "videoTimes": [
+        {
+          "file": "light-projection.mp4",
+          "time": 2,
+          "paused": true
+        },
+        {
+          "file": "chrome-current.webm",
+          "time": 2,
+          "paused": true
+        },
+        {
+          "file": "aurora-bloom.webm",
+          "time": 2,
+          "paused": true
+        }
+      ],
+      "camera": {
+        "y": "-39.5922",
+        "azimuth": "6.8044",
+        "orbitYaw": "0.0000"
+      },
+      "drawCalls": 139
+    },
+    {
+      "phase": "before",
+      "progress": 0.72,
+      "file": "docs/screenshots/chamber-art/before/scroll-720.jpg",
+      "sha256": "8381a0407ba00e632e9c89e21fb047f75449c0cd0c9e42a97d5134248d7a3b8b",
+      "clock": 41499.99999999969,
+      "videoTimes": [
+        {
+          "file": "light-projection.mp4",
+          "time": 2,
+          "paused": true
+        },
+        {
+          "file": "chrome-current.webm",
+          "time": 2,
+          "paused": true
+        },
+        {
+          "file": "aurora-bloom.webm",
+          "time": 2,
+          "paused": true
+        }
+      ],
+      "camera": {
+        "y": "-40.9086",
+        "azimuth": "6.9341",
+        "orbitYaw": "0.0000"
+      },
+      "drawCalls": 115
+    },
+    {
+      "phase": "before",
+      "progress": 0.765,
+      "file": "docs/screenshots/chamber-art/before/scroll-765.jpg",
+      "sha256": "8dd45acee29ab57419907d94fb30b515885989e930c35514c571ad2b148fda50",
+      "clock": 45999.99999999903,
+      "videoTimes": [
+        {
+          "file": "light-projection.mp4",
+          "time": 2,
+          "paused": true
+        },
+        {
+          "file": "chrome-current.webm",
+          "time": 2,
+          "paused": true
+        },
+        {
+          "file": "aurora-bloom.webm",
+          "time": 2,
+          "paused": true
+        }
+      ],
+      "camera": {
+        "y": "-44.1203",
+        "azimuth": "6.8256",
+        "orbitYaw": "0.0000"
+      },
+      "drawCalls": 74
+    },
+    {
+      "phase": "before",
+      "progress": 0.8,
+      "file": "docs/screenshots/chamber-art/before/scroll-800.jpg",
+      "sha256": "354d554a95231fce976f481f189b5b16babba26b41d13bc2d5a4bf56e62f6606",
+      "clock": 50499.99999999838,
+      "videoTimes": [
+        {
+          "file": "light-projection.mp4",
+          "time": 2,
+          "paused": true
+        },
+        {
+          "file": "chrome-current.webm",
+          "time": 2,
+          "paused": true
+        },
+        {
+          "file": "aurora-bloom.webm",
+          "time": 2,
+          "paused": true
+        }
+      ],
+      "camera": {
+        "y": "-46.2916",
+        "azimuth": "6.4764",
+        "orbitYaw": "0.0000"
+      },
+      "drawCalls": 49
+    },
+    {
+      "phase": "before",
+      "progress": 0.85,
+      "file": "docs/screenshots/chamber-art/before/scroll-850.jpg",
+      "sha256": "4f165719d576d7a8d832e2976260397c35a7b521af8e52a27303c39de8cf42c9",
+      "clock": 54999.99999999772,
+      "videoTimes": [
+        {
+          "file": "light-projection.mp4",
+          "time": 2,
+          "paused": true
+        },
+        {
+          "file": "chrome-current.webm",
+          "time": 2,
+          "paused": true
+        },
+        {
+          "file": "aurora-bloom.webm",
+          "time": 2,
+          "paused": true
+        }
+      ],
+      "camera": {
+        "y": "-48.9816",
+        "azimuth": "6.4297",
+        "orbitYaw": "0.0000"
+      },
+      "drawCalls": 41
+    },
+    {
+      "phase": "before",
+      "progress": 0.9,
+      "file": "docs/screenshots/chamber-art/before/scroll-900.jpg",
+      "sha256": "cc745937017bc6b4d756510aede1f8cc26e2d3c9cf83c92e15ba440ee3433577",
+      "clock": 59499.99999999707,
+      "videoTimes": [
+        {
+          "file": "light-projection.mp4",
+          "time": 2,
+          "paused": true
+        },
+        {
+          "file": "chrome-current.webm",
+          "time": 2,
+          "paused": true
+        },
+        {
+          "file": "aurora-bloom.webm",
+          "time": 2,
+          "paused": true
+        }
+      ],
+      "camera": {
+        "y": "-51.9928",
+        "azimuth": "7.2943",
+        "orbitYaw": "0.0000"
+      },
+      "drawCalls": 49
+    },
+    {
+      "phase": "before",
+      "progress": 0.98,
+      "file": "docs/screenshots/chamber-art/before/scroll-980.jpg",
+      "sha256": "5ac9993ef8a515529b4ecf7da6880e69f14bfe367c4a89fd48233cbe687ba0ad",
+      "clock": 63999.99999999641,
+      "videoTimes": [
+        {
+          "file": "light-projection.mp4",
+          "time": 2,
+          "paused": true
+        },
+        {
+          "file": "chrome-current.webm",
+          "time": 2,
+          "paused": true
+        },
+        {
+          "file": "aurora-bloom.webm",
+          "time": 2,
+          "paused": true
+        }
+      ],
+      "camera": {
+        "y": "-58.4174",
+        "azimuth": "11.2178",
+        "orbitYaw": "0.0000"
+      },
+      "drawCalls": 64
+    },
+    {
+      "phase": "after",
+      "progress": 0,
+      "file": "docs/screenshots/chamber-art/after/scroll-000.jpg",
+      "sha256": "0562bbec8fb4d6003d9ee74361297fb9e8a2d8e803aaa09e15127abcfe7f208f",
+      "clock": 5500.000000000012,
+      "videoTimes": [
+        {
+          "file": "light-projection.mp4",
+          "time": 2,
+          "paused": true
+        }
+      ],
+      "camera": {
+        "y": "0.3479",
+        "azimuth": "0.0000",
+        "orbitYaw": "0.0000"
+      },
+      "drawCalls": 78
+    },
+    {
+      "phase": "after",
+      "progress": 0.145,
+      "file": "docs/screenshots/chamber-art/after/scroll-145.jpg",
+      "sha256": "62370aea8ab1c859204d2c9de01d502d9461e5fe0756027e706372ea2c6de241",
+      "clock": 9999.999999999995,
+      "videoTimes": [
+        {
+          "file": "light-projection.mp4",
+          "time": 2,
+          "paused": true
+        }
+      ],
+      "camera": {
+        "y": "-8.7815",
+        "azimuth": "5.0351",
+        "orbitYaw": "0.0000"
+      },
+      "drawCalls": 42
+    },
+    {
+      "phase": "after",
+      "progress": 0.24,
+      "file": "docs/screenshots/chamber-art/after/scroll-240.jpg",
+      "sha256": "8dd9b52f08ef5fc98602f77dccdba0de8f936a99a405aa02633dc95d285fd181",
+      "clock": 14499.99999999983,
+      "videoTimes": [
+        {
+          "file": "light-projection.mp4",
+          "time": 2,
+          "paused": true
+        }
+      ],
+      "camera": {
+        "y": "-15.1179",
+        "azimuth": "6.2800",
+        "orbitYaw": "0.0000"
+      },
+      "drawCalls": 47
+    },
+    {
+      "phase": "after",
+      "progress": 0.285,
+      "file": "docs/screenshots/chamber-art/after/scroll-285.jpg",
+      "sha256": "b36f36a0c5fcd7c06ae5d8b74dd01dd528bd5e196f0fc2c2efbf8f76831a9d55",
+      "clock": 18999.999999999953,
+      "videoTimes": [
+        {
+          "file": "light-projection.mp4",
+          "time": 2,
+          "paused": true
+        },
+        {
+          "file": "chrome-current.webm",
+          "time": 2,
+          "paused": true
+        },
+        {
+          "file": "aurora-bloom.webm",
+          "time": 2,
+          "paused": true
+        }
+      ],
+      "camera": {
+        "y": "-17.2775",
+        "azimuth": "6.2800",
+        "orbitYaw": "0.0000"
+      },
+      "drawCalls": 144
+    },
+    {
+      "phase": "after",
+      "progress": 0.63,
+      "file": "docs/screenshots/chamber-art/after/scroll-630.jpg",
+      "sha256": "0b6bb84de1d5bc7dc1edd751c77f31c7675ace048f2d553082253a234c3ca711",
+      "clock": 23500.00000000028,
+      "videoTimes": [
+        {
+          "file": "light-projection.mp4",
+          "time": 2,
+          "paused": true
+        },
+        {
+          "file": "chrome-current.webm",
+          "time": 2,
+          "paused": true
+        },
+        {
+          "file": "aurora-bloom.webm",
+          "time": 2,
+          "paused": true
+        }
+      ],
+      "camera": {
+        "y": "-35.6799",
+        "azimuth": "6.4340",
+        "orbitYaw": "0.0000"
+      },
+      "drawCalls": 216
+    },
+    {
+      "phase": "after",
+      "progress": 0.65,
+      "file": "docs/screenshots/chamber-art/after/scroll-650.jpg",
+      "sha256": "223747d5c68af189ea7128a1ad3ff58ed7948eb665caecbf35b6273e0892f7cf",
+      "clock": 28000.000000000608,
+      "videoTimes": [
+        {
+          "file": "light-projection.mp4",
+          "time": 2,
+          "paused": true
+        },
+        {
+          "file": "chrome-current.webm",
+          "time": 2,
+          "paused": true
+        },
+        {
+          "file": "aurora-bloom.webm",
+          "time": 2,
+          "paused": true
+        }
+      ],
+      "camera": {
+        "y": "-36.7416",
+        "azimuth": "6.5391",
+        "orbitYaw": "0.0000"
+      },
+      "drawCalls": 215
+    },
+    {
+      "phase": "after",
+      "progress": 0.675,
+      "file": "docs/screenshots/chamber-art/after/scroll-675.jpg",
+      "sha256": "aec333e2bcf56bef941d05694ea64a2cfdee8986b91beb03bb45a3935116dce5",
+      "clock": 32500.000000000935,
+      "videoTimes": [
+        {
+          "file": "light-projection.mp4",
+          "time": 2,
+          "paused": true
+        },
+        {
+          "file": "chrome-current.webm",
+          "time": 2,
+          "paused": true
+        },
+        {
+          "file": "aurora-bloom.webm",
+          "time": 2,
+          "paused": true
+        }
+      ],
+      "camera": {
+        "y": "-38.1138",
+        "azimuth": "6.6697",
+        "orbitYaw": "0.0000"
+      },
+      "drawCalls": 223
+    },
+    {
+      "phase": "after",
+      "progress": 0.7,
+      "file": "docs/screenshots/chamber-art/after/scroll-700.jpg",
+      "sha256": "0c1e66071a7ed8b38be9fa76892a83c71552983850f1b7498117a4eb503bad11",
+      "clock": 37000.00000000034,
+      "videoTimes": [
+        {
+          "file": "light-projection.mp4",
+          "time": 2,
+          "paused": true
+        },
+        {
+          "file": "chrome-current.webm",
+          "time": 2,
+          "paused": true
+        },
+        {
+          "file": "aurora-bloom.webm",
+          "time": 2,
+          "paused": true
+        }
+      ],
+      "camera": {
+        "y": "-39.5922",
+        "azimuth": "6.8044",
+        "orbitYaw": "0.0000"
+      },
+      "drawCalls": 145
+    },
+    {
+      "phase": "after",
+      "progress": 0.72,
+      "file": "docs/screenshots/chamber-art/after/scroll-720.jpg",
+      "sha256": "dcf1dbc7580cf13dac21d1d01bf8226814136b6128708bbbb9fefccada58b878",
+      "clock": 41499.99999999969,
+      "videoTimes": [
+        {
+          "file": "light-projection.mp4",
+          "time": 2,
+          "paused": true
+        },
+        {
+          "file": "chrome-current.webm",
+          "time": 2,
+          "paused": true
+        },
+        {
+          "file": "aurora-bloom.webm",
+          "time": 2,
+          "paused": true
+        }
+      ],
+      "camera": {
+        "y": "-40.9086",
+        "azimuth": "6.9341",
+        "orbitYaw": "0.0000"
+      },
+      "drawCalls": 121
+    },
+    {
+      "phase": "after",
+      "progress": 0.765,
+      "file": "docs/screenshots/chamber-art/after/scroll-765.jpg",
+      "sha256": "ab0fe7eaaedf7b831de602a4cf2881890ecf4f682890542d34ce15d3aa006253",
+      "clock": 45999.99999999903,
+      "videoTimes": [
+        {
+          "file": "light-projection.mp4",
+          "time": 2,
+          "paused": true
+        },
+        {
+          "file": "chrome-current.webm",
+          "time": 2,
+          "paused": true
+        },
+        {
+          "file": "aurora-bloom.webm",
+          "time": 2,
+          "paused": true
+        }
+      ],
+      "camera": {
+        "y": "-44.1203",
+        "azimuth": "6.8256",
+        "orbitYaw": "0.0000"
+      },
+      "drawCalls": 76
+    },
+    {
+      "phase": "after",
+      "progress": 0.8,
+      "file": "docs/screenshots/chamber-art/after/scroll-800.jpg",
+      "sha256": "f2318a080e1a00d5ce7bd3f419b8321a1262907388add1c0ee98cb6b148dea9e",
+      "clock": 50499.99999999838,
+      "videoTimes": [
+        {
+          "file": "light-projection.mp4",
+          "time": 2,
+          "paused": true
+        },
+        {
+          "file": "chrome-current.webm",
+          "time": 2,
+          "paused": true
+        },
+        {
+          "file": "aurora-bloom.webm",
+          "time": 2,
+          "paused": true
+        }
+      ],
+      "camera": {
+        "y": "-46.2916",
+        "azimuth": "6.4764",
+        "orbitYaw": "0.0000"
+      },
+      "drawCalls": 48
+    },
+    {
+      "phase": "after",
+      "progress": 0.85,
+      "file": "docs/screenshots/chamber-art/after/scroll-850.jpg",
+      "sha256": "3b2fe47f3d260940a7b32a23ca53fd7807ffa38a151752cec32c887f13c4d715",
+      "clock": 54999.99999999772,
+      "videoTimes": [
+        {
+          "file": "light-projection.mp4",
+          "time": 2,
+          "paused": true
+        },
+        {
+          "file": "chrome-current.webm",
+          "time": 2,
+          "paused": true
+        },
+        {
+          "file": "aurora-bloom.webm",
+          "time": 2,
+          "paused": true
+        }
+      ],
+      "camera": {
+        "y": "-48.9816",
+        "azimuth": "6.4297",
+        "orbitYaw": "0.0000"
+      },
+      "drawCalls": 40
+    },
+    {
+      "phase": "after",
+      "progress": 0.9,
+      "file": "docs/screenshots/chamber-art/after/scroll-900.jpg",
+      "sha256": "202717f012cba4d0b35c87e594cbe289ae4e9cc4c434c190f23c375e668df715",
+      "clock": 59499.99999999707,
+      "videoTimes": [
+        {
+          "file": "light-projection.mp4",
+          "time": 2,
+          "paused": true
+        },
+        {
+          "file": "chrome-current.webm",
+          "time": 2,
+          "paused": true
+        },
+        {
+          "file": "aurora-bloom.webm",
+          "time": 2,
+          "paused": true
+        }
+      ],
+      "camera": {
+        "y": "-51.9928",
+        "azimuth": "7.2943",
+        "orbitYaw": "0.0000"
+      },
+      "drawCalls": 48
+    },
+    {
+      "phase": "after",
+      "progress": 0.98,
+      "file": "docs/screenshots/chamber-art/after/scroll-980.jpg",
+      "sha256": "2720475d37a3352fa550c7f8aae02606a11beb7f705f17d0f0d01fb65618043d",
+      "clock": 63999.99999999641,
+      "videoTimes": [
+        {
+          "file": "light-projection.mp4",
+          "time": 2,
+          "paused": true
+        },
+        {
+          "file": "chrome-current.webm",
+          "time": 2,
+          "paused": true
+        },
+        {
+          "file": "aurora-bloom.webm",
+          "time": 2,
+          "paused": true
+        }
+      ],
+      "camera": {
+        "y": "-58.4174",
+        "azimuth": "11.2178",
+        "orbitYaw": "0.0000"
+      },
+      "drawCalls": 64
+    }
+  ],
+  "after": "a671a44a89069ad608cb588a803ff3cd8a8245f7"
+}

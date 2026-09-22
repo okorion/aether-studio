@@ -521,7 +521,9 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
     expect(contact.capTop).toBeCloseTo(-37.12, 5)
     // StandardMaterial.clone resets custom defines unless explicitly restored.
     expect(contact.capFilmDefine).toBe(1)
-    expect(contact.ceilingY).toBeCloseTo(-34.6, 5)
+    expect(contact.ceilingY).toBeCloseTo(contact.capTop, 5)
+    expect(contact.ceilingTop - contact.ceilingY).toBeCloseTo(.18, 5)
+    expect(contact.scaleCorePresent).toBe(false)
     expect(contact.ceilingWidth).toBeCloseTo(64, 5)
     expect(contact.undersideY).toBeLessThan(contact.floorMin)
     expect(contact.undersideWidth).toBeCloseTo(64, 5)

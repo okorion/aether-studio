@@ -23,6 +23,7 @@ export type InteractionHarness = {
   stepField: typeof stepField
   probeScalePointer: typeof probeScalePointer
   probeMonitorCapture: typeof probeMonitorCapture
+  probeMonitorOcclusion: typeof probeMonitorOcclusion
   sampleWorld: (elapsed: number, progress: number) => {
     chain: number[]
     vertebrae: number[]
@@ -155,6 +156,78 @@ function probeScalePointer() {
     probeScene.clear()
     assembly.dispose()
     target.dispose()
+  }
+}
+
+function probeMonitorOcclusion() {
+  const monitors = createSceneMonitors(true, false)
+  const occlusionScene = new THREE.Scene()
+  const occluders = new THREE.Group()
+  const probeCamera = new THREE.PerspectiveCamera(42, 1.6, .1, 90)
+  probeCamera.position.set(0, 0, 12)
+  probeCamera.lookAt(0, 0, 0)
+  probeCamera.updateMatrixWorld()
+  const boxGeometry = new THREE.BoxGeometry(1, 1, 1)
+  const opaque = new THREE.MeshBasicMaterial()
+  const blocker = new THREE.Mesh(boxGeometry, opaque)
+  blocker.position.z = 5
+  const particles = new THREE.Points(new THREE.BufferGeometry().setAttribute('position',
+    new THREE.Float32BufferAttribute([0, 0, 5], 3)), new THREE.PointsMaterial())
+  const instances = new THREE.InstancedMesh(boxGeometry, opaque, 1)
+  const matrix = new THREE.Matrix4()
+  const ndc = new THREE.Vector2()
+  const pick = () => monitors.pick(ndc, probeCamera)
+  occlusionScene.add(monitors.group, occluders)
+  occluders.add(blocker)
+  monitors.update(1, .367)
+  monitors.setOccluders([occluders])
+  try {
+    const foreground = pick()
+    monitors.update(2, .367, { ndc, strength: 1, aspect: 1.6, active: true }, probeCamera)
+    const hovered = monitors.getHoveredPanel()
+    const ignored: (number | null)[] = []
+    occluders.visible = false; ignored.push(pick()); occluders.visible = true
+    blocker.visible = false; ignored.push(pick()); blocker.visible = true
+    opaque.visible = false; ignored.push(pick()); opaque.visible = true
+    opaque.depthWrite = false; ignored.push(pick()); opaque.depthWrite = true
+    opaque.transparent = true; opaque.opacity = .5; ignored.push(pick()); opaque.opacity = 1
+    blocker.position.z = -4; ignored.push(pick())
+    blocker.position.set(20, 0, 5)
+    let offRayCasts = 0
+    const raycast = blocker.raycast
+    blocker.raycast = function (...args) { offRayCasts++; raycast.apply(this, args) }
+    ignored.push(pick())
+    occluders.remove(blocker)
+    occluders.add(particles)
+    monitors.setOccluders([occluders])
+    ignored.push(pick())
+    occluders.add(instances)
+    monitors.setOccluders([occluders])
+    const instancePicks = [20, 0, 20].map(x => {
+      instances.setMatrixAt(0, matrix.makeTranslation(x, 0, 5))
+      instances.instanceMatrix.needsUpdate = true
+      return pick()
+    })
+    // The actual world registrations must still allow a visible production card.
+    worlds ??= createSceneWorlds(worldScene, true)
+    const state = sampleJourney(.4)
+    probeCamera.position.set(Math.sin(state.azimuth) * state.radius * Math.cos(state.elevation),
+      state.height + Math.sin(state.elevation) * state.radius,
+      Math.cos(state.azimuth) * state.radius * Math.cos(state.elevation))
+    probeCamera.lookAt(0, state.height, 0)
+    probeCamera.updateMatrixWorld()
+    worlds.update(10, .4)
+    worldScene.updateMatrixWorld(true)
+    const visibleProduction = worlds.getMonitorHit(new THREE.Vector2(420 / 1440 * 2 - 1, 1 - 380 / 900 * 2), probeCamera)
+    return { foreground, hovered, ignored, offRayCasts, instancePicks, visibleProduction }
+  } finally {
+    monitors.dispose()
+    instances.dispose()
+    particles.geometry.dispose()
+    particles.material.dispose()
+    boxGeometry.dispose()
+    opaque.dispose()
+    occlusionScene.clear()
   }
 }
 
@@ -292,6 +365,7 @@ window.interactionHarness = {
   stepField,
   probeScalePointer,
   probeMonitorCapture,
+  probeMonitorOcclusion,
   sampleWorld(elapsed, progress) {
     worlds ??= createSceneWorlds(worldScene, true)
     worlds.update(elapsed, progress)

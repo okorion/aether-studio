@@ -117,6 +117,9 @@ export default function App() {
   const audio = useRef<ReturnType<(typeof import('./audio'))['createAmbientAudio']> | null>(null)
   const journey = useRef<HTMLDivElement>(null)
   const onReady = useCallback(() => setReady(true), [])
+  const onSelectProject = useCallback((index: number) => {
+    if (Number.isInteger(index) && index >= 0) setProject(projects[index % projects.length])
+  }, [])
 
   useEffect(() => {
     const navigate = () => {
@@ -217,7 +220,12 @@ export default function App() {
       </div>
       <SceneBoundary onUnavailable={onReady}>
         <Suspense fallback={null}>
-          <Scene reducedMotion={reducedMotion} active={activeSection === 'home' && !project} onReady={onReady} />
+          <Scene
+            reducedMotion={reducedMotion}
+            active={activeSection === 'home' && !project}
+            onReady={onReady}
+            onSelectProject={onSelectProject}
+          />
         </Suspense>
       </SceneBoundary>
       <div className="film-grain" aria-hidden="true" />

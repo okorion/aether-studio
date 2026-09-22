@@ -6,12 +6,14 @@ import { createSceneWorlds } from './SceneWorlds'
 import { sampleJourney, smooth } from './Journey'
 import { createSceneGlow } from './SceneGlow'
 import { createSceneForest } from './SceneForest'
-import { createSceneLayers } from './SceneLayers'
+import { createSceneLayers, sampleLayers } from './SceneLayers'
+import { createSceneVideo } from './SceneVideo'
 
 type SceneProps = {
   reducedMotion: boolean
   active: boolean
   onReady: () => void
+  onSelectProject?: (index: number) => void
 }
 
 const particleVertex = /* glsl */ `
@@ -72,12 +74,14 @@ function seededRandom(seed: number) {
   }
 }
 
-/** An original, entirely procedural scene. No downloaded models or textures. */
-export default function Scene({ reducedMotion, active, onReady }: SceneProps) {
+/** Original procedural geometry with two locally authored monitor films. */
+export default function Scene({ reducedMotion, active, onReady, onSelectProject }: SceneProps) {
   const hostRef = useRef<HTMLDivElement>(null)
   const readyRef = useRef(onReady)
   const activeRef = useRef(active)
   const wakeRef = useRef<(() => void) | null>(null)
+  const selectProjectRef = useRef(onSelectProject)
+  const videoRef = useRef<ReturnType<typeof createSceneVideo> | null>(null)
   // Motion preference changes rebuild the render budget, preserving the view
   // and time so pausing cannot snap a user's chosen angle back to the front.
   const preserved = useRef({ yaw: 0, pitch: 0, elapsed: 0 })
@@ -87,8 +91,19 @@ export default function Scene({ reducedMotion, active, onReady }: SceneProps) {
   }, [onReady])
 
   useEffect(() => {
+    selectProjectRef.current = onSelectProject
+  }, [onSelectProject])
+
+  // Decoders outlive GPU rebuilds caused by motion preference changes. Only
+  // an actual component teardown releases their frames and network resources.
+  useEffect(() => () => {
+    videoRef.current?.dispose()
+    videoRef.current = null
+  }, [])
+
+  useEffect(() => {
     activeRef.current = active
-    if (active) wakeRef.current?.()
+    wakeRef.current?.()
   }, [active])
 
   useEffect(() => {
@@ -121,6 +136,8 @@ export default function Scene({ reducedMotion, active, onReady }: SceneProps) {
       return value
     }
     const releaseResources = () => {
+      videoRef.current?.update(false, true)
+      document.documentElement.classList.remove('scene-monitor-hover')
       cleanup?.()
       cleanup = undefined
       effectDisposers.splice(0).forEach((dispose) => dispose())
@@ -610,7 +627,8 @@ export default function Scene({ reducedMotion, active, onReady }: SceneProps) {
 
       const atmosphere = createAtmosphere(scene, softwareRenderer, smallScreen)
       effectDisposers.push(() => atmosphere.dispose())
-      const worlds = createSceneWorlds(scene, softwareRenderer, smallScreen)
+      const video = videoRef.current ??= createSceneVideo()
+      const worlds = createSceneWorlds(scene, softwareRenderer, smallScreen, video)
       effectDisposers.push(() => worlds.dispose())
       const forest = createSceneForest(scene, softwareRenderer, smallScreen)
       effectDisposers.push(() => forest.dispose())
@@ -653,6 +671,82 @@ export default function Scene({ reducedMotion, active, onReady }: SceneProps) {
       let renderedFrames = 0
       let frameAverage = 16
       let qualityFrames = 0
+      let foreground = true
+      const monitorPointer = new THREE.Vector2()
+      let monitorPress: {
+        id: number; x: number; y: number; started: number; scrollY: number; progress: number; panel: number
+      } | null = null
+      const overInterface = (target: EventTarget | null) => target instanceof Element && Boolean(
+        target.closest('a,button,input,select,textarea,dialog,label,summary,[role="button"],[role="link"],[contenteditable]:not([contenteditable="false"]),[data-no-camera]'),
+      )
+      const sceneAvailable = () => !disposed && !contextLost && !document.hidden && foreground &&
+        activeRef.current && (!location.hash || location.hash === '#home') &&
+        !document.querySelector('dialog[open]')
+      const clearMonitorHover = () => {
+        document.documentElement.classList.remove('scene-monitor-hover')
+        canvas.dataset.monitorHover = '-1'
+      }
+      const cancelMonitorPress = () => { monitorPress = null }
+      const syncMedia = () => {
+        const enabled = sceneAvailable()
+        // A hidden scene retains its previous panel visibility. On returning
+        // home, the layout resets scroll before that GPU frame is replaced;
+        // consult the actual destination so stale panels cannot resume media.
+        targetProgress = readProgress()
+        const mask = sampleLayers(targetProgress)
+        // The slanted viewport boundary spans [-.1, 1.1] in monitor UV space.
+        const targetHasMonitors = mask.monitorEntry > -.1 && mask.monitorExit < 1.1 &&
+          mask.monitorEntry > mask.monitorExit
+        interaction.setActive(enabled)
+        worlds.setMediaActive(enabled && targetHasMonitors, reducedMotion)
+        canvas.dataset.videoState = JSON.stringify(worlds.getVideoStatus())
+        if (!enabled || reducedMotion) {
+          clearMonitorHover()
+          if (!enabled) cancelMonitorPress()
+        }
+      }
+      const monitorHit = (event: PointerEvent) => {
+        monitorPointer.set(event.clientX / innerWidth * 2 - 1, 1 - event.clientY / innerHeight * 2)
+        return worlds.getMonitorHit(monitorPointer, camera)
+      }
+      const monitorDown = (event: PointerEvent) => {
+        cancelMonitorPress()
+        if (!sceneAvailable() || event.button !== 0 || !event.isPrimary || overInterface(event.target)) return
+        const panel = monitorHit(event)
+        if (panel === null) return
+        monitorPress = {
+          id: event.pointerId, x: event.clientX, y: event.clientY, started: event.timeStamp,
+          scrollY: window.scrollY, progress, panel,
+        }
+      }
+      const monitorMove = (event: PointerEvent) => {
+        if (!sceneAvailable() || overInterface(event.target)) {
+          cancelMonitorPress()
+          clearMonitorHover()
+          return
+        }
+        if (reducedMotion || event.pointerType === 'touch') clearMonitorHover()
+        if (monitorPress && event.pointerId === monitorPress.id &&
+          Math.hypot(event.clientX - monitorPress.x, event.clientY - monitorPress.y) >= 8) {
+          cancelMonitorPress()
+        }
+      }
+      const monitorUp = (event: PointerEvent) => {
+        const press = monitorPress
+        cancelMonitorPress()
+        if (!press || event.pointerId !== press.id || event.button !== 0 || !sceneAvailable() ||
+          overInterface(event.target) || event.timeStamp - press.started > 700 ||
+          Math.hypot(event.clientX - press.x, event.clientY - press.y) >= 8 ||
+          Math.abs(window.scrollY - press.scrollY) > .5 || Math.abs(progress - press.progress) > .0001) return
+        const panel = monitorHit(event)
+        if (panel !== press.panel) return
+        // Pause synchronously; the React dialog/active update follows this event.
+        worlds.setMediaActive(false, reducedMotion)
+        canvas.dataset.videoState = JSON.stringify(worlds.getVideoStatus())
+        interaction.setActive(false)
+        clearMonitorHover()
+        selectProjectRef.current?.(panel)
+      }
       const applyResolution = () => {
         activeRenderer.setPixelRatio(pixelRatio(innerWidth))
         activeRenderer.setSize(innerWidth, innerHeight)
@@ -662,6 +756,7 @@ export default function Scene({ reducedMotion, active, onReady }: SceneProps) {
 
       const render = (timestamp: number) => {
         frame = 0
+        syncMedia()
         if (disposed || contextLost || document.hidden) return
         const wallDelta = previousTime ? (timestamp - previousTime) / 1000 : 0.016
         const delta = Math.min(wallDelta, 0.05)
@@ -737,6 +832,10 @@ export default function Scene({ reducedMotion, active, onReady }: SceneProps) {
         camera.updateMatrixWorld()
         // Projection-based surface interaction must use this frame's camera.
         worlds.update(elapsed, scroll, input.field, camera)
+        const monitorHover = sceneAvailable() && input.field.active ? worlds.getHoveredPanel() : -1
+        canvas.dataset.monitorHover = String(monitorHover)
+        document.documentElement.classList.toggle('scene-monitor-hover', monitorHover >= 0)
+        canvas.dataset.videoState = JSON.stringify(worlds.getVideoStatus())
         atmosphere.update(elapsed, scroll, activeRenderer.getPixelRatio(), input.field)
         forest.update(elapsed, scroll, camera, input.field, activeRenderer.getPixelRatio())
         layers.update(scroll, camera)
@@ -818,10 +917,12 @@ export default function Scene({ reducedMotion, active, onReady }: SceneProps) {
       // Hidden content views retain their last frame, releasing CPU/GPU time
       // for cards and dialogs without rebuilding the scene on navigation.
       wakeRef.current = () => {
+        syncMedia()
         previousTime = 0
         requestRender()
       }
       const resize = () => {
+        cancelMonitorPress()
         const width = window.innerWidth
         const height = window.innerHeight
         camera.aspect = width / height
@@ -831,10 +932,13 @@ export default function Scene({ reducedMotion, active, onReady }: SceneProps) {
         requestRender()
       }
       const scroll = () => {
+        cancelMonitorPress()
         targetProgress = readProgress()
+        syncMedia()
         requestRender()
       }
       const visibilityChange = () => {
+        syncMedia()
         if (document.hidden) {
           cancelAnimationFrame(frame)
           window.clearTimeout(frameTimer)
@@ -848,6 +952,7 @@ export default function Scene({ reducedMotion, active, onReady }: SceneProps) {
       const lost = (event: Event) => {
         event.preventDefault()
         contextLost = true
+        syncMedia()
         canvas.dataset.renderState = 'lost'
         cancelAnimationFrame(frame)
         window.clearTimeout(frameTimer)
@@ -868,17 +973,47 @@ export default function Scene({ reducedMotion, active, onReady }: SceneProps) {
           failScene()
         }
       }
+      const blur = () => {
+        foreground = false
+        syncMedia()
+      }
+      const focusWindow = () => {
+        foreground = true
+        syncMedia()
+        requestRender()
+      }
+      const leaveMonitor = () => {
+        cancelMonitorPress()
+        clearMonitorHover()
+      }
       window.addEventListener('resize', resize)
       window.addEventListener('scroll', scroll, { passive: true })
       window.addEventListener('hashchange', scroll)
+      window.addEventListener('pointerdown', monitorDown, { passive: true })
+      window.addEventListener('pointermove', monitorMove, { passive: true })
+      window.addEventListener('pointerup', monitorUp, { passive: true })
+      window.addEventListener('pointercancel', leaveMonitor)
+      window.addEventListener('blur', blur)
+      window.addEventListener('focus', focusWindow)
+      document.addEventListener('pointerleave', leaveMonitor)
       document.addEventListener('visibilitychange', visibilityChange)
       canvas.addEventListener('webglcontextlost', lost)
       canvas.addEventListener('webglcontextrestored', restored)
       cleanup = () => {
+        worlds.setMediaActive(false, true)
+        canvas.dataset.videoState = JSON.stringify(worlds.getVideoStatus())
+        leaveMonitor()
         wakeRef.current = null
         window.removeEventListener('resize', resize)
         window.removeEventListener('scroll', scroll)
         window.removeEventListener('hashchange', scroll)
+        window.removeEventListener('pointerdown', monitorDown)
+        window.removeEventListener('pointermove', monitorMove)
+        window.removeEventListener('pointerup', monitorUp)
+        window.removeEventListener('pointercancel', leaveMonitor)
+        window.removeEventListener('blur', blur)
+        window.removeEventListener('focus', focusWindow)
+        document.removeEventListener('pointerleave', leaveMonitor)
         document.removeEventListener('visibilitychange', visibilityChange)
         canvas.removeEventListener('webglcontextlost', lost)
         canvas.removeEventListener('webglcontextrestored', restored)

@@ -1,6 +1,17 @@
 # AETHER STUDIO 시각 변천 기록
 
-초기 구현부터 현재까지 같은 문서 스크롤 비율에서 화면이 어떻게 바뀌었는지 비교합니다. 과거 6개 대표 버전은 `main`의 first-parent 병합 기록을 기준으로 골랐고, PR #10과 #11의 확정 소스를 추가했습니다. 총 **8개 버전·48장**을 수록했습니다. PR #3·#5·#7의 변화는 각각 후속 대표 버전에 포함됩니다.
+초기 구현부터 PR #11까지 같은 문서 스크롤 비율에서 화면이 어떻게 바뀌었는지 비교합니다. 과거 6개 대표 버전은 `main`의 first-parent 병합 기록을 기준으로 골랐고, PR #10과 #11의 확정 소스를 추가했습니다. 총 **8개 버전·48장**을 수록했습니다. PR #3·#5·#7의 변화는 각각 후속 대표 버전에 포함됩니다.
+
+이후 변경은 각각 다른 비교 조건으로 촬영했으므로 아래 갤러리의 표본에 섞지 않습니다.
+
+| 후속 기록 | 변화 |
+| --- | --- |
+| [포인터 흐름](particle-pointer-flow.md) | 이동 방향에 따른 입자 변형·감쇠 |
+| [차폐와 조명](scene-occlusion-light.md) | 위층 구조 노출과 영상 색 공간 |
+| [영상 진입 성능](monitor-transition-performance.md) | VP8 선택과 불필요한 캡처 생략 |
+| [챔버와 조명 영상](chamber-art-direction.md) | 주변 설비와 어두운 사틴 조명 |
+| [공통 장면 경계](scene-continuity.md) | 넓은 천장 제거와 경계 연결 |
+| [나선 모니터와 원형 파동](scene-reference-detail.md) | 본 컬럼 꼬임·고정 입자·O 축소·잔상 제거 |
 
 ## 비교 조건
 
@@ -19,7 +30,7 @@
 | --- | --- | --- |
 | [PR #1](https://github.com/okorion/aether-studio/pull/1) | 초기 금속 A 링·리본 트레일과 입자 배경, Work·Contact | 초기 스튜디오 |
 | [PR #2](https://github.com/okorion/aether-studio/pull/2) | 링과 리본 트레일 결합, 스크롤 장면 확대, 은빛 흔적과 드래그 | 다섯 장면과 마우스 흔적 |
-| [PR #3](https://github.com/okorion/aether-studio/pull/3) → [#4](https://github.com/okorion/aether-studio/pull/4) | 24단계 연속 중심 흐름, 카메라 수직 하강과 정지·역방향 체인 | #4 병합본 |
+| [PR #3](https://github.com/okorion/aether-studio/pull/3) → [#4](https://github.com/okorion/aether-studio/pull/4) | 중심을 따라 이어지는 스크롤 경로, 카메라 수직 하강과 정지·역방향 체인 | #4 병합본 |
 | [PR #5](https://github.com/okorion/aether-studio/pull/5) → [#6](https://github.com/okorion/aether-studio/pull/6) | 중간 장면 카메라 잠금, 본 컬럼 관절·체인과 굴절 모니터 | #6 병합본 |
 | [PR #7](https://github.com/okorion/aether-studio/pull/7) → [#8](https://github.com/okorion/aether-studio/pull/8) | 포레스트·문구·독립 지하층 전환, 실제 MP4와 모니터 호버·클릭 | #8 병합본 |
 | [PR #9](https://github.com/okorion/aether-studio/pull/9) | 입체 포레스트, 유기적 본 컬럼·감기는 체인, 연속 입자 O와 리액터, 전진 섬광 | #9 병합본 |
@@ -58,9 +69,11 @@
 | --- | --- | --- |
 | [![PR 2 · 60%](screenshots/history/pr02/scroll-060.jpg)](screenshots/history/pr02/scroll-060.jpg) | [![PR 2 · 80%](screenshots/history/pr02/scroll-080.jpg)](screenshots/history/pr02/scroll-080.jpg) | [![PR 2 · 98%](screenshots/history/pr02/scroll-098.jpg)](screenshots/history/pr02/scroll-098.jpg) |
 
-### 연속 하강과 24단계 · PR #4
+<a id="연속-하강과-24단계--pr-4"></a>
 
-기준: [`31ffdee`](https://github.com/okorion/aether-studio/commit/31ffdee24d8c0ce17692f46870650b9fd09922e3) · PR #3의 24단계 흐름에 실제 수직 하강·왕복 체인·O 방향 보정. [당시 설명](dynamic-motion.md)
+### 카메라 하강과 체인 왕복 · PR #4
+
+기준: [`31ffdee`](https://github.com/okorion/aether-studio/commit/31ffdee24d8c0ce17692f46870650b9fd09922e3) · PR #3의 연속 경로에 카메라 수직 하강·체인 왕복·O 방향 보정 적용. [당시 설명](dynamic-motion.md)
 
 재실행 완료 · 실제 문서 높이 16200px · 브라우저 오류 0개 · [캡처 조건과 좌표](screenshots/history/pr04/report.json)
 
@@ -154,7 +167,7 @@
 
 - [초기 배포·콘텐츠 화면](verification.md)
 - [초기 5지점 전후·원본 비교](visual-comparison.md)
-- [24단계 연속 흐름](continuous-journey.md) · [실제 하강·역스크롤](dynamic-motion.md)
+- [연속 스크롤 경로](continuous-journey.md) · [실제 하강·역스크롤](dynamic-motion.md)
 - [본 컬럼과 굴절 모니터](spine-monitors.md) · [층 전환](layered-transitions.md)
 - [실제 영상·호버·프로젝트 열기](monitor-cinema.md)
 - [입체 포레스트·본 컬럼·리액터](living-worlds.md)

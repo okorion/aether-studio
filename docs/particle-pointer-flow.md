@@ -2,6 +2,8 @@
 
 # 입자 마우스 반응과 포레스트 전환 경계
 
+PR #12의 입자·흐름 검사 기록이다. 이후 스케일 패널도 이 흐름을 공유하게 했고, 포인터 스트릭과 흰 점은 포레스트로 제한했다. [현재 입력 구조](architecture.md) · [후속 수정](scene-reference-detail.md)
+
 2026-09-22. 리액터의 입자가 포인터 주변에 또렷한 원을 만들던 변형을 완화하고, 상·하단 포레스트의 미세 입자와 잎에 이동 방향을 따라 남는 흐름을 추가했습니다.
 
 ## 원본에서 확인한 메커니즘
@@ -62,6 +64,6 @@ lint·typecheck·production build를 통과했습니다. 로컬 전체 실행에
 | 하부 경계 · 87.5% | 16.8 / 16.8ms | 16.8 / 16.8ms | 50 → 50 |
 | 하단 포레스트 · 98% | 16.8 / 16.7ms | 16.8 / 16.8ms | 68 → 68 |
 
-모든 구간에서 33.5ms 초과·longtask·새 shader link는 0, 품질 최솟값은 1.00이었습니다. 이 수치는 RAF 간격이며 GPU 실행 시간은 아닙니다. 한 환경의 단일 비교이므로 모든 기기의 성능 개선이나 동일한 체감을 보장하지 않습니다. 초기 모니터 진입과 실제 Safari/iOS 검증은 이전 [잔여 과제](next-improvements.md)에 남깁니다.
+모든 구간에서 33.5ms 초과·longtask·새 shader link는 0, 품질 최솟값은 1.00이었습니다. 이 수치는 RAF 간격이며 GPU 실행 시간은 아닙니다. 한 환경의 단일 비교이므로 모든 기기의 성능 개선이나 동일한 체감을 보장하지 않습니다. 초기 모니터 진입은 이후 [성능 분석](monitor-transition-performance.md)에서 다뤘다. 실제 Safari/iOS 확인은 [후속 검증](next-improvements.md)에 남아 있다.
 
 [측정 수치·원본 해시](performance/pointer.json) · [캡처 목록·SHA-256](screenshots/pointer/manifest.json)

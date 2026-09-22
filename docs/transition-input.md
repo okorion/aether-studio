@@ -2,6 +2,8 @@
 
 # 리액터 입자와 세로 카메라 입력 검증
 
+`af57c87`과 `da14095` 사이의 입력 변경 기록이다. 리액터 O의 크기는 이후 줄였으며, 아래 이미지와 픽셀 측정은 당시 크기를 기준으로 한다. [후속 수정](scene-reference-detail.md)
+
 2026-09-22, 수정 전 `af57c87`과 수정 후 `da14095`의 production 빌드를 실제 GPU에서 실행했다. 뷰포트 1440×900, DPR 1, Chromium·ANGLE D3D11, 동일한 스크롤 비율·포인터 경로·정착 시간을 사용했다. 조명과 영상의 시간은 고정하지 않았으므로 화면 전체의 픽셀 일치 비교는 아니다. 세로 입력은 방향을 바꾸는 수정이므로 결과 카메라 각도가 달라지는 것이 기대 동작이다.
 
 ## 같은 입력의 전후 화면
@@ -31,4 +33,4 @@
 - 실제 production 화면에서 모니터 영상 2개 재생, `WEBGL_lose_context` 이후 재준비·복원, 390×844 모바일 6개 스크롤 지점을 확인했다. 브라우저 오류는 없었다. 모바일 크기의 Chromium 검증이며 실물 iOS 검증은 아니다.
 - 별도 코드 리뷰에서 임시 render target·visibility·frustum culling·렌더 콜백 복구, 취소·컨텍스트 세대 검사와 영상 지연 로드를 검토했으며 P1/P2 결함은 발견하지 못했다.
 
-[전환 성능의 원인·전후 측정](transition-performance.md) · [초기부터 현재까지 42장](visual-history.md) · [메타데이터](metadata.md) · [후속 개선](next-improvements.md)
+[전환 성능의 원인·전후 측정](transition-performance.md) · [이후 시각 변천 기록](visual-history.md) · [메타데이터](metadata.md) · [후속 개선](next-improvements.md)

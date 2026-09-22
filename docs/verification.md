@@ -1,5 +1,7 @@
 # 초기 구현 검증 · 2026-09-21
 
+첫 배포의 확인 기록이다. 아래 비공개 저장소·검사 횟수·화면은 2026-09-21 당시 상태다. 현재 저장소는 공개이며 최근 실행 환경과 결과는 [검증 안내](testing.md)에서 확인한다.
+
 ## 공개 배포 확인 · 2026-09-21
 
 - 운영 주소: https://aether-studio-nu.vercel.app/
@@ -8,8 +10,8 @@
 - 비로그인 Chromium에서 홈 → Work → Liminal 상세 → Escape → Contact 이동 및 390×844 모바일 탐색 확인
 - 실제 3D canvas ready와 웹폰트 로딩 후 캡처, page error 0개
 - 배포 후 Vercel error 로그 조회 결과 없음. 정적 사이트이며 브라우저 오류 확인은 별도로 수행했고 지속 오류 수집 도구는 미설정
-- [README 초기 배포 기록](../README.md)의 초기 이미지는 로컬이 아닌 공개 배포에서 캡처
-- 저장소는 PRIVATE로 유지하며 사이트만 공개. 예시 프로젝트·연락처는 데모 콘텐츠
+- [공개 배포 캡처](screenshots/production/)는 로컬 서버가 아닌 당시 공개 사이트에서 촬영
+- 당시 저장소는 PRIVATE였으며 사이트만 공개했다. 예시 프로젝트·연락처는 데모 콘텐츠
 - 최초 GitHub CI는 12개 첫 실행 통과, 3개 Linux action timeout 후 재시도 통과. 로컬 production·SwiftShader는 15개 모두 재시도 없이 통과
 
 ## 결과

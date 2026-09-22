@@ -303,7 +303,9 @@ export function createSceneInteraction(
     }
     if (orbitEnabled && held && event.pointerId === pointerId) {
       targetYaw = startYaw - (pointer.x - anchor.x) * 2.5
-      targetPitch = THREE.MathUtils.clamp(startPitch + (pointer.y - anchor.y) * .8, -.6, .6)
+      // Dragging down raises the viewpoint over the central object; dragging
+      // up exposes its underside. Horizontal orbit retains its existing sign.
+      targetPitch = THREE.MathUtils.clamp(startPitch - (pointer.y - anchor.y) * .8, -.6, .6)
       const seconds = Math.max(.008, Math.min(.1, (event.timeStamp - previousMove) / 1000))
       velocityYaw = THREE.MathUtils.clamp((targetYaw - previousYaw) / seconds, -2.2, 2.2)
       previousYaw = targetYaw

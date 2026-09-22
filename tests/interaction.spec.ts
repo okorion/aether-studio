@@ -575,7 +575,7 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
       await page.mouse.move(500, 130, { steps: 6 })
       const orbit = await page.evaluate(() => window.interactionHarness.step(0.8))
       expect(orbit.yaw).toBeLessThan(-0.2)
-      expect(orbit.pitch).toBeGreaterThan(0.1)
+      expect(orbit.pitch).toBeLessThan(-0.1)
       expect(orbit.zoom).toBe(0)
       await expect(page.locator('#interaction-canvas')).toHaveAttribute('data-camera-mode', 'orbit')
       await page.evaluate((ending) => {
@@ -588,7 +588,7 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
       await expect(page.locator('#interaction-canvas')).toHaveAttribute('data-camera-mode', 'idle')
       const settled = await page.evaluate(() => window.interactionHarness.step(3))
       expect(settled.yaw).toBeLessThan(-0.2)
-      expect(settled.pitch).toBeGreaterThan(0.1)
+      expect(settled.pitch).toBeLessThan(-0.1)
       expect(settled.zoom).toBe(0)
       const retained = await page.evaluate(() => window.interactionHarness.step(3))
       expect(Math.abs(retained.yaw - settled.yaw)).toBeLessThan(0.001)

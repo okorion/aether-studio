@@ -99,7 +99,7 @@ function inputEnvironment(software: boolean) {
   }
 }
 
-test('@interaction leaving the forest clears only streak history while motes and pointer flow keep responding', () => {
+test('@interaction leaving the forest clears ribbons and motes while surface input keeps responding', () => {
   for (const software of [false, true]) {
     const env = inputEnvironment(software)
     const stroke = (y: number) => {
@@ -114,6 +114,7 @@ test('@interaction leaving the forest clears only streak history while motes and
       expect(env.ribbon.visible).toBe(true)
       expect(env.ribbon.geometry.drawRange.count).toBeGreaterThan(0)
       const moteBirths = Array.from(env.motes.geometry.getAttribute('aBirth').array)
+      expect(moteBirths.some(birth => birth >= 0)).toBe(true)
       env.input.setOrbitEnabled(false)
       for (const p of [.45, .72, .83]) {
         env.stage(p)
@@ -121,7 +122,8 @@ test('@interaction leaving the forest clears only streak history while motes and
         const state = env.step()
         expect(env.ribbon.visible).toBe(false)
         expect(env.ribbon.geometry.drawRange.count).toBe(0)
-        expect(env.motes.visible).toBe(true)
+        expect(env.motes.visible).toBe(false)
+        expect(Array.from(env.motes.geometry.getAttribute('aBirth').array).every(birth => birth === -100)).toBe(true)
         expect(state.field.active).toBe(true)
         expect(state.field.strength).toBeGreaterThan(.5)
         const bytes = state.field.flowTexture.image.data as Uint8Array
@@ -136,11 +138,14 @@ test('@interaction leaving the forest clears only streak history while motes and
       stroke(60)
       expect(env.ribbon.visible).toBe(true)
       expect(env.ribbon.geometry.drawRange.count).toBe(0)
+      expect(Array.from(env.motes.geometry.getAttribute('aBirth').array).every(birth => birth === -100)).toBe(true)
       stroke(420)
       expect(env.ribbon.geometry.drawRange.count).toBeGreaterThan(0)
+      expect(Array.from(env.motes.geometry.getAttribute('aBirth').array).some(birth => birth >= 0)).toBe(true)
       env.stage(.83)
       env.stage(1)
       expect(env.ribbon.geometry.drawRange.count).toBe(0)
+      expect(Array.from(env.motes.geometry.getAttribute('aBirth').array).every(birth => birth === -100)).toBe(true)
       stroke(240)
       expect(env.ribbon.geometry.drawRange.count).toBeGreaterThan(0)
       env.step(1.6)

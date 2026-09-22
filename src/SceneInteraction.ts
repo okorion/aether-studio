@@ -132,29 +132,38 @@ export function createSceneInteraction(
     depthWrite: false,
     depthTest: false,
     blending: THREE.NormalBlending,
-    uniforms: { uTime: { value: 0 }, uRatio: { value: 1 } },
+    uniforms: {
+      uTime: { value: 0 }, uRatio: { value: 1 },
+      uStreakForestExit: { value: streakScope.exit },
+      uStreakForestEntry: { value: streakScope.entry },
+    },
     vertexShader: `
       attribute float aBirth; attribute float aSeed;
       uniform float uTime; uniform float uRatio;
       varying float vLife;
+      varying vec4 vStreakClip;
       void main() {
         float age = max(0., uTime - aBirth);
         vLife = max(0., 1. - age / 1.7);
         vec3 p = position + vec3(sin(aSeed), cos(aSeed), sin(aSeed * 2.)) * age * .07;
         vec4 mv = modelViewMatrix * vec4(p, 1.);
         gl_Position = projectionMatrix * mv;
+        vStreakClip = gl_Position;
         gl_PointSize = clamp((1.2 + 1.6 * fract(aSeed)) * uRatio * vLife, 0., 4.);
       }`,
     fragmentShader: `
+      ${pointerStreakScopeGLSL}
       varying float vLife;
       void main() {
         vec2 uv = (gl_PointCoord - .5) * 2.;
         float r = dot(uv, uv);
-        if (r > 1. || vLife <= 0.) discard;
-        gl_FragColor = vec4(.65,.88,.88, exp(-r * 4.) * vLife * .4);
+        float coverage = streakForestCoverage();
+        if (r > 1. || vLife <= 0. || coverage < .003) discard;
+        gl_FragColor = vec4(.65,.88,.88, exp(-r * 4.) * vLife * .4 * coverage);
       }`,
   })
   const points = new THREE.Points(geometry, material)
+  points.name = 'aether-pointer-motes'
   points.frustumCulled = false
   points.renderOrder = 9
   scene.add(points)
@@ -240,9 +249,10 @@ export function createSceneInteraction(
       historyStrokes[index] = stroke
       historySeeds[index] = nextSeed++
     } else {
-      // Preserve small motes and their sampling cadence, but never bridge
-      // a streak across pointer samples that belonged to another scene.
+      // Both pointer effects belong to the forest. Keep the separate surface
+      // input field alive, but do not seed trails across another scene.
       stroke++
+      return
     }
     if (time - lastMote > (software ? .11 : .065)) {
       const n = head++ % count
@@ -425,6 +435,13 @@ export function createSceneInteraction(
       streakScope = samplePointerStreakScope(progress)
       ribbonMaterial.uniforms.uStreakForestExit.value = streakScope.exit
       ribbonMaterial.uniforms.uStreakForestEntry.value = streakScope.entry
+      material.uniforms.uStreakForestExit.value = streakScope.exit
+      material.uniforms.uStreakForestEntry.value = streakScope.entry
+      if (!streakScope.visible && lastMote !== -Infinity) {
+        births.fill(-100)
+        lastMote = -Infinity
+        dirty = true
+      }
       if (!streakScope.visible && historySize) {
         // Once both groves are gone, do not resurrect their old world-space
         // trails if the camera quickly returns from a different floor.
@@ -436,8 +453,8 @@ export function createSceneInteraction(
       material.uniforms.uRatio.value = ratio
       ribbonMaterial.uniforms.uTime.value = time
       ribbonMaterial.uniforms.uHeight.value = innerHeight
-      points.visible = enabled && !reducedMotion && home() && !blocked()
-      ribbon.visible = points.visible && streakScope.visible
+      points.visible = enabled && !reducedMotion && home() && !blocked() && streakScope.visible
+      ribbon.visible = points.visible
       if (!enabled || reducedMotion || !home() || blocked() || document.hidden) {
         clearField()
       }

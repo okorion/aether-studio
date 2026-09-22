@@ -71,8 +71,12 @@ export function createSceneWorlds(
   const pointerAspect = { value: 1 }
   const surfaceTime = { value: 0 }
   const lightDepth = { value: 0 }
+  const neutralFlow = new THREE.DataTexture(new Uint8Array([128, 128, 0, 255]), 1, 1)
+  neutralFlow.needsUpdate = true
+  textures.push(neutralFlow)
+  const pointerFlow = { value: neutralFlow as THREE.Texture }
   const metal = mat(createScaleSurface(software,
-    { pointerNdc, pointerStrength, pointerAspect, surfaceTime, lightDepth }, lightFilm))
+    { pointerNdc, pointerStrength, pointerAspect, pointerFlow, surfaceTime, lightDepth }, lightFilm))
   const silver = mat(new THREE.MeshStandardMaterial({
     color: 0x929197, metalness: software ? .45 : .96, roughness: .24, envMapIntensity: 1.25, transparent: true,
   }))
@@ -170,8 +174,8 @@ export function createSceneWorlds(
     return item
   }
 
-  const wallColumns = software ? 16 : mobile ? 22 : 28
-  const wallRows = software ? 10 : mobile ? 13 : 16
+  const wallColumns = software ? 24 : mobile ? 34 : 44
+  const wallRows = software ? 14 : mobile ? 20 : 25
   const count = wallColumns * wallRows
   const tileHeight = 5.4 / ((wallRows - 1) * .75 + 1)
   const tileWidth = tileHeight * Math.sqrt(3) / 2
@@ -184,14 +188,14 @@ export function createSceneWorlds(
     const wallRow = Math.floor(i / wallColumns)
     const wallX = ((i % wallColumns) - (wallColumns - 1) * .5 + ((wallRow % 2) - .5) * .5) * tileWidth
     const wallY = (wallRow - (wallRows - 1) * .5) * tileHeight * .75
-    dummy.position.set(wallX, wallY, -.65 + wallX * wallX * .025 + Math.cos(wallY * .7) * .13)
-    dummy.rotation.set(wallY * -.02, -wallX * .065, 0)
+    dummy.position.set(wallX, wallY, -.65)
+    dummy.rotation.set(0, 0, 0)
     dummy.scale.setScalar(tileHeight * .965)
     dummy.updateMatrix()
     feathers.setMatrixAt(i, dummy.matrix)
     const tealWeight = Math.exp(-((wallX - 1.1) ** 2 * .19 + (wallY - .7) ** 2 * .32)) * .85
-    const violetWeight = Math.exp(-((wallX + 3.5) ** 2 * .16 + (wallY + .5) ** 2 * .20)) * .52
-      + Math.exp(-((wallX - 4.5) ** 2 * .38 + wallY * wallY * .18)) * .38
+    const violetWeight = Math.exp(-((wallX + 3.5) ** 2 * .16 + (wallY + .5) ** 2 * .20)) * .28
+      + Math.exp(-((wallX - 4.5) ** 2 * .38 + wallY * wallY * .18)) * .60
     color.copy(bronze).lerp(teal, tealWeight).lerp(violet, Math.min(.8, violetWeight))
     color.multiplyScalar(.88 + Math.sin(wallX * .7 + wallY * .93) * .12)
     feathers.setColorAt(i, color)
@@ -557,7 +561,7 @@ export function createSceneWorlds(
       return monitorAssembly.pick(ndc, camera)
     },
     update(time: number, progress: number,
-      pointer?: { ndc: THREE.Vector2; strength: number; aspect: number; active?: boolean }, camera?: THREE.Camera) {
+      pointer?: { ndc: THREE.Vector2; strength: number; aspect: number; active?: boolean; flowTexture?: THREE.Texture }, camera?: THREE.Camera) {
       const journey = sampleJourney(progress)
       const layers = sampleLayers(progress)
       deviceCurtain.upper.value = layers.monitorExit
@@ -601,6 +605,7 @@ export function createSceneWorlds(
       pointerAspect.value = pointer && Number.isFinite(pointer.aspect)
         ? Math.max(.25, Math.min(5, pointer.aspect)) : 1
       surfaceTime.value = time
+      pointerFlow.value = pointer?.flowTexture ?? neutralFlow
 
       const architectureWeight = smooth(.59, .615, progress) * (1 - journey.darkness * .77)
         * (1 - journey.scales * .35) * (1 - smooth(.86, .94, progress) * .85)

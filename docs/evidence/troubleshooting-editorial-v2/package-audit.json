@@ -1,0 +1,62 @@
+{
+  "articleAssetRef": "1f44d09739df70ee1930aaea9ae48768f16b24f0",
+  "sameBodyArticles": [
+    "01-camera.md",
+    "02-particles.md",
+    "03-transitions.md",
+    "04-monitors.md",
+    "05-performance.md",
+    "06-recovery-and-release.md",
+    "07-scene-continuity.md"
+  ],
+  "unchangedCaptureCount": 25,
+  "unchangedCaptures": [
+    "docs/screenshots/motion/entry-wheel.gif",
+    "docs/screenshots/mechanical-lock/after-drag-result.jpg",
+    "docs/screenshots/mechanical-lock/before-drag-result.jpg",
+    "docs/screenshots/living/after-340.jpg",
+    "docs/screenshots/living/before-340.jpg",
+    "docs/screenshots/pointer/after/720-move.jpg",
+    "docs/screenshots/pointer/before/720-move.jpg",
+    "docs/screenshots/occlusion-v13/after/scroll-785.jpg",
+    "docs/screenshots/occlusion-v13/before/scroll-785.jpg",
+    "docs/screenshots/chamber-art/after/scroll-675.jpg",
+    "docs/screenshots/chamber-art/before/scroll-675.jpg",
+    "docs/screenshots/monitors/before-40.jpg",
+    "docs/screenshots/monitors/after-40.jpg",
+    "docs/screenshots/monitors/film.gif",
+    "docs/screenshots/performance/before/scroll-650.jpg",
+    "docs/screenshots/performance/after/scroll-650.jpg",
+    "docs/screenshots/software-home.png",
+    "docs/screenshots/desktop-project.png",
+    "docs/screenshots/brand/after.png",
+    "docs/screenshots/brand/before.png",
+    "docs/screenshots/continuity-v18/before/scroll-650.jpg",
+    "docs/screenshots/continuity-v18/after/scroll-650.jpg",
+    "docs/screenshots/continuity-v18/after/scroll-765.jpg",
+    "docs/screenshots/continuity-v18/after/scroll-500.jpg",
+    "docs/screenshots/continuity-v18/after/scroll-850.jpg"
+  ],
+  "imageCount": 32,
+  "diagramCount": 7,
+  "overlappingTextBoxes": 0,
+  "archiveEntries": 57,
+  "archiveHashesMatch": true,
+  "files": [
+    {
+      "file": "Aether-3D-Troubleshooting.html",
+      "sha256": "e9d92f9308dff490d299034cce993f7421a3289e24df125b80e53f96104f9b9e",
+      "bytes": 16187145
+    },
+    {
+      "file": "Aether-3D-Troubleshooting.zip",
+      "sha256": "bd7f84ba02b22228049427384e392a446792101cfb62122bb5216f29bfc0de59",
+      "bytes": 24132459
+    },
+    {
+      "file": "manifest.json",
+      "sha256": "0ffc0bde3d94a9d56fd308b70b59c27552df7b51db16c63c0b99685f6d7a9a12",
+      "bytes": 19924
+    }
+  ]
+}

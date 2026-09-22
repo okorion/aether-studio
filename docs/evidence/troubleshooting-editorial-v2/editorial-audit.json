@@ -1,0 +1,128 @@
+{
+  "baseline": "89d72e1ea3b4730d8acf4e2ac5ea344473b448b8",
+  "errors": [],
+  "articles": [
+    {
+      "file": "01-camera.md",
+      "beforeCharacters": 5240,
+      "afterCharacters": 3570,
+      "codeBlocks": 6,
+      "imageReferences": 4,
+      "numericTableRows": 0,
+      "warnings": []
+    },
+    {
+      "file": "02-particles.md",
+      "beforeCharacters": 5628,
+      "afterCharacters": 3589,
+      "codeBlocks": 4,
+      "imageReferences": 5,
+      "numericTableRows": 0,
+      "warnings": []
+    },
+    {
+      "file": "03-transitions.md",
+      "beforeCharacters": 6029,
+      "afterCharacters": 3620,
+      "codeBlocks": 3,
+      "imageReferences": 5,
+      "numericTableRows": 0,
+      "warnings": []
+    },
+    {
+      "file": "04-monitors.md",
+      "beforeCharacters": 6264,
+      "afterCharacters": 4477,
+      "codeBlocks": 4,
+      "imageReferences": 4,
+      "numericTableRows": 7,
+      "warnings": []
+    },
+    {
+      "file": "05-performance.md",
+      "beforeCharacters": 8023,
+      "afterCharacters": 5859,
+      "codeBlocks": 2,
+      "imageReferences": 4,
+      "numericTableRows": 24,
+      "warnings": []
+    },
+    {
+      "file": "06-recovery-and-release.md",
+      "beforeCharacters": 6274,
+      "afterCharacters": 4658,
+      "codeBlocks": 5,
+      "imageReferences": 5,
+      "numericTableRows": 0,
+      "warnings": []
+    },
+    {
+      "file": "07-scene-continuity.md",
+      "beforeCharacters": 3153,
+      "afterCharacters": 2560,
+      "codeBlocks": 1,
+      "imageReferences": 5,
+      "numericTableRows": 0,
+      "warnings": []
+    }
+  ],
+  "figures": [
+    {
+      "file": "coordinates.png",
+      "title": [
+        "링·리본의 부모 좌표계"
+      ],
+      "labels": 19,
+      "sha256": "4811b63012b0a8d17600c92bf5565a30a803762970a83bdbcfbec599100a5fea"
+    },
+    {
+      "file": "particle-flow.png",
+      "title": [
+        "효과별 이동 기준"
+      ],
+      "labels": 13,
+      "sha256": "dab5973e57ff2c1be32e27db1a2f0eaf381c86a38a3a73f571d33d720da789a8"
+    },
+    {
+      "file": "layers.png",
+      "title": [
+        "화면 마스크와 깊이 차폐"
+      ],
+      "labels": 15,
+      "sha256": "515fc2a3db04815c996862d80087b4bd7df874d45a2523c8212778a46d177b08"
+    },
+    {
+      "file": "render-target.png",
+      "title": [
+        "DPR 중복 적용과 렌더 타깃 크기"
+      ],
+      "labels": 15,
+      "sha256": "316c7fd7d4f4233b94fe7af08c79a1d062d87b390cd92b51686618267664418b"
+    },
+    {
+      "file": "cold-warm.png",
+      "title": [
+        "첫 진입의 GPU·영상 준비"
+      ],
+      "labels": 14,
+      "sha256": "9ea85319129de4a9d85f9f1a443d9bbd406016224df4569260f5b9432cf6e0e3"
+    },
+    {
+      "file": "frame-evidence.png",
+      "title": [
+        "실험별 최대 프레임 간격"
+      ],
+      "labels": 15,
+      "sha256": "45ef8e0f4f7a9eae8d6d3b8515b17099349865a422142aaf59238747c8b2ee39"
+    },
+    {
+      "file": "recovery.png",
+      "title": [
+        "WebGL·미디어 오류의 복구 경로"
+      ],
+      "labels": 11,
+      "sha256": "f87ac59c7d65334707dc5626ccf7a47495c5620ef9fc8ae63a5e108a620fd8f4"
+    }
+  ],
+  "issueCount": 66
+}

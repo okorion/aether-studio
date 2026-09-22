@@ -1,0 +1,145 @@
+{
+  "articleAssetRef": "1f44d09739df70ee1930aaea9ae48768f16b24f0",
+  "reports": [
+    {
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "chapters": 11,
+      "images": 32,
+      "brokenImages": 0,
+      "brokenAnchors": [],
+      "overflow": false,
+      "screenshots": [
+        {
+          "article": 1,
+          "heading": "Aether Studio의 3D 화면과 입력을 고친 기록",
+          "top": 71.78125
+        },
+        {
+          "article": 2,
+          "heading": "Three.js 스크롤 카메라의 좌표계와 드래그 처리",
+          "top": 71.859375
+        },
+        {
+          "article": 3,
+          "heading": "Three.js 체인 경로와 파티클의 스크롤·포인터 반응",
+          "top": 72.09375
+        },
+        {
+          "article": 4,
+          "heading": "Three.js 장면 전환의 깊이 버퍼와 화면 마스크",
+          "top": 72.3125
+        },
+        {
+          "article": 5,
+          "heading": "Three.js 유리 모니터의 DPR 오류와 영상 재생 관리",
+          "top": 71.765625
+        },
+        {
+          "article": 6,
+          "heading": "첫 스크롤의 2.8초 멈춤을 추적했다",
+          "top": 72.4375
+        },
+        {
+          "article": 7,
+          "heading": "WebGL 오류 뒤에 남겨야 했던 화면",
+          "top": 72.484375
+        },
+        {
+          "article": 8,
+          "heading": "다음 장면을 막고 있던 천장을 걷어냈다",
+          "top": 71.640625
+        },
+        {
+          "article": 9,
+          "heading": "증상으로 찾는 전체 이슈 색인",
+          "top": 72.4375
+        },
+        {
+          "article": 10,
+          "heading": "3D 인터랙션 구현 순서와 검증 항목",
+          "top": 71.90625
+        },
+        {
+          "article": 11,
+          "heading": "출처·구현 기준·시각 자료",
+          "top": 71.890625
+        }
+      ],
+      "errors": [],
+      "network": []
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "chapters": 11,
+      "images": 32,
+      "brokenImages": 0,
+      "brokenAnchors": [],
+      "overflow": false,
+      "screenshots": [
+        {
+          "article": 1,
+          "heading": "Aether Studio의 3D 화면과 입력을 고친 기록",
+          "top": 72.109375
+        },
+        {
+          "article": 2,
+          "heading": "Three.js 스크롤 카메라의 좌표계와 드래그 처리",
+          "top": 72.15625
+        },
+        {
+          "article": 3,
+          "heading": "Three.js 체인 경로와 파티클의 스크롤·포인터 반응",
+          "top": 72.03125
+        },
+        {
+          "article": 4,
+          "heading": "Three.js 장면 전환의 깊이 버퍼와 화면 마스크",
+          "top": 71.5625
+        },
+        {
+          "article": 5,
+          "heading": "Three.js 유리 모니터의 DPR 오류와 영상 재생 관리",
+          "top": 71.984375
+        },
+        {
+          "article": 6,
+          "heading": "첫 스크롤의 2.8초 멈춤을 추적했다",
+          "top": 71.921875
+        },
+        {
+          "article": 7,
+          "heading": "WebGL 오류 뒤에 남겨야 했던 화면",
+          "top": 72.171875
+        },
+        {
+          "article": 8,
+          "heading": "다음 장면을 막고 있던 천장을 걷어냈다",
+          "top": 72.09375
+        },
+        {
+          "article": 9,
+          "heading": "증상으로 찾는 전체 이슈 색인",
+          "top": 72.0625
+        },
+        {
+          "article": 10,
+          "heading": "3D 인터랙션 구현 순서와 검증 항목",
+          "top": 71.859375
+        },
+        {
+          "article": 11,
+          "heading": "출처·구현 기준·시각 자료",
+          "top": 71.5625
+        }
+      ],
+      "errors": [],
+      "network": []
+    }
+  ]
+}

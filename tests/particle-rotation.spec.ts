@@ -14,7 +14,7 @@ test('@interaction anchored and moving grains share one rotating spine path', as
     ParticleRotation: { sampleRotation(): Record<string, number[]> }
   }).ParticleRotation.sampleRotation())
   const { start, end, moving, matched, reverse } = samples
-  // GPU trigonometry varies slightly across drivers; sub-millimetre tolerance
+  // GPU trigonometry varies slightly across drivers; 0.001 world-unit tolerance
   // still rejects stationary anchors and the old, separately rotating path.
   expect(start[3]).toBe(1)
   expect(end[1]).toBeCloseTo(start[1], 3)

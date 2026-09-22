@@ -1,0 +1,32 @@
+[
+  {
+    "file": "chrome-current.mp4",
+    "bytes": 1510755,
+    "codec": "H.264",
+    "pixel_format": "yuv420p",
+    "width": 640,
+    "height": 400,
+    "fps": 24,
+    "seconds": 10,
+    "frames": 240,
+    "audio": false,
+    "faststart": true,
+    "sha256": "546f31b436c2c094a119ecd7b76be7f93661b4c2b9cf62f56decc61e211ed123",
+    "full_decode_verified": true
+  },
+  {
+    "file": "aurora-bloom.mp4",
+    "bytes": 591023,
+    "codec": "H.264",
+    "pixel_format": "yuv420p",
+    "width": 640,
+    "height": 400,
+    "fps": 24,
+    "seconds": 10,
+    "frames": 240,
+    "audio": false,
+    "faststart": true,
+    "sha256": "8e1f7e6839d5a91932e7a287865171d769c0f59015bc6dda2ed9b237e308f903",
+    "full_decode_verified": true
+  }
+]

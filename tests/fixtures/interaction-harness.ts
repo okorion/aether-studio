@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { Reflector } from 'three/addons/objects/Reflector.js'
 import { createSceneInteraction } from '../../src/SceneInteraction'
 import { createSceneWorlds } from '../../src/SceneWorlds'
 import { createSceneMonitors } from '../../src/SceneMonitors'
@@ -8,6 +9,7 @@ import { sampleJourney } from '../../src/Journey'
 import { createSceneLayers, sampleEmblemCurtain, sampleLayers } from '../../src/SceneLayers'
 import { bindCurtain, bindGroupCurtain, createCurtainBounds } from '../../src/SceneCurtains'
 import { createLightFilmUniforms } from '../../src/SceneLighting'
+import { createWaterSurface } from '../../src/SceneWater'
 
 type Snapshot = {
   yaw: number
@@ -33,6 +35,7 @@ export type InteractionHarness = {
   probeDevicePointer: typeof probeDevicePointer
   probeForestPointer: typeof probeForestPointer
   probeMonitorCapture: typeof probeMonitorCapture
+  probeWaterCaptureVisibility: typeof probeWaterCaptureVisibility
   probeMonitorOcclusion: typeof probeMonitorOcclusion
   sampleWorld: (elapsed: number, progress: number) => {
     chain: number[]
@@ -856,10 +859,30 @@ function probeMonitorCapture(pixelRatio: number, usePreviousTarget: boolean) {
     const before = snapshot()
     monitors.capture(renderer, captureScene, camera)
     const success = {
-      before, after: snapshot(), observed,
+      before, after: snapshot(), observed: [...observed],
       refraction: String(monitors.group.userData.refraction),
       backgroundFlags: backgroundFlags(),
     }
+    const captureAt = (name: string, progress: number, scheduled: boolean, x = 0, indirect = false) => {
+      monitors.update(10, progress)
+      monitors.group.position.x = x
+      const count = observed.length
+      monitors.capture(renderer, captureScene, camera, scheduled, indirect)
+      return { name, draws: observed.length - count, groupVisible: monitors.group.visible }
+    }
+    const visibility = [
+      captureAt('visible-unscheduled', .4, false),
+      captureAt('closed-entry', .24, true),
+      captureAt('entry-first-unscheduled', .4, false),
+      captureAt('visible-unscheduled-again', .4, false),
+      captureAt('visible-scheduled', .4, true),
+      captureAt('closed-exit', .69, true),
+      captureAt('reverse-first-unscheduled', .4, false),
+      captureAt('offscreen', .4, true, 200),
+      captureAt('indirect-reflection', .4, false, 200, true),
+      captureAt('offscreen-again', .4, true, 200),
+      captureAt('frustum-reentry-unscheduled', .4, false),
+    ]
     // Fail after a valid capture, proving that stale render-target textures are
     // replaced by the fallback and a failed capture is not retried every frame.
     let failureAttempts = 0
@@ -874,7 +897,7 @@ function probeMonitorCapture(pixelRatio: number, usePreviousTarget: boolean) {
       backgroundFlags: backgroundFlags(),
     }
     monitors.capture(renderer, captureScene, camera)
-    return { ...success, failure: { ...failure, attempts: failureAttempts } }
+    return { ...success, visibility, failure: { ...failure, attempts: failureAttempts } }
   } finally {
     renderer.render = saved.render
     renderer.setRenderTarget(null)
@@ -890,6 +913,61 @@ function probeMonitorCapture(pixelRatio: number, usePreviousTarget: boolean) {
     probe.geometry.dispose()
     probe.material.dispose()
     captureScene.clear()
+  }
+}
+
+function probeWaterCaptureVisibility() {
+  const waterScene = new THREE.Scene()
+  const floorGeometry = new THREE.PlaneGeometry(8, 8)
+  const reflector = new Reflector(floorGeometry, { textureWidth: 64, textureHeight: 64, multisample: 0 })
+  const water = createWaterSurface(reflector, 8, 8)
+  water.surface.position.y = -1
+  water.surface.rotation.x = -Math.PI / 2
+  waterScene.add(water.surface)
+  const bounds = createCurtainBounds()
+  bindGroupCurtain(water.surface, bounds)
+  const mainCamera = new THREE.PerspectiveCamera(42, 4 / 3, .1, 50)
+  mainCamera.position.set(0, 1, 5)
+  mainCamera.lookAt(0, -1, 0)
+  mainCamera.updateMatrixWorld()
+  const overheadCamera = new THREE.PerspectiveCamera(42, 4 / 3, .1, 50)
+  overheadCamera.position.set(0, 8, .01)
+  overheadCamera.lookAt(0, -1, 0)
+  overheadCamera.updateMatrixWorld()
+  const target = new THREE.WebGLRenderTarget(128, 96)
+  const saved = { render: renderer.render, target: renderer.getRenderTarget(),
+    face: renderer.getActiveCubeFace(), mip: renderer.getActiveMipmapLevel(), autoClear: renderer.autoClear }
+  let reflectedFrames = 0
+  renderer.render = function (...args) {
+    if (this.getRenderTarget() === reflector.getRenderTarget()) reflectedFrames++
+    saved.render.apply(this, args)
+  }
+  const draw = (name: string, upper: number, lower: number, view = mainCamera) => {
+    bounds.upper.value = upper
+    bounds.lower.value = lower
+    // The update camera stays fixed while the actual render camera may differ.
+    // Reflection eligibility must follow that real pass, not cached main UVs.
+    water.update(10 + reflectedFrames, .7, 1, true, mainCamera, { upper, lower })
+    const before = reflectedFrames
+    renderer.setRenderTarget(target)
+    renderer.render(waterScene, view)
+    return { name, reflected: reflectedFrames - before, visible: water.surface.visible }
+  }
+  try {
+    renderer.autoClear = true
+    return [draw('open', 1.5, -.5), draw('closed', -.25, -.5),
+      draw('open-reentry', 1.5, -.5), draw('open-moving-light', 1.5, -.5),
+      draw('surface-below-band', 1.2, .9), draw('other-camera-sees-band', 1.2, .9, overheadCamera),
+      draw('open-reverse', 1.5, -.5)]
+  } finally {
+    renderer.render = saved.render
+    renderer.setRenderTarget(saved.target, saved.face, saved.mip)
+    renderer.autoClear = saved.autoClear
+    water.dispose()
+    reflector.dispose()
+    floorGeometry.dispose()
+    target.dispose()
+    waterScene.clear()
   }
 }
 
@@ -928,6 +1006,7 @@ window.interactionHarness = {
   probeDevicePointer,
   probeForestPointer,
   probeMonitorCapture,
+  probeWaterCaptureVisibility,
   probeMonitorOcclusion,
   sampleWorld(elapsed, progress) {
     worlds ??= createSceneWorlds(worldScene, true, false, undefined, worldFilm)

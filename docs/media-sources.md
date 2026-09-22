@@ -1,15 +1,33 @@
 # 모니터 영상 자산
 
-두 영상과 포스터는 이 저장소의 [생성 스크립트](../scripts/generate-media.py)로 직접 만든 절차적 그래픽이다. 외부 영상, 사진, 브랜드, 3D 모델, 텍스처, 음악을 다운로드하거나 복제하지 않았다. 실행 시에도 외부 미디어에 접속하지 않는다.
+두 영상과 포스터는 이 저장소의 [원본 생성 스크립트](../scripts/generate-media.py)로 직접 만든 절차적 그래픽이다. PR #15에서 같은 해상도·프레임률의 VP8 WebM을 추가했다. 외부 영상, 사진, 브랜드, 3D 모델, 텍스처, 음악을 다운로드하거나 복제하지 않았다. 실행 시에도 외부 미디어에 접속하지 않는다.
 
 | 자산 | 내용 | 형식 |
 | --- | --- | --- |
+| [chrome-current.webm](../public/media/chrome-current.webm) | 자체 크롬 유체 MP4의 VP8 대체 형식 | 640×400, 24fps, 10초 |
+| [aurora-bloom.webm](../public/media/aurora-bloom.webm) | 자체 오로라 MP4의 VP8 대체 형식 | 640×400, 24fps, 10초 |
 | [chrome-current.mp4](../public/media/chrome-current.mp4) | 움직이는 높이장의 법선과 반사 벡터로 만든 크롬 유체. 수식으로 정의한 은색·청록·금색·보라색 조명이 표면을 따라 흐른다. | 640×400, 24fps, 10초 |
 | [aurora-bloom.mp4](../public/media/aurora-bloom.mp4) | 세 겹의 접힌 오로라 리본과 미세한 발광 실. 리본의 폭·굽힘·색·중첩을 주기 함수로 변화시킨다. | 640×400, 24fps, 10초 |
 | [chrome-current.jpg](../public/media/chrome-current.jpg) | 크롬 영상의 1.8초 시점 포스터 | JPEG, 640×400 |
 | [aurora-bloom.jpg](../public/media/aurora-bloom.jpg) | 오로라 영상의 1.8초 시점 포스터 | JPEG, 640×400 |
 
-MP4는 H.264 High / `yuv420p`, 무음, `faststart`로 인코딩한다. 현재 두 영상의 총 용량은 **2,101,778바이트(약 2.10MB)**이며, 크롬 1,510,755바이트·오로라 591,023바이트다. 총 예산은 5MB이고 개별 영상은 2.5MB를 넘으면 스크립트가 실패한다. 해상도·프레임 수·용량·SHA-256은 [manifest](../public/media/media-manifest.json)에 기록한다.
+MP4는 H.264 High / `yuv420p`, 무음, `faststart`로 인코딩한다. 원본 두 편의 합계는 **2,101,778바이트**이며 크롬 1,510,755바이트·오로라 591,023바이트다. 원본 생성 예산은 합계 5MB·개별 2.5MB이며 [원본 manifest](../public/media/media-manifest.json)에 규격과 SHA-256을 기록한다.
+
+| VP8 파일 | 용량 | 원본 MP4 대비 SSIM | SHA-256 |
+| --- | ---: | ---: | --- |
+| 크롬 | 1,476,078 bytes | 0.977189 | `28ddf17c64918408d44b12afedc928dc30114fbfe4d15efec5c9aae06471d768` |
+| 오로라 | 594,901 bytes | 0.984363 | `b8a2c38dd2d25bd63843d5b5fc8349aa8e56843b9bbe194be004ac41cfbd3377` |
+| **합계** | **2,070,979 bytes** | — | — |
+
+VP8도 `yuv420p`·무음·240프레임이다. 640×400·24fps와 내용은 유지하되 손실 재인코딩이므로 무손실이라고 부르지 않는다. [WebM manifest](../public/media/monitor-webm-manifest.json)에 원본·결과 해시, 전체 디코딩과 SSIM을 기록한다. 기존 MP4·공유 조명 영상은 변경하지 않았다.
+
+## 런타임 선택과 실패 처리
+
+홈의 모니터 구간이 처음 열릴 때 VP8 지원 여부를 확인한다. `canPlayType('video/webm; codecs="vp8"')`가 `probably` 또는 `maybe`이면 WebM, 미지원·조회 오류이면 원본 MP4를 선택한다. 두 형식을 함께 다운로드하지 않으며 초기 `preload`는 `none`이다.
+
+선택한 영상의 다운로드·디코딩·자동 재생이 실패하면 절차적 영상 셰이더를 표시한다. WebM 실패 후 MP4를 연속 요청하거나 프레임마다 재시도하지 않는다. 모션 정지·숨긴 탭·화면 전환에서는 기존 소스와 재생 위치를 보존하며, 처음부터 모션 축소 상태이면 영상 소스를 연결하지 않는다. JPEG 포스터는 자산 확인용으로 보존하고 화면 밖 영상 요소에 연결하지 않아 런타임에서 요청하지 않는다.
+
+두 영상은 `public/media/`에서 사이트와 함께 Vercel CDN으로 제공한다. 별도 클라우드 계정·API 키·외부 미디어 요청은 필요하지 않다. 디코더 경로와 실제 첫 진입 비교는 [성능 보고서](monitor-transition-performance.md)에 기록했다.
 
 ## 재생성
 
@@ -30,13 +48,27 @@ python scripts/generate-media.py --posters-only
 
 인코딩 설정은 `libx264 -preset slow -crf 21 -maxrate 1600k -bufsize 3200k -pix_fmt yuv420p -profile:v high -level 3.1 -g 48 -keyint_min 48 -movflags +faststart -an`이다. 입력은 240장의 RGB24 프레임이다.
 
+### VP8 대체 형식 재생성
+
+원본 MP4가 준비된 상태에서 다음 명령을 사용한다. [WebM 생성 스크립트](../scripts/generate-monitor-webm.py)는 원본과 조명 자산을 다시 쓰지 않는다.
+
+```sh
+python scripts/generate-monitor-webm.py
+# 기존 FFmpeg 실행 파일을 지정할 때
+python scripts/generate-monitor-webm.py --ffmpeg /path/to/ffmpeg
+```
+
+설정은 `libvpx -crf 10 -deadline good -cpu-used 4 -threads 2 -g 48 -an`이며 비트레이트는 크롬 `1200k`, 오로라 `500k`다. 임시 디렉터리에서 인코딩·전체 디코딩·SSIM 검증을 끝낸 뒤 생성 파일을 각각 원자적으로 교체하고 manifest를 마지막에 기록한다. 크롬은 2MB·SSIM 0.97, 오로라는 0.9MB·SSIM 0.98 조건을 벗어나면 실패한다. FFmpeg/libvpx·WebM 메타데이터 차이로 다른 환경의 압축 바이트·해시는 달라질 수 있다.
+
 ## 검증
 
 - 시간 의존식은 10초 주기를 사용한다. 스크립트가 0초와 10초의 생성 프레임을 비교하여 최대 RGB 차이가 1을 넘으면 중단한다.
 - 각 영상은 240프레임이며 음성 트랙이 없다.
 - 두 파일의 총 480프레임을 끝까지 디코딩하고 H.264·`yuv420p`·해상도·프레임 속도·10초 길이를 확인했다. MP4의 `moov` atom이 `mdat`보다 앞에 있어 스트리밍 재생에 필요한 `faststart` 순서임을 확인했다.
+- PR #15의 배포 대상 WebM도 두 편 합계 480프레임을 끝까지 디코딩하고 VP8·`yuv420p`·640×400·24fps·10초·무음과 SSIM을 확인했다. 원본·조명 파일의 전후 SHA-256이 동일하다.
 - 포스터는 실제 생성 프레임에서 추출했으며 별도의 참고 이미지가 아니다.
 - 브라우저 재생 성공·상태 전환·실제 모니터 재질과의 합성은 애플리케이션 통합 검증에서 확인한다.
+- PR #15의 로컬 전체 68개 테스트가 통과했다. 지원 조회를 조작한 형식 선택과 실패 시 절차적 표현을 포함하며, 실제 Safari/iOS 기기 검증과는 구분한다.
 
 기존 영상을 다시 생성하지 않고 위 검증과 manifest 갱신만 실행할 수 있다.
 

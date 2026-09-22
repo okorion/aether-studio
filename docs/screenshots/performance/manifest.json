@@ -1,0 +1,1470 @@
+{
+  "baseline": "2d34128767db976a4eab65ef13296dcba496cd68",
+  "after": "6da8426",
+  "sourceAssets": [
+    "/assets/index-DSjGQt4l.js",
+    "/assets/Scene-Du2IMWZi.js"
+  ],
+  "captures": [
+    {
+      "p": 0.24,
+      "file": "before/scroll-240.jpg",
+      "data": {
+        "engine": "three.js r186",
+        "renderProfile": "gpu",
+        "renderState": "ready",
+        "cameraMode": "idle",
+        "orbitEnabled": "false",
+        "preparation": "ready",
+        "videoState": "{\"active\":false,\"disposed\":false,\"ready\":[false,false],\"playing\":[false,false],\"state\":[\"idle\",\"idle\"],\"errors\":[null,null]}",
+        "lightVideoState": "{\"active\":false,\"ready\":true,\"playing\":false,\"attached\":true,\"state\":\"paused\",\"error\":null}",
+        "monitorHover": "-1",
+        "journeyStep": "7",
+        "focusX": "0.0000",
+        "focusY": "0.0000",
+        "orbitYaw": "0.0000",
+        "renderProgress": "0.240000",
+        "pointerStrength": "0.0000",
+        "cameraY": "-15.1179",
+        "targetY": "-15.3633",
+        "modelY": "-15.3633",
+        "viewAzimuth": "6.2800",
+        "structureYaw": "0.0051",
+        "ringRoll": "0.0000",
+        "chainPhase": "2.400000",
+        "chamberY": "-40.4000",
+        "frameMs": "16.7",
+        "drawCalls": "47",
+        "quality": "1.00",
+        "geometries": "211",
+        "textures": "31",
+        "programs": "96",
+        "renderFrame": "270"
+      },
+      "clock": 5500.000000000012,
+      "videos": [
+        {
+          "src": "http://127.0.0.1:4175/media/light-projection.mp4",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        }
+      ],
+      "version": "before",
+      "bytes": 146278,
+      "sha256": "b52b93377b40af9e88f7c68b844ac9c34412278dd1aa67fb95c61f1353ed6296",
+      "capturedAt": "2026-09-22T06:38:48.581Z"
+    },
+    {
+      "p": 0.26,
+      "file": "before/scroll-260.jpg",
+      "data": {
+        "engine": "three.js r186",
+        "renderProfile": "gpu",
+        "renderState": "ready",
+        "cameraMode": "idle",
+        "orbitEnabled": "false",
+        "preparation": "ready",
+        "videoState": "{\"active\":true,\"disposed\":false,\"ready\":[true,true],\"playing\":[false,false],\"state\":[\"paused\",\"paused\"],\"errors\":[null,null]}",
+        "lightVideoState": "{\"active\":false,\"ready\":true,\"playing\":false,\"attached\":true,\"state\":\"paused\",\"error\":null}",
+        "monitorHover": "-1",
+        "journeyStep": "7",
+        "focusX": "-0.0000",
+        "focusY": "0.0000",
+        "orbitYaw": "0.0000",
+        "renderProgress": "0.260000",
+        "pointerStrength": "0.0000",
+        "cameraY": "-16.1629",
+        "targetY": "-16.4554",
+        "modelY": "-16.4554",
+        "viewAzimuth": "6.2800",
+        "structureYaw": "0.1225",
+        "ringRoll": "0.0000",
+        "chainPhase": "2.600000",
+        "chamberY": "-40.4000",
+        "frameMs": "16.7",
+        "drawCalls": "60",
+        "quality": "1.00",
+        "geometries": "211",
+        "textures": "33",
+        "programs": "96",
+        "renderFrame": "540"
+      },
+      "clock": 9999.999999999995,
+      "videos": [
+        {
+          "src": "http://127.0.0.1:4175/media/light-projection.mp4",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        },
+        {
+          "src": "http://127.0.0.1:4175/media/chrome-current.mp4",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        },
+        {
+          "src": "http://127.0.0.1:4175/media/aurora-bloom.mp4",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        }
+      ],
+      "version": "before",
+      "bytes": 170540,
+      "sha256": "e52f67c05cad1222589838bf3807ac75d237b8eeeeb6c621cdd37c388f776300",
+      "capturedAt": "2026-09-22T06:38:53.199Z"
+    },
+    {
+      "p": 0.285,
+      "file": "before/scroll-285.jpg",
+      "data": {
+        "engine": "three.js r186",
+        "renderProfile": "gpu",
+        "renderState": "ready",
+        "cameraMode": "idle",
+        "orbitEnabled": "false",
+        "preparation": "ready",
+        "videoState": "{\"active\":true,\"disposed\":false,\"ready\":[true,true],\"playing\":[false,false],\"state\":[\"paused\",\"paused\"],\"errors\":[null,null]}",
+        "lightVideoState": "{\"active\":false,\"ready\":true,\"playing\":false,\"attached\":true,\"state\":\"paused\",\"error\":null}",
+        "monitorHover": "-1",
+        "journeyStep": "8",
+        "focusX": "-0.0000",
+        "focusY": "0.0000",
+        "orbitYaw": "0.0000",
+        "renderProgress": "0.285033",
+        "pointerStrength": "0.0000",
+        "cameraY": "-17.2775",
+        "targetY": "-17.6054",
+        "modelY": "-17.6054",
+        "viewAzimuth": "6.2800",
+        "structureYaw": "0.4708",
+        "ringRoll": "0.0000",
+        "chainPhase": "2.850327",
+        "chamberY": "-40.4000",
+        "frameMs": "16.7",
+        "drawCalls": "82",
+        "quality": "1.00",
+        "geometries": "211",
+        "textures": "33",
+        "programs": "96",
+        "renderFrame": "810"
+      },
+      "clock": 14499.99999999983,
+      "videos": [
+        {
+          "src": "http://127.0.0.1:4175/media/light-projection.mp4",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        },
+        {
+          "src": "http://127.0.0.1:4175/media/chrome-current.mp4",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        },
+        {
+          "src": "http://127.0.0.1:4175/media/aurora-bloom.mp4",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        }
+      ],
+      "version": "before",
+      "bytes": 305307,
+      "sha256": "0f5bc4a7be61e3528efef6913ca22ca0163a43d1522d925787ad016343647b26",
+      "capturedAt": "2026-09-22T06:38:57.752Z"
+    },
+    {
+      "p": 0.4,
+      "file": "before/scroll-400.jpg",
+      "data": {
+        "engine": "three.js r186",
+        "renderProfile": "gpu",
+        "renderState": "ready",
+        "cameraMode": "idle",
+        "orbitEnabled": "false",
+        "preparation": "ready",
+        "videoState": "{\"active\":true,\"disposed\":false,\"ready\":[true,true],\"playing\":[false,false],\"state\":[\"paused\",\"paused\"],\"errors\":[null,null]}",
+        "lightVideoState": "{\"active\":false,\"ready\":true,\"playing\":false,\"attached\":true,\"state\":\"paused\",\"error\":null}",
+        "monitorHover": "-1",
+        "journeyStep": "10",
+        "focusX": "-0.0000",
+        "focusY": "-0.0000",
+        "orbitYaw": "0.0000",
+        "renderProgress": "0.400000",
+        "pointerStrength": "0.0000",
+        "cameraY": "-23.7941",
+        "targetY": "-24.0000",
+        "modelY": "-24.0000",
+        "viewAzimuth": "6.2800",
+        "structureYaw": "4.1309",
+        "ringRoll": "0.0000",
+        "chainPhase": "4.000000",
+        "chamberY": "-40.4000",
+        "frameMs": "16.7",
+        "drawCalls": "130",
+        "quality": "1.00",
+        "geometries": "211",
+        "textures": "33",
+        "programs": "96",
+        "renderFrame": "1095"
+      },
+      "clock": 18999.999999999953,
+      "videos": [
+        {
+          "src": "http://127.0.0.1:4175/media/light-projection.mp4",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        },
+        {
+          "src": "http://127.0.0.1:4175/media/chrome-current.mp4",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        },
+        {
+          "src": "http://127.0.0.1:4175/media/aurora-bloom.mp4",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        }
+      ],
+      "version": "before",
+      "bytes": 382576,
+      "sha256": "d46b18232f6e7032944924897cf215da71cb65288e360b91c4ba6bbb685b2065",
+      "capturedAt": "2026-09-22T06:39:02.320Z"
+    },
+    {
+      "p": 0.61,
+      "file": "before/scroll-610.jpg",
+      "data": {
+        "engine": "three.js r186",
+        "renderProfile": "gpu",
+        "renderState": "ready",
+        "cameraMode": "idle",
+        "orbitEnabled": "false",
+        "preparation": "ready",
+        "videoState": "{\"active\":true,\"disposed\":false,\"ready\":[true,true],\"playing\":[false,false],\"state\":[\"paused\",\"paused\"],\"errors\":[null,null]}",
+        "lightVideoState": "{\"active\":true,\"ready\":true,\"playing\":false,\"attached\":true,\"state\":\"paused\",\"error\":null}",
+        "monitorHover": "-1",
+        "journeyStep": "15",
+        "focusX": "0.0000",
+        "focusY": "0.0000",
+        "orbitYaw": "0.0000",
+        "renderProgress": "0.610000",
+        "pointerStrength": "0.0000",
+        "cameraY": "-34.6521",
+        "targetY": "-36.0752",
+        "modelY": "-36.0752",
+        "viewAzimuth": "6.3533",
+        "structureYaw": "12.0022",
+        "ringRoll": "0.0000",
+        "chainPhase": "6.100000",
+        "chamberY": "-40.4000",
+        "frameMs": "16.7",
+        "drawCalls": "163",
+        "quality": "1.00",
+        "geometries": "211",
+        "textures": "33",
+        "programs": "96",
+        "renderFrame": "1365"
+      },
+      "clock": 23500.00000000028,
+      "videos": [
+        {
+          "src": "http://127.0.0.1:4175/media/light-projection.mp4",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        },
+        {
+          "src": "http://127.0.0.1:4175/media/chrome-current.mp4",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        },
+        {
+          "src": "http://127.0.0.1:4175/media/aurora-bloom.mp4",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        }
+      ],
+      "version": "before",
+      "bytes": 305134,
+      "sha256": "4ee57cf45ec7ebfd41b1586edcffe2323ef9d18d594e7e7e570c8568b9dda0bb",
+      "capturedAt": "2026-09-22T06:39:06.884Z"
+    },
+    {
+      "p": 0.63,
+      "file": "before/scroll-630.jpg",
+      "data": {
+        "engine": "three.js r186",
+        "renderProfile": "gpu",
+        "renderState": "ready",
+        "cameraMode": "idle",
+        "orbitEnabled": "false",
+        "preparation": "ready",
+        "videoState": "{\"active\":true,\"disposed\":false,\"ready\":[true,true],\"playing\":[false,false],\"state\":[\"paused\",\"paused\"],\"errors\":[null,null]}",
+        "lightVideoState": "{\"active\":true,\"ready\":true,\"playing\":false,\"attached\":true,\"state\":\"paused\",\"error\":null}",
+        "monitorHover": "-1",
+        "journeyStep": "15",
+        "focusX": "0.0000",
+        "focusY": "0.0000",
+        "orbitYaw": "0.0000",
+        "renderProgress": "0.630000",
+        "pointerStrength": "0.0000",
+        "cameraY": "-35.6799",
+        "targetY": "-37.2590",
+        "modelY": "-37.2590",
+        "viewAzimuth": "6.4340",
+        "structureYaw": "12.3302",
+        "ringRoll": "0.0000",
+        "chainPhase": "6.300000",
+        "chamberY": "-40.4000",
+        "frameMs": "16.7",
+        "drawCalls": "206",
+        "quality": "1.00",
+        "geometries": "211",
+        "textures": "33",
+        "programs": "96",
+        "renderFrame": "1635"
+      },
+      "clock": 28000.000000000608,
+      "videos": [
+        {
+          "src": "http://127.0.0.1:4175/media/light-projection.mp4",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        },
+        {
+          "src": "http://127.0.0.1:4175/media/chrome-current.mp4",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        },
+        {
+          "src": "http://127.0.0.1:4175/media/aurora-bloom.mp4",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        }
+      ],
+      "version": "before",
+      "bytes": 225990,
+      "sha256": "1cc90a4a8e4a6aa7acbf6621c94f668e6d8ca3afe3d6aa273b5dc257a6c2b1ab",
+      "capturedAt": "2026-09-22T06:39:11.448Z"
+    },
+    {
+      "p": 0.65,
+      "file": "before/scroll-650.jpg",
+      "data": {
+        "engine": "three.js r186",
+        "renderProfile": "gpu",
+        "renderState": "ready",
+        "cameraMode": "idle",
+        "orbitEnabled": "false",
+        "preparation": "ready",
+        "videoState": "{\"active\":true,\"disposed\":false,\"ready\":[true,true],\"playing\":[false,false],\"state\":[\"paused\",\"paused\"],\"errors\":[null,null]}",
+        "lightVideoState": "{\"active\":true,\"ready\":true,\"playing\":false,\"attached\":true,\"state\":\"paused\",\"error\":null}",
+        "monitorHover": "-1",
+        "journeyStep": "16",
+        "focusX": "0.0000",
+        "focusY": "0.0000",
+        "orbitYaw": "0.0000",
+        "renderProgress": "0.650000",
+        "pointerStrength": "0.0000",
+        "cameraY": "-36.7416",
+        "targetY": "-38.3875",
+        "modelY": "-38.3875",
+        "viewAzimuth": "6.5391",
+        "structureYaw": "12.5216",
+        "ringRoll": "0.0000",
+        "chainPhase": "6.500000",
+        "chamberY": "-40.4000",
+        "frameMs": "16.7",
+        "drawCalls": "208",
+        "quality": "1.00",
+        "geometries": "211",
+        "textures": "33",
+        "programs": "96",
+        "renderFrame": "1905"
+      },
+      "clock": 32500.000000000935,
+      "videos": [
+        {
+          "src": "http://127.0.0.1:4175/media/light-projection.mp4",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        },
+        {
+          "src": "http://127.0.0.1:4175/media/chrome-current.mp4",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        },
+        {
+          "src": "http://127.0.0.1:4175/media/aurora-bloom.mp4",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        }
+      ],
+      "version": "before",
+      "bytes": 257881,
+      "sha256": "2792b4c000e668625289b99cf329358879fb79620cdcc7f7124876247454d153",
+      "capturedAt": "2026-09-22T06:39:15.997Z"
+    },
+    {
+      "p": 0.675,
+      "file": "before/scroll-675.jpg",
+      "data": {
+        "engine": "three.js r186",
+        "renderProfile": "gpu",
+        "renderState": "ready",
+        "cameraMode": "idle",
+        "orbitEnabled": "false",
+        "preparation": "ready",
+        "videoState": "{\"active\":false,\"disposed\":false,\"ready\":[true,true],\"playing\":[false,false],\"state\":[\"paused\",\"paused\"],\"errors\":[null,null]}",
+        "lightVideoState": "{\"active\":true,\"ready\":true,\"playing\":false,\"attached\":true,\"state\":\"paused\",\"error\":null}",
+        "monitorHover": "-1",
+        "journeyStep": "17",
+        "focusX": "-0.0000",
+        "focusY": "0.0000",
+        "orbitYaw": "0.0000",
+        "renderProgress": "0.675033",
+        "pointerStrength": "0.0000",
+        "cameraY": "-38.1138",
+        "targetY": "-39.5778",
+        "modelY": "-39.5778",
+        "viewAzimuth": "6.6697",
+        "structureYaw": "12.5664",
+        "ringRoll": "0.0000",
+        "chainPhase": "6.750327",
+        "chamberY": "-40.4000",
+        "frameMs": "16.7",
+        "drawCalls": "140",
+        "quality": "1.00",
+        "geometries": "211",
+        "textures": "33",
+        "programs": "96",
+        "renderFrame": "2190"
+      },
+      "clock": 37000.00000000034,
+      "videos": [
+        {
+          "src": "http://127.0.0.1:4175/media/light-projection.mp4",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        },
+        {
+          "src": "http://127.0.0.1:4175/media/chrome-current.mp4",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        },
+        {
+          "src": "http://127.0.0.1:4175/media/aurora-bloom.mp4",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        }
+      ],
+      "version": "before",
+      "bytes": 252071,
+      "sha256": "5d7fbdb5a3dd8d55ab1fa19f816bd17cde11510c6ef2dfe5747a617c387a160f",
+      "capturedAt": "2026-09-22T06:39:20.553Z"
+    },
+    {
+      "p": 0.72,
+      "file": "before/scroll-720.jpg",
+      "data": {
+        "engine": "three.js r186",
+        "renderProfile": "gpu",
+        "renderState": "ready",
+        "cameraMode": "idle",
+        "orbitEnabled": "false",
+        "preparation": "ready",
+        "videoState": "{\"active\":false,\"disposed\":false,\"ready\":[true,true],\"playing\":[false,false],\"state\":[\"paused\",\"paused\"],\"errors\":[null,null]}",
+        "lightVideoState": "{\"active\":true,\"ready\":true,\"playing\":false,\"attached\":true,\"state\":\"paused\",\"error\":null}",
+        "monitorHover": "-1",
+        "journeyStep": "18",
+        "focusX": "-0.0000",
+        "focusY": "0.0000",
+        "orbitYaw": "0.0000",
+        "renderProgress": "0.720000",
+        "pointerStrength": "0.0000",
+        "cameraY": "-40.9086",
+        "targetY": "-41.5893",
+        "modelY": "-41.5893",
+        "viewAzimuth": "6.9341",
+        "structureYaw": "12.5664",
+        "ringRoll": "0.0000",
+        "chainPhase": "7.200000",
+        "chamberY": "-40.4000",
+        "frameMs": "16.7",
+        "drawCalls": "115",
+        "quality": "1.00",
+        "geometries": "211",
+        "textures": "33",
+        "programs": "96",
+        "renderFrame": "2460"
+      },
+      "clock": 41499.99999999969,
+      "videos": [
+        {
+          "src": "http://127.0.0.1:4175/media/light-projection.mp4",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        },
+        {
+          "src": "http://127.0.0.1:4175/media/chrome-current.mp4",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        },
+        {
+          "src": "http://127.0.0.1:4175/media/aurora-bloom.mp4",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        }
+      ],
+      "version": "before",
+      "bytes": 255972,
+      "sha256": "8381a0407ba00e632e9c89e21fb047f75449c0cd0c9e42a97d5134248d7a3b8b",
+      "capturedAt": "2026-09-22T06:39:25.111Z"
+    },
+    {
+      "p": 0.76,
+      "file": "before/scroll-760.jpg",
+      "data": {
+        "engine": "three.js r186",
+        "renderProfile": "gpu",
+        "renderState": "ready",
+        "cameraMode": "idle",
+        "orbitEnabled": "false",
+        "preparation": "ready",
+        "videoState": "{\"active\":false,\"disposed\":false,\"ready\":[true,true],\"playing\":[false,false],\"state\":[\"paused\",\"paused\"],\"errors\":[null,null]}",
+        "lightVideoState": "{\"active\":true,\"ready\":true,\"playing\":false,\"attached\":true,\"state\":\"paused\",\"error\":null}",
+        "monitorHover": "-1",
+        "journeyStep": "18",
+        "focusX": "0.0000",
+        "focusY": "0.0000",
+        "orbitYaw": "0.0000",
+        "renderProgress": "0.760000",
+        "pointerStrength": "0.0000",
+        "cameraY": "-43.7369",
+        "targetY": "-43.6639",
+        "modelY": "-43.6639",
+        "viewAzimuth": "6.8774",
+        "structureYaw": "12.5664",
+        "ringRoll": "0.0000",
+        "chainPhase": "7.600000",
+        "chamberY": "-40.4000",
+        "frameMs": "16.7",
+        "drawCalls": "125",
+        "quality": "1.00",
+        "geometries": "211",
+        "textures": "33",
+        "programs": "96",
+        "renderFrame": "2730"
+      },
+      "clock": 45999.99999999903,
+      "videos": [
+        {
+          "src": "http://127.0.0.1:4175/media/light-projection.mp4",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        },
+        {
+          "src": "http://127.0.0.1:4175/media/chrome-current.mp4",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        },
+        {
+          "src": "http://127.0.0.1:4175/media/aurora-bloom.mp4",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        }
+      ],
+      "version": "before",
+      "bytes": 331272,
+      "sha256": "ec349f985431a96f2b40970907b0e3b7f9a26601d12a0ce10dff16e5f4d5f922",
+      "capturedAt": "2026-09-22T06:39:29.666Z"
+    },
+    {
+      "p": 0.89,
+      "file": "before/scroll-890.jpg",
+      "data": {
+        "engine": "three.js r186",
+        "renderProfile": "gpu",
+        "renderState": "ready",
+        "cameraMode": "idle",
+        "orbitEnabled": "false",
+        "preparation": "ready",
+        "videoState": "{\"active\":false,\"disposed\":false,\"ready\":[true,true],\"playing\":[false,false],\"state\":[\"paused\",\"paused\"],\"errors\":[null,null]}",
+        "lightVideoState": "{\"active\":true,\"ready\":true,\"playing\":false,\"attached\":true,\"state\":\"paused\",\"error\":null}",
+        "monitorHover": "-1",
+        "journeyStep": "21",
+        "focusX": "0.0000",
+        "focusY": "0.0000",
+        "orbitYaw": "0.0000",
+        "renderProgress": "0.890000",
+        "pointerStrength": "0.0000",
+        "cameraY": "-51.3107",
+        "targetY": "-52.1095",
+        "modelY": "-52.1095",
+        "viewAzimuth": "7.0283",
+        "structureYaw": "12.5664",
+        "ringRoll": "0.0000",
+        "chainPhase": "8.900000",
+        "chamberY": "-40.4000",
+        "frameMs": "16.7",
+        "drawCalls": "49",
+        "quality": "1.00",
+        "geometries": "211",
+        "textures": "33",
+        "programs": "96",
+        "renderFrame": "3000"
+      },
+      "clock": 50499.99999999838,
+      "videos": [
+        {
+          "src": "http://127.0.0.1:4175/media/light-projection.mp4",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        },
+        {
+          "src": "http://127.0.0.1:4175/media/chrome-current.mp4",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        },
+        {
+          "src": "http://127.0.0.1:4175/media/aurora-bloom.mp4",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        }
+      ],
+      "version": "before",
+      "bytes": 294641,
+      "sha256": "9fec4cfa3234282c3622eaf988c624d60c5fc8733ee62694d7de879ca5990774",
+      "capturedAt": "2026-09-22T06:39:34.223Z"
+    },
+    {
+      "p": 0.915,
+      "file": "before/scroll-915.jpg",
+      "data": {
+        "engine": "three.js r186",
+        "renderProfile": "gpu",
+        "renderState": "ready",
+        "cameraMode": "idle",
+        "orbitEnabled": "false",
+        "preparation": "ready",
+        "videoState": "{\"active\":false,\"disposed\":false,\"ready\":[true,true],\"playing\":[false,false],\"state\":[\"paused\",\"paused\"],\"errors\":[null,null]}",
+        "lightVideoState": "{\"active\":true,\"ready\":true,\"playing\":false,\"attached\":true,\"state\":\"paused\",\"error\":null}",
+        "monitorHover": "-1",
+        "journeyStep": "22",
+        "focusX": "0.0000",
+        "focusY": "-0.0000",
+        "orbitYaw": "0.0000",
+        "renderProgress": "0.915033",
+        "pointerStrength": "0.0000",
+        "cameraY": "-53.0656",
+        "targetY": "-54.1597",
+        "modelY": "-54.1597",
+        "viewAzimuth": "7.7695",
+        "structureYaw": "12.5664",
+        "ringRoll": "0.0000",
+        "chainPhase": "9.150327",
+        "chamberY": "-40.4000",
+        "frameMs": "16.7",
+        "drawCalls": "49",
+        "quality": "1.00",
+        "geometries": "211",
+        "textures": "33",
+        "programs": "96",
+        "renderFrame": "3285"
+      },
+      "clock": 54999.99999999772,
+      "videos": [
+        {
+          "src": "http://127.0.0.1:4175/media/light-projection.mp4",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        },
+        {
+          "src": "http://127.0.0.1:4175/media/chrome-current.mp4",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        },
+        {
+          "src": "http://127.0.0.1:4175/media/aurora-bloom.mp4",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        }
+      ],
+      "version": "before",
+      "bytes": 333403,
+      "sha256": "340968aaf562c8c72b332b8469518ce62ee0b43c0e38133cae431f24a8121e83",
+      "capturedAt": "2026-09-22T06:39:38.789Z"
+    },
+    {
+      "p": 0.24,
+      "file": "after/scroll-240.jpg",
+      "data": {
+        "engine": "three.js r186",
+        "renderProfile": "gpu",
+        "renderState": "ready",
+        "cameraMode": "idle",
+        "orbitEnabled": "false",
+        "preparation": "ready",
+        "videoState": "{\"active\":false,\"disposed\":false,\"ready\":[false,false],\"playing\":[false,false],\"state\":[\"idle\",\"idle\"],\"errors\":[null,null]}",
+        "lightVideoState": "{\"active\":false,\"ready\":true,\"playing\":false,\"attached\":true,\"state\":\"paused\",\"error\":null}",
+        "monitorHover": "-1",
+        "journeyStep": "7",
+        "focusX": "0.0000",
+        "focusY": "0.0000",
+        "orbitYaw": "0.0000",
+        "renderProgress": "0.240000",
+        "pointerStrength": "0.0000",
+        "cameraY": "-15.1179",
+        "targetY": "-15.3633",
+        "modelY": "-15.3633",
+        "viewAzimuth": "6.2800",
+        "structureYaw": "0.0051",
+        "ringRoll": "0.0000",
+        "chainPhase": "2.400000",
+        "chamberY": "-40.4000",
+        "frameMs": "16.7",
+        "drawCalls": "47",
+        "quality": "1.00",
+        "geometries": "211",
+        "textures": "31",
+        "programs": "96",
+        "renderFrame": "270"
+      },
+      "clock": 5500.000000000012,
+      "videos": [
+        {
+          "src": "http://127.0.0.1:4173/media/light-projection.mp4",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        }
+      ],
+      "version": "after",
+      "bytes": 146278,
+      "sha256": "b52b93377b40af9e88f7c68b844ac9c34412278dd1aa67fb95c61f1353ed6296",
+      "capturedAt": "2026-09-22T06:39:48.022Z"
+    },
+    {
+      "p": 0.26,
+      "file": "after/scroll-260.jpg",
+      "data": {
+        "engine": "three.js r186",
+        "renderProfile": "gpu",
+        "renderState": "ready",
+        "cameraMode": "idle",
+        "orbitEnabled": "false",
+        "preparation": "ready",
+        "videoState": "{\"active\":true,\"disposed\":false,\"ready\":[true,true],\"playing\":[false,false],\"state\":[\"paused\",\"paused\"],\"errors\":[null,null]}",
+        "lightVideoState": "{\"active\":false,\"ready\":true,\"playing\":false,\"attached\":true,\"state\":\"paused\",\"error\":null}",
+        "monitorHover": "-1",
+        "journeyStep": "7",
+        "focusX": "-0.0000",
+        "focusY": "0.0000",
+        "orbitYaw": "0.0000",
+        "renderProgress": "0.260000",
+        "pointerStrength": "0.0000",
+        "cameraY": "-16.1629",
+        "targetY": "-16.4554",
+        "modelY": "-16.4554",
+        "viewAzimuth": "6.2800",
+        "structureYaw": "0.1225",
+        "ringRoll": "0.0000",
+        "chainPhase": "2.600000",
+        "chamberY": "-40.4000",
+        "frameMs": "16.7",
+        "drawCalls": "60",
+        "quality": "1.00",
+        "geometries": "211",
+        "textures": "33",
+        "programs": "96",
+        "renderFrame": "540"
+      },
+      "clock": 9999.999999999995,
+      "videos": [
+        {
+          "src": "http://127.0.0.1:4173/media/light-projection.mp4",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        },
+        {
+          "src": "http://127.0.0.1:4173/media/chrome-current.webm",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        },
+        {
+          "src": "http://127.0.0.1:4173/media/aurora-bloom.webm",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        }
+      ],
+      "version": "after",
+      "bytes": 170335,
+      "sha256": "e69acb0f935f8ea561d8f63270e2a21c54e09411c321e3dac5b585210be0aa8f",
+      "capturedAt": "2026-09-22T06:39:52.587Z"
+    },
+    {
+      "p": 0.285,
+      "file": "after/scroll-285.jpg",
+      "data": {
+        "engine": "three.js r186",
+        "renderProfile": "gpu",
+        "renderState": "ready",
+        "cameraMode": "idle",
+        "orbitEnabled": "false",
+        "preparation": "ready",
+        "videoState": "{\"active\":true,\"disposed\":false,\"ready\":[true,true],\"playing\":[false,false],\"state\":[\"paused\",\"paused\"],\"errors\":[null,null]}",
+        "lightVideoState": "{\"active\":false,\"ready\":true,\"playing\":false,\"attached\":true,\"state\":\"paused\",\"error\":null}",
+        "monitorHover": "-1",
+        "journeyStep": "8",
+        "focusX": "-0.0000",
+        "focusY": "0.0000",
+        "orbitYaw": "0.0000",
+        "renderProgress": "0.285033",
+        "pointerStrength": "0.0000",
+        "cameraY": "-17.2775",
+        "targetY": "-17.6054",
+        "modelY": "-17.6054",
+        "viewAzimuth": "6.2800",
+        "structureYaw": "0.4708",
+        "ringRoll": "0.0000",
+        "chainPhase": "2.850327",
+        "chamberY": "-40.4000",
+        "frameMs": "16.7",
+        "drawCalls": "82",
+        "quality": "1.00",
+        "geometries": "211",
+        "textures": "33",
+        "programs": "96",
+        "renderFrame": "810"
+      },
+      "clock": 14499.99999999983,
+      "videos": [
+        {
+          "src": "http://127.0.0.1:4173/media/light-projection.mp4",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        },
+        {
+          "src": "http://127.0.0.1:4173/media/chrome-current.webm",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        },
+        {
+          "src": "http://127.0.0.1:4173/media/aurora-bloom.webm",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        }
+      ],
+      "version": "after",
+      "bytes": 303384,
+      "sha256": "8da8253a047f30f60129a7eabff46124c3ec21b28d93c30366b5afb61b799c10",
+      "capturedAt": "2026-09-22T06:39:57.154Z"
+    },
+    {
+      "p": 0.4,
+      "file": "after/scroll-400.jpg",
+      "data": {
+        "engine": "three.js r186",
+        "renderProfile": "gpu",
+        "renderState": "ready",
+        "cameraMode": "idle",
+        "orbitEnabled": "false",
+        "preparation": "ready",
+        "videoState": "{\"active\":true,\"disposed\":false,\"ready\":[true,true],\"playing\":[false,false],\"state\":[\"paused\",\"paused\"],\"errors\":[null,null]}",
+        "lightVideoState": "{\"active\":false,\"ready\":true,\"playing\":false,\"attached\":true,\"state\":\"paused\",\"error\":null}",
+        "monitorHover": "-1",
+        "journeyStep": "10",
+        "focusX": "-0.0000",
+        "focusY": "-0.0000",
+        "orbitYaw": "0.0000",
+        "renderProgress": "0.400000",
+        "pointerStrength": "0.0000",
+        "cameraY": "-23.7941",
+        "targetY": "-24.0000",
+        "modelY": "-24.0000",
+        "viewAzimuth": "6.2800",
+        "structureYaw": "4.1309",
+        "ringRoll": "0.0000",
+        "chainPhase": "4.000000",
+        "chamberY": "-40.4000",
+        "frameMs": "16.7",
+        "drawCalls": "130",
+        "quality": "1.00",
+        "geometries": "211",
+        "textures": "33",
+        "programs": "96",
+        "renderFrame": "1095"
+      },
+      "clock": 18999.999999999953,
+      "videos": [
+        {
+          "src": "http://127.0.0.1:4173/media/light-projection.mp4",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        },
+        {
+          "src": "http://127.0.0.1:4173/media/chrome-current.webm",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        },
+        {
+          "src": "http://127.0.0.1:4173/media/aurora-bloom.webm",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        }
+      ],
+      "version": "after",
+      "bytes": 376948,
+      "sha256": "679b5ccbc918e98dca3273af6b063e5aa389ce70b56530c1672d7a9108df2a3a",
+      "capturedAt": "2026-09-22T06:40:01.719Z"
+    },
+    {
+      "p": 0.61,
+      "file": "after/scroll-610.jpg",
+      "data": {
+        "engine": "three.js r186",
+        "renderProfile": "gpu",
+        "renderState": "ready",
+        "cameraMode": "idle",
+        "orbitEnabled": "false",
+        "preparation": "ready",
+        "videoState": "{\"active\":true,\"disposed\":false,\"ready\":[true,true],\"playing\":[false,false],\"state\":[\"paused\",\"paused\"],\"errors\":[null,null]}",
+        "lightVideoState": "{\"active\":true,\"ready\":true,\"playing\":false,\"attached\":true,\"state\":\"paused\",\"error\":null}",
+        "monitorHover": "-1",
+        "journeyStep": "15",
+        "focusX": "0.0000",
+        "focusY": "0.0000",
+        "orbitYaw": "0.0000",
+        "renderProgress": "0.610000",
+        "pointerStrength": "0.0000",
+        "cameraY": "-34.6521",
+        "targetY": "-36.0752",
+        "modelY": "-36.0752",
+        "viewAzimuth": "6.3533",
+        "structureYaw": "12.0022",
+        "ringRoll": "0.0000",
+        "chainPhase": "6.100000",
+        "chamberY": "-40.4000",
+        "frameMs": "16.7",
+        "drawCalls": "94",
+        "quality": "1.00",
+        "geometries": "211",
+        "textures": "33",
+        "programs": "96",
+        "renderFrame": "1365"
+      },
+      "clock": 23500.00000000028,
+      "videos": [
+        {
+          "src": "http://127.0.0.1:4173/media/light-projection.mp4",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        },
+        {
+          "src": "http://127.0.0.1:4173/media/chrome-current.webm",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        },
+        {
+          "src": "http://127.0.0.1:4173/media/aurora-bloom.webm",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        }
+      ],
+      "version": "after",
+      "bytes": 299872,
+      "sha256": "27c62ed971efd666f1cdabc40ad1e1998d15eb9b00b969952f7fa5e4f0e27f4d",
+      "capturedAt": "2026-09-22T06:40:06.283Z"
+    },
+    {
+      "p": 0.63,
+      "file": "after/scroll-630.jpg",
+      "data": {
+        "engine": "three.js r186",
+        "renderProfile": "gpu",
+        "renderState": "ready",
+        "cameraMode": "idle",
+        "orbitEnabled": "false",
+        "preparation": "ready",
+        "videoState": "{\"active\":true,\"disposed\":false,\"ready\":[true,true],\"playing\":[false,false],\"state\":[\"paused\",\"paused\"],\"errors\":[null,null]}",
+        "lightVideoState": "{\"active\":true,\"ready\":true,\"playing\":false,\"attached\":true,\"state\":\"paused\",\"error\":null}",
+        "monitorHover": "-1",
+        "journeyStep": "15",
+        "focusX": "0.0000",
+        "focusY": "0.0000",
+        "orbitYaw": "0.0000",
+        "renderProgress": "0.630000",
+        "pointerStrength": "0.0000",
+        "cameraY": "-35.6799",
+        "targetY": "-37.2590",
+        "modelY": "-37.2590",
+        "viewAzimuth": "6.4340",
+        "structureYaw": "12.3302",
+        "ringRoll": "0.0000",
+        "chainPhase": "6.300000",
+        "chamberY": "-40.4000",
+        "frameMs": "16.7",
+        "drawCalls": "206",
+        "quality": "1.00",
+        "geometries": "211",
+        "textures": "33",
+        "programs": "96",
+        "renderFrame": "1635"
+      },
+      "clock": 28000.000000000608,
+      "videos": [
+        {
+          "src": "http://127.0.0.1:4173/media/light-projection.mp4",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        },
+        {
+          "src": "http://127.0.0.1:4173/media/chrome-current.webm",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        },
+        {
+          "src": "http://127.0.0.1:4173/media/aurora-bloom.webm",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        }
+      ],
+      "version": "after",
+      "bytes": 220217,
+      "sha256": "e4c5d465690af6d2ed7eb9c0207565b9dd0eb31f943608e9aca69ac76cab5633",
+      "capturedAt": "2026-09-22T06:40:10.843Z"
+    },
+    {
+      "p": 0.65,
+      "file": "after/scroll-650.jpg",
+      "data": {
+        "engine": "three.js r186",
+        "renderProfile": "gpu",
+        "renderState": "ready",
+        "cameraMode": "idle",
+        "orbitEnabled": "false",
+        "preparation": "ready",
+        "videoState": "{\"active\":true,\"disposed\":false,\"ready\":[true,true],\"playing\":[false,false],\"state\":[\"paused\",\"paused\"],\"errors\":[null,null]}",
+        "lightVideoState": "{\"active\":true,\"ready\":true,\"playing\":false,\"attached\":true,\"state\":\"paused\",\"error\":null}",
+        "monitorHover": "-1",
+        "journeyStep": "16",
+        "focusX": "0.0000",
+        "focusY": "0.0000",
+        "orbitYaw": "0.0000",
+        "renderProgress": "0.650000",
+        "pointerStrength": "0.0000",
+        "cameraY": "-36.7416",
+        "targetY": "-38.3875",
+        "modelY": "-38.3875",
+        "viewAzimuth": "6.5391",
+        "structureYaw": "12.5216",
+        "ringRoll": "0.0000",
+        "chainPhase": "6.500000",
+        "chamberY": "-40.4000",
+        "frameMs": "16.7",
+        "drawCalls": "208",
+        "quality": "1.00",
+        "geometries": "211",
+        "textures": "33",
+        "programs": "96",
+        "renderFrame": "1905"
+      },
+      "clock": 32500.000000000935,
+      "videos": [
+        {
+          "src": "http://127.0.0.1:4173/media/light-projection.mp4",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        },
+        {
+          "src": "http://127.0.0.1:4173/media/chrome-current.webm",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        },
+        {
+          "src": "http://127.0.0.1:4173/media/aurora-bloom.webm",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        }
+      ],
+      "version": "after",
+      "bytes": 253021,
+      "sha256": "8e40cffad83d0c41c05d3cb409f816049dfe0ca69b987d6a04f2c2a5c94b38e5",
+      "capturedAt": "2026-09-22T06:40:15.393Z"
+    },
+    {
+      "p": 0.675,
+      "file": "after/scroll-675.jpg",
+      "data": {
+        "engine": "three.js r186",
+        "renderProfile": "gpu",
+        "renderState": "ready",
+        "cameraMode": "idle",
+        "orbitEnabled": "false",
+        "preparation": "ready",
+        "videoState": "{\"active\":false,\"disposed\":false,\"ready\":[true,true],\"playing\":[false,false],\"state\":[\"paused\",\"paused\"],\"errors\":[null,null]}",
+        "lightVideoState": "{\"active\":true,\"ready\":true,\"playing\":false,\"attached\":true,\"state\":\"paused\",\"error\":null}",
+        "monitorHover": "-1",
+        "journeyStep": "17",
+        "focusX": "-0.0000",
+        "focusY": "0.0000",
+        "orbitYaw": "0.0000",
+        "renderProgress": "0.675033",
+        "pointerStrength": "0.0000",
+        "cameraY": "-38.1138",
+        "targetY": "-39.5778",
+        "modelY": "-39.5778",
+        "viewAzimuth": "6.6697",
+        "structureYaw": "12.5664",
+        "ringRoll": "0.0000",
+        "chainPhase": "6.750327",
+        "chamberY": "-40.4000",
+        "frameMs": "16.7",
+        "drawCalls": "140",
+        "quality": "1.00",
+        "geometries": "211",
+        "textures": "33",
+        "programs": "96",
+        "renderFrame": "2190"
+      },
+      "clock": 37000.00000000034,
+      "videos": [
+        {
+          "src": "http://127.0.0.1:4173/media/light-projection.mp4",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        },
+        {
+          "src": "http://127.0.0.1:4173/media/chrome-current.webm",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        },
+        {
+          "src": "http://127.0.0.1:4173/media/aurora-bloom.webm",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        }
+      ],
+      "version": "after",
+      "bytes": 252071,
+      "sha256": "5d7fbdb5a3dd8d55ab1fa19f816bd17cde11510c6ef2dfe5747a617c387a160f",
+      "capturedAt": "2026-09-22T06:40:19.944Z"
+    },
+    {
+      "p": 0.72,
+      "file": "after/scroll-720.jpg",
+      "data": {
+        "engine": "three.js r186",
+        "renderProfile": "gpu",
+        "renderState": "ready",
+        "cameraMode": "idle",
+        "orbitEnabled": "false",
+        "preparation": "ready",
+        "videoState": "{\"active\":false,\"disposed\":false,\"ready\":[true,true],\"playing\":[false,false],\"state\":[\"paused\",\"paused\"],\"errors\":[null,null]}",
+        "lightVideoState": "{\"active\":true,\"ready\":true,\"playing\":false,\"attached\":true,\"state\":\"paused\",\"error\":null}",
+        "monitorHover": "-1",
+        "journeyStep": "18",
+        "focusX": "-0.0000",
+        "focusY": "0.0000",
+        "orbitYaw": "0.0000",
+        "renderProgress": "0.720000",
+        "pointerStrength": "0.0000",
+        "cameraY": "-40.9086",
+        "targetY": "-41.5893",
+        "modelY": "-41.5893",
+        "viewAzimuth": "6.9341",
+        "structureYaw": "12.5664",
+        "ringRoll": "0.0000",
+        "chainPhase": "7.200000",
+        "chamberY": "-40.4000",
+        "frameMs": "16.7",
+        "drawCalls": "115",
+        "quality": "1.00",
+        "geometries": "211",
+        "textures": "33",
+        "programs": "96",
+        "renderFrame": "2460"
+      },
+      "clock": 41499.99999999969,
+      "videos": [
+        {
+          "src": "http://127.0.0.1:4173/media/light-projection.mp4",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        },
+        {
+          "src": "http://127.0.0.1:4173/media/chrome-current.webm",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        },
+        {
+          "src": "http://127.0.0.1:4173/media/aurora-bloom.webm",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        }
+      ],
+      "version": "after",
+      "bytes": 255972,
+      "sha256": "8381a0407ba00e632e9c89e21fb047f75449c0cd0c9e42a97d5134248d7a3b8b",
+      "capturedAt": "2026-09-22T06:40:24.500Z"
+    },
+    {
+      "p": 0.76,
+      "file": "after/scroll-760.jpg",
+      "data": {
+        "engine": "three.js r186",
+        "renderProfile": "gpu",
+        "renderState": "ready",
+        "cameraMode": "idle",
+        "orbitEnabled": "false",
+        "preparation": "ready",
+        "videoState": "{\"active\":false,\"disposed\":false,\"ready\":[true,true],\"playing\":[false,false],\"state\":[\"paused\",\"paused\"],\"errors\":[null,null]}",
+        "lightVideoState": "{\"active\":true,\"ready\":true,\"playing\":false,\"attached\":true,\"state\":\"paused\",\"error\":null}",
+        "monitorHover": "-1",
+        "journeyStep": "18",
+        "focusX": "0.0000",
+        "focusY": "0.0000",
+        "orbitYaw": "0.0000",
+        "renderProgress": "0.760000",
+        "pointerStrength": "0.0000",
+        "cameraY": "-43.7369",
+        "targetY": "-43.6639",
+        "modelY": "-43.6639",
+        "viewAzimuth": "6.8774",
+        "structureYaw": "12.5664",
+        "ringRoll": "0.0000",
+        "chainPhase": "7.600000",
+        "chamberY": "-40.4000",
+        "frameMs": "16.7",
+        "drawCalls": "125",
+        "quality": "1.00",
+        "geometries": "211",
+        "textures": "33",
+        "programs": "96",
+        "renderFrame": "2730"
+      },
+      "clock": 45999.99999999903,
+      "videos": [
+        {
+          "src": "http://127.0.0.1:4173/media/light-projection.mp4",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        },
+        {
+          "src": "http://127.0.0.1:4173/media/chrome-current.webm",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        },
+        {
+          "src": "http://127.0.0.1:4173/media/aurora-bloom.webm",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        }
+      ],
+      "version": "after",
+      "bytes": 331272,
+      "sha256": "ec349f985431a96f2b40970907b0e3b7f9a26601d12a0ce10dff16e5f4d5f922",
+      "capturedAt": "2026-09-22T06:40:29.063Z"
+    },
+    {
+      "p": 0.89,
+      "file": "after/scroll-890.jpg",
+      "data": {
+        "engine": "three.js r186",
+        "renderProfile": "gpu",
+        "renderState": "ready",
+        "cameraMode": "idle",
+        "orbitEnabled": "false",
+        "preparation": "ready",
+        "videoState": "{\"active\":false,\"disposed\":false,\"ready\":[true,true],\"playing\":[false,false],\"state\":[\"paused\",\"paused\"],\"errors\":[null,null]}",
+        "lightVideoState": "{\"active\":true,\"ready\":true,\"playing\":false,\"attached\":true,\"state\":\"paused\",\"error\":null}",
+        "monitorHover": "-1",
+        "journeyStep": "21",
+        "focusX": "0.0000",
+        "focusY": "0.0000",
+        "orbitYaw": "0.0000",
+        "renderProgress": "0.890000",
+        "pointerStrength": "0.0000",
+        "cameraY": "-51.3107",
+        "targetY": "-52.1095",
+        "modelY": "-52.1095",
+        "viewAzimuth": "7.0283",
+        "structureYaw": "12.5664",
+        "ringRoll": "0.0000",
+        "chainPhase": "8.900000",
+        "chamberY": "-40.4000",
+        "frameMs": "16.7",
+        "drawCalls": "49",
+        "quality": "1.00",
+        "geometries": "211",
+        "textures": "33",
+        "programs": "96",
+        "renderFrame": "3000"
+      },
+      "clock": 50499.99999999838,
+      "videos": [
+        {
+          "src": "http://127.0.0.1:4173/media/light-projection.mp4",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        },
+        {
+          "src": "http://127.0.0.1:4173/media/chrome-current.webm",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        },
+        {
+          "src": "http://127.0.0.1:4173/media/aurora-bloom.webm",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        }
+      ],
+      "version": "after",
+      "bytes": 294641,
+      "sha256": "9fec4cfa3234282c3622eaf988c624d60c5fc8733ee62694d7de879ca5990774",
+      "capturedAt": "2026-09-22T06:40:33.621Z"
+    },
+    {
+      "p": 0.915,
+      "file": "after/scroll-915.jpg",
+      "data": {
+        "engine": "three.js r186",
+        "renderProfile": "gpu",
+        "renderState": "ready",
+        "cameraMode": "idle",
+        "orbitEnabled": "false",
+        "preparation": "ready",
+        "videoState": "{\"active\":false,\"disposed\":false,\"ready\":[true,true],\"playing\":[false,false],\"state\":[\"paused\",\"paused\"],\"errors\":[null,null]}",
+        "lightVideoState": "{\"active\":true,\"ready\":true,\"playing\":false,\"attached\":true,\"state\":\"paused\",\"error\":null}",
+        "monitorHover": "-1",
+        "journeyStep": "22",
+        "focusX": "0.0000",
+        "focusY": "-0.0000",
+        "orbitYaw": "0.0000",
+        "renderProgress": "0.915033",
+        "pointerStrength": "0.0000",
+        "cameraY": "-53.0656",
+        "targetY": "-54.1597",
+        "modelY": "-54.1597",
+        "viewAzimuth": "7.7695",
+        "structureYaw": "12.5664",
+        "ringRoll": "0.0000",
+        "chainPhase": "9.150327",
+        "chamberY": "-40.4000",
+        "frameMs": "16.7",
+        "drawCalls": "44",
+        "quality": "1.00",
+        "geometries": "211",
+        "textures": "33",
+        "programs": "96",
+        "renderFrame": "3270"
+      },
+      "clock": 54999.99999999772,
+      "videos": [
+        {
+          "src": "http://127.0.0.1:4173/media/light-projection.mp4",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        },
+        {
+          "src": "http://127.0.0.1:4173/media/chrome-current.webm",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        },
+        {
+          "src": "http://127.0.0.1:4173/media/aurora-bloom.webm",
+          "time": 2,
+          "ready": 4,
+          "paused": true
+        }
+      ],
+      "version": "after",
+      "bytes": 333403,
+      "sha256": "340968aaf562c8c72b332b8469518ce62ee0b43c0e38133cae431f24a8121e83",
+      "capturedAt": "2026-09-22T06:40:38.183Z"
+    }
+  ],
+  "beforeInput": {
+    "url": "http://127.0.0.1:4175/",
+    "viewport": [
+      1440,
+      900
+    ],
+    "dpr": 1,
+    "input": "Identical scroll positions and 270 controlled 60Hz clock increments per position; video paused/seeked to 2 seconds; no pointer input. Actual production rendering, not performance evidence.",
+    "errors": []
+  },
+  "afterInput": {
+    "url": "http://127.0.0.1:4173/",
+    "viewport": [
+      1440,
+      900
+    ],
+    "dpr": 1,
+    "input": "Identical scroll positions and 270 controlled 60Hz clock increments per position; video paused/seeked to 2 seconds; no pointer input. Actual production rendering, not performance evidence.",
+    "errors": []
+  }
+}

@@ -875,7 +875,7 @@ export default function Scene({ reducedMotion, active, onReady, onSelectProject 
           activeRenderer.info.reset()
           // All glass screens share one bounded background capture. Refresh it
           // at half the display cadence; paused/reduced-motion frames stay exact.
-          if (renderedFrames % 2 === 0 || reducedMotion) worlds.capture(activeRenderer, camera)
+          worlds.capture(activeRenderer, camera, renderedFrames % 2 === 0 || reducedMotion)
           if (glow && quality > .65 && innerWidth >= 768) glow.render(state.energy)
           else activeRenderer.render(scene, camera)
           renderedFrames++

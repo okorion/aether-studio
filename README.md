@@ -1,5 +1,7 @@
 # AETHER STUDIO
 
+[트러블슈팅 6편·전체 이슈 색인](docs/troubleshooting/index.md) · [다음 3D 프로젝트 구현·검증 가이드](docs/troubleshooting/runbook.md) · [이미지 내장 문서·Velog 원고 보관 안내](docs/troubleshooting/README.md)
+
 [사이트 바로 보기](https://aether-studio-nu.vercel.app/) · [장면 용어표](docs/scene-glossary.md) · [리액터 챔버·새 영상 비교](docs/chamber-art-direction.md) · [첫 모니터·겹침 성능](docs/monitor-transition-performance.md) · [장면 차폐·영상 조명](docs/scene-occlusion-light.md) · [입자 마우스 반응](docs/particle-pointer-flow.md) · [공간 전환·빛](docs/spatial-transitions.md) · [시각 변천: 8개 버전·48장](docs/visual-history.md) · [초기 전환 성능](docs/transition-performance.md) · [메타데이터](docs/metadata.md) · [다음 개선](docs/next-improvements.md)
 
 [Active Theory](https://activetheory.net/)의 중앙 오브젝트, 연속된 공간 이동, 금속 반사와 움직이는 프로젝트 화면을 참고한 자체 3D 경험입니다. React + TypeScript + Three.js + Vite로 개발했습니다.
@@ -87,8 +89,8 @@ npm run preview
 
 - 운영 주소: **https://aether-studio-nu.vercel.app/**
 - 호스팅: Vercel · Vite 정적 사이트 · `npm run build` → `dist/`
-- GitHub의 `okorion/aether-studio` 비공개 저장소와 연결되어 있으며, production 브랜치는 `main`입니다.
-- 소스 저장소는 비공개이고 배포 사이트는 공개 데모입니다. 별도의 서버·DB·환경변수는 필요하지 않습니다.
+- GitHub의 `okorion/aether-studio` 공개 저장소와 연결되어 있으며, production 브랜치는 `main`입니다.
+- 소스 저장소와 배포 데모는 공개되어 있습니다. 초기 비공개 배포 기록은 당시 이력으로 보존합니다. 별도의 서버·DB·환경변수는 필요하지 않습니다.
 
 저장소 접근 권한과 Vercel 프로젝트 권한이 있는 환경에서 수동 배포하려면:
 

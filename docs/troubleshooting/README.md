@@ -4,6 +4,8 @@
 
 1~6편은 PR #17, 7편은 PR #18의 기록이다. 이번 문체 개정에서도 기존 캡처와 측정 자료는 그대로 사용한다. 초판 릴리스는 보존하고 개정판을 별도로 만든다.
 
+문체 개정판은 [v2 릴리스](https://github.com/okorion/aether-studio/releases/tag/troubleshooting-2026-09-22-v2)에 보관했다. 이후 PR #20에서 바뀐 모니터 배치·입자·스케일 패널은 [후속 기록](../scene-reference-detail.md)에 있다. 현재 개발 안내는 [문서 색인](../README.md)에서 찾을 수 있다.
+
 ## 원본 위치
 
 | 경로 | 내용 |

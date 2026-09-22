@@ -1,78 +1,60 @@
-# AETHER STUDIO
+# Aether Studio
 
-[트러블슈팅 7편·전체 이슈 색인](docs/troubleshooting/index.md) · [다음 3D 프로젝트 구현·검증 가이드](docs/troubleshooting/runbook.md) · [이미지 내장 문서·Velog 원고 보관 안내](docs/troubleshooting/README.md)
+스크롤로 포레스트와 기계 장면을 탐색하는 인터랙티브 3D 웹사이트입니다. 본 컬럼을 감싸는 영상 모니터를 지나 리액터와 금속 스케일 패널로 내려가며, 마우스를 움직이면 입자와 표면이 반응합니다. React, TypeScript, Three.js, Vite로 만들었습니다.
 
-[사이트 바로 보기](https://aether-studio-nu.vercel.app/) · [장면 용어표](docs/scene-glossary.md) · [리액터 챔버·새 영상 비교](docs/chamber-art-direction.md) · [첫 모니터·겹침 성능](docs/monitor-transition-performance.md) · [장면 차폐·영상 조명](docs/scene-occlusion-light.md) · [입자 마우스 반응](docs/particle-pointer-flow.md) · [공간 전환·빛](docs/spatial-transitions.md) · [시각 변천: 8개 버전·48장](docs/visual-history.md) · [초기 전환 성능](docs/transition-performance.md) · [메타데이터](docs/metadata.md) · [다음 개선](docs/next-improvements.md)
+[사이트 열기](https://aether-studio-nu.vercel.app/) · [개발 문서](docs/README.md) · [트러블슈팅](docs/troubleshooting/index.md)
 
-[Active Theory](https://activetheory.net/)의 중앙 오브젝트, 연속된 공간 이동, 금속 반사와 움직이는 프로젝트 화면을 참고한 자체 3D 경험입니다. React + TypeScript + Three.js + Vite로 개발했습니다.
+![본 컬럼을 감싸는 영상 모니터와 입자](docs/screenshots/reference-detail/after/scroll-399.jpg)
 
-런타임에는 원본의 소스·로고·모델·영상·음악을 사용하지 않습니다. AETHER STUDIO 브랜드와 가상 프로젝트, 절차적 모델, 수식으로 제작한 모니터 MP4 두 편과 별도 조명 영상, 대체 영상 셰이더를 직접 작성했습니다. 원본 화면은 비교 문서의 검수 증거에만 사용합니다.
+실제 실행 화면입니다. 본 컬럼·모니터·리액터·스케일 패널을 수정한 [PR #20](https://github.com/okorion/aether-studio/pull/20)의 캡처를 사용했습니다.
 
-![최신 상단 포레스트와 O 심벌](docs/screenshots/chamber-art/after/scroll-000.jpg)
+## 둘러보기
 
-최근 변경은 각 공간의 3D를 유지하는 공통 화면 경계, 더 높고 적은 본 세그먼트, 모니터 방향 고정과 바깥쪽 호버 이동, 스케일 반사 재질, 포레스트에 한정한 섬광과 하단 리본 부착입니다. [13개 스크롤 지점의 전후 26장·검증 기록](docs/scene-continuity.md)에서 비교할 수 있습니다. 리액터의 작은 덮개와 접점은 유지하고, 전환을 가리던 넓은 천장은 렌더하지 않습니다. [이전 챔버 변경](docs/chamber-art-direction.md) · [아이콘 전후 비교](docs/metadata.md) · [장면 용어표](docs/scene-glossary.md)
+스크롤을 내리면 상단 포레스트의 링에서 본 컬럼, 리액터 챔버, 스케일 패널, 하단 포레스트로 이어집니다. 위로 스크롤하면 같은 경로를 돌아갑니다.
 
-초기 구현부터 PR #11까지 대표 소스 8개를 다시 빌드하고, 같은 뷰포트의 0·20·40·60·80·98% 스크롤 위치에서 촬영했습니다. [시각 변천 기록](docs/visual-history.md)에서 48장의 실제 화면과 기준 커밋·캡처 조건을 함께 비교할 수 있습니다. 이후의 바닥·빛·상부 수관 변경은 [최신 공간 전환 비교](docs/spatial-transitions.md)에 정리했습니다.
+- **마우스 이동:** 포레스트의 입자와 잎, 리액터 O, 스케일 패널이 반응합니다. 포인터 스트릭과 잔광은 상단·하단 포레스트에만 나타납니다.
+- **빈 공간 드래그:** 링과 소개 구간에서 시점을 돌립니다. 놓으면 선택한 시점을 유지하고, 더블클릭하면 기본 시점으로 돌아갑니다. 본 컬럼부터 스케일 패널까지는 스크롤로 시점을 제어합니다.
+- **모니터 클릭:** 해당 프로젝트의 상세 화면을 엽니다. Work에서도 프로젝트를 선택할 수 있습니다. Escape로 상세 화면을 닫습니다.
+- **모션·사운드:** 화면의 모션 버튼으로 애니메이션을 멈추거나 재개합니다. 사운드는 직접 켰을 때만 재생됩니다. 운영체제의 모션 축소 설정도 따릅니다.
 
-## 스크롤로 내려가는 3D 여정
-
-1800svh 홈에 24개의 카메라 키프레임을 배치했습니다. 상단 포레스트(Forest)의 링과 리본 트레일 → 평면 소개 위의 큰 3D O → 본 컬럼(Bone Column)과 나선형 영상 모니터 → 리액터 챔버 → 바닥 아래 금속 스케일 패널 → 하단 포레스트와 링으로 이어집니다. 중심은 총 61.5 월드 단위를 내려가고 카메라가 이를 따라가며, 주변 공간은 위로 지나갑니다. 포레스트와 모니터는 사선 경계로 다음 장면을 드러내며, 역스크롤하면 같은 경로를 되짚습니다.
-
-- 마우스 이동: 작은 섬광의 선두 광점이 입력을 멈춘 뒤에도 전진하고, 곡선 궤적이 약 2.35초에 걸쳐 사라집니다. 포레스트의 미세 입자와 잎은 이동 방향의 흐름을 따라 움직였다가 복귀하며, 소개·스케일 패널 경계에서도 보이는 포레스트는 계속 반응합니다. 스케일 패널은 굴곡과 반사광으로 반응합니다. 리액터 O는 원형 빈 공간을 만들던 밀침을 완화하고 기존 스크롤 위치·형태를 유지합니다. 버튼 위·화면 이탈·모션 축소에서는 입력 효과를 초기화합니다. [입자 반응과 구간별 검증](docs/particle-pointer-flow.md)
-- 초반·소개 로고·마지막 링에서 빈 공간 드래그: 중앙 오브젝트를 축으로 회전하고 놓은 뒤 선택한 시점을 유지합니다. 위에서 아래로 끌면 상단이 앞으로, 아래에서 위로 끌면 바닥이 앞으로 오도록 세로 방향을 적용했습니다. 더블클릭하면 기본 시점으로 복귀합니다.
-- 본 컬럼·모니터·리액터·스케일 패널 구간: 드래그 궤도를 잠그고 스크롤로 카메라를 제어합니다. 스케일 패널이 사라지는 전환 끝까지 마우스 이동·드래그·더블클릭이 카메라를 바꾸지 않습니다. [잠금 경계 검증](docs/mechanical-camera.md)
-- 본 컬럼·체인: 두 줄의 체인이 본 컬럼 앞뒤를 감으며 스크롤 위치에 따라 움직입니다. 입력이 멎으면 정착 뒤 멈추고, 역스크롤하면 반대 방향으로 돌아갑니다. 입자는 고정 역할과 스크롤 이동 역할로 나뉘며 하나의 흐름이 리액터 O로 모입니다. 모니터 영상과 조명은 계속 움직입니다.
-- 포레스트는 고정된 월드 공간의 줄기·가지·잎·미세 입자로 구성됩니다. 상·하부에서 링 중심으로 드래그하면 포레스트의 원근과 가림도 함께 바뀝니다.
-- 리액터와 스케일 패널 사이의 22×26 바닥은 위쪽에서 물결과 반사를, 아래쪽에서 천장 빛 무늬를 보여줍니다. 데스크톱은 기존 512×512 반사 하나를 재사용합니다. 스케일 패널 다음에는 전체 잎 예산의 24%를 배치한 고정된 상부 가지·덩굴·고사리가 먼저 드러납니다. [세 경계의 전후 화면](docs/spatial-transitions.md)
-- 포레스트와 리액터의 청록·금·보라빛은 월드 위치마다 다른 느린 위상으로 변합니다. 검은 여백과 청록·먹보라 반사가 흐르는 자체 사틴 영상 40,498바이트 조명 루프를 하나의 디코더로 공유하고, 로딩·디코딩 실패 시 절차적 조명을 유지합니다. 물에는 영상을 직접 사용하지 않습니다. [새 조명 영상과 재생·정지 동작](docs/light-projection-media.md)
-- 본 컬럼은 비대칭 세그먼트·연결 아치·돌출면과 교차 연결 체인으로 구성했습니다. 얇은 유리 모니터 6장이 아래에서 들어와 전경을 거쳐 위로 지나갑니다. 영상 두 편을 공유해 재생하고, GPU 데스크톱에서는 실제 본 컬럼과 입자를 화면 안에 굴절시킵니다. VP8 WebM을 지원하면 사용하고 미지원이면 MP4를 선택합니다.
-- 모니터 위 마우스: 해당 판이 조금 들리고 기울며 가장자리 빛과 굴절이 반응합니다. 포인터를 멈춰도 호버를 유지하고, UI 위에서는 해제합니다. 판을 클릭하면 해당 프로젝트 상세가 열립니다. 드래그·스크롤 중에는 상세 열기를 취소합니다.
-- 마지막 스케일 패널은 위층에 남고 링이 아래로 내려갑니다. 링 안의 대문자 O는 상하 반전되지 않습니다.
-- 모션 정지·재개: 선택한 시점과 애니메이션 위상, 영상 재생 위치를 보존합니다. OS reduced motion도 지원하며 처음부터 모션 축소 상태이면 영상을 내려받지 않습니다.
-- Work / Contact와 dialog, 숨긴 탭에서는 배경 렌더링과 영상을 멈춥니다. 홈의 모니터 구간으로 돌아오면 같은 영상의 재생을 이어갑니다. 모바일은 기본 터치 스크롤을 유지하고 텍스트는 드래그 선택되지 않습니다.
-
-| 포레스트·소개·본 컬럼 전환 | 리액터·바닥·스케일 패널·포레스트 전환 |
+| 리액터 | 스케일 패널 |
 | --- | --- |
-| ![실제 휠 연속 캡처](docs/screenshots/living/entry-wheel.gif) | ![실제 하강 연속 캡처](docs/screenshots/living/lower-wheel.gif) |
+| ![장치 안에 모인 O 입자](docs/screenshots/reference-detail/after/scroll-700.jpg) | ![원형 파동이 지나는 금속 스케일 패널](docs/screenshots/reference-detail/after/scroll-850.jpg) |
 
-위 GIF는 PR #9에서 실제 wheel 입력 중 캡처한 화면을 일정 간격으로 재생한 요약입니다. 실시간 프레임률이나 입력 속도 측정 영상은 아닙니다. PR #10의 성능 수정 결과는 [전환 측정](docs/transition-performance.md)을 참고하세요.
+## 로컬 실행
 
-| 본 컬럼과 움직이는 모니터 · 40% | 리액터의 단일 O 입자 · 72% |
-| --- | --- |
-| ![PR #10 본 컬럼과 실제 영상 모니터](docs/screenshots/history/pr10/scroll-040.jpg) | ![PR #10 리액터와 O 입자](docs/screenshots/transitions/device-base.jpg) |
-
-| 리액터 챔버 바닥 아래 금속 스케일 패널 · 80% | 하부 링 · 98% |
-| --- | --- |
-| ![PR #10 리액터 챔버 바닥과 금속 스케일 패널](docs/screenshots/history/pr10/scroll-080.jpg) | ![PR #10 하부 링](docs/screenshots/history/pr10/scroll-098.jpg) |
-
-위 정지 화면은 PR #10 당시 `da14095`의 production 빌드에서 촬영한 1440×900 GPU 캡처로 보존합니다. 최신 바닥·빛·상부 수관과의 전후 비교는 [공간 전환 문서](docs/spatial-transitions.md)를 참고하세요. [모니터 문서](docs/monitor-cinema.md)에 원본 입력 관찰, 실제 MP4와 굴절의 합성, 호버·클릭과 재생 수명을 정리했습니다. 모바일은 공유 배경 캡처를 생략하고 영상과 유리 표면을 표시합니다. 시각적 유사도를 백분율로 측정하거나 인증하지 않습니다. [월드 공간 포레스트·본 컬럼·리액터](docs/living-worlds.md), [본 컬럼 개선](docs/spine-monitors.md), [이전 5개 지점 비교](docs/visual-comparison.md), [24단계 비교](docs/continuous-journey.md)는 각 단계의 기록입니다.
-
-![본 컬럼 구간 실제 스크롤](docs/screenshots/spine/scroll.gif)
-
-<a id="화면-미리보기"></a>
-
-## 콘텐츠 화면 · 초기 배포 기록
-
-아래 이미지는 초기 배포에서 캡처한 콘텐츠 화면입니다. 모바일 홈의 최신 스크롤 구성은 위 24단계 여정이며 아래 홈 이미지는 초기 버전입니다. 데스크톱은 1440×900, 모바일은 390×844입니다.
-
-| 프로젝트 목록 | 프로젝트 상세 |
-| --- | --- |
-| ![Work](docs/screenshots/production/desktop-work.png) | ![프로젝트 상세](docs/screenshots/production/desktop-project.png) |
-
-| Contact | 모바일 홈 |
-| --- | --- |
-| ![Contact](docs/screenshots/production/desktop-contact.png) | <img src="docs/screenshots/production/mobile-home.png" alt="모바일 홈" width="240" /> |
-
-## 실행
-
-Node.js 22.13 이상이 필요합니다. CI에서는 Node.js 24를 사용합니다.
+Node.js 22.13 이상이 필요합니다. CI는 Node.js 24를 사용합니다.
 
 ```sh
+git clone https://github.com/okorion/aether-studio.git
+cd aether-studio
 npm ci
 npm run dev
 ```
 
-개발 서버: `http://127.0.0.1:5173`
+터미널에 표시된 개발 서버 주소를 엽니다. 기본 주소는 `http://127.0.0.1:5173`입니다. 서버·데이터베이스·API 키는 필요하지 않습니다.
+
+```sh
+npm run build
+npm run preview
+```
+
+빌드 결과는 `dist/`에 생성됩니다. 실행 옵션과 배포 설정은 [개발 안내](docs/development.md)에 있습니다.
+
+## 코드 수정
+
+| 바꿀 내용 | 시작할 파일 |
+| --- | --- |
+| 소개·연락처와 화면 구성 | [App.tsx](src/App.tsx), [styles.css](src/styles.css) |
+| 프로젝트 내용 | [projects.ts](src/projects.ts) |
+| 스크롤 경로·카메라 | [Journey.ts](src/Journey.ts), [Scene.tsx](src/Scene.tsx) |
+| 본 컬럼·체인·모니터 | [SceneSpine.ts](src/SceneSpine.ts), [SceneMonitors.ts](src/SceneMonitors.ts) |
+| 입자·포인터 반응 | [Atmosphere.ts](src/Atmosphere.ts), [SceneInteraction.ts](src/SceneInteraction.ts) |
+| 리액터·스케일 패널 | [SceneWorlds.ts](src/SceneWorlds.ts), [SceneScaleSurface.ts](src/SceneScaleSurface.ts) |
+
+모듈 간 연결과 장면 수명은 [구조 문서](docs/architecture.md)에 정리했습니다. 영상과 아이콘을 바꿀 때는 [자산 문서](docs/README.md#자산과-메타데이터)도 확인하세요.
+
+## 검사
 
 ```sh
 npm run lint
@@ -80,136 +62,18 @@ npm run typecheck
 npm run build
 npx playwright install chromium
 npm test
-npm run preview
 ```
 
-`npm run build` 결과인 `dist/`를 정적 호스팅에 사용할 수 있습니다.
+Playwright는 탐색·상세 화면·스크롤 왕복·영상 재생과 실패 처리·WebGL 대체 화면을 검사합니다. 실제 셰이더의 픽셀과 모델 행렬을 읽는 검사도 포함합니다. 실행 환경과 최근 결과는 [검증 안내](docs/testing.md)에 있습니다.
 
-## 배포
+모바일 화면은 Chromium 에뮬레이션으로 확인했습니다. 실제 Safari/iOS와 저사양 기기의 장시간 실행은 아직 검증하지 않았습니다. WebGL을 사용할 수 없으면 CSS 배경과 본문·탐색을 유지합니다.
 
-- 운영 주소: **https://aether-studio-nu.vercel.app/**
-- 호스팅: Vercel · Vite 정적 사이트 · `npm run build` → `dist/`
-- GitHub의 `okorion/aether-studio` 공개 저장소와 연결되어 있으며, production 브랜치는 `main`입니다.
-- 소스 저장소와 배포 데모는 공개되어 있습니다. 초기 비공개 배포 기록은 당시 이력으로 보존합니다. 별도의 서버·DB·환경변수는 필요하지 않습니다.
+## 참고와 자산
 
-저장소 접근 권한과 Vercel 프로젝트 권한이 있는 환경에서 수동 배포하려면:
+[Active Theory](https://activetheory.net/)의 공간 구성과 인터랙션을 참고했습니다. 제휴 프로젝트는 아니며, 해당 사이트의 소스·로고·모델·영상을 앱 자산으로 사용하지 않습니다. 이 저장소의 모델과 영상은 코드와 생성 스크립트로 만듭니다. 비교 문서의 원본 캡처는 관찰 근거입니다.
 
-```sh
-npx vercel link --project aether-studio --scope okorions-projects
-npx vercel deploy --prod --scope okorions-projects
-```
+Aether Studio와 프로젝트는 가상 콘셉트입니다. `hello@aether.example`은 예시 주소이며 Contact는 이메일 앱을 엽니다. 실제 문의를 받으려면 연락처를 교체해야 합니다.
 
-`.vercel/`과 `.env*`는 Git에서 제외합니다. Git 연결에 따른 Vercel 배포와 GitHub Actions 검증은 독립적으로 실행되므로 CI 통과가 배포의 필수 게이트로 설정된 상태는 아닙니다.
+구현과 문서 작성에는 AI를 사용했습니다. 코드·리뷰·실행 결과를 바탕으로 정리한 수정 과정은 트러블슈팅 문서에 남겼습니다.
 
-## 구현 범위
-
-- 금속 링과 대문자 O 심벌, 본 컬럼·체인·리액터·금속 스케일 패널, 입자 군집을 실시간 렌더링
-- 하강하는 중심을 따라가는 카메라와 24개 기준점의 연속 native scroll
-- GPU 유동 입자 최대 42,000개, 구간별 포레스트 최대 60,000개, 인스턴싱 금속 구조
-- 유리 모니터 6장이 공유하는 영상 두 편·VideoTexture 두 개, VP8 우선·MP4 호환 선택, 지연 로드와 재생 실패 시 절차적 대체 표현
-- 데스크톱 HDR bloom·512px 평면 반사, 프레임 시간 기반 적응형 DPR과 후처리 축소
-- 첫 표시 전 두 출력 경로의 셰이더·정적 텍스처·렌더 타깃 준비와 2px 시험 렌더, 중복 바닥 반사와 보이지 않는 전환 영역의 캡처 생략
-- Work / Contact / 홈 이동, 현재 챕터 표시
-- 프로젝트 4개 및 상세 dialog, 다음 프로젝트, Escape 닫기와 초점 복원
-- 사용자 조작으로 켜는 3가지 Web Audio 사운드스케이프
-- 모바일 레이아웃, 모션 정지, OS reduced-motion 지원
-- GPU가 없는 SwiftShader·llvmpipe 환경에서는 자동으로 입자·해상도·반사 계산을 줄이고 프레임 사이 입력 처리 시간을 확보
-- WebGL 미지원·컨텍스트 손실·3D 모듈 로딩 실패 시 CSS 배경과 탐색 유지
-- 숨긴 탭의 렌더링·소리·영상 정지, 콘텐츠 화면의 연속 렌더링 중지, GPU·미디어 리소스와 이벤트 정리
-- 자체 호스팅 글꼴. 런타임 외부 API·분석 도구·원격 미디어 요청 없음
-
-## 전환과 포인터 반응
-
-PR #15에서는 영상 초기화 경로를 분리한 뒤 같은 640×400·24fps의 VP8을 적용했습니다. 통제된 첫 진입은 기존 99.9/83.3ms에서 독립 3회 모두 최대 **16.8ms**, 33.5ms 초과 **0회**였습니다. 닫힌 경계의 모니터·리액터와 화면에 기여하지 않는 굴절·반사 캡처를 생략해 전체 렌더당 평균 GL 호출도 약 4% 줄었습니다. 겹침 최대 217 draw는 남고 GPU 시간은 일관되게 감소하지 않았습니다. [원인 분리·최종 측정·전후 24장·한계](docs/monitor-transition-performance.md)
-
-리액터와 스케일 패널은 서로 다른 높이에 고정되어 바닥이 두 공간을 구분합니다. 평면 문구도 3D 안에서 합성하므로 링과 포레스트의 가림 순서를 따릅니다. 리액터의 단일 O 입자는 기존 스크롤 위상과 형태를 유지하면서 포인터 주변에서만 변형되고 복귀합니다. 상·하부의 세로 드래그 방향도 사용자가 끄는 쪽의 면이 앞으로 오는 방식으로 통일했습니다.
-
-PR #10에서 첫 전환 때 멈추던 원인은 새 셰이더 변형과 첫 GPU 자원 사용이 몰리는 데 있었습니다. 광원 개수를 고정하고, 선형·직접 출력 경로를 비동기 사전 컴파일한 뒤 2×2 타깃에서 최초 사용을 준비합니다. 정적 텍스처·굴절·반사 타깃도 미리 올리며 모니터 캡처가 바닥 반사를 재실행하는 중복 패스를 제거했습니다. 모니터 영상은 모니터 진입 때, 별도 조명 영상은 홈의 포레스트·지하 구간에서 지연 로드합니다.
-
-PR #10의 통제된 최초 하강 측정에서 최장 RAF 간격은 **2799.9→66.6ms**, 전환 중 셰이더 링크는 **33→0회**로 줄었고 자동 품질은 1.00을 유지했습니다. 당시 첫 모니터 진입의 66.6ms 한 프레임은 남았습니다. 이 수치는 특정 Chromium·D3D11 장비의 콜백 간격이며 GPU 실행 시간이나 모든 기기의 FPS, 이후 변경의 성능을 뜻하지 않습니다. [원인·수정·전후 수치·측정 한계](docs/transition-performance.md)
-
-[리액터 입력·카메라 전후 비교](docs/transition-input.md)에 동일한 마우스 입력의 실제 화면과 회귀 검증을 정리했습니다. [이전 전환 검증](docs/layered-transitions.md)의 전후 캡처와 실제 휠 입력 기록도 보존합니다.
-
-## 아이콘과 공유·검색 정보
-
-기울어진 티타늄 O 심벌의 SVG·PNG·ICO 파비콘과 Apple·maskable 홈 화면 아이콘을 사용합니다. 작은 크기에서도 형태가 읽히도록 넓은 획과 내부 여백을 두었고, 아이콘 URL의 `?v=2`로 캐시를 갱신합니다. 기존 포레스트 캡처 기반 1200×630 OG 이미지는 그대로 유지합니다. canonical·Open Graph·Twitter·WebSite JSON-LD는 운영 URL로 통일했고 robots·sitemap·manifest도 설정했습니다. 확인되지 않은 사업자 정보나 소셜 계정은 넣지 않았습니다. [파일 목록·전후 비교·재생성·검증](docs/metadata.md)
-
-## 실제 영상과 유리 모니터
-
-크롬 유체와 오로라를 수식으로 직접 제작한 10초 루프 영상 두 편을 사용합니다. 각각 640×400·24fps·무음이며, VP8 WebM 합계는 **2,070,979바이트**, 호환용 H.264 MP4 합계는 2,101,778바이트입니다. 브라우저 지원에 따라 형식 하나만 내려받습니다. 원본 대비 SSIM은 크롬 0.977189·오로라 0.984363이며 재인코딩은 무손실이 아닙니다. `public/media/`에서 Vercel CDN으로 제공해 별도 클라우드나 API 키가 필요하지 않습니다. [영상 출처·재생성·검증](docs/media-sources.md)
-
-최초로 홈 모니터 구간이 열릴 때만 영상 소스를 연결합니다. WebM 미지원이면 MP4를 선택하며, 선택한 영상의 다운로드·디코딩 실패나 자동 재생 차단은 절차적 영상 셰이더로 대체합니다. 실패 후 다른 형식을 연속 요청하거나 프레임마다 재시도하지 않습니다. 포스터는 런타임에 요청하지 않습니다. 모션 정지와 화면 전환은 이미 받은 영상과 재생 위치를 보존합니다.
-
-![실제 모니터 영상 재생 요약](docs/screenshots/monitors/film.gif)
-
-실제 화면 캡처를 이어 붙인 요약이며 실시간 FPS나 24fps 재생 성능을 증명하는 자료는 아닙니다. [전후·호버·프로젝트 열기 비교](docs/monitor-cinema.md)
-
-## 콘텐츠 교체
-
-| 대상 | 위치 |
-| --- | --- |
-| 브랜드·소개·연락처 | `src/App.tsx`, `index.html`, `public/favicon.svg` |
-| 공유·검색·아이콘 메타데이터 | `index.html`, `public/site.webmanifest`, `scripts/generate-metadata.mjs`, [설정 문서](docs/metadata.md) |
-| 프로젝트 내용 | `src/projects.ts` |
-| 3D 장면·적응형 해상도 | `src/Scene.tsx` |
-| 셰이더·정적 텍스처·첫 GPU 사용 준비 | `src/ScenePreparation.ts` |
-| 전환 경계·투영 범위에 따른 캡처 생략 | `src/SceneVisibility.ts` |
-| 24단계 카메라·장면 타임라인 | `src/Journey.ts` |
-| HDR bloom | `src/SceneGlow.ts` |
-| 구체 입자·흐름 | `src/Atmosphere.ts` |
-| 은빛 곡선 흔적·구간별 카메라 입력 | `src/SceneInteraction.ts` |
-| 리액터·독립 스케일 패널 층·반사 바닥·국소 변위 | `src/SceneWorlds.ts` |
-| 얕은 물과 기존 평면 반사 합성 | `src/SceneWater.ts` |
-| 포레스트 전경·중경·상부 수관 geometry와 포인터 조명 | `src/ForestGeometry.ts`, `src/SceneForest.ts` |
-| 월드 좌표 조명과 공유 조명 영상 수명 | `src/SceneLighting.ts`, `src/SceneLightVideo.ts`, [공간 전환 문서](docs/spatial-transitions.md) |
-| 평면 문구·사선 전환 경계 | `src/SceneLayers.ts` |
-| 본 컬럼·관절·교차 연결 체인 | `src/SceneSpine.ts` |
-| 유리 모니터·공유 굴절·호버·영상 합성 | `src/SceneMonitors.ts` |
-| 영상 지연 로드·재생·정지·실패·해제 | `src/SceneVideo.ts` |
-| 자체 MP4·VP8·포스터와 생성 스크립트 | `public/media/`, `scripts/generate-media.py`, `scripts/generate-monitor-webm.py`, [자산 문서](docs/media-sources.md) |
-| 프로젝트 비주얼 | `src/ProjectArt.tsx`, `src/styles.css` |
-| 합성 사운드 | `src/audio.ts` |
-
-`hello@aether.example`은 예약된 예시 도메인입니다. 현재 배포는 콘셉트 데모이며 실제 문의를 받을 때는 연락처를 교체해야 합니다. 모든 프로젝트는 가상 콘셉트이며 실제 고객 실적을 의미하지 않습니다. Contact 링크는 이메일 앱을 열며, 서버 전송 기능은 없습니다.
-
-## 검증
-
-PR #15는 로컬 전체 **68개 테스트(4.4분)**와 lint·타입 검사·production build를 통과했습니다. 영상 형식 선택·재생 수명·실패 대체 표현, 캡처 재진입·반사 경로를 검증하고 같은 영상 시점의 전후 24장을 보관했습니다. 독립 첫 진입 3회와 전체 왕복 2회는 모두 최장 16.8ms, 품질 1.00이었습니다. GitHub CI·배포와 실제 Safari/iOS 기기 검증은 별도입니다. [최종 증거와 측정 한계](docs/monitor-transition-performance.md)
-
-PR #13에서는 받침 접지, 지하층 천장 차폐, 수렴 입자와 마지막 링의 화면 경계, 영상 조명 변화를 검증했습니다. 로컬 64개 테스트와 GitHub의 데스크톱·모바일·인터랙션 CI가 통과했으며, 같은 스크롤 위치의 전후 12쌍과 조명 변화·모바일 화면을 보관했습니다. 당시 프레임 시간 p95는 전후 16.8ms였고 첫 모니터 진입의 약 83ms 단발성 지연이 남았습니다. [차폐·영상 조명·역사 검증 기록](docs/scene-occlusion-light.md)
-
-입자 마우스 반응 변경은 총 62개 검사 항목과 lint·타입·build를 확인했습니다. 상·하부 끝과 전환 경계에서 포인터 조명 세기를 0으로 둔 픽셀 검사를 통해 실제 입자 이동·원복을 분리해 확인했으며, 입력 중 5개 지점의 최장 RAF 간격은 이전·수정본 모두 16.8ms였습니다. [최신 입자 반응·비교 조건·검증 한계](docs/particle-pointer-flow.md)
-
-PR #11의 공간 전환·물·조명 변경은 로컬 전체 **55개 테스트**, lint·타입 검사·build를 통과했습니다. 실제 휠 왕복·모바일 6지점·GPU 복구도 확인했습니다. 당시 하부 전환은 최장 16.8ms였으며 최초 모니터 진입의 한 프레임 83.3ms가 남았습니다. [당시 캡처·측정·한계](docs/spatial-transitions.md#실제-검증과-성능)
-
-Playwright는 데스크톱 1440×900, 모바일 390×844, WebGL 비활성 환경을 사용합니다. 실제 wheel의 하강·역방향, 24개 렌더 상태의 높이·링 방향, 본 컬럼·체인·모니터의 정지·왕복, 중간 구간 카메라 잠금, 탐색·상세 보기·초점·사운드·hash/history와 로딩 실패를 검사합니다. DPR 1.5·2의 실제 WebGL 캡처·상태 복구·실패 시 대체 표현, 흔적의 픽셀 발생·잔존·소멸, 포인터 조명 초기화와 실제 스케일 패널 픽셀 반응·원복도 포함합니다. GitHub Actions에서는 lint·타입·빌드를 확인하고 production preview를 SwiftShader로 실행합니다.
-
-영상 재생·수명과 모니터 입력에 더해 실제 체인 감기·정지·복귀, 입자 역할 분리, 포레스트의 월드 좌표와 시차, 선두 광점의 픽셀 전진을 검사합니다. PR #10에서는 리액터 입자의 포인터 변형·정확한 복귀, 세로 드래그 방향, 장면 준비·취소·상태 복구, 메타데이터 정합성을 추가했습니다. **PR #10의 2026-09-22 검증에서 로컬 전체 47개 테스트가 재시도 없이 통과했고, lint·타입 검사·production build도 통과했습니다.**
-
-당시 별도 실제 GPU 검수에서는 여정 6개 지점, 상·하부의 양방향 세로 드래그, 리액터 포인터 반응과 복귀, MP4 두 편 재생, WebGL 컨텍스트 손실 후 같은 위치 복원을 확인했습니다. 모바일 390×844의 6개 지점도 캡처했으며 기록된 브라우저 오류는 없었습니다. PR #10의 프레임 간격·준비 시간은 [전환 성능 보고서](docs/transition-performance.md), 전체 시각 변화는 [8개 버전·48장 갤러리](docs/visual-history.md)에 정리했습니다.
-
-이전 36개 검사와 당시 성능 측정은 [PR #9 검증 기록](docs/living-worlds.md)에 그대로 남깁니다. 이후에는 실제 Safari/iOS·저사양 기기 검증, 겹침 구간의 최대 GPU 부하, 근접 표면 품질 순으로 개선하는 것을 권합니다. [다음 개선 3가지와 완료 기준](docs/next-improvements.md)
-
-[전환 검증 문서](docs/layered-transitions.md), [이전 동작·성능 기록](docs/dynamic-motion.md), [초기 검증 기록](docs/verification.md)도 보존합니다. WebGL과 영상 디코딩 성능은 기기와 브라우저에 따라 달라질 수 있습니다. 실제 Safari/iOS 기기 검증은 수행하지 않았습니다.
-
-## 주요 파일
-
-```text
-src/
-  App.tsx             페이지·내비게이션·상세 dialog
-  Scene.tsx           절차적 Three.js 장면과 수명 관리
-  ScenePreparation.ts 셰이더·텍스처·첫 GPU 사용 사전 준비
-  SceneVisibility.ts  전환 경계와 실제 카메라의 캡처 범위 판단
-  SceneMonitors.ts    유리 모니터·영상 합성·호버와 선택
-  SceneVideo.ts       공유 영상 두 편의 재생 수명 관리
-  SceneBoundary.tsx   선택적 3D 모듈 실패 격리
-  ProjectArt.tsx      독립 프로젝트 아트
-  projects.ts         교체 가능한 프로젝트 데이터
-  audio.ts            사용자 조작 기반 사운드 합성
-  styles.css          반응형 레이아웃·시각 스타일
-tests/
-  experience.spec.ts  핵심 사용자 흐름 회귀 테스트
-  video.spec.ts       실제 영상·모니터 입력·실패 처리 검사
-```
-
-서드파티 글꼴 라이선스는 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)에 안내합니다.
+글꼴과 패키지 라이선스 고지는 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)에 있습니다.

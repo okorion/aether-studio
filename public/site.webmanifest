@@ -2,7 +2,7 @@
   "id": "/",
   "name": "Aether Studio",
   "short_name": "Aether",
-  "description": "Explore luminous forests, sculptural forms and digital worlds in an interactive, real-time creative technology experience.",
+  "description": "An interactive 3D website with scroll-driven scenes, video screens and metal surfaces that respond to the pointer.",
   "lang": "en",
   "dir": "ltr",
   "start_url": "/",

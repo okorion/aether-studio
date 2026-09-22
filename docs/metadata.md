@@ -2,6 +2,8 @@
 
 운영 기준 주소는 **https://aether-studio-nu.vercel.app/** 이다. 쿼리 문자열로 방문하거나 Vercel 미리보기 주소에서 열어도 canonical, Open Graph, 구조화 데이터는 같은 운영 주소를 가리킨다. 공개 사이트의 영어 본문에 맞춰 언어는 `en`, 공유 카드 locale은 `en_US`로 맞췄다.
 
+현재 제목은 `Aether Studio — Interactive 3D website`다. 검색·Open Graph·Twitter·JSON-LD·manifest 설명은 스크롤 장면, 영상 모니터와 포인터에 반응하는 금속 표면을 설명한다. GitHub About의 description은 `Interactive 3D`로 고정한다. 구현 단계나 자원 개수를 소개 문구에 넣지 않는다.
+
 | 용도 | 파일·설정 | 내용 |
 | --- | --- | --- |
 | 검색·브라우저 제목 | `index.html` | 제목, 설명, 언어, canonical, robots, 색상 |

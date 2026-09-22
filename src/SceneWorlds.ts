@@ -271,8 +271,8 @@ export function createSceneWorlds(
     joints.setColorAt(i, color.setScalar(.74 + (i % 3) * .13))
   }
 
-  // Fine spine dust and scale highlights. Atmosphere owns the single descending
-  // particle field that gathers into the machine O; no duplicate reactor cloud.
+  // Scale highlights only. Atmosphere owns the single masked spine current
+  // that gathers into the machine O; no duplicate spine or reactor cloud.
   const pointCount = software ? 420 : mobile ? 1100 : 2300
   const seeds = new Float32Array(pointCount * 3)
   for (let i = 0; i < pointCount; i++) seeds.set([i / pointCount, (i * .61803398875) % 1, (i * .754877666) % 1], i * 3)
@@ -353,9 +353,6 @@ export function createSceneWorlds(
       }
     `,
   }))
-  const core = new THREE.Points(pointGeometry, coreMaterial)
-  core.frustumCulled = false
-  matter.add(core)
   const createLayerCore = (parent: THREE.Group, weights: THREE.Vector3, name: string,
     geometry = pointGeometry) => {
     const material = mat(coreMaterial.clone())
@@ -616,7 +613,6 @@ export function createSceneWorlds(
       const spineWeight = journey.spine * (1 - smooth(.61, .67, progress))
       const spineOffset = -12 * (1 - emergence) + 10 * smooth(.60, .67, progress)
       spineAssembly.group.position.y = spineOffset
-      core.position.y = spineOffset
       matter.visible = spineWeight > .001
       spineAssembly.update(progress, journey.core * spineWeight, emergence)
       const deviceWeight = smooth(.60, .69, progress) * (1 - smooth(.79, .88, progress))
@@ -635,10 +631,6 @@ export function createSceneWorlds(
       pointerAspect.value = pointer && Number.isFinite(pointer.aspect)
         ? Math.max(.25, Math.min(5, pointer.aspect)) : 1
       surfaceTime.value = time
-      coreMaterial.uniforms.uTime.value = time
-      coreMaterial.uniforms.uScroll.value = progress * 55
-      coreMaterial.uniforms.uWeights.value.set(1, 0, 0)
-      coreMaterial.uniforms.uOpacity.value = journey.core * spineWeight * .48
       scaleCore.material.uniforms.uTime.value = time
       scaleCore.material.uniforms.uOpacity.value = scaleWeight * .40
 

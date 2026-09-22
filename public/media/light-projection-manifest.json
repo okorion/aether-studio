@@ -1,6 +1,6 @@
 {
   "file": "light-projection.mp4",
-  "bytes": 218586,
+  "bytes": 40498,
   "codec": "H.264 Main",
   "pixel_format": "yuv420p",
   "width": 256,
@@ -11,33 +11,55 @@
   "audio": false,
   "faststart": true,
   "full_decode_verified": true,
-  "sha256": "36b9720b2d1cce38bde73f661b1cf71ae6212da4713d0dcc21c8cdde982f83bd",
-  "sources": [
-    {
-      "file": "chrome-current.mp4",
-      "sha256": "546f31b436c2c094a119ecd7b76be7f93661b4c2b9cf62f56decc61e211ed123",
-      "seconds": 10
-    },
-    {
-      "file": "aurora-bloom.mp4",
-      "sha256": "8e1f7e6839d5a91932e7a287865171d769c0f59015bc6dda2ed9b237e308f903",
-      "seconds": 10
-    }
+  "sha256": "0b8e42c3a247292b7e6513a6a922cb1260dfa7237f3ff2e0614f7272a0d6779d",
+  "sources": [],
+  "authorship": "Original periodic mathematical satin and low-frequency haze; no external footage or monitor-film sampling",
+  "palette": [
+    "graphite",
+    "deep teal",
+    "ink violet",
+    "restrained silver"
   ],
+  "sequence": "Continuous asymmetric folds and soft reflected light; one periodic 14-second phase; broad unlit space",
+  "protected_monitor_hashes_before": {
+    "chrome-current.mp4": "546f31b436c2c094a119ecd7b76be7f93661b4c2b9cf62f56decc61e211ed123",
+    "aurora-bloom.mp4": "8e1f7e6839d5a91932e7a287865171d769c0f59015bc6dda2ed9b237e308f903",
+    "chrome-current.webm": "28ddf17c64918408d44b12afedc928dc30114fbfe4d15efec5c9aae06471d768",
+    "aurora-bloom.webm": "b8a2c38dd2d25bd63843d5b5fc8349aa8e56843b9bbe194be004ac41cfbd3377",
+    "media-manifest.json": "332991ee242d200b31ab7c6d62fe479ba56bd467b56ab682cc7636475788c25b",
+    "monitor-webm-manifest.json": "bfeba6fd46fa0c0a77787f49ac02e0241d40dc3ee64289fd1d8d21994e99cc5f"
+  },
+  "protected_monitor_hashes_after": {
+    "chrome-current.mp4": "546f31b436c2c094a119ecd7b76be7f93661b4c2b9cf62f56decc61e211ed123",
+    "aurora-bloom.mp4": "8e1f7e6839d5a91932e7a287865171d769c0f59015bc6dda2ed9b237e308f903",
+    "chrome-current.webm": "28ddf17c64918408d44b12afedc928dc30114fbfe4d15efec5c9aae06471d768",
+    "aurora-bloom.webm": "b8a2c38dd2d25bd63843d5b5fc8349aa8e56843b9bbe194be004ac41cfbd3377",
+    "media-manifest.json": "332991ee242d200b31ab7c6d62fe479ba56bd467b56ab682cc7636475788c25b",
+    "monitor-webm-manifest.json": "bfeba6fd46fa0c0a77787f49ac02e0241d40dc3ee64289fd1d8d21994e99cc5f"
+  },
   "source_hashes_verified_before_and_after": true,
-  "authorship": "Derived only from Aether's mathematical chrome-current and aurora-bloom films; no external footage",
-  "sequence": "chrome 0-2s; cosine crossfade 2-5s; aurora 5-9s; cosine crossfade 9-12s; chrome 12-14s",
-  "source_period_seconds": 10,
-  "source_time_scale": 1.4,
+  "luma": {
+    "method": "Rec.709 weighted display RGB over all decoded pixels, range 0-255; not linear scene radiance",
+    "mean": 19.03191,
+    "p95": 49.5242,
+    "p99": 65.7078,
+    "maximum": 89.5622,
+    "maximum_allowed": 160,
+    "fraction_below_24": 0.700672,
+    "fraction_above_150": 0.0,
+    "frame_mean_min": 18.04792,
+    "frame_mean_max": 20.28342
+  },
   "loop_join": {
     "verified": true,
-    "method": "decoded last-to-first mean absolute RGB difference versus sampled adjacent frames",
-    "mean_abs_rgb": 16.39636,
-    "adjacent_p95_mean_abs_rgb": 26.04698,
-    "maximum_allowed_mean_abs_rgb": 42.97752
+    "method": "all decoded adjacent-frame RGB differences and last-to-first seam",
+    "mean_abs_rgb": 1.01357,
+    "adjacent_p95_mean_abs_rgb": 0.82772,
+    "maximum_allowed_mean_abs_rgb": 1.36574,
+    "procedural_first_and_period_endpoint_identical": true
   },
   "generator": "scripts/generate-light-video.py",
-  "crf": 28,
+  "crf": 22,
   "maxrate": "160k",
   "gop": 24,
   "ffmpeg_version": "ffmpeg version 7.1-essentials_build-www.gyan.dev Copyright (c) 2000-2024 the FFmpeg developers"

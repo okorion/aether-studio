@@ -38,6 +38,17 @@ OUT.mkdir(parents=True, exist_ok=True)
 for folder in ('images', 'portable/posts', 'velog'):
     (OUT / folder).mkdir(parents=True, exist_ok=True)
 md = MarkdownIt('commonmark', {'html': True}).enable(['table', 'strikethrough'])
+render_image = md.renderer.rules['image']
+
+
+def readable_image(tokens, index, options, env):
+    rendered = render_image(tokens, index, options, env)
+    if tokens[index].attrGet('class') == 'diagram-image':
+        return '<span class="diagram-frame" tabindex="0" role="group" aria-label="설명 그림, 좌우 스크롤">' + rendered + '</span>'
+    return rendered
+
+
+md.renderer.rules['image'] = readable_image
 repo_url = 'https://github.com/okorion/aether-studio'
 raw_url = 'https://raw.githubusercontent.com/okorion/aether-studio'
 images = {}
@@ -114,8 +125,11 @@ def render(src, number):
         while children:
             child = children.pop()
             if child.type == 'image':
-                child.attrSet('src', image_asset(src, child.attrGet('src'))['dataUri'])
+                asset = image_asset(src, child.attrGet('src'))
+                child.attrSet('src', asset['dataUri'])
                 child.attrSet('loading', 'lazy')
+                if asset['kind'] == 'diagram':
+                    child.attrSet('class', 'diagram-image')
             elif child.type == 'link_open':
                 url = child.attrGet('href')
                 target = local_path(src, url)
@@ -144,6 +158,9 @@ def rewrite_markdown(src, portable):
 
 
 css = '''
+.diagram-frame{display:block;overflow-x:auto}.diagram-frame:focus-visible{outline:2px solid #19776f;outline-offset:3px}
+@media(max-width:650px){.diagram-frame img{min-width:760px;max-width:none;width:100%}.diagram-frame::after{content:"← 그림 좌우 스크롤 →";display:block;font-size:12px;color:#53666c}}
+@media print{.diagram-frame{overflow:visible}.diagram-frame img{min-width:0;max-width:100%}.diagram-frame::after{display:none}}
 :root {color-scheme:light;--ink:#18262d;--muted:#53666c;--line:#dce5e1;--accent:#19776f}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:#fafbf9;color:var(--ink);font:17px/1.85 "Malgun Gothic","Apple SD Gothic Neo",sans-serif}
 header,main,footer{max-width:880px;margin:auto;padding:40px 36px}header{padding-top:64px;border-bottom:1px solid var(--line)}header>p{color:var(--muted);font-size:14px;margin:0}

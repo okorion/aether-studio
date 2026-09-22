@@ -1,0 +1,109 @@
+{
+  "generator": "scripts/generate-monitor-webm.py",
+  "codec": "VP8",
+  "container": "WebM",
+  "pixel_format": "yuv420p",
+  "width": 640,
+  "height": 400,
+  "fps": 24,
+  "seconds": 10,
+  "frames": 240,
+  "audio": false,
+  "ffmpeg_version": "imageioffmpeg-v7.1",
+  "encoding": {
+    "encoder": "libvpx",
+    "crf": 10,
+    "deadline": "good",
+    "cpu_used": 4,
+    "threads": 2,
+    "gop": 48,
+    "audio": false
+  },
+  "validation": {
+    "mode": "adopted_prevalidated_balanced",
+    "method": "Byte-identical adoption of the previously validated PR14 balanced candidates",
+    "metadata_and_ssim_origin": "Prior PR14 candidate inspection and full-film SSIM comparison against the authored MP4s",
+    "ssim_filter": "[0:v]settb=AVTB,setpts=N/24/TB[a];[1:v]settb=AVTB,setpts=N/24/TB[b];[a][b]ssim=shortest=1:repeatlast=0",
+    "encoding_or_decode_repeated_during_adoption": false,
+    "copied_bytes_sha256_verified": true,
+    "source_hashes_before": {
+      "chrome-current.mp4": "546f31b436c2c094a119ecd7b76be7f93661b4c2b9cf62f56decc61e211ed123",
+      "aurora-bloom.mp4": "8e1f7e6839d5a91932e7a287865171d769c0f59015bc6dda2ed9b237e308f903",
+      "media-manifest.json": "332991ee242d200b31ab7c6d62fe479ba56bd467b56ab682cc7636475788c25b",
+      "light-projection.mp4": "36b9720b2d1cce38bde73f661b1cf71ae6212da4713d0dcc21c8cdde982f83bd",
+      "light-projection-manifest.json": "846e1d89910cac5ac3a3768c76b5d78e46fb684982da3878315cf7010531056b"
+    },
+    "source_hashes_after": {
+      "chrome-current.mp4": "546f31b436c2c094a119ecd7b76be7f93661b4c2b9cf62f56decc61e211ed123",
+      "aurora-bloom.mp4": "8e1f7e6839d5a91932e7a287865171d769c0f59015bc6dda2ed9b237e308f903",
+      "media-manifest.json": "332991ee242d200b31ab7c6d62fe479ba56bd467b56ab682cc7636475788c25b",
+      "light-projection.mp4": "36b9720b2d1cce38bde73f661b1cf71ae6212da4713d0dcc21c8cdde982f83bd",
+      "light-projection-manifest.json": "846e1d89910cac5ac3a3768c76b5d78e46fb684982da3878315cf7010531056b"
+    },
+    "protected_sources_unchanged": true,
+    "post_adoption_full_decode_verified": true,
+    "post_adoption_verification": "Both published WebM files fully decoded to 240 RGB frames; metadata and normalized full-film SSIM rechecked using generator functions; source/output hashes preserved."
+  },
+  "publication": "Validated candidate bytes copied unchanged; regeneration uses atomic per-file replacement and publishes the manifest last",
+  "byte_reproducibility": "Hashes can vary with ffmpeg/libvpx version and WebM muxer metadata",
+  "files": [
+    {
+      "file": "chrome-current.webm",
+      "bytes": 1476078,
+      "sha256": "28ddf17c64918408d44b12afedc928dc30114fbfe4d15efec5c9aae06471d768",
+      "source": "chrome-current.mp4",
+      "source_sha256": "546f31b436c2c094a119ecd7b76be7f93661b4c2b9cf62f56decc61e211ed123",
+      "bitrate": "1200k",
+      "encode_options": [
+        "-c:v",
+        "libvpx",
+        "-crf",
+        "10",
+        "-b:v",
+        "1200k",
+        "-deadline",
+        "good",
+        "-cpu-used",
+        "4",
+        "-threads",
+        "2",
+        "-g",
+        "48",
+        "-an"
+      ],
+      "frames": 240,
+      "ssim_all": 0.977189,
+      "minimum_ssim": 0.97,
+      "adopted_from": ".qa/performance-v14/media/chrome-current-balanced.webm"
+    },
+    {
+      "file": "aurora-bloom.webm",
+      "bytes": 594901,
+      "sha256": "b8a2c38dd2d25bd63843d5b5fc8349aa8e56843b9bbe194be004ac41cfbd3377",
+      "source": "aurora-bloom.mp4",
+      "source_sha256": "8e1f7e6839d5a91932e7a287865171d769c0f59015bc6dda2ed9b237e308f903",
+      "bitrate": "500k",
+      "encode_options": [
+        "-c:v",
+        "libvpx",
+        "-crf",
+        "10",
+        "-b:v",
+        "500k",
+        "-deadline",
+        "good",
+        "-cpu-used",
+        "4",
+        "-threads",
+        "2",
+        "-g",
+        "48",
+        "-an"
+      ],
+      "frames": 240,
+      "ssim_all": 0.984363,
+      "minimum_ssim": 0.98,
+      "adopted_from": ".qa/performance-v14/media/aurora-bloom-balanced.webm"
+    }
+  ]
+}

@@ -2,7 +2,9 @@ import * as THREE from 'three'
 
 export interface SceneVideoSource {
   src: string
-  poster: string
+  optimizedSrc?: string
+  /** Optional metadata only; offscreen decoders use the procedural fallback. */
+  poster?: string
 }
 
 export type SceneVideoState = 'idle' | 'loading' | 'ready' | 'playing' | 'paused' | 'blocked' | 'error' | 'disposed'
@@ -17,8 +19,8 @@ export interface SceneVideoStatus {
 }
 
 const defaultSources: readonly [SceneVideoSource, SceneVideoSource] = [
-  { src: '/media/chrome-current.mp4', poster: '/media/chrome-current.jpg' },
-  { src: '/media/aurora-bloom.mp4', poster: '/media/aurora-bloom.jpg' },
+  { src: '/media/chrome-current.mp4', optimizedSrc: '/media/chrome-current.webm' },
+  { src: '/media/aurora-bloom.mp4', optimizedSrc: '/media/aurora-bloom.webm' },
 ]
 
 /** Two shared decoders; callers use ready=false to retain their shader fallback. */
@@ -86,10 +88,19 @@ export function createSceneVideo(sources: readonly [SceneVideoSource, SceneVideo
         const currentAttempt = ++attempt
         try {
           if (!attached) {
-            // No source, poster request, or media load occurs before first entry.
+            // Capability probing and resource selection happen only at first
+            // entry. Pauses keep this source, decoder and current playback time.
+            let selectedSource = source.src
+            if (source.optimizedSrc) {
+              try {
+                const support = video.canPlayType('video/webm; codecs="vp8"')
+                if (support === 'probably' || support === 'maybe') selectedSource = source.optimizedSrc
+              } catch { /* A failed capability probe retains the original source. */ }
+            }
             attached = true
-            video.poster = source.poster
-            video.src = source.src
+            // The shader fallback is procedural, so an offscreen DOM poster
+            // would only add an unused network request.
+            video.src = selectedSource
             video.load()
           }
           state = hasData ? 'ready' : 'loading'

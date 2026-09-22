@@ -3,7 +3,8 @@ import { build } from 'vite'
 import type { SceneVideoStatus } from '../src/SceneVideo'
 import type {} from './fixtures/video-harness'
 
-type VideoRecord = { video: HTMLVideoElement; loads: number; playTimes: number[] }
+type VideoRecord = { video: HTMLVideoElement; loads: number; playTimes: number[]; supportQueries: string[] }
+type Vp8Support = '' | 'maybe' | 'probably'
 const slowRenderer = () => test.info().project.use.launchOptions?.args?.includes('--use-angle=swiftshader') ?? false
 
 declare global {
@@ -12,8 +13,8 @@ declare global {
   }
 }
 
-async function installVideoProbe(page: Page, blockPlayback = false) {
-  await page.addInitScript((blocked) => {
+async function installVideoProbe(page: Page, blockPlayback = false, vp8Support?: Vp8Support) {
+  await page.addInitScript(({ blocked, vp8 }) => {
     window.videoProbe = { records: [], rejections: [] }
     window.addEventListener('unhandledrejection', (event) =>
       window.videoProbe.rejections.push(String(event.reason)),
@@ -22,10 +23,15 @@ async function installVideoProbe(page: Page, blockPlayback = false) {
     document.createElement = ((tag: string, options?: ElementCreationOptions) => {
       const element = create(tag, options)
       if (element instanceof HTMLVideoElement) {
-        const record: VideoRecord = { video: element, loads: 0, playTimes: [] }
+        const record: VideoRecord = { video: element, loads: 0, playTimes: [], supportQueries: [] }
         window.videoProbe.records.push(record)
         const load = element.load.bind(element)
         const play = element.play.bind(element)
+        const canPlayType = element.canPlayType.bind(element)
+        element.canPlayType = (type) => {
+          record.supportQueries.push(type)
+          return vp8 !== undefined && type === 'video/webm; codecs="vp8"' ? vp8 : canPlayType(type)
+        }
         element.load = () => { record.loads++; load() }
         element.play = () => {
           record.playTimes.push(element.currentTime)
@@ -34,13 +40,13 @@ async function installVideoProbe(page: Page, blockPlayback = false) {
       }
       return element
     }) as typeof document.createElement
-  }, blockPlayback)
+  }, { blocked: blockPlayback, vp8: vp8Support })
 }
 
 async function snapshots(page: Page) {
   return page.evaluate(() => window.videoProbe.records
     .filter(({ video }) => video.dataset.mediaRole !== 'light-projection')
-    .map(({ video, loads, playTimes }, id) => ({
+    .map(({ video, loads, playTimes, supportQueries }, id) => ({
     id,
     src: video.getAttribute('src'),
     poster: video.getAttribute('poster'),
@@ -52,6 +58,7 @@ async function snapshots(page: Page) {
     height: video.videoHeight,
     loads,
     playTimes: [...playTimes],
+    supportQueries: [...supportQueries],
   })))
 }
 
@@ -99,6 +106,8 @@ function expectResumedFrom(
   expect(after.map((video) => video.id)).toEqual(before.map((video) => video.id))
   after.forEach((video, index) => {
     expect(video.loads).toBe(before[index].loads)
+    expect(video.src).toBe(before[index].src)
+    expect(video.supportQueries).toEqual(before[index].supportQueries)
     expect(video.playTimes.length).toBe(before[index].playTimes.length + 1)
     // The exact time at play(), before decode resumes, detects reset-to-zero.
     expect(video.playTimes.at(-1)).toBeCloseTo(before[index].time, 3)
@@ -111,7 +120,7 @@ test('@interaction production monitor videos load on entry and retain playback a
   const mediaRequests: string[] = []
   page.on('pageerror', (error) => pageErrors.push(error.message))
   page.on('request', (request) => {
-    if (/\/media\/(chrome-current|aurora-bloom)\.(mp4|jpg)(?:\?|$)/.test(request.url())) mediaRequests.push(request.url())
+    if (/\/media\/(chrome-current|aurora-bloom)\.(mp4|webm|jpg)(?:\?|$)/.test(request.url())) mediaRequests.push(request.url())
   })
   await installVideoProbe(page)
   await page.goto('/')
@@ -120,6 +129,7 @@ test('@interaction production monitor videos load on entry and retain playback a
   const initial = await snapshots(page)
   expect(initial.length).toBeGreaterThanOrEqual(2)
   expect(initial.every((video) => video.src === null && video.poster === null && video.loads === 0 && video.playTimes.length === 0)).toBe(true)
+  expect(initial.every(video => video.supportQueries.length === 0)).toBe(true)
   expect(mediaRequests).toEqual([])
 
   const enterMonitors = async () => {
@@ -139,8 +149,13 @@ test('@interaction production monitor videos load on entry and retain playback a
     await expect.poll(() => page.evaluate(() => scrollY)).toBe(0)
   }
   await enterMonitors()
-  expect(new Set(mediaRequests.filter((url) => url.includes('.mp4')).map((url) => new URL(url).pathname)))
-    .toEqual(new Set(['/media/chrome-current.mp4', '/media/aurora-bloom.mp4']))
+  const extension = await page.evaluate(() => {
+    const record = window.videoProbe.records.find(({ video }) => video.dataset.mediaRole !== 'light-projection')!
+    return HTMLMediaElement.prototype.canPlayType.call(record.video, 'video/webm; codecs="vp8"') ? 'webm' : 'mp4'
+  })
+  expect(new Set(mediaRequests.map(url => new URL(url).pathname)))
+    .toEqual(new Set([`/media/chrome-current.${extension}`, `/media/aurora-bloom.${extension}`]))
+  expect((await attachedVideos(page)).every(video => video.poster === null && video.supportQueries.length === 1)).toBe(true)
   const recordCount = (await snapshots(page)).length
   await page.getByRole('button', { name: 'Pause motion' }).click()
   const pausedMotion = await stoppedVideos(page)
@@ -286,8 +301,8 @@ test.describe('@interaction isolated monitor video failure lifecycle', () => {
     harnessCode = chunk.code
   })
 
-  async function openHarness(page: Page, blocked: boolean) {
-    await installVideoProbe(page, blocked)
+  async function openHarness(page: Page, blocked: boolean, support?: Vp8Support) {
+    await installVideoProbe(page, blocked, support)
     await page.route('**/__video-harness', (route) => route.fulfill({
       contentType: 'text/html', body: '<!doctype html><title>Video lifecycle fixture</title>',
     }))
@@ -310,6 +325,8 @@ test.describe('@interaction isolated monitor video failure lifecycle', () => {
     const after = await snapshots(page)
     expect(after.map((video) => [video.loads, video.playTimes.length]))
       .toEqual(before.map((video) => [video.loads, video.playTimes.length]))
+    expect(after.map(video => [video.src, video.poster, video.supportQueries]))
+      .toEqual(before.map(video => [video.src, video.poster, video.supportQueries]))
     expect(after.every((video) => video.paused)).toBe(true)
     expect(await page.evaluate(() => window.videoHarness.status().errors.every(Boolean))).toBe(true)
     await page.evaluate(() => { window.videoHarness.dispose(); window.videoHarness.dispose() })
@@ -319,16 +336,64 @@ test.describe('@interaction isolated monitor video failure lifecycle', () => {
     expect(await page.evaluate(() => window.videoProbe.rejections)).toEqual([])
   }
 
-  test('missing video responses fall back without repeated requests or leaked resources', async ({ page }) => {
-    let requests = 0
+  for (const support of ['probably', 'maybe', ''] as const) {
+    test(`selects ${support ? 'VP8 WebM' : 'MP4 fallback'} once for ${support || 'unsupported'} capability`, async ({ page }) => {
+      const requests: string[] = []
+      page.on('request', request => {
+        if (/\/media\//.test(request.url())) requests.push(new URL(request.url()).pathname)
+      })
+      await openHarness(page, false, support)
+      await page.evaluate(() => {
+        window.videoHarness.update(true, true)
+        Object.defineProperty(document, 'hidden', { value: true, configurable: true })
+        window.videoHarness.update(true, false)
+      })
+      const untouched = await snapshots(page)
+      expect(untouched).toHaveLength(2)
+      expect(untouched.every(video => video.src === null && video.poster === null
+        && video.loads === 0 && video.supportQueries.length === 0)).toBe(true)
+      expect(requests).toEqual([])
+      await page.evaluate(() => {
+        window.videoHarness.update(false, false)
+        Reflect.deleteProperty(document, 'hidden')
+        document.dispatchEvent(new Event('visibilitychange'))
+        window.videoHarness.update(true, false)
+      })
+      const playing = await playingVideos(page)
+      const extension = support ? 'webm' : 'mp4'
+      const paths = [`/media/chrome-current.${extension}`, `/media/aurora-bloom.${extension}`]
+      expect(playing.map(video => video.src)).toEqual(paths)
+      expect(new Set(requests)).toEqual(new Set(paths))
+      expect(playing.every(video => video.poster === null && video.loads === 1)).toBe(true)
+      expect(playing.map(video => video.supportQueries))
+        .toEqual([['video/webm; codecs="vp8"'], ['video/webm; codecs="vp8"']])
+      expect(await page.evaluate(() => window.videoHarness.status().ready)).toEqual([true, true])
+      await page.evaluate(() => window.videoHarness.update(false, false))
+      const paused = await stoppedVideos(page)
+      await page.evaluate(() => window.videoHarness.update(true, false))
+      expectResumedFrom(paused, await playingVideos(page))
+      expect(await page.evaluate(() => window.videoHarness.retainsTextures())).toBe(true)
+      expect((await snapshots(page)).every(video => video.poster === null)).toBe(true)
+      await page.evaluate(() => { window.videoHarness.dispose(); window.videoHarness.dispose() })
+      expect(await page.evaluate(() => window.videoHarness.textureDisposals)).toEqual([1, 1])
+      expect((await snapshots(page)).every(video => video.src === null && video.paused)).toBe(true)
+      expect(await page.evaluate(() => window.videoProbe.rejections)).toEqual([])
+    })
+  }
+
+  test('failed preferred WebM retains fallback without MP4 retries or leaked resources', async ({ page }) => {
+    const requests: string[] = []
     const errors: string[] = []
     page.on('pageerror', (error) => errors.push(error.message))
-    await page.route('**/media/*.mp4', (route) => { requests++; return route.abort('failed') })
-    await openHarness(page, false)
-    expect(requests).toBe(0)
+    await page.route('**/media/*', (route) => {
+      requests.push(new URL(route.request().url()).pathname)
+      return route.abort('failed')
+    })
+    await openHarness(page, false, 'probably')
+    expect(requests).toEqual([])
     await page.evaluate(() => window.videoHarness.update(true, false))
     await verifyTerminalFallback(page, 'error')
-    expect(requests).toBe(2)
+    expect(requests.sort()).toEqual(['/media/aurora-bloom.webm', '/media/chrome-current.webm'])
     expect(errors).toEqual([])
   })
 

@@ -180,15 +180,16 @@ export function createSceneInteraction(
   let previousMove = 0
   let previousYaw = 0
   let disposed = false
+  let enabled = true
   // Shared lighting input stays independent of the scene's orbit permission.
-  const field = { ndc: new THREE.Vector2(), strength: 0, aspect: innerWidth / innerHeight }
+  const field = { ndc: new THREE.Vector2(), strength: 0, aspect: innerWidth / innerHeight, active: false }
   let fieldTarget = 0
   canvas.dataset.cameraMode = 'idle'
   canvas.dataset.orbitEnabled = 'true'
   const home = () => !location.hash || location.hash === '#home'
   const interactive = (target: EventTarget | null) =>
     target instanceof Element &&
-    Boolean(target.closest('a,button,input,select,textarea,dialog,[data-no-camera]'))
+    Boolean(target.closest('a,button,input,select,textarea,dialog,label,summary,[role="button"],[role="link"],[contenteditable]:not([contenteditable="false"]),[data-no-camera]'))
   const blocked = () => Boolean(document.querySelector('dialog[open]'))
   const pointAt = (x: number, y: number) => {
     ray.set(x, y, 0.5).unproject(camera).sub(camera.position).normalize()
@@ -272,16 +273,21 @@ export function createSceneInteraction(
     }
   }
   const move = (event: PointerEvent) => {
-    if (reducedMotion || event.pointerType === 'touch' || !home() || blocked()) {
+    if (!enabled || reducedMotion || document.hidden || event.pointerType === 'touch' || !home() || blocked() ||
+      !Number.isFinite(event.clientX) || !Number.isFinite(event.clientY) ||
+      event.clientX < 0 || event.clientX > innerWidth || event.clientY < 0 || event.clientY > innerHeight) {
+      field.active = false
       fieldTarget = field.strength = 0
       breakStroke()
       return
     }
     pointer.set((event.clientX / innerWidth) * 2 - 1, 1 - (event.clientY / innerHeight) * 2)
     if (interactive(event.target)) {
+      field.active = false
       fieldTarget = field.strength = 0
       breakStroke()
     } else {
+      field.active = true
       fieldTarget = 1
       const distance = pointer.distanceTo(last)
       if (last.x === -10 || (distance > .0025 && event.timeStamp - lastSample >= (software ? 24 : 14))) {
@@ -301,8 +307,13 @@ export function createSceneInteraction(
     }
   }
   const down = (event: PointerEvent) => {
-    if (reducedMotion || !orbitEnabled || !home() || blocked() || event.button !== 0 ||
-      event.pointerType === 'touch' || interactive(event.target)) return
+    if (!enabled || reducedMotion || document.hidden || !home() || blocked() ||
+      event.pointerType === 'touch' || interactive(event.target)) {
+      field.active = false
+      fieldTarget = field.strength = 0
+      return
+    }
+    if (!orbitEnabled || event.button !== 0) return
     pointerId = event.pointerId
     held = true
     anchor.set((event.clientX / innerWidth) * 2 - 1, 1 - (event.clientY / innerHeight) * 2)
@@ -316,6 +327,10 @@ export function createSceneInteraction(
     document.documentElement.classList.add('scene-dragging')
   }
   const release = (event?: PointerEvent) => {
+    if (event?.type === 'pointercancel') {
+      field.active = false
+      fieldTarget = field.strength = 0
+    }
     if (event instanceof PointerEvent && event.pointerId !== pointerId) return
     held = false
     pointerId = -1
@@ -324,6 +339,7 @@ export function createSceneInteraction(
     document.documentElement.classList.remove('scene-dragging')
   }
   const leave = () => {
+    field.active = false
     fieldTarget = field.strength = 0
     breakStroke()
     release()
@@ -341,7 +357,7 @@ export function createSceneInteraction(
     reset()
   }
   const doubleClick = (event: MouseEvent) => {
-    if (!reducedMotion && orbitEnabled && !interactive(event.target) && !blocked() && home()) reset()
+    if (enabled && !reducedMotion && orbitEnabled && !interactive(event.target) && !blocked() && home()) reset()
   }
   window.addEventListener('pointermove', move, { passive: true })
   window.addEventListener('pointerdown', down, { passive: true })
@@ -356,6 +372,10 @@ export function createSceneInteraction(
   }
   document.addEventListener('visibilitychange', visibility)
   return {
+    setActive(active: boolean) {
+      enabled = active
+      if (!active) leave()
+    },
     setOrbitEnabled(enabled: boolean) {
       if (disposed || orbitEnabled === enabled) return
       orbitEnabled = enabled
@@ -376,8 +396,11 @@ export function createSceneInteraction(
       material.uniforms.uRatio.value = ratio
       ribbonMaterial.uniforms.uTime.value = time
       ribbonMaterial.uniforms.uHeight.value = innerHeight
-      points.visible = ribbon.visible = !reducedMotion && home()
-      if (reducedMotion || !home() || blocked() || document.hidden) fieldTarget = field.strength = 0
+      points.visible = ribbon.visible = enabled && !reducedMotion && home() && !blocked()
+      if (!enabled || reducedMotion || !home() || blocked() || document.hidden) {
+        field.active = false
+        fieldTarget = field.strength = 0
+      }
       field.ndc.lerp(pointer, 1 - Math.exp(-10 * delta))
       field.strength = THREE.MathUtils.damp(field.strength, fieldTarget, 9, delta)
       fieldTarget *= Math.exp(-1.35 * delta)
@@ -400,7 +423,7 @@ export function createSceneInteraction(
     dispose() {
       if (disposed) return
       disposed = true
-      release()
+      leave()
       window.removeEventListener('pointermove', move)
       window.removeEventListener('pointerdown', down)
       window.removeEventListener('pointerup', release)

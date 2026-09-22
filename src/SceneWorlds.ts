@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import { Reflector } from 'three/addons/objects/Reflector.js'
 import { createSpineAssembly } from './SceneSpine'
 import { createSceneMonitors } from './SceneMonitors'
+import type { createSceneVideo } from './SceneVideo'
 import { sampleJourney, smooth } from './Journey'
 
 const TAU = Math.PI * 2
@@ -36,7 +37,10 @@ const screenVertex = /* glsl */ `
 `
 
 /** Descending articulated matter inside an independently anchored shaft. */
-export function createSceneWorlds(scene: THREE.Scene, software: boolean, mobile = false) {
+export function createSceneWorlds(
+  scene: THREE.Scene, software: boolean, mobile = false,
+  externalMedia?: ReturnType<typeof createSceneVideo>,
+) {
   const geometries: THREE.BufferGeometry[] = []
   const materials: THREE.Material[] = []
   const textures: THREE.Texture[] = []
@@ -45,7 +49,7 @@ export function createSceneWorlds(scene: THREE.Scene, software: boolean, mobile 
   const mat = <T extends THREE.Material>(m: T) => { materials.push(m); return m }
   const root = new THREE.Group()
   const matter = new THREE.Group()
-  const monitorAssembly = createSceneMonitors(software, mobile)
+  const monitorAssembly = createSceneMonitors(software, mobile, externalMedia)
   const monitors = monitorAssembly.group
   const spineAssembly = createSpineAssembly(software, mobile)
   matter.add(spineAssembly.group)
@@ -497,6 +501,7 @@ export function createSceneWorlds(scene: THREE.Scene, software: boolean, mobile 
   const projectedCore = new THREE.Vector3()
   const chamberHeight = -40.4
   const floorHeight = chamberHeight - 3.7
+  monitorAssembly.setOccluders([matter, chamber])
   const scaleHeight = -48.0
   return {
     getChamberHeight() {
@@ -505,8 +510,20 @@ export function createSceneWorlds(scene: THREE.Scene, software: boolean, mobile 
     capture(renderer: THREE.WebGLRenderer, camera: THREE.Camera) {
       monitorAssembly.capture(renderer, scene, camera)
     },
+    setMediaActive(active: boolean, reducedMotion: boolean) {
+      monitorAssembly.setMediaActive(active, reducedMotion)
+    },
+    getVideoStatus() {
+      return monitorAssembly.getVideoStatus()
+    },
+    getHoveredPanel() {
+      return monitorAssembly.getHoveredPanel()
+    },
+    getMonitorHit(ndc: THREE.Vector2, camera: THREE.Camera) {
+      return monitorAssembly.pick(ndc, camera)
+    },
     update(time: number, progress: number,
-      pointer?: { ndc: THREE.Vector2; strength: number; aspect: number }, camera?: THREE.Camera) {
+      pointer?: { ndc: THREE.Vector2; strength: number; aspect: number; active?: boolean }, camera?: THREE.Camera) {
       const journey = sampleJourney(progress)
       root.position.y = journey.height
       // Root follows the travelling spine; both mechanical layers stay in world
@@ -604,7 +621,7 @@ export function createSceneWorlds(scene: THREE.Scene, software: boolean, mobile 
         luminousRings.instanceMatrix.needsUpdate = true
       }
       reactorLight.intensity = software ? 0 : deviceWeight * (7 + Math.sin(time * 1.5) * .8 + coreProximity * 2.5)
-      monitorAssembly.update(time, progress)
+      monitorAssembly.update(time, progress, pointer, camera)
     },
     dispose() {
       spineAssembly.dispose()

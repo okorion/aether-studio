@@ -339,6 +339,8 @@ main > section {
   overflow: hidden;
   user-select: none;
 }
+
+html.scene-monitor-hover .hero-stage { cursor: pointer; }
 .scroll-invitation {
   position: absolute;
   left: 50%;

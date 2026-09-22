@@ -1,12 +1,14 @@
 # AETHER STUDIO
 
-[사이트 바로 보기](https://aether-studio-nu.vercel.app/) · [첫 모니터·겹침 성능](docs/monitor-transition-performance.md) · [장면 차폐·영상 조명](docs/scene-occlusion-light.md) · [입자 마우스 반응](docs/particle-pointer-flow.md) · [공간 전환·빛](docs/spatial-transitions.md) · [시각 변천: 8개 버전·48장](docs/visual-history.md) · [초기 전환 성능](docs/transition-performance.md) · [메타데이터](docs/metadata.md) · [다음 개선](docs/next-improvements.md)
+[사이트 바로 보기](https://aether-studio-nu.vercel.app/) · [지하 공간·새 영상 비교](docs/chamber-art-direction.md) · [첫 모니터·겹침 성능](docs/monitor-transition-performance.md) · [장면 차폐·영상 조명](docs/scene-occlusion-light.md) · [입자 마우스 반응](docs/particle-pointer-flow.md) · [공간 전환·빛](docs/spatial-transitions.md) · [시각 변천: 8개 버전·48장](docs/visual-history.md) · [초기 전환 성능](docs/transition-performance.md) · [메타데이터](docs/metadata.md) · [다음 개선](docs/next-improvements.md)
 
 [Active Theory](https://activetheory.net/)의 중앙 오브젝트, 연속된 공간 이동, 금속 반사와 움직이는 프로젝트 화면을 참고한 자체 3D 경험입니다. React + TypeScript + Three.js + Vite로 개발했습니다.
 
-런타임에는 원본의 소스·로고·모델·영상·음악을 사용하지 않습니다. AETHER STUDIO 브랜드와 가상 프로젝트, 절차적 모델, 수식으로 제작한 모니터 MP4 두 편과 조명용 파생 영상, 대체 영상 셰이더를 직접 작성했습니다. 원본 화면은 비교 문서의 검수 증거에만 사용합니다.
+런타임에는 원본의 소스·로고·모델·영상·음악을 사용하지 않습니다. AETHER STUDIO 브랜드와 가상 프로젝트, 절차적 모델, 수식으로 제작한 모니터 MP4 두 편과 별도 조명 영상, 대체 영상 셰이더를 직접 작성했습니다. 원본 화면은 비교 문서의 검수 증거에만 사용합니다.
 
-![최신 월드 공간 숲과 O 심벌](docs/screenshots/history/pr11/scroll-000.jpg)
+![최신 숲과 O 심벌](docs/screenshots/chamber-art/after/scroll-000.jpg)
+
+최신 변경은 장치 덮개에 맞닿는 얇은 천장, 중앙 수면을 비운 양측 서비스 설비, 동심원 소용돌이를 제거한 비늘 표면, 어두운 사틴 조명 영상입니다. [14개 스크롤 지점의 전후 28장](docs/chamber-art-direction.md)에서 비교할 수 있습니다.
 
 초기 구현부터 PR #11까지 대표 소스 8개를 다시 빌드하고, 같은 뷰포트의 0·20·40·60·80·98% 스크롤 위치에서 촬영했습니다. [시각 변천 기록](docs/visual-history.md)에서 48장의 실제 화면과 기준 커밋·캡처 조건을 함께 비교할 수 있습니다. 이후의 바닥·빛·상부 수관 변경은 [최신 공간 전환 비교](docs/spatial-transitions.md)에 정리했습니다.
 
@@ -20,7 +22,7 @@
 - 척추·사슬: 두 줄의 사슬이 척추 앞뒤를 감으며 스크롤 위치에 따라 움직입니다. 입력이 멎으면 정착 뒤 멈추고, 역스크롤하면 반대 방향으로 돌아갑니다. 입자는 고정 역할과 스크롤 이동 역할로 나뉘며 하나의 흐름이 장치 O로 모입니다. 모니터 영상과 조명은 계속 움직입니다.
 - 숲은 고정된 월드 공간의 줄기·가지·잎·미세 입자로 구성됩니다. 상·하부에서 링 중심으로 드래그하면 숲의 원근과 가림도 함께 바뀝니다.
 - 장치와 비늘 사이의 22×26 바닥은 위쪽에서 물결과 반사를, 아래쪽에서 천장 빛 무늬를 보여줍니다. 데스크톱은 기존 512×512 반사 하나를 재사용합니다. 비늘 다음에는 전체 잎 예산의 24%를 배치한 고정된 상부 가지·덩굴·고사리가 먼저 드러납니다. [세 경계의 전후 화면](docs/spatial-transitions.md)
-- 숲과 장치의 청록·금·보라빛은 월드 위치마다 다른 느린 위상으로 변합니다. 자체 크롬·오로라 영상이 교대하는 218,586바이트 조명 루프를 하나의 디코더로 공유하고, 로딩·디코딩 실패 시 절차적 조명을 유지합니다. 물에는 영상을 직접 사용하지 않습니다. [빛과 재생·정지 동작](docs/spatial-transitions.md#재생과-정지-프로파일)
+- 숲과 장치의 청록·금·보라빛은 월드 위치마다 다른 느린 위상으로 변합니다. 검은 여백과 청록·먹보라 반사가 흐르는 자체 사틴 영상 40,498바이트 조명 루프를 하나의 디코더로 공유하고, 로딩·디코딩 실패 시 절차적 조명을 유지합니다. 물에는 영상을 직접 사용하지 않습니다. [새 조명 영상과 재생·정지 동작](docs/light-projection-media.md)
 - 척추는 굵은 비대칭 관절·추궁·돌기와 교차 연결 사슬로 구성했습니다. 얇은 유리 모니터 6장이 아래에서 들어와 전경을 거쳐 위로 지나갑니다. 영상 두 편을 공유해 재생하고, GPU 데스크톱에서는 실제 척추와 입자를 화면 안에 굴절시킵니다. VP8 WebM을 지원하면 사용하고 미지원이면 MP4를 선택합니다.
 - 모니터 위 마우스: 해당 판이 조금 들리고 기울며 가장자리 빛과 굴절이 반응합니다. 포인터를 멈춰도 호버를 유지하고, UI 위에서는 해제합니다. 판을 클릭하면 해당 프로젝트 상세가 열립니다. 드래그·스크롤 중에는 상세 열기를 취소합니다.
 - 마지막 비늘은 위층에 남고 링이 아래로 내려갑니다. 링 안의 대문자 O는 상하 반전되지 않습니다.

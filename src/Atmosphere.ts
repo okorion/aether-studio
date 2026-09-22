@@ -8,12 +8,18 @@ import { lightChoreographyGLSL, type LightFilmUniforms } from './SceneLighting'
 const entryFragment = /* glsl */ `
   uniform float uEntryEdge;
   uniform float uEntryWipe;
+  uniform float uDeviceEntryEdge;
+  uniform float uDeviceEntryWipe;
   varying vec4 vFieldClip;
   float fieldEntry() {
     vec2 screen = vFieldClip.xy / vFieldClip.w * .5 + .5;
     float noise = fract(sin(dot(floor(screen * vec2(1800., 1100.)), vec2(12.9898, 78.233))) * 43758.5453);
     float boundary = screen.y - (screen.x - .5) * .20 + (noise - .5) * .009;
-    return mix(1., 1. - smoothstep(uEntryEdge - .004, uEntryEdge + .004, boundary), uEntryWipe);
+    float monitor = mix(1., 1. - smoothstep(uEntryEdge - .004, uEntryEdge + .004, boundary), uEntryWipe);
+    // Convergence belongs to the incoming sealed chamber, not the outgoing
+    // monitor wrapper. Hand over the field before its new shape is revealed.
+    float chamber = mix(1., 1. - smoothstep(uDeviceEntryEdge - .004, uDeviceEntryEdge + .004, boundary), uDeviceEntryWipe);
+    return monitor * chamber;
   }
 `
 
@@ -356,7 +362,10 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
     uFieldOpacity: { value: 1 },
     uEntryEdge: { value: -0.25 },
     uEntryWipe: { value: 0 },
+    uDeviceEntryEdge: { value: -.25 },
+    uDeviceEntryWipe: { value: 0 },
   }
+  const cameraWorld = new THREE.Vector3()
   const dustGeometry = new THREE.BufferGeometry()
   dustGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
   dustGeometry.setAttribute('aDust', new THREE.BufferAttribute(dust, 4))
@@ -429,7 +438,7 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
   let previousProgress = Number.NaN
   return {
     update(time: number, progress: number, pixelRatio?: number,
-      pointer?: { ndc: THREE.Vector2; strength: number; aspect: number; active?: boolean }) {
+      pointer?: { ndc: THREE.Vector2; strength: number; aspect: number; active?: boolean }, camera?: THREE.Camera) {
       if (disposed) return
       const journey = sampleJourney(progress)
       const p = journey.progress
@@ -450,6 +459,8 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
         + smooth(.245, .31, p) * (1 - smooth(.75, .81, p))
       uniforms.uEntryEdge.value = sampleLayers(p).monitorEntry
       uniforms.uEntryWipe.value = p >= .20 ? 1 : 0
+      uniforms.uDeviceEntryEdge.value = sampleLayers(p).monitorExit
+      uniforms.uDeviceEntryWipe.value = smooth(.60, .635, p)
       const validPointer = pointer && pointer.active !== false
         && Number.isFinite(pointer.ndc.x) && Number.isFinite(pointer.ndc.y)
       if (validPointer) uniforms.uPointer.value.copy(pointer.ndc)
@@ -465,7 +476,12 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
         ? THREE.MathUtils.clamp(pointer.aspect, .25, 5) : 1
       const ratio = pixelRatio ?? window.devicePixelRatio ?? 1
       uniforms.uPixelRatio.value = THREE.MathUtils.clamp(Number.isFinite(ratio) ? ratio : 1, 0.4, 2)
-      const visible = uniforms.uFieldOpacity.value > .001
+      // The current belongs to the upper chamber. Once the camera crosses its
+      // solid floor, only the separate light spill may reach the scale ceiling.
+      const eyeHeight = camera ? camera.getWorldPosition(cameraWorld).y
+        : journey.height + Math.sin(journey.elevation) * journey.radius
+      const belowChamber = p > .70 && eyeHeight <= -44.13
+      const visible = uniforms.uFieldOpacity.value > .001 && !belowChamber
       particles.visible = filaments.visible = shafts.visible = visible
       particles.userData.scrollStep = signedStep
       particles.userData.morph = morph

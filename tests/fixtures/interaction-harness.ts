@@ -5,8 +5,9 @@ import { createSceneMonitors } from '../../src/SceneMonitors'
 import { createAtmosphere } from '../../src/Atmosphere'
 import { createSceneForest } from '../../src/SceneForest'
 import { sampleJourney } from '../../src/Journey'
-import { createSceneLayers, sampleLayers } from '../../src/SceneLayers'
-import { bindCurtain, createCurtainBounds } from '../../src/SceneCurtains'
+import { createSceneLayers, sampleEmblemCurtain, sampleLayers } from '../../src/SceneLayers'
+import { bindCurtain, bindGroupCurtain, createCurtainBounds } from '../../src/SceneCurtains'
+import { createLightFilmUniforms } from '../../src/SceneLighting'
 
 type Snapshot = {
   yaw: number
@@ -26,6 +27,8 @@ export type InteractionHarness = {
   sampleEditorial: typeof sampleEditorial
   stepField: typeof stepField
   probeCurtainPixels: typeof probeCurtainPixels
+  probeEmblemCurtainPixels: typeof probeEmblemCurtainPixels
+  probeWorldSurfaceDepth: typeof probeWorldSurfaceDepth
   probeScalePointer: typeof probeScalePointer
   probeDevicePointer: typeof probeDevicePointer
   probeForestPointer: typeof probeForestPointer
@@ -70,6 +73,9 @@ const pixels = new Uint8Array(innerWidth * innerHeight * 4)
 // This scene is never rendered. Inspect the real instance transforms without
 // another WebGL context or a costly production-scene screenshot per sample.
 const worldScene = new THREE.Scene()
+const worldFilmTexture = new THREE.DataTexture(new Uint8Array([0, 0, 0, 255]), 1, 1)
+worldFilmTexture.needsUpdate = true
+const worldFilm = createLightFilmUniforms(worldFilmTexture)
 let worlds: ReturnType<typeof createSceneWorlds> | undefined
 const worldPosition = new THREE.Vector3()
 const editorialScene = new THREE.Scene()
@@ -226,6 +232,244 @@ function probeCurtainPixels() {
   }
 }
 
+function probeEmblemCurtainPixels() {
+  const width = 240, height = 160
+  const probeScene = new THREE.Scene()
+  const probeCamera = new THREE.OrthographicCamera(-1.5, 1.5, 1, -1, .1, 10)
+  probeCamera.position.z = 3
+  probeCamera.updateMatrixWorld()
+  const emblem = new THREE.Group()
+  const bounds = createCurtainBounds()
+  const ringGeometry = new THREE.TorusGeometry(.81, .105, 12, 72)
+  const glyphShape = new THREE.Shape()
+  glyphShape.absellipse(0, 0, .29, .48, 0, Math.PI * 2, false, 0)
+  const glyphHole = new THREE.Path()
+  glyphHole.absellipse(0, 0, .16, .32, 0, Math.PI * 2, true, 0)
+  glyphShape.holes.push(glyphHole)
+  const glyphGeometry = new THREE.ExtrudeGeometry(glyphShape, { depth: .08, bevelEnabled: false, curveSegments: 24 })
+  const ringMaterial = new THREE.MeshStandardMaterial({ color: 0, emissive: 0xff0000, depthWrite: true })
+  const glyphMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000, depthWrite: true })
+  const ring = new THREE.Mesh(ringGeometry, ringMaterial)
+  const glyph = new THREE.Mesh(glyphGeometry, glyphMaterial)
+  glyph.position.z = .15
+  emblem.add(ring, glyph)
+  // Use the production group binding, including both ring and glyph materials.
+  bindGroupCurtain(emblem, bounds)
+  const backgroundGeometry = new THREE.PlaneGeometry(3.2, 2.2)
+  const backgroundMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff })
+  const background = new THREE.Mesh(backgroundGeometry, backgroundMaterial)
+  background.position.z = -1
+  background.renderOrder = 10
+  probeScene.add(emblem, background)
+  const target = new THREE.WebGLRenderTarget(width, height, { depthBuffer: true })
+  const saved = {
+    target: renderer.getRenderTarget(), face: renderer.getActiveCubeFace(), mip: renderer.getActiveMipmapLevel(),
+    autoClear: renderer.autoClear, color: renderer.getClearColor(new THREE.Color()), alpha: renderer.getClearAlpha(),
+  }
+  const draw = () => {
+    renderer.setRenderTarget(target)
+    renderer.render(probeScene, probeCamera)
+    const image = new Uint8Array(width * height * 4)
+    renderer.readRenderTargetPixels(target, 0, 0, width, height, image)
+    return image
+  }
+  const isRed = (image: Uint8Array, offset: number) => image[offset] > 150 && image[offset + 1] < 10 && image[offset + 2] < 10
+  const isBlue = (image: Uint8Array, offset: number) => image[offset + 2] > 150 && image[offset] < 10 && image[offset + 1] < 10
+  try {
+    renderer.autoClear = true
+    renderer.setClearColor(0x00ff00, 1)
+    const baseline = draw()
+    return [.89, .90, .915].map(progress => {
+      const state = sampleEmblemCurtain(progress)
+      bounds.upper.value = state.upper
+      bounds.lower.value = state.lower
+      const image = draw()
+      let baselineRingPixels = 0, hiddenRingPixels = 0, visibleRingPixels = 0
+      let checkedAbove = 0, redAbove = 0, depthHoles = 0, missingBelow = 0, changedBackground = 0
+      for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+        const offset = (y * width + x) * 4
+        const originalRed = isRed(baseline, offset)
+        if (originalRed) baselineRingPixels++
+        const edge = (y + .5) / height - ((x + .5) / width - .5) * .20
+        if (edge > state.upper + .022) {
+          checkedAbove++
+          if (originalRed) hiddenRingPixels++
+          if (isRed(image, offset)) redAbove++
+          // The background is submitted last: a hidden depth-writing ring
+          // leaves green here, even if its own red output has been suppressed.
+          if (!isBlue(image, offset)) depthHoles++
+        } else if (edge < state.upper - .022 && edge > state.lower + .022 && originalRed) {
+          visibleRingPixels++
+          if (!isRed(image, offset)) missingBelow++
+        }
+        if (!originalRed && !isBlue(image, offset)) changedBackground++
+      }
+      return { progress, upper: state.upper, baselineRingPixels, hiddenRingPixels, visibleRingPixels,
+        checkedAbove, redAbove, depthHoles, missingBelow, changedBackground }
+    })
+  } finally {
+    renderer.setRenderTarget(saved.target, saved.face, saved.mip)
+    renderer.autoClear = saved.autoClear
+    renderer.setClearColor(saved.color, saved.alpha)
+    target.dispose()
+    ringGeometry.dispose()
+    glyphGeometry.dispose()
+    backgroundGeometry.dispose()
+    ringMaterial.dispose()
+    glyphMaterial.dispose()
+    backgroundMaterial.dispose()
+    probeScene.clear()
+  }
+}
+
+function probeWorldSurfaceDepth() {
+  worlds ??= createSceneWorlds(worldScene, true, false, undefined, worldFilm)
+  const width = 160, height = 120
+  const probeScene = new THREE.Scene()
+  const probeCamera = new THREE.PerspectiveCamera(42, width / height, .1, 100)
+  const markerGeometry = new THREE.PlaneGeometry(1, 1)
+  // A transparent, fully opaque marker is submitted after BOTH opaque and
+  // transparent production surfaces. Only their actual depth can block it.
+  const markerMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 1, depthWrite: false })
+  const marker = new THREE.Mesh(markerGeometry, markerMaterial)
+  marker.renderOrder = 100
+  probeScene.add(marker)
+  const target = new THREE.WebGLRenderTarget(width, height, { depthBuffer: true })
+  const saved = {
+    target: renderer.getRenderTarget(), face: renderer.getActiveCubeFace(), mip: renderer.getActiveMipmapLevel(),
+    autoClear: renderer.autoClear, color: renderer.getClearColor(new THREE.Color()), alpha: renderer.getClearAlpha(),
+  }
+  const required = (name: string) => {
+    const object = worldScene.getObjectByName(name)
+    if (!(object instanceof THREE.Mesh)) throw new Error(`Missing production surface ${name}`)
+    return object as THREE.Mesh<THREE.BufferGeometry, THREE.Material>
+  }
+  const atProgress = (progress: number) => {
+    const state = sampleJourney(progress)
+    probeCamera.position.set(
+      Math.sin(state.azimuth) * Math.cos(state.elevation) * state.radius,
+      state.height + Math.sin(state.elevation) * state.radius,
+      Math.cos(state.azimuth) * Math.cos(state.elevation) * state.radius,
+    )
+    probeCamera.lookAt(0, state.height, 0)
+    probeCamera.updateMatrixWorld()
+    worlds!.update(10, progress, undefined, probeCamera)
+    worldScene.updateMatrixWorld(true)
+  }
+  const read = () => {
+    renderer.setRenderTarget(target)
+    renderer.render(probeScene, probeCamera)
+    const image = new Uint8Array(width * height * 4)
+    renderer.readRenderTargetPixels(target, 0, 0, width, height, image)
+    return image
+  }
+  const red = (image: Uint8Array, offset: number) => image[offset] > 150 && image[offset + 1] < 10 && image[offset + 2] < 10
+  try {
+    renderer.autoClear = true
+    renderer.setClearColor(0x0000ff, 1)
+    atProgress(.70)
+    const plinth = new THREE.Box3().setFromObject(required('aether-machine-plinth'))
+    const floor = new THREE.Box3().setFromObject(required('aether-separating-floor'))
+    const capMesh = required('aether-machine-closed-cap')
+    if (!(capMesh.material instanceof THREE.MeshStandardMaterial)) throw new Error('The closed cap must retain its production standard material')
+    const cap = new THREE.Box3().setFromObject(capMesh)
+    const socket = new THREE.Box3().setFromObject(required('aether-machine-upper-socket'))
+    const ceiling = new THREE.Box3().setFromObject(required('aether-chamber-ceiling'))
+    const underside = new THREE.Box3().setFromObject(required('aether-floor-underside'))
+    const contact = { plinthBottom: plinth.min.y, floorMin: floor.min.y, floorMax: floor.max.y,
+      capBottom: cap.min.y, capTop: cap.max.y, socketTop: socket.max.y,
+      capFilmDefine: capMesh.material.defines?.AETHER_LIGHT_FILM as number | undefined,
+      ceilingY: ceiling.max.y, ceilingWidth: ceiling.max.x - ceiling.min.x,
+      undersideY: underside.max.y, undersideWidth: underside.max.x - underside.min.x }
+    const visibility = [.70, .79, .70].map(progress => {
+      atProgress(progress)
+      return {
+        eyeY: probeCamera.position.y,
+        machine: worldScene.getObjectByName('aether-machine-assembly')!.visible,
+        ruins: worldScene.getObjectByName('aether-flooded-ruins')!.visible,
+        upperStructure: worldScene.getObjectByName('aether-upper-room-structure')!.visible,
+        underside: required('aether-floor-underside').visible,
+      }
+    })
+    const cases = [
+      { name: 'aether-chamber-ceiling', progress: .67, ndcY: .80 },
+      { name: 'aether-separating-floor', progress: .70, ndcY: -.55 },
+      { name: 'aether-floor-underside', progress: .79, ndcY: .80 },
+      { name: 'aether-machine-closed-cap', progress: .67, ndcY: null },
+    ].map(entry => {
+      atProgress(entry.progress)
+      const source = required(entry.name)
+      let effectivelyVisible = true
+      for (let object: THREE.Object3D | null = source; object; object = object.parent)
+        effectivelyVisible &&= object.visible
+      // Keep the actual geometry, compiled material hooks, world transform,
+      // depth policy and camera; isolate unrelated room lights and meshes.
+      const surface = new THREE.Mesh(source.geometry, source.material)
+      surface.matrixAutoUpdate = false
+      surface.matrix.copy(source.matrixWorld)
+      surface.renderOrder = source.renderOrder
+      const surfacePoint = source.getWorldPosition(new THREE.Vector3())
+      const raycaster = new THREE.Raycaster()
+      if (entry.ndcY !== null) {
+        raycaster.setFromCamera(new THREE.Vector2(0, entry.ndcY), probeCamera)
+        const intersection = raycaster.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), -surfacePoint.y), new THREE.Vector3())
+        if (!intersection) throw new Error(`The production camera ray misses ${entry.name}`)
+        surfacePoint.copy(intersection)
+      } else {
+        raycaster.ray.origin.copy(probeCamera.position)
+        raycaster.ray.direction.copy(surfacePoint).sub(probeCamera.position).normalize()
+      }
+      marker.position.copy(surfacePoint).addScaledVector(raycaster.ray.direction, 1)
+      marker.quaternion.copy(probeCamera.quaternion)
+      const depth = -marker.position.clone().applyMatrix4(probeCamera.matrixWorldInverse).z
+      const halfHeight = Math.tan(THREE.MathUtils.degToRad(probeCamera.fov) / 2) * depth
+      marker.scale.set(halfHeight * .25, halfHeight * .15, 1)
+      const baseline = read()
+      surface.visible = effectivelyVisible
+      probeScene.add(surface)
+      const blocked = read()
+      let markerPixels = 0, checkedOccluded = 0, exposedMarker = 0, outsideCurtain = 0, leakedPixels = 0
+      const layers = sampleLayers(entry.progress)
+      for (let offset = 0; offset < baseline.length; offset += 4) if (red(baseline, offset)) {
+        markerPixels++
+        const pixel = offset / 4, x = pixel % width, y = Math.floor(pixel / width)
+        const uvX = (x + .5) / width, uvY = (y + .5) / height
+        const boundary = uvY - (uvX - .5) * .20
+        if (boundary <= layers.forestEntry + .022 || boundary >= layers.monitorExit - .022) {
+          outsideCurtain++
+          continue
+        }
+        // A camera-facing marker may itself straddle the horizontal surface.
+        // Only require occlusion where the actual geometry lies in front of
+        // that pixel's marker hit. This is an independent ray/GL depth check,
+        // not an assumption that the marker's centre determines every pixel.
+        raycaster.setFromCamera(new THREE.Vector2(uvX * 2 - 1, uvY * 2 - 1), probeCamera)
+        const surfaceHit = raycaster.intersectObject(surface, false)[0]
+        const markerHit = raycaster.intersectObject(marker, false)[0]
+        if (!surfaceHit || !markerHit || surfaceHit.distance >= markerHit.distance - .001) {
+          exposedMarker++
+          continue
+        }
+        checkedOccluded++
+        if (red(blocked, offset)) leakedPixels++
+      }
+      probeScene.remove(surface)
+      return { name: entry.name, progress: entry.progress, effectivelyVisible, depthWrite: source.material.depthWrite,
+        markerPixels, checkedOccluded, exposedMarker, outsideCurtain, leakedPixels }
+    })
+    return { contact, visibility, cases }
+  } finally {
+    renderer.setRenderTarget(saved.target, saved.face, saved.mip)
+    renderer.autoClear = saved.autoClear
+    renderer.setClearColor(saved.color, saved.alpha)
+    target.dispose()
+    markerGeometry.dispose()
+    markerMaterial.dispose()
+    // The borrowed production geometry/material remain owned by worlds.
+    probeScene.clear()
+  }
+}
+
 function probeScalePointer() {
   const modelScene = new THREE.Scene()
   const assembly = createSceneWorlds(modelScene, true)
@@ -292,15 +536,18 @@ function probeDevicePointer() {
   const atmosphere = createAtmosphere(probeScene, false, false)
   const particles = probeScene.getObjectByName('aether-current-particles') as THREE.Points<THREE.BufferGeometry, THREE.ShaderMaterial>
   const initialSeeds = new Float32Array(particles.geometry.attributes.position.array)
-  const state = sampleJourney(progress)
   const probeCamera = new THREE.PerspectiveCamera(42, width / height, .1, 90)
-  probeCamera.position.set(
-    Math.sin(state.azimuth) * Math.cos(state.elevation) * state.radius,
-    state.height + Math.sin(state.elevation) * state.radius,
-    Math.cos(state.azimuth) * Math.cos(state.elevation) * state.radius,
-  )
-  probeCamera.lookAt(0, state.height, 0)
-  probeCamera.updateMatrixWorld()
+  const positionCamera = (p: number) => {
+    const state = sampleJourney(p)
+    probeCamera.position.set(
+      Math.sin(state.azimuth) * Math.cos(state.elevation) * state.radius,
+      state.height + Math.sin(state.elevation) * state.radius,
+      Math.cos(state.azimuth) * Math.cos(state.elevation) * state.radius,
+    )
+    probeCamera.lookAt(0, state.height, 0)
+    probeCamera.updateMatrixWorld()
+  }
+  positionCamera(progress)
   // A world-space point on the device's right arc locates the actual cursor;
   // all deformation remains in the production vertex shader.
   const projectedArc = new THREE.Vector3(1.47, -40.4, 0).project(probeCamera)
@@ -344,9 +591,58 @@ function probeDevicePointer() {
     let illuminatedPixels = 0
     for (let i = 0; i < baseline.length; i += 4)
       if (baseline[i] + baseline[i + 1] + baseline[i + 2] > 10) illuminatedPixels++
+    const fieldY = particles.position.y
+    const chamberEntry = [.635, .65].map(p => {
+      positionCamera(p)
+      atmosphere.update(elapsed, p, 1, undefined, probeCamera)
+      atmosphere.update(elapsed, p, 1, undefined, probeCamera)
+      // Isolate the actual current grains. Light beams have their own
+      // overlapping coverage and cannot stand in for particle masking.
+      probeScene.getObjectByName('aether-current-filaments')!.visible = false
+      probeScene.getObjectByName('aether-volume-shafts')!.visible = false
+      const renderGrains = () => {
+        renderer.setRenderTarget(target)
+        renderer.render(probeScene, probeCamera)
+        const image = new Uint8Array(width * height * 4)
+        renderer.readRenderTargetPixels(target, 0, 0, width, height, image)
+        return image
+      }
+      const uniforms = particles.material.uniforms
+      const edge = uniforms.uDeviceEntryEdge.value as number
+      const wipe = uniforms.uDeviceEntryWipe.value as number
+      const masked = renderGrains()
+      // Counterfactual baseline at identical time, geometry and camera. Only
+      // the production mask is disabled; no replacement shader is involved.
+      uniforms.uDeviceEntryWipe.value = 0
+      const unmasked = renderGrains()
+      uniforms.uDeviceEntryWipe.value = wipe
+      let hiddenBaseline = 0, leakedAbove = 0, visibleBelow = 0, changedBelow = 0
+      for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+        const offset = (y * width + x) * 4
+        const boundary = (y + .5) / height - ((x + .5) / width - .5) * .20
+        const lit = unmasked[offset] + unmasked[offset + 1] + unmasked[offset + 2] > 6
+        // Point sprites inherit the centre's clip varying. Exclude their
+        // maximum 6px radius plus the sloped 0.009 grain / 0.004 fringe.
+        if (boundary > edge + .05) {
+          if (lit) hiddenBaseline++
+          if (masked[offset] || masked[offset + 1] || masked[offset + 2] || masked[offset + 3]) leakedAbove++
+        } else if (boundary < edge - .05 && lit) {
+          visibleBelow++
+          for (let channel = 0; channel < 4; channel++)
+            if (masked[offset + channel] !== unmasked[offset + channel]) { changedBelow++; break }
+        }
+      }
+      return { progress: p, edge, wipe, hiddenBaseline, leakedAbove, visibleBelow, changedBelow }
+    })
+    const roomVisibility = [.70, .79, .70].map(p => {
+      positionCamera(p)
+      atmosphere.update(elapsed, p, 1, undefined, probeCamera)
+      return ['aether-current-particles', 'aether-current-filaments', 'aether-volume-shafts']
+        .map(name => probeScene.getObjectByName(name)!.visible)
+    })
     return {
       illuminatedPixels, moved: difference(baseline, moved), restored: difference(baseline, restored),
-      scrollSteps, fieldY: particles.position.y, pointer: pointer.ndc.toArray(),
+      scrollSteps, fieldY, pointer: pointer.ndc.toArray(), chamberEntry, roomVisibility,
       seedsUnchanged: initialSeeds.every((value, index) => value === particles.geometry.attributes.position.array[index]),
     }
   } finally {
@@ -372,7 +668,8 @@ function probeForestPointer(progress: number) {
   const micro=grove.getObjectByName('aether-forest-microfoliage') as THREE.Points<THREE.BufferGeometry,THREE.ShaderMaterial>
   grove.children.forEach(child=>{if(child!==micro)child.visible=false})
   const original=Array.from(micro.geometry.attributes.position.array)
-  const flow=new THREE.DataTexture(new Uint8Array([128,128,0,255]),1,1)
+  const flowBytes=new Uint8Array([128,128,0,255])
+  const flow=new THREE.DataTexture(flowBytes,1,1)
   flow.needsUpdate=true
   const pointer={ndc:new THREE.Vector2(),strength:0,aspect:width/height,active:true,flowTexture:flow}
   forest.update(elapsed,progress,probeCamera,pointer,1);probeScene.updateMatrixWorld(true)
@@ -381,7 +678,7 @@ function probeForestPointer(progress: number) {
   const previous={target:renderer.getRenderTarget(),face:renderer.getActiveCubeFace(),mip:renderer.getActiveMipmapLevel(),
     clear:renderer.getClearColor(new THREE.Color()),alpha:renderer.getClearAlpha(),auto:renderer.autoClear}
   const render=(x:number,y:number,active=true)=>{
-    flow.image.data[0]=Math.round(128+x*127);flow.image.data[1]=Math.round(128+y*127);flow.needsUpdate=true
+    flowBytes[0]=Math.round(128+x*127);flowBytes[1]=Math.round(128+y*127);flow.needsUpdate=true
     pointer.active=active
     forest.update(elapsed,progress,probeCamera,pointer,1)
     renderer.setRenderTarget(target);renderer.render(probeScene,probeCamera)
@@ -466,7 +763,7 @@ function probeMonitorOcclusion() {
       return pick()
     })
     // The actual world registrations must still allow a visible production card.
-    worlds ??= createSceneWorlds(worldScene, true)
+    worlds ??= createSceneWorlds(worldScene, true, false, undefined, worldFilm)
     const state = sampleJourney(.4)
     probeCamera.position.set(Math.sin(state.azimuth) * state.radius * Math.cos(state.elevation),
       state.height + Math.sin(state.elevation) * state.radius,
@@ -625,13 +922,15 @@ window.interactionHarness = {
   sampleEditorial,
   stepField,
   probeCurtainPixels,
+  probeEmblemCurtainPixels,
+  probeWorldSurfaceDepth,
   probeScalePointer,
   probeDevicePointer,
   probeForestPointer,
   probeMonitorCapture,
   probeMonitorOcclusion,
   sampleWorld(elapsed, progress) {
-    worlds ??= createSceneWorlds(worldScene, true)
+    worlds ??= createSceneWorlds(worldScene, true, false, undefined, worldFilm)
     worlds.update(elapsed, progress)
     worldScene.updateMatrixWorld(true)
     const chain = worldScene.getObjectByName('aether-spine-chain')
@@ -669,6 +968,7 @@ window.interactionHarness = {
   dispose() {
     interaction.dispose()
     worlds?.dispose()
+    worldFilmTexture.dispose()
     editorial?.dispose()
     renderer.dispose()
     renderer.forceContextLoss()

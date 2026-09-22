@@ -7,6 +7,7 @@ const boundaryGLSL = /* glsl */ `
   uniform vec4 uWeights;
   uniform float uForestExit;
   uniform float uForestEntry;
+  uniform float uDeviceEntry;
   uniform float uTime;
   varying vec4 vClip;
   varying float vZone;
@@ -16,7 +17,7 @@ const boundaryGLSL = /* glsl */ `
     if (vZone < .5) return uWeights.x * smoothstep(uForestExit - .006, uForestExit + .006, edge);
     if (vZone < 1.5) return uWeights.y * (1. - smoothstep(uForestEntry - .006, uForestEntry + .006, edge));
     // Ceiling light crosses the mechanical layer transition independently.
-    return vZone < 2.5 ? uWeights.z : uWeights.w;
+    return vZone < 2.5 ? uWeights.z * (1. - smoothstep(uDeviceEntry - .025, uDeviceEntry + .025, edge)) : uWeights.w;
   }
 `
 
@@ -31,6 +32,7 @@ export function createSceneLightShafts(
     uLightFilm: film.map, uLightFilmReady: film.ready,
     uTime: { value: 0 }, uWeights: { value: new THREE.Vector4() },
     uForestExit: { value: -.35 }, uForestEntry: { value: -.35 },
+    uDeviceEntry: { value: -.25 },
     uCameraRight: { value: new THREE.Vector3(1, 0, 0) },
   }
 
@@ -212,6 +214,7 @@ export function createSceneLightShafts(
       shared.uTime.value = Number.isFinite(elapsed) ? Math.max(0, elapsed) : 0
       shared.uForestExit.value = layers.forestExit
       shared.uForestEntry.value = layers.forestEntry
+      shared.uDeviceEntry.value = layers.monitorExit
       shared.uWeights.value.set(1 - smooth(.18, .235, p), smooth(.855, .925, p),
         windowWeight(p, .595, .655, .79, .865), windowWeight(p, .725, .775, .89, .945))
       camera.updateMatrixWorld()

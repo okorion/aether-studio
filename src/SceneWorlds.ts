@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import { Reflector } from 'three/addons/objects/Reflector.js'
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
 import { createSpineAssembly } from './SceneSpine'
+import { createScaleSurface } from './SceneScaleSurface'
 import { createSceneMonitors } from './SceneMonitors'
 import { createSceneRuins } from './SceneRuins'
 import { createWaterSurface } from './SceneWater'
@@ -55,90 +56,23 @@ export function createSceneWorlds(
   const chamber = new THREE.Group()
   const scaleWall = new THREE.Group()
   const space = new THREE.Group()
+  const lowerSpace = new THREE.Group()
   matter.name = 'aether-matter'
   chamber.name = 'aether-machine-assembly'
   scaleWall.name = 'aether-scale-wall'
   space.name = 'aether-chamber-space'
-  root.add(matter, monitors, chamber, scaleWall, space)
+  lowerSpace.name = 'aether-lower-room-space'
+  root.add(matter, monitors, chamber, scaleWall, space, lowerSpace)
   scene.add(root)
   const dummy = new THREE.Object3D()
   const color = new THREE.Color()
-  const metal = mat(new THREE.MeshPhysicalMaterial({
-    color: 0x92928d, metalness: software ? .45 : 1, roughness: software ? .42 : .32,
-    envMapIntensity: .72, clearcoat: software ? 0 : .08, clearcoatRoughness: .38,
-    iridescence: software ? 0 : .32, iridescenceIOR: 1.38,
-    iridescenceThicknessRange: [120, 470], transparent: true,
-  }))
   const pointerNdc = { value: new THREE.Vector2() }
   const pointerStrength = { value: 0 }
   const pointerAspect = { value: 1 }
   const surfaceTime = { value: 0 }
   const lightDepth = { value: 0 }
-  metal.onBeforeCompile = (shader) => {
-    shader.uniforms.uSurfacePointer = pointerNdc
-    shader.uniforms.uSurfaceStrength = pointerStrength
-    shader.uniforms.uSurfaceAspect = pointerAspect
-    shader.uniforms.uSurfaceTime = surfaceTime
-    shader.vertexShader = /* glsl */ `
-      attribute vec3 aArmour;
-      attribute vec3 aArmourNormal;
-      uniform vec2 uSurfacePointer;
-      uniform float uSurfaceStrength;
-      uniform float uSurfaceAspect;
-      uniform float uSurfaceTime;
-      varying float vSurfaceHeat;
-      varying vec3 vTilePoint;
-    ` + shader.vertexShader
-    shader.vertexShader = shader.vertexShader.replace('#include <beginnormal_vertex>',
-      /* glsl */ `
-        #include <beginnormal_vertex>
-        vec4 tileCentre = vec4(0.0, 0.0, 0.0, 1.0);
-        float tileUnit = 1.0;
-        #ifdef USE_INSTANCING
-          tileCentre = instanceMatrix * tileCentre;
-          tileUnit = max(length(instanceMatrix[0].xyz), .001);
-        #endif
-        vec4 tileClip = projectionMatrix * modelViewMatrix * tileCentre;
-        vec2 tileDelta = (tileClip.xy / max(tileClip.w, .001) - uSurfacePointer)
-          * vec2(uSurfaceAspect, 1.0);
-        vSurfaceHeat = exp(-dot(tileDelta, tileDelta) * 20.0) * uSurfaceStrength
-          * step(.001, tileClip.w);
-        // Broad travelling folds have no centre or concentric diamond rings.
-        // Pointer lift remains local to each tile's actual projected position.
-        float tilePhase = tileCentre.x * .48 + tileCentre.y * .31 - uSurfaceTime * .13;
-        float tileAngle = cos(tilePhase) * .18
-          + sin(tileCentre.y * .63 + uSurfaceTime * .09) * .07;
-        vec3 tileAxis = normalize(vec3(-.31, .48, 0.0));
-        float tileCos = cos(tileAngle);
-        float tileSin = sin(tileAngle);
-        objectNormal = aArmourNormal * tileCos + cross(tileAxis, aArmourNormal) * tileSin
-          + tileAxis * dot(tileAxis, aArmourNormal) * (1.0 - tileCos);
-        objectNormal = normalize(objectNormal + vec3(tileDelta * vSurfaceHeat * .20, 0.0));
-      `)
-    shader.vertexShader = shader.vertexShader.replace('#include <begin_vertex>', /* glsl */ `
-      vec3 transformed = aArmour * tileCos + cross(tileAxis, aArmour) * tileSin
-        + tileAxis * dot(tileAxis, aArmour) * (1.0 - tileCos);
-      vTilePoint = aArmour;
-      float tileRipple = sin(tilePhase) * .18
-        + sin(tileCentre.y * .63 + uSurfaceTime * .09) * .07;
-      transformed.z += (tileRipple + vSurfaceHeat * .36) / tileUnit;
-      transformed.y += sin(uSurfaceTime * 1.4 + tileCentre.x * 2.0) * vSurfaceHeat * .045;
-    `)
-    shader.fragmentShader = 'varying float vSurfaceHeat; varying vec3 vTilePoint;\n' + shader.fragmentShader
-    shader.fragmentShader = shader.fragmentShader.replace('#include <normal_fragment_maps>', `
-      #include <normal_fragment_maps>
-      float hammered = sin(vTilePoint.x * 83. + sin(vTilePoint.y * 51.) * 2.3)
-        * sin(vTilePoint.y * 76. + cos(vTilePoint.x * 35.));
-      float detailFade = 1. - smoothstep(.012, .055, max(fwidth(vTilePoint.x), fwidth(vTilePoint.y)));
-      normal = normalize(normal + vec3(hammered * .14,
-        sin(vTilePoint.y * 87. + vTilePoint.x * 38.) * .09, 0.) * detailFade);
-    `)
-    shader.fragmentShader = shader.fragmentShader.replace('#include <roughnessmap_fragment>',
-      '#include <roughnessmap_fragment>\nroughnessFactor = max(.16, roughnessFactor - vSurfaceHeat * .10);')
-    shader.fragmentShader = shader.fragmentShader.replace('#include <emissivemap_fragment>',
-      '#include <emissivemap_fragment>\ntotalEmissiveRadiance += vec3(.06, .25, .32) * vSurfaceHeat;')
-  }
-  metal.customProgramCacheKey = () => 'aether-folded-hex-pointer-v5'
+  const metal = mat(createScaleSurface(software,
+    { pointerNdc, pointerStrength, pointerAspect, surfaceTime, lightDepth }, lightFilm))
   const silver = mat(new THREE.MeshStandardMaterial({
     color: 0x929197, metalness: software ? .45 : .96, roughness: .24, envMapIntensity: 1.25, transparent: true,
   }))
@@ -243,9 +177,9 @@ export function createSceneWorlds(
   const tileWidth = tileHeight * Math.sqrt(3) / 2
   const feathers = instanced(scaleWall, geo(scaleGeometry(software)), metal, count, false)
   feathers.name = 'aether-scale-tiles'
-  const bronze = new THREE.Color().setRGB(.38, .285, .18)
-  const teal = new THREE.Color().setRGB(.17, .30, .28)
-  const violet = new THREE.Color().setRGB(.29, .19, .30)
+  const bronze = new THREE.Color().setRGB(.45, .40, .29)
+  const teal = new THREE.Color().setRGB(.13, .32, .29)
+  const violet = new THREE.Color().setRGB(.36, .18, .41)
   for (let i = 0; i < count; i++) {
     const wallRow = Math.floor(i / wallColumns)
     const wallX = ((i % wallColumns) - (wallColumns - 1) * .5 + ((wallRow % 2) - .5) * .5) * tileWidth
@@ -259,7 +193,7 @@ export function createSceneWorlds(
     const violetWeight = Math.exp(-((wallX + 3.5) ** 2 * .16 + (wallY + .5) ** 2 * .20)) * .52
       + Math.exp(-((wallX - 4.5) ** 2 * .38 + wallY * wallY * .18)) * .38
     color.copy(bronze).lerp(teal, tealWeight).lerp(violet, Math.min(.8, violetWeight))
-    color.multiplyScalar(.84 + Math.sin(wallX * .7 + wallY * .93) * .10)
+    color.multiplyScalar(.88 + Math.sin(wallX * .7 + wallY * .93) * .12)
     feathers.setColorAt(i, color)
   }
   // A broad, bevelled annular cross-section reads as stamped metal flanges,
@@ -284,7 +218,7 @@ export function createSceneWorlds(
     joints.setColorAt(i, color.setScalar(.74 + (i % 3) * .13))
   }
 
-  // Architecture appears around the centre and remains behind the final ring.
+  // The chamber architecture stays anchored independently of the travelling bone.
   const architecture = mat(new THREE.MeshStandardMaterial({
     color: 0x0a171b, metalness: .7, roughness: .37, envMapIntensity: .75, transparent: true,
     depthWrite: false,
@@ -322,9 +256,8 @@ export function createSceneWorlds(
   water.surface.position.set(0, -3.635, platformZ)
   water.surface.rotation.x = -Math.PI / 2
   space.add(water.surface)
-  // Unlike the translucent wall dressing, the room ceiling seals the next
-  // chamber while the incoming current is still converging behind it.
-  // One shared interface: the machine lid touches the slab's underside.
+  // Preserve the authored contact plane as a non-rendering reference.
+  // The compact machine lid still touches its underside.
   const capThickness = .26
   const capCentreY = 3.15
   const ceilingY = capCentreY + capThickness * .5
@@ -337,13 +270,16 @@ export function createSceneWorlds(
     ceilingMaterial, 0, ceilingY + ceilingThickness * .5, platformZ)
   ceiling.name = 'aether-chamber-ceiling'
   ceiling.renderOrder = -2
-  // A separate, opaque underside keeps the device behind the lower room's
-  // ceiling. Its extent covers the camera path beyond the finite flooded bed.
+  // Keep the contact reference, but reveal the chamber through the wrapper.
+  // Its small physical machine cap remains solid.
+  ceiling.visible = false
+  // The scale room owns its ceiling and light, on the incoming side of
+  // the same screen edge that clips every upper-room object.
   const undersideMaterial = mat(new THREE.MeshStandardMaterial({
     color: 0x090d12, metalness: .43, roughness: .57, envMapIntensity: .42,
     depthWrite: true,
   }))
-  const underside = mesh(space, geo(new THREE.PlaneGeometry(64, 64)), undersideMaterial, 0, -3.755, platformZ)
+  const underside = mesh(lowerSpace, geo(new THREE.PlaneGeometry(64, 64)), undersideMaterial, 0, -3.755, platformZ)
   underside.name = 'aether-floor-underside'
   underside.rotation.x = Math.PI / 2
   underside.renderOrder = -2
@@ -420,7 +356,7 @@ export function createSceneWorlds(
     transparent: true, blending: THREE.AdditiveBlending, depthWrite: false,
   }))
   // The underside of the floor becomes the next chamber's illuminated ceiling.
-  const caustics = mesh(space, geo(new THREE.PlaneGeometry(platformWidth, platformDepth)),
+  const caustics = mesh(lowerSpace, geo(new THREE.PlaneGeometry(platformWidth, platformDepth)),
     causticMaterial, 0, -3.770, platformZ)
   caustics.rotation.x = Math.PI / 2
   caustics.renderOrder = 1
@@ -583,9 +519,12 @@ export function createSceneWorlds(
   // while the outgoing scene reads as a single flat, frayed wrapper.
   const deviceCurtain = createCurtainBounds(-.25)
   const scaleCurtain = createCurtainBounds()
+  const boneCurtain = createCurtainBounds()
+  bindGroupCurtain(matter, boneCurtain)
   bindGroupCurtain(chamber, deviceCurtain)
   bindGroupCurtain(space, deviceCurtain)
   bindGroupCurtain(scaleWall, scaleCurtain)
+  bindGroupCurtain(lowerSpace, scaleCurtain)
   return {
     getChamberHeight() {
       return space.getWorldPosition(chamberWorld).y
@@ -622,15 +561,19 @@ export function createSceneWorlds(
       const journey = sampleJourney(progress)
       const layers = sampleLayers(progress)
       deviceCurtain.upper.value = layers.monitorExit
-      deviceCurtain.lower.value = scaleCurtain.lower.value = layers.forestEntry
+      deviceCurtain.lower.value = layers.deviceExit
+      scaleCurtain.upper.value = layers.deviceExit
+      scaleCurtain.lower.value = layers.forestEntry
+      boneCurtain.upper.value = layers.monitorEntry
+      boneCurtain.lower.value = layers.monitorExit
       // Only a globally empty curtain can hide a whole room. Main-camera
       // frustum culling here would incorrectly remove reflected geometry.
-      const deviceCoverage = curtainHasCoverage(layers.monitorExit, layers.forestEntry)
+      const deviceCoverage = curtainHasCoverage(layers.monitorExit, layers.deviceExit)
       lightDepth.value = journey.darkness
       root.position.y = journey.height
       // Root follows the travelling spine; both mechanical layers stay in world
       // space. Their separation is real even while both are visible together.
-      space.position.y = chamberHeight - journey.height
+      space.position.y = lowerSpace.position.y = chamberHeight - journey.height
       chamber.position.y = chamberHeight - journey.height
       scaleWall.position.y = scaleHeight - journey.height
       matter.position.y = 0
@@ -638,9 +581,9 @@ export function createSceneWorlds(
       scaleWall.rotation.y = 0
       const emergence = smooth(.205, .29, progress)
       const spineWeight = smooth(.20, .29, progress) * (1 - smooth(.685, .705, progress))
-      const spineOffset = -12 * (1 - emergence) + 10 * smooth(.60, .67, progress)
+      const spineOffset = -12 * (1 - emergence)
       spineAssembly.group.position.y = spineOffset
-      matter.visible = spineWeight > .001
+      matter.visible = spineWeight > .001 && curtainHasCoverage(layers.monitorEntry, layers.monitorExit)
       spineAssembly.update(progress, journey.core * spineWeight, emergence)
       const deviceWeight = smooth(.59, .615, progress) * (1 - smooth(.79, .88, progress))
       const scaleWeight = smooth(.725, .75, progress) * (1 - smooth(.93, .95, progress))
@@ -688,15 +631,13 @@ export function createSceneWorlds(
       // side as a screen-filling bar. Only its thickness dissolves near the eye;
       // the zero-thickness floor skin and the lower ceiling light stay intact.
       const eyeHeight = camera ? cameraWorld.y : journey.height
-      const inLowerRoom = eyeHeight <= floorHeight - .03
-      // Once the eye enters the lower room, no upper-floor device can remain
-      // visible through a near-plane gap or beyond a screen-diagonal seam.
-      chamber.visible = deviceWeight > .001 && !inLowerRoom && deviceCoverage
-      // Broken banks and long upper-room supports cross below the bed in world
-      // space. A ceiling cannot occlude those protruding bottoms from below.
-      // Keep only the plain back wall as the lower room's distant enclosure.
-      ruins.update(inLowerRoom ? 0 : architectureWeight)
-      architectureBars.visible = !inLowerRoom
+      lowerSpace.visible = scaleWeight > .001 && curtainHasCoverage(layers.deviceExit, layers.forestEntry)
+      // Eye height cannot hide a whole room while its screen band is visible.
+      chamber.visible = deviceWeight > .001 && deviceCoverage
+      // Keep upper-room assets only in their outgoing band; the lower ceiling
+      // and projected light survive independently after that band closes.
+      ruins.update(deviceCoverage ? architectureWeight : 0)
+      architectureBars.visible = deviceCoverage
       underside.visible = scaleWeight > .001 && eyeHeight < floorHeight
       const slabDistance = Math.abs(eyeHeight - (floorHeight - .17))
       slabMaterial.opacity = floorMaterial.opacity * smooth(.55, 1.10, slabDistance)
@@ -707,7 +648,7 @@ export function createSceneWorlds(
       floorMaterial.depthWrite = floorMaterial.opacity > .94
       floor.visible = floorMaterial.opacity > .015
       water.update(time, progress, architectureWeight, aboveFloor, camera,
-        { upper: layers.monitorExit, lower: layers.forestEntry })
+        { upper: layers.monitorExit, lower: layers.deviceExit })
       dark.opacity = deviceWeight
       machineMetal.opacity = deviceWeight
       cableMaterial.opacity = deviceWeight

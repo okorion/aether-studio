@@ -1,10 +1,11 @@
 import { expect, test } from '@playwright/test'
 import { readFileSync } from 'node:fs'
+import { createHash } from 'node:crypto'
 import { resolve } from 'node:path'
 
 const origin = 'https://aether-studio-nu.vercel.app/'
 const html = readFileSync(resolve('index.html'), 'utf8')
-const readAsset = (path: string) => readFileSync(resolve('public', path.replace(/^\//, '')))
+const readAsset = (path: string) => readFileSync(resolve('public', new URL(path, origin).pathname.replace(/^\//, '')))
 const meta = (name: string) => {
   const tags = html.match(/<meta\b[^>]*>/g) ?? []
   const tag = tags.find(tag => tag.includes(`name="${name}"`) || tag.includes(`property="${name}"`))
@@ -55,6 +56,8 @@ test('@interaction shared images and icon declarations point to real files with 
   expect(meta('og:image')).toBe(`${origin}og-image.jpg`)
   expect(meta('twitter:image')).toBe(meta('og:image'))
   const image = readAsset('/og-image.jpg')
+  // The approved share card is independent of this favicon redesign.
+  expect(createHash('sha256').update(image).digest('hex')).toBe('be7003cea6e7ae9f296481260db83e1ba1da89adbed7e88bfc301901e1d306e2')
   const dimensions = jpegSize(image)
   expect(dimensions).toEqual([Number(meta('og:image:width')), Number(meta('og:image:height'))])
   expect(dimensions).toEqual([1200, 630])
@@ -64,6 +67,12 @@ test('@interaction shared images and icon declarations point to real files with 
   expect(manifest.start_url).toBe('/')
   expect(manifest.scope).toBe('/')
   expect(manifest.display).toBe('browser')
+  for (const tag of html.match(/<link\b[^>]*>/g) ?? []) {
+    if (!/rel="(?:icon|apple-touch-icon|manifest)"/.test(tag)) continue
+    const href = tag.match(/href="([^"]+)"/)?.[1]
+    expect(href).toBeTruthy()
+    expect(readAsset(href!).length).toBeGreaterThan(0)
+  }
   for (const icon of manifest.icons) {
     expect(pngSize(readAsset(icon.src)).join('x')).toBe(icon.sizes)
   }

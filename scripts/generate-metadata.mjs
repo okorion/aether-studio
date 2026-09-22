@@ -1,6 +1,6 @@
 /**
- * Original icon geometry and a new SVG share-card layout containing an unchanged
- * project screenshot. No browser or WebGL is needed to render these static files.
+ * Generates the icon family from the vector master. The existing OG card is
+ * untouched by default; pass --share-card only to explicitly rebuild that card.
  * npm install --no-save --package-lock=false sharp
  * node scripts/generate-metadata.mjs
  * Alternatively: --sharp-module /absolute/path/to/sharp
@@ -31,8 +31,9 @@ await save('public/apple-touch-icon.png', pngs.get(180))
 await save('public/icon-192.png', pngs.get(192))
 await save('public/icon-512.png', pngs.get(512))
 
-// The ring remains within the guaranteed central 80% diameter of a maskable icon.
-const maskable = `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 64 64"><rect width="64" height="64" fill="#070d10"/><svg x="6" y="6" width="52" height="52" viewBox="0 0 64 64" fill="none">${icon.toString().replace(/<svg[^>]*>|<\/svg>/g, '')}</svg></svg>`
+// Keep the O in the mask-safe centre with a full-bleed field, not an inset tile.
+const mark = icon.toString().replace(/<svg[^>]*>|<\/svg>|<rect\b[^>]*\/>/g, '')
+const maskable = `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 64 64"><rect width="64" height="64" fill="#0a1114"/><svg x="6" y="6" width="52" height="52" viewBox="0 0 64 64" fill="none">${mark}</svg></svg>`
 await save('public/icon-maskable-512.png', await sharp(Buffer.from(maskable)).png().toBuffer())
 
 // ICO stores the same lossless PNG artwork at three real directory-entry sizes.
@@ -54,6 +55,7 @@ icoSizes.forEach((size, index) => {
 })
 await save('public/favicon.ico', Buffer.concat([header, ...icoSizes.map(size => pngs.get(size))]))
 
+if (process.argv.includes('--share-card')) {
 const photo = (await read('docs/screenshots/living/after-000.jpg')).toString('base64')
 const card = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
   <defs>
@@ -75,4 +77,5 @@ const card = `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" 
   <text x="1120" y="543" text-anchor="end" font-family="Arial, sans-serif" font-size="11" letter-spacing="2" fill="#c4d4c6">EXPLORE THE UNKNOWN</text>
 </svg>`
 await save('public/og-image.jpg', await sharp(Buffer.from(card)).jpeg({ quality: 88, mozjpeg: true }).toBuffer())
-process.stdout.write('Generated O icons (SVG source), PNG/ICO assets and 1200x630 share card.\n')
+}
+process.stdout.write(`Generated O icon assets. Share card ${process.argv.includes('--share-card') ? 'rebuilt' : 'preserved'}.\n`)

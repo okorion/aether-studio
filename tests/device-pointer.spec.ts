@@ -161,6 +161,13 @@ test('@interaction a stopped device responds to mouse motion and recovers withou
     step(.1, .4)
     expect(baseState()).toEqual(spine)
 
+    // Window blur disables fresh input while the visible surface settles.
+    env.input.setActive(false, true)
+    expect(step().field.strength).toBeGreaterThan(0)
+    for (let i = 0; i < 180; i++) step()
+    expect(step().field.strength).toBeLessThan(.0001)
+    env.input.setActive(true)
+
     // Excluded UI/non-home input clears the actual field immediately, rather
     // than leaving a deformation behind until its ordinary idle decay ends.
     env.send('pointermove', 380, 200)

@@ -23,7 +23,7 @@
 | 본 컬럼 입자 | 약 80%는 경로 위의 위치를 유지하고 나머지는 같은 경로를 따라 이동한다. 두 무리 모두 본 컬럼 주변의 회전을 공유하며, 고정 입자도 구름과 함께 회전한다. | [Atmosphere](../src/Atmosphere.ts) |
 | 모니터 | 본 컬럼 앞뒤의 사선 나선을 따라 위치·높이·방향이 함께 바뀐다. 호버는 나선 바깥쪽으로 조금 이동시키며 클릭은 프로젝트 상세를 연다. | [SceneMonitors](../src/SceneMonitors.ts) |
 | 리액터 | 고정된 높이의 금속 장치 안으로 O 입자가 모인다. 포인터 주변의 입자는 변형됐다가 돌아온다. | [SceneWorlds](../src/SceneWorlds.ts), [Atmosphere](../src/Atmosphere.ts) |
-| 스케일 패널 | 원형 파동에 따라 육각 조각이 뒤집힌다. 포인터 흐름을 공유해 지나간 자리의 변형이 감쇠한다. 마모·거칠기·미세 요철은 생성 텍스처로 표현한다. | [SceneScaleSurface](../src/SceneScaleSurface.ts) |
+| 스케일 패널 | 1초마다 큰 박동과 작은 후속 박동이 바깥으로 퍼지고 잠시 쉰다. 마우스가 브라우저 밖으로 나가도 남은 변형은 자연스럽게 감쇠한다. 마모·거칠기·미세 요철은 생성 텍스처로 표현한다. | [SceneScaleSurface](../src/SceneScaleSurface.ts) |
 | 벨 크리처 | 몸통·테두리·촉수가 상단·하단 포레스트의 경계를 공유한다. 중간 장면에는 배치하지 않는다. | [Scene](../src/Scene.tsx) |
 
 명칭과 사용자 별칭은 [용어집](scene-glossary.md)에서 찾을 수 있다. 모니터 나선과 입자 비율, O 크기를 바꾼 근거는 [장면 수정 기록](scene-reference-detail.md)에 있다.

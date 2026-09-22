@@ -724,7 +724,8 @@ export default function Scene({ reducedMotion, active, onReady, onSelectProject 
         // The slanted viewport boundary spans [-.1, 1.1] in monitor UV space.
         const targetHasMonitors = mask.monitorEntry > -.1 && mask.monitorExit < 1.1 &&
           mask.monitorEntry > mask.monitorExit
-        interaction.setActive(enabled)
+        interaction.setActive(enabled, !foreground && !document.hidden && activeRef.current &&
+          (!location.hash || location.hash === '#home') && !document.querySelector('dialog[open]'))
         worlds.setMediaActive(enabled && targetHasMonitors, reducedMotion)
         lightVideo.setActive(enabled && !softwareRenderer && !preparing &&
           (targetProgress < .235 || targetProgress > .60), reducedMotion)
@@ -827,8 +828,9 @@ export default function Scene({ reducedMotion, active, onReady, onSelectProject 
         emblem.scale.setScalar(1.15 + statementScale * .48)
         emblem.rotation.set(0, smooth(.21, .30, scroll) * .7 * (1 - state.end), 0)
         ribbons.rotation.x = 0
-        ribbons.visible = statementScale < .95
-        tailChrome.opacity = tailDark.opacity = emblemOpacity * (1 - statementScale)
+        const tailPresence = scroll < .5 ? 1 - smooth(.10, .18, scroll) : 1
+        ribbons.visible = tailPresence > .001
+        tailChrome.opacity = tailDark.opacity = emblemOpacity * tailPresence
         glyph.scale.setScalar(1)
         glyphChrome.opacity = emblemOpacity
         glyph.visible = glyphChrome.opacity > .005

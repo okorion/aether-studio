@@ -431,7 +431,8 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
           document.body.appendChild(dialog)
           dialog.showModal()
         }
-        cleared.push({ reason, before, after: harness.stepField(.1) })
+        const after = harness.stepField(.1)
+        cleared.push({ reason, before, after, settled: harness.stepField(3) })
         if (reason === 'hidden') Reflect.deleteProperty(document, 'hidden')
         if (reason === 'hash') {
           history.replaceState(null, '', '#home')
@@ -445,12 +446,16 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
       return { active, idle, cleared, reduced: harness.stepField(.2) }
     })
     expect(result.active.strength).toBeGreaterThan(.4)
+    expect(result.active.active).toBe(true)
     expect(result.active.flowEnergy).toBeGreaterThan(0)
     expect(result.idle.flowEnergy).toBe(0)
     expect(result.reduced.flowEnergy).toBe(0)
     for(const entry of result.cleared){
       expect(entry.before.flowEnergy,entry.reason).toBeGreaterThan(0)
-      expect(entry.after.flowEnergy,entry.reason).toBe(0)
+      if (entry.reason === 'leave' || entry.reason === 'blur') {
+        expect(entry.after.flowEnergy, entry.reason).toBeGreaterThan(0)
+        expect(entry.settled.flowEnergy, entry.reason).toBe(0)
+      } else expect(entry.after.flowEnergy,entry.reason).toBe(0)
     }
     expect(result.active.strength).toBeLessThanOrEqual(1)
     expect(result.active.ndc[0]).toBeGreaterThan(.4)
@@ -460,8 +465,13 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
     expect(result.active.pitch).toBe(0)
     expect(result.idle.strength).toBeLessThan(result.active.strength / 10)
     for (const sample of result.cleared) {
+      expect(sample.after.active, sample.reason).toBe(false)
       expect(sample.before.strength, sample.reason).toBeGreaterThan(.4)
-      expect(sample.after.strength, sample.reason).toBe(0)
+      if (sample.reason === 'leave' || sample.reason === 'blur') {
+        expect(sample.after.strength, sample.reason).toBeGreaterThan(0)
+        expect(sample.after.strength, sample.reason).toBeLessThan(sample.before.strength)
+        expect(sample.settled.strength, sample.reason).toBeLessThan(.0001)
+      } else expect(sample.after.strength, sample.reason).toBe(0)
       expect(sample.after.yaw, sample.reason).toBe(0)
     }
     expect(result.reduced.strength).toBe(0)
@@ -690,6 +700,7 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
     expect(pixels.wake.centroidX).toBeLessThan(.5)
     expect(pixels.wakeReset.changed).toBe(0)
     expect(pixels.wave.changed).toBeGreaterThan(300)
+    expect(pixels.nextBeat.changed).toBeLessThan(5)
     expect(pixels.matricesUnchanged).toBe(true)
   })
 

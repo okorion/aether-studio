@@ -228,7 +228,9 @@ export function createSceneWorlds(
     depthWrite: false,
   }))
   const floorMaterial = mat(architecture.clone())
-  floorMaterial.side = THREE.DoubleSide
+  // The lower room owns the underside. Drawing this upper floor's back face
+  // puts a blurred reflection over the outgoing reactor above the shared edge.
+  floorMaterial.side = THREE.FrontSide
   floorMaterial.forceSinglePass = true
   floorMaterial.depthWrite = true
   const platformWidth = 22

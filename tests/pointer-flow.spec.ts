@@ -47,6 +47,23 @@ function stroke(flow: PointerFlow, horizontal: boolean, sign: number, aspect = 1
   }
 }
 
+test('@interaction leaving the viewport preserves the wake and re-entry cannot bridge the gap', () => {
+  const flow = createPointerFlow()
+  try {
+    stroke(flow, true, 1)
+    const before = Array.from(pixels(flow))
+    expect(field(flow).energy).toBeGreaterThan(0)
+    flow.release()
+    expect(Array.from(pixels(flow))).toEqual(before)
+    flow.move(-.8, .8, 1)
+    expect(Array.from(pixels(flow))).toEqual(before)
+    flow.update(frame)
+    expect(field(flow).energy).toBeGreaterThan(0)
+    for (let i = 0; i < 150; i++) flow.update(frame)
+    expectNeutral(flow)
+  } finally { flow.dispose() }
+})
+
 test('@interaction pointer flow starts neutral and a stationary pointer never injects motion', () => {
   const flow = createPointerFlow()
   try {

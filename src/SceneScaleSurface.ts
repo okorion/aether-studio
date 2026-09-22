@@ -116,8 +116,11 @@ export function createScaleSurface(
       // Ring waves roll individual facets through their edge and back face.
       // The shared input field retains the wake after the cursor has moved on.
       float tileRadius = length(tileCentre.xy);
-      float tilePhase = tileRadius * 2.9 - uSurfaceTime * .72;
-      float tileAngle = (sin(tilePhase) * .5 + .5) * 6.283185;
+      // One outward heartbeat per second: a main pulse, a smaller echo, rest.
+      float beatPhase = fract(uSurfaceTime - tileRadius * .12);
+      float heartbeat = smoothstep(.02, .08, beatPhase) * (1. - smoothstep(.08, .22, beatPhase));
+      heartbeat += .32 * smoothstep(.22, .26, beatPhase) * (1. - smoothstep(.26, .38, beatPhase));
+      float tileAngle = heartbeat * 2.4;
       tileAngle += vSurfaceHeat * 1.8 + (tileFlow.x - tileFlow.y) * .65;
       vec2 radial = tileCentre.xy / max(tileRadius, .001);
       vec3 tileAxis = tileRadius > .001 ? vec3(radial.y, -radial.x, 0.) : vec3(0., 1., 0.);
@@ -139,7 +142,7 @@ export function createScaleSurface(
         + tileAxis * dot(tileAxis, aArmour) * (1.0 - tileCos);
       vTilePoint = aArmour;
       vSheetPoint = tileCentre.xy + aArmour.xy * tileUnit;
-      float tileRipple = (.28 + sin(tilePhase) * .48) * (1. - smoothstep(.4, 6., tileRadius));
+      float tileRipple = heartbeat * .48 * (1. - smoothstep(.4, 6., tileRadius));
       transformed.z += (tileRipple + vSurfaceHeat * .28) / tileUnit;
       ${filmEnabled ? /* glsl */ `
         vec4 scalePoint = vec4(transformed, 1.);

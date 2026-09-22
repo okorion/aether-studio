@@ -201,6 +201,7 @@ export function createSceneInteraction(
   let previousYaw = 0
   let disposed = false
   let enabled = true
+  let retiringSurface = false
   // Shared lighting input stays independent of the scene's orbit permission.
   const flow = createPointerFlow()
   const field = {
@@ -314,11 +315,15 @@ export function createSceneInteraction(
     }
   }
   const move = (event: PointerEvent) => {
+    if (!enabled && retiringSurface) return
     if (!enabled || reducedMotion || document.hidden || event.pointerType === 'touch' || !home() || blocked() ||
-      !Number.isFinite(event.clientX) || !Number.isFinite(event.clientY) ||
-      event.clientX < 0 || event.clientX > innerWidth || event.clientY < 0 || event.clientY > innerHeight) {
+      !Number.isFinite(event.clientX) || !Number.isFinite(event.clientY)) {
       clearField()
       breakStroke()
+      return
+    }
+    if (event.clientX < 0 || event.clientX > innerWidth || event.clientY < 0 || event.clientY > innerHeight) {
+      leaveViewport()
       return
     }
     pointer.set((event.clientX / innerWidth) * 2 - 1, 1 - (event.clientY / innerHeight) * 2)
@@ -384,6 +389,16 @@ export function createSceneInteraction(
     release()
     velocityYaw = 0
   }
+  const leaveViewport = () => {
+    // Keep the surface response alive while it decays. Re-entry starts a new
+    // flow stroke, so crossing the window edge cannot inject a long segment.
+    field.active = false
+    fieldTarget = 0
+    flow.release()
+    breakStroke()
+    release()
+    velocityYaw = 0
+  }
   const reset = () => {
     leave()
     targetYaw = 0
@@ -403,18 +418,22 @@ export function createSceneInteraction(
   window.addEventListener('pointerdown', down, { passive: true })
   window.addEventListener('pointerup', release)
   window.addEventListener('pointercancel', release)
-  window.addEventListener('blur', leave)
+  window.addEventListener('blur', leaveViewport)
   window.addEventListener('hashchange', navigate)
   window.addEventListener('dblclick', doubleClick)
-  document.addEventListener('pointerleave', leave)
+  document.addEventListener('pointerleave', leaveViewport)
   const visibility = () => {
     if (document.hidden) leave()
   }
   document.addEventListener('visibilitychange', visibility)
   return {
-    setActive(active: boolean) {
+    setActive(active: boolean, preserveSurface = false) {
       enabled = active
-      if (!active) leave()
+      retiringSurface = !active && preserveSurface
+      if (!active) {
+        if (retiringSurface) leaveViewport()
+        else leave()
+      }
     },
     setOrbitEnabled(enabled: boolean) {
       if (disposed || orbitEnabled === enabled) return
@@ -455,7 +474,7 @@ export function createSceneInteraction(
       ribbonMaterial.uniforms.uHeight.value = innerHeight
       points.visible = enabled && !reducedMotion && home() && !blocked() && streakScope.visible
       ribbon.visible = points.visible
-      if (!enabled || reducedMotion || !home() || blocked() || document.hidden) {
+      if ((!enabled && !retiringSurface) || reducedMotion || !home() || blocked() || document.hidden) {
         clearField()
       }
       flow.update(delta)
@@ -486,10 +505,10 @@ export function createSceneInteraction(
       window.removeEventListener('pointerdown', down)
       window.removeEventListener('pointerup', release)
       window.removeEventListener('pointercancel', release)
-      window.removeEventListener('blur', leave)
+      window.removeEventListener('blur', leaveViewport)
       window.removeEventListener('hashchange', navigate)
       window.removeEventListener('dblclick', doubleClick)
-      document.removeEventListener('pointerleave', leave)
+      document.removeEventListener('pointerleave', leaveViewport)
       document.removeEventListener('visibilitychange', visibility)
       scene.remove(points, ribbon)
       geometry.dispose()

@@ -1,10 +1,10 @@
 # AETHER STUDIO
 
-[사이트 바로 보기](https://aether-studio-nu.vercel.app/) · [숲·지하층 전환과 포인터 반응](docs/layered-transitions.md) · [척추·굴절 모니터 개선](docs/spine-monitors.md)
+[사이트 바로 보기](https://aether-studio-nu.vercel.app/) · [영상 모니터와 마우스 입력](docs/monitor-cinema.md) · [숲·지하층 전환과 포인터 반응](docs/layered-transitions.md)
 
 [Active Theory](https://activetheory.net/)의 중앙 오브젝트, 연속된 공간 이동, 금속 반사와 움직이는 프로젝트 화면을 참고한 자체 3D 경험입니다. React + TypeScript + Three.js + Vite로 개발했습니다.
 
-런타임에는 원본의 소스·로고·모델·영상·음악을 사용하지 않습니다. AETHER STUDIO 브랜드와 가상 프로젝트, 절차적 모델·GPU 영상은 직접 작성했습니다. 원본 화면은 비교 문서의 검수 증거에만 사용합니다.
+런타임에는 원본의 소스·로고·모델·영상·음악을 사용하지 않습니다. AETHER STUDIO 브랜드와 가상 프로젝트, 절차적 모델, 수식으로 제작한 MP4 두 편과 대체 영상 셰이더를 직접 작성했습니다. 원본 화면은 비교 문서의 검수 증거에만 사용합니다.
 
 ![숲 입자와 O 심벌](docs/screenshots/transitions/entry.jpg)
 
@@ -16,10 +16,11 @@
 - 초반·소개 로고·마지막 링에서 빈 공간 드래그: 중앙 오브젝트를 축으로 회전하고 놓은 뒤 선택한 시점을 유지합니다. 더블클릭하면 기본 시점으로 복귀합니다.
 - 척추·모니터·지하 장치·비늘 구간: 드래그 궤도를 잠그고 스크롤로 카메라를 제어합니다. 비늘이 사라지는 전환 끝까지 마우스 이동·드래그·더블클릭이 카메라를 바꾸지 않습니다. [잠금 경계 검증](docs/mechanical-camera.md)
 - 척추·사슬: 스크롤 위치에 따라 움직입니다. 입력이 멎으면 관성 정착 뒤 멈추고, 역스크롤하면 반대 방향으로 돌아갑니다. 모니터 영상과 조명은 계속 움직입니다.
-- 척추는 굵은 비대칭 관절·추궁·돌기와 교차 연결 사슬로 구성했습니다. 곡면 모니터 6장이 아래에서 들어와 전경을 거쳐 위로 지나갑니다. GPU 데스크톱에서는 실제 척추와 입자가 화면 안에서 굴절됩니다.
+- 척추는 굵은 비대칭 관절·추궁·돌기와 교차 연결 사슬로 구성했습니다. 얇은 유리 모니터 6장이 아래에서 들어와 전경을 거쳐 위로 지나갑니다. MP4 두 편을 공유해 재생하고, GPU 데스크톱에서는 실제 척추와 입자를 화면 안에 굴절시킵니다.
+- 모니터 위 마우스: 해당 판이 조금 들리고 기울며 가장자리 빛과 굴절이 반응합니다. 포인터를 멈춰도 호버를 유지하고, UI 위에서는 해제합니다. 판을 클릭하면 해당 프로젝트 상세가 열립니다. 드래그·스크롤 중에는 상세 열기를 취소합니다.
 - 마지막 비늘은 위층에 남고 링이 아래로 내려갑니다. 링 안의 대문자 O는 상하 반전되지 않습니다.
-- 모션 정지·재개: 선택한 시점과 애니메이션 위상을 보존합니다. OS reduced motion도 지원합니다.
-- Work / Contact와 dialog에서는 배경의 연속 렌더링을 쉬고 홈으로 돌아오면 재개합니다. 모바일은 기본 터치 스크롤을 유지하고 텍스트는 드래그 선택되지 않습니다.
+- 모션 정지·재개: 선택한 시점과 애니메이션 위상, 영상 재생 위치를 보존합니다. OS reduced motion도 지원하며 처음부터 모션 축소 상태이면 MP4를 내려받지 않습니다.
+- Work / Contact와 dialog, 숨긴 탭에서는 배경 렌더링과 영상을 멈춥니다. 홈의 모니터 구간으로 돌아오면 같은 영상의 재생을 이어갑니다. 모바일은 기본 터치 스크롤을 유지하고 텍스트는 드래그 선택되지 않습니다.
 
 | 숲·소개·척추 전환 | 장치·바닥·비늘·숲 전환 |
 | --- | --- |
@@ -29,13 +30,13 @@
 
 | 척추와 움직이는 모니터 | 지하 장치 |
 | --- | --- |
-| ![척추](docs/screenshots/spine/after-40.jpg) | ![장치](docs/screenshots/transitions/device.jpg) |
+| ![척추와 실제 영상 모니터](docs/screenshots/monitors/after-40.jpg) | ![장치](docs/screenshots/transitions/device.jpg) |
 
 | 금속 비늘 | 하부 링 |
 | --- | --- |
 | ![비늘](docs/screenshots/transitions/scales.jpg) | ![하부 링](docs/screenshots/transitions/after-910.jpg) |
 
-실제 production 빌드의 1440×900 GPU 캡처입니다. [척추·모니터 검증 문서](docs/spine-monitors.md)에 원본의 입력 관찰, 전후 비교, 유리 굴절·자체 GPU 영상과 성능 경계를 기록했습니다. 모바일은 공유 배경 캡처 대신 가벼운 투명 영상으로 표시합니다. 시각적 유사도를 백분율로 측정하거나 인증하지 않습니다. [이전 5개 지점 비교](docs/visual-comparison.md)와 [24단계 비교](docs/continuous-journey.md)는 역사 기록입니다.
+실제 production 빌드의 1440×900 GPU 캡처입니다. [최신 모니터 문서](docs/monitor-cinema.md)에 원본 입력 관찰, 실제 MP4와 굴절의 합성, 호버·클릭과 재생 수명을 정리했습니다. 모바일은 공유 배경 캡처를 생략하고 영상과 유리 표면을 표시합니다. 시각적 유사도를 백분율로 측정하거나 인증하지 않습니다. [척추 개선](docs/spine-monitors.md), [이전 5개 지점 비교](docs/visual-comparison.md), [24단계 비교](docs/continuous-journey.md)는 이전 단계의 기록입니다.
 
 ![척추 구간 실제 스크롤](docs/screenshots/spine/scroll.gif)
 
@@ -93,7 +94,8 @@ npx vercel deploy --prod --scope okorions-projects
 
 - 금속 링과 대문자 O 심벌, 척추·사슬·지하 장치·금속 비늘, 입자 군집을 실시간 렌더링
 - 하강하는 중심을 따라가는 카메라와 24개 기준점의 연속 native scroll
-- GPU 유동 입자 최대 42,000개, 구간별 숲 최대 35,000개, 인스턴싱 금속 구조와 6종 자체 GPU 영상
+- GPU 유동 입자 최대 42,000개, 구간별 숲 최대 35,000개, 인스턴싱 금속 구조
+- 유리 모니터 6장이 공유하는 MP4 두 편·VideoTexture 두 개, 영상 지연 로드와 재생 실패 시 절차적 대체 표현
 - 데스크톱 HDR bloom·512px 평면 반사, 프레임 시간 기반 적응형 DPR과 후처리 축소
 - Work / Contact / 홈 이동, 현재 챕터 표시
 - 프로젝트 4개 및 상세 dialog, 다음 프로젝트, Escape 닫기와 초점 복원
@@ -101,12 +103,22 @@ npx vercel deploy --prod --scope okorions-projects
 - 모바일 레이아웃, 모션 정지, OS reduced-motion 지원
 - GPU가 없는 SwiftShader·llvmpipe 환경에서는 자동으로 입자·해상도·반사 계산을 줄이고 프레임 사이 입력 처리 시간을 확보
 - WebGL 미지원·컨텍스트 손실·3D 모듈 로딩 실패 시 CSS 배경과 탐색 유지
-- 숨긴 탭의 렌더링·소리 정지, 콘텐츠 화면의 연속 렌더링 중지, GPU 리소스와 이벤트 정리
+- 숨긴 탭의 렌더링·소리·영상 정지, 콘텐츠 화면의 연속 렌더링 중지, GPU·미디어 리소스와 이벤트 정리
 - 자체 호스팅 글꼴. 런타임 외부 API·분석 도구·원격 미디어 요청 없음
 
 ## 전환과 포인터 반응
 
-[최신 검증 문서](docs/layered-transitions.md)에 동일 위치의 전후 캡처, 실제 휠 입력, 숲·장치 입자·비늘의 마우스 반응을 정리했습니다. 장치와 비늘은 서로 다른 높이에 고정되어 바닥이 두 공간을 구분합니다. 평면 문구도 3D 안에서 합성하므로 링과 숲의 가림 순서를 따릅니다.
+[전환 검증 문서](docs/layered-transitions.md)에 동일 위치의 전후 캡처, 실제 휠 입력, 숲·장치 입자·비늘의 마우스 반응을 정리했습니다. 장치와 비늘은 서로 다른 높이에 고정되어 바닥이 두 공간을 구분합니다. 평면 문구도 3D 안에서 합성하므로 링과 숲의 가림 순서를 따릅니다.
+
+## 실제 영상과 유리 모니터
+
+크롬 유체와 오로라를 수식으로 직접 제작한 10초 루프 영상 두 편을 사용합니다. 각각 640×400·24fps·무음 H.264이며, MP4 합계는 2,101,778바이트(약 2.10MB)입니다. `public/media/`에서 사이트와 함께 Vercel CDN으로 제공하므로 별도 영상 클라우드나 API 키가 필요하지 않습니다. [영상 출처·재생성·검증](docs/media-sources.md)
+
+최초로 홈 모니터 구간에 들어올 때만 영상 소스를 연결합니다. 로딩 전, 다운로드 실패, 자동 재생 차단 시에는 기존 절차적 영상 셰이더를 표시하며 프레임마다 재시도하지 않습니다. 모션 정지와 화면 전환은 이미 받은 영상과 재생 위치를 보존합니다.
+
+![실제 모니터 영상 재생 요약](docs/screenshots/monitors/film.gif)
+
+실제 화면 캡처를 이어 붙인 요약이며 실시간 FPS나 24fps 재생 성능을 증명하는 자료는 아닙니다. [전후·호버·프로젝트 열기 비교](docs/monitor-cinema.md)
 
 ## 콘텐츠 교체
 
@@ -123,7 +135,9 @@ npx vercel deploy --prod --scope okorions-projects
 | 전경·중경 숲 수관과 포인터 조명 | `src/SceneForest.ts` |
 | 평면 문구·사선 전환 경계 | `src/SceneLayers.ts` |
 | 척추·관절·교차 연결 사슬 | `src/SceneSpine.ts` |
-| 곡면 모니터·공유 굴절·자체 영상 | `src/SceneMonitors.ts` |
+| 유리 모니터·공유 굴절·호버·영상 합성 | `src/SceneMonitors.ts` |
+| 영상 지연 로드·재생·정지·실패·해제 | `src/SceneVideo.ts` |
+| 자체 MP4·포스터와 생성 스크립트 | `public/media/`, `scripts/generate-media.py`, [자산 문서](docs/media-sources.md) |
 | 프로젝트 비주얼 | `src/ProjectArt.tsx`, `src/styles.css` |
 | 합성 사운드 | `src/audio.ts` |
 
@@ -131,9 +145,11 @@ npx vercel deploy --prod --scope okorions-projects
 
 ## 검증
 
-Playwright 테스트 27개는 데스크톱 1440×900, 모바일 390×844, WebGL 비활성 환경을 사용합니다. 실제 wheel의 하강·역방향, 24개 렌더 상태의 높이·링 방향, 척추·사슬·모니터의 정지·왕복, 중간 구간 카메라 잠금, 탐색·상세 보기·초점·사운드·hash/history와 로딩 실패를 검증합니다. DPR 1.5·2의 실제 WebGL 캡처·상태 복구·실패 시 대체 표현, 흔적의 픽셀 발생·잔존·소멸, 포인터 조명 초기화와 실제 비늘 픽셀 반응·원복도 확인합니다. GitHub Actions에서는 lint·타입·빌드를 확인하고 production preview를 SwiftShader로 실행합니다.
+Playwright는 데스크톱 1440×900, 모바일 390×844, WebGL 비활성 환경을 사용합니다. 실제 wheel의 하강·역방향, 24개 렌더 상태의 높이·링 방향, 척추·사슬·모니터의 정지·왕복, 중간 구간 카메라 잠금, 탐색·상세 보기·초점·사운드·hash/history와 로딩 실패를 검사합니다. DPR 1.5·2의 실제 WebGL 캡처·상태 복구·실패 시 대체 표현, 흔적의 픽셀 발생·잔존·소멸, 포인터 조명 초기화와 실제 비늘 픽셀 반응·원복도 포함합니다. GitHub Actions에서는 lint·타입·빌드를 확인하고 production preview를 SwiftShader로 실행합니다.
 
-최신 전환·마우스 반응 증거는 [전환 검증 문서](docs/layered-transitions.md)에 정리했습니다. [이전 동작·성능 기록](docs/dynamic-motion.md)과 [초기 검증 기록](docs/verification.md)도 보존합니다. WebGL 성능은 기기와 브라우저에 따라 달라질 수 있습니다. 실제 Safari/iOS 기기 검증은 수행하지 않았습니다.
+영상 지연 로드·재생 시간·정지와 재개, 실제 모니터 호버·드래그 취소·프로젝트 클릭, 다운로드 실패·자동 재생 차단·자원 정리 검사를 추가했습니다. **로컬 Playwright 31개, lint·타입 검사·production build를 통과했습니다.** 실제 GPU에서 데스크톱·모바일 스크롤 캡처와 모니터 입력을 확인했고 브라우저 오류는 없었습니다. 검사 범위와 확인 경계는 [모니터 문서](docs/monitor-cinema.md)에 정리했습니다.
+
+[전환 검증 문서](docs/layered-transitions.md), [이전 동작·성능 기록](docs/dynamic-motion.md), [초기 검증 기록](docs/verification.md)도 보존합니다. WebGL과 영상 디코딩 성능은 기기와 브라우저에 따라 달라질 수 있습니다. 실제 Safari/iOS 기기 검증은 수행하지 않았습니다.
 
 ## 주요 파일
 
@@ -141,6 +157,8 @@ Playwright 테스트 27개는 데스크톱 1440×900, 모바일 390×844, WebGL 
 src/
   App.tsx             페이지·내비게이션·상세 dialog
   Scene.tsx           절차적 Three.js 장면과 수명 관리
+  SceneMonitors.ts    유리 모니터·영상 합성·호버와 선택
+  SceneVideo.ts       공유 영상 두 편의 재생 수명 관리
   SceneBoundary.tsx   선택적 3D 모듈 실패 격리
   ProjectArt.tsx      독립 프로젝트 아트
   projects.ts         교체 가능한 프로젝트 데이터
@@ -148,6 +166,7 @@ src/
   styles.css          반응형 레이아웃·시각 스타일
 tests/
   experience.spec.ts  핵심 사용자 흐름 회귀 테스트
+  video.spec.ts       실제 영상·모니터 입력·실패 처리 검사
 ```
 
 서드파티 글꼴 라이선스는 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)에 안내합니다.

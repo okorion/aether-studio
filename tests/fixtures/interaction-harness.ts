@@ -31,12 +31,15 @@ export type InteractionHarness = {
   probeCurtainPixels: typeof probeCurtainPixels
   probeEmblemCurtainPixels: typeof probeEmblemCurtainPixels
   probeWorldSurfaceDepth: typeof probeWorldSurfaceDepth
+  probeProductionBoundaryPixels: typeof probeProductionBoundaryPixels
+  probeOutgoingBonePixels: typeof probeOutgoingBonePixels
   probeScalePointer: typeof probeScalePointer
   probeDevicePointer: typeof probeDevicePointer
   probeForestPointer: typeof probeForestPointer
   probeMonitorCapture: typeof probeMonitorCapture
   probeWaterCaptureVisibility: typeof probeWaterCaptureVisibility
   probeMonitorOcclusion: typeof probeMonitorOcclusion
+  probeMonitorMotion: typeof probeMonitorMotion
   sampleWorld: (elapsed: number, progress: number) => {
     chain: number[]
     vertebrae: number[]
@@ -44,6 +47,9 @@ export type InteractionHarness = {
     modelY: number
     chamberY: number
     structureYaw: number
+    boneLocalY: number
+    boneWorldY: number
+    boneVisible: boolean
     fixed: { machineY: number; floorY: number; scaleY: number; machineVisible: boolean; scaleVisible: boolean }
     scaleTiles: number[]
   }
@@ -384,8 +390,9 @@ function probeWorldSurfaceDepth() {
       scaleCorePresent: Boolean(worldScene.getObjectByName('aether-scale-core')),
       capFilmDefine: capMesh.material.defines?.AETHER_LIGHT_FILM as number | undefined,
       ceilingY: ceiling.min.y, ceilingTop: ceiling.max.y, ceilingWidth: ceiling.max.x - ceiling.min.x,
+      ceilingVisible: required('aether-chamber-ceiling').visible,
       undersideY: underside.max.y, undersideWidth: underside.max.x - underside.min.x }
-    const visibility = [.70, .79, .70].map(progress => {
+    const visibility = [.70, .76, .82, .70].map(progress => {
       atProgress(progress)
       return {
         eyeY: probeCamera.position.y,
@@ -396,9 +403,8 @@ function probeWorldSurfaceDepth() {
       }
     })
     const cases = [
-      { name: 'aether-chamber-ceiling', progress: .67, ndcY: .80 },
       { name: 'aether-separating-floor', progress: .70, ndcY: -.55 },
-      { name: 'aether-floor-underside', progress: .79, ndcY: .80 },
+      { name: 'aether-floor-underside', progress: .82, ndcY: .80 },
       { name: 'aether-machine-closed-cap', progress: .67, ndcY: null },
     ].map(entry => {
       atProgress(entry.progress)
@@ -439,7 +445,10 @@ function probeWorldSurfaceDepth() {
         const pixel = offset / 4, x = pixel % width, y = Math.floor(pixel / width)
         const uvX = (x + .5) / width, uvY = (y + .5) / height
         const boundary = uvY - (uvX - .5) * .20
-        if (boundary <= layers.forestEntry + .022 || boundary >= layers.monitorExit - .022) {
+        const lowerRoom = entry.name === 'aether-floor-underside'
+        const lower = lowerRoom ? layers.forestEntry : layers.deviceExit
+        const upper = lowerRoom ? layers.deviceExit : layers.monitorExit
+        if (boundary <= lower + .022 || boundary >= upper - .022) {
           outsideCurtain++
           continue
         }
@@ -471,6 +480,199 @@ function probeWorldSurfaceDepth() {
     markerMaterial.dispose()
     // The borrowed production geometry/material remain owned by worlds.
     probeScene.clear()
+  }
+}
+
+function probeProductionBoundaryPixels() {
+  worlds ??= createSceneWorlds(worldScene, true, false, undefined, worldFilm)
+  const width = 160, height = 120
+  const probeScene = new THREE.Scene()
+  const probeCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, .1, 20)
+  probeCamera.position.z = 5
+  probeCamera.updateMatrixWorld()
+  const target = new THREE.WebGLRenderTarget(width, height)
+  // A full-screen plane isolates the REAL production material/binding from
+  // sparse geometry coverage. Constant output changes color only, not discard.
+  const geometry = new THREE.PlaneGeometry(5, 5)
+  geometry.setAttribute('aArmour', geometry.getAttribute('position').clone())
+  geometry.setAttribute('aArmourNormal', geometry.getAttribute('normal').clone())
+  geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(geometry.attributes.position.count * 3).fill(1), 3))
+  const saved = { target: renderer.getRenderTarget(), autoClear: renderer.autoClear,
+    color: renderer.getClearColor(new THREE.Color()), alpha: renderer.getClearAlpha() }
+  const cases = [
+    { name: 'aether-spine-vertebrae', region: 'bone', progress: [.635, .65, .665] },
+    { name: 'aether-machine-closed-cap', region: 'device', progress: [.755, .765, .78, .82] },
+    { name: 'aether-scale-tiles', region: 'scales', progress: [.755, .765, .775, .90] },
+    { name: 'aether-floor-underside', region: 'scales', progress: [.765, .775] },
+  ] as const
+  const results = []
+  try {
+    renderer.autoClear = true
+    renderer.setClearColor(0x0000ff, 1)
+    for (const entry of cases) {
+      const source = worldScene.getObjectByName(entry.name)
+      if (!(source instanceof THREE.Mesh) || Array.isArray(source.material)) throw new Error(`Missing production material ${entry.name}`)
+      const production = source.material as THREE.MeshStandardMaterial
+      const material = production.clone()
+      material.defines = { ...production.defines }
+      material.transparent = false
+      material.opacity = 1
+      material.side = THREE.DoubleSide
+      material.onBeforeCompile = (shader, activeRenderer) => {
+        production.onBeforeCompile.call(production, shader, activeRenderer)
+        const end = shader.fragmentShader.lastIndexOf('}')
+        shader.fragmentShader = shader.fragmentShader.slice(0, end)
+          + '\ngl_FragColor = vec4(1., 0., 0., 1.);\n' + shader.fragmentShader.slice(end)
+      }
+      material.customProgramCacheKey = () => production.customProgramCacheKey() + '-boundary-pixel-probe'
+      const surface = new THREE.Mesh(geometry, material)
+      probeScene.add(surface)
+      try {
+        for (const progress of entry.progress) {
+          worlds.update(10, progress)
+          const layers = sampleLayers(progress)
+          // Expected region comes from the timeline contract, not uniforms read
+          // back out of the material under test.
+          const upper = entry.region === 'bone' ? layers.monitorEntry
+            : entry.region === 'device' ? layers.monitorExit : layers.deviceExit
+          const lower = entry.region === 'bone' ? layers.monitorExit
+            : entry.region === 'device' ? layers.deviceExit : layers.forestEntry
+          renderer.setRenderTarget(target)
+          renderer.render(probeScene, probeCamera)
+          const image = new Uint8Array(width * height * 4)
+          renderer.readRenderTargetPixels(target, 0, 0, width, height, image)
+          let checkedInside = 0, checkedOutside = 0, missingInside = 0, leakedOutside = 0
+          for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+            const offset = (y * width + x) * 4
+            const boundary = (y + .5) / height - ((x + .5) / width - .5) * .20
+            const red = image[offset] > 150 && image[offset + 1] < 10 && image[offset + 2] < 10
+            if (boundary > lower + .022 && boundary < upper - .022) {
+              checkedInside++
+              if (!red) missingInside++
+            } else if (boundary < lower - .022 || boundary > upper + .022) {
+              checkedOutside++
+              if (red) leakedOutside++
+            }
+          }
+          results.push({ name: entry.name, progress, checkedInside, checkedOutside, missingInside, leakedOutside })
+        }
+      } finally {
+        probeScene.remove(surface)
+        material.dispose()
+      }
+    }
+    return results
+  } finally {
+    renderer.setRenderTarget(saved.target)
+    renderer.autoClear = saved.autoClear
+    renderer.setClearColor(saved.color, saved.alpha)
+    geometry.dispose()
+    target.dispose()
+  }
+}
+
+function probeOutgoingBonePixels() {
+  const width = 320, height = 200
+  const probeScene = new THREE.Scene()
+  const atmosphere = createAtmosphere(probeScene, false, false)
+  const grains = probeScene.getObjectByName('aether-current-particles') as THREE.Points<THREE.BufferGeometry, THREE.ShaderMaterial>
+  const outgoing = probeScene.getObjectByName('aether-outgoing-bone-current') as THREE.Points<THREE.BufferGeometry, THREE.ShaderMaterial>
+  if (!outgoing) throw new Error('Missing outgoing production bone current')
+  const originalMaterial = outgoing.material
+  const referenceMaterial = grains.material.clone()
+  referenceMaterial.uniforms = { ...grains.material.uniforms,
+    uWeights: { value: new THREE.Vector4(1, 0, 0, 0) },
+    uFieldOpacity: { value: 1 }, uExitEdge: { value: -.5 },
+    uDeviceEntryWipe: { value: 0 }, uDevicePointerStrength: { value: 0 },
+  }
+  const reference = new THREE.Points(grains.geometry, referenceMaterial)
+  reference.frustumCulled = false
+  reference.visible = false
+  probeScene.add(reference)
+  const coverageMaterial = originalMaterial.clone()
+  coverageMaterial.uniforms = originalMaterial.uniforms
+  // Retain the actual position/point size and both circular/curtain discards;
+  // remove shimmer/color so a stationary geometry check cannot fail on light.
+  coverageMaterial.fragmentShader = coverageMaterial.fragmentShader.replace(
+    'gl_FragColor = vec4(color, shape * vAlpha * entry);',
+    'gl_FragColor = vec4(1., 1., 1., 1.);')
+  const probeCamera = new THREE.PerspectiveCamera(42, width / height, .1, 100)
+  const target = new THREE.WebGLRenderTarget(width, height)
+  const saved = { target: renderer.getRenderTarget(), autoClear: renderer.autoClear,
+    color: renderer.getClearColor(new THREE.Color()), alpha: renderer.getClearAlpha() }
+  const at = (progress: number, time: number) => {
+    const state = sampleJourney(progress)
+    probeCamera.position.set(Math.sin(state.azimuth) * Math.cos(state.elevation) * state.radius,
+      state.height + Math.sin(state.elevation) * state.radius,
+      Math.cos(state.azimuth) * Math.cos(state.elevation) * state.radius)
+    probeCamera.lookAt(0, state.height, 0)
+    probeCamera.updateMatrixWorld()
+    atmosphere.update(time, progress, 1, undefined, probeCamera)
+    atmosphere.update(time, progress, 1, undefined, probeCamera)
+    for (const name of ['aether-current-particles', 'aether-current-filaments', 'aether-volume-shafts'])
+      probeScene.getObjectByName(name)!.visible = false
+    reference.position.y = state.height
+  }
+  const read = () => {
+    renderer.setRenderTarget(target)
+    renderer.render(probeScene, probeCamera)
+    const image = new Uint8Array(width * height * 4)
+    renderer.readRenderTargetPixels(target, 0, 0, width, height, image)
+    return image
+  }
+  const changed = (a: Uint8Array, b: Uint8Array) => a.reduce((sum, value, i) => sum + Number(value !== b[i]), 0)
+  try {
+    renderer.autoClear = true
+    renderer.setClearColor(0x000000, 0)
+    const cases = [.635, .65, .665].map(progress => {
+      at(progress, 10)
+      const masked = read()
+      outgoing.visible = false
+      reference.visible = true
+      const unmasked = read()
+      reference.visible = false
+      const lower = sampleLayers(progress).monitorExit
+      let visibleAbove = 0, changedAbove = 0, hiddenBaseline = 0, leakedBelow = 0
+      for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+        const offset = (y * width + x) * 4
+        const boundary = (y + .5) / height - ((x + .5) / width - .5) * .20
+        const lit = unmasked[offset] + unmasked[offset + 1] + unmasked[offset + 2] > 6
+        if (boundary > lower + .05 && lit) {
+          visibleAbove++
+          if (masked.slice(offset, offset + 4).some((value, i) => value !== unmasked[offset + i])) changedAbove++
+        } else if (boundary < lower - .05) {
+          if (lit) hiddenBaseline++
+          if (masked[offset] || masked[offset + 1] || masked[offset + 2] || masked[offset + 3]) leakedBelow++
+        }
+      }
+      return { progress, visibleAbove, changedAbove, hiddenBaseline, leakedBelow }
+    })
+    outgoing.material = coverageMaterial
+    at(.645, 10)
+    const initial = read()
+    at(.645, 12)
+    const idle = read()
+    at(.66, 12)
+    const forward = read()
+    at(.645, 15)
+    const reverse = read()
+    const closed = [.59, .70].map(progress => {
+      at(progress, 10)
+      return outgoing.visible
+    })
+    return { cases, geometryShared: outgoing.geometry === grains.geometry,
+      idleChanged: changed(initial, idle), forwardChanged: changed(initial, forward),
+      reverseChanged: changed(initial, reverse), closed }
+  } finally {
+    outgoing.material = originalMaterial
+    probeScene.remove(reference)
+    referenceMaterial.dispose()
+    coverageMaterial.dispose()
+    atmosphere.dispose()
+    target.dispose()
+    renderer.setRenderTarget(saved.target)
+    renderer.autoClear = saved.autoClear
+    renderer.setClearColor(saved.color, saved.alpha)
   }
 }
 
@@ -604,6 +806,7 @@ function probeDevicePointer() {
       // overlapping coverage and cannot stand in for particle masking.
       probeScene.getObjectByName('aether-current-filaments')!.visible = false
       probeScene.getObjectByName('aether-volume-shafts')!.visible = false
+      probeScene.getObjectByName('aether-outgoing-bone-current')!.visible = false
       const renderGrains = () => {
         renderer.setRenderTarget(target)
         renderer.render(probeScene, probeCamera)
@@ -638,7 +841,7 @@ function probeDevicePointer() {
       }
       return { progress: p, edge, wipe, hiddenBaseline, leakedAbove, visibleBelow, changedBelow }
     })
-    const roomVisibility = [.70, .79, .70].map(p => {
+    const roomVisibility = [.70, .76, .82, .70].map(p => {
       positionCamera(p)
       atmosphere.update(elapsed, p, 1, undefined, probeCamera)
       return ['aether-current-particles', 'aether-current-filaments', 'aether-volume-shafts']
@@ -717,6 +920,72 @@ function probeForestPointer(progress: number) {
   }
 }
 
+function probeMonitorMotion() {
+  const monitors = createSceneMonitors(true, false)
+  const probeCamera = new THREE.PerspectiveCamera(42, 1.6, .1, 90)
+  probeCamera.position.set(0, 0, 12)
+  probeCamera.lookAt(0, 0, 0)
+  probeCamera.updateMatrixWorld()
+  const snapshot = () => monitors.group.children.map(panel => ({
+    position: panel.position.toArray(), quaternion: panel.quaternion.toArray(), scale: panel.scale.toArray(),
+  }))
+  let time = 0
+  try {
+    const scroll = [.303, .367, .431, .495, .559, .623, .303].map(progress => {
+      monitors.update(++time, progress)
+      return snapshot()
+    })
+    const hover = [1, 2].map(index => {
+      const progress = .303 + index * .064
+      // Settle previous hover before selecting the opposite side of the stack.
+      for (let frame = 0; frame < 90; frame++) monitors.update(time += 1 / 60, progress)
+      const before = snapshot()[index]
+      monitors.group.updateMatrixWorld(true)
+      const center = monitors.group.children[index].getWorldPosition(new THREE.Vector3()).project(probeCamera)
+      const pointer = { ndc: new THREE.Vector2(center.x, center.y), strength: 1, aspect: 1.6, active: true }
+      for (let frame = 0; frame < 60; frame++) monitors.update(time += 1 / 60, progress, pointer, probeCamera)
+      const after = snapshot()[index]
+      const selected = monitors.getHoveredPanel()
+      for (let frame = 0; frame < 90; frame++) monitors.update(time += 1 / 60, progress)
+      return { index, before, after, restored: snapshot()[index], selected }
+    })
+
+    // Raycast the REAL production chain and card geometry along projected card
+    // samples. Bounding-box Z alone would not prove camera-space occlusion.
+    worlds ??= createSceneWorlds(worldScene, true, false, undefined, worldFilm)
+    const chain = worldScene.getObjectByName('aether-spine-chain')
+    if (!(chain instanceof THREE.InstancedMesh)) throw new Error('Missing production chain')
+    const raycaster = new THREE.Raycaster()
+    const chainDepth = [.367, .431, .495, .559, .623].map((progress, index) => {
+      const state = sampleJourney(progress)
+      probeCamera.position.set(Math.sin(state.azimuth) * Math.cos(state.elevation) * state.radius,
+        state.height + Math.sin(state.elevation) * state.radius,
+        Math.cos(state.azimuth) * Math.cos(state.elevation) * state.radius)
+      probeCamera.lookAt(0, state.height, 0)
+      probeCamera.updateMatrixWorld()
+      worlds!.update(time, progress)
+      worldScene.updateMatrixWorld(true)
+      chain.computeBoundingSphere()
+      const panel = worldScene.getObjectByName(`aether-monitor-${index + 1}`)
+      if (!(panel instanceof THREE.Mesh)) throw new Error('Missing production monitor')
+      let overlaps = 0, inFront = 0, minimumGap = Infinity
+      for (let row = 0; row < 33; row++) for (let column = 0; column < 49; column++) {
+        const point = panel.localToWorld(new THREE.Vector3((column / 48 - .5) * 5.5, (row / 32 - .5) * 3.3, .035)).project(probeCamera)
+        raycaster.setFromCamera(new THREE.Vector2(point.x, point.y), probeCamera)
+        const cardHit = raycaster.intersectObject(panel, false)[0]
+        const chainHit = raycaster.intersectObject(chain, false)[0]
+        if (!cardHit || !chainHit) continue
+        overlaps++
+        const gap = chainHit.distance - cardHit.distance
+        minimumGap = Math.min(minimumGap, gap)
+        if (gap > 0) inFront++
+      }
+      return { progress, overlaps, inFront, minimumGap: Number.isFinite(minimumGap) ? minimumGap : null }
+    })
+    return { scroll, hover, chainDepth }
+  } finally { monitors.dispose() }
+}
+
 function probeMonitorOcclusion() {
   const monitors = createSceneMonitors(true, false)
   const occlusionScene = new THREE.Scene()
@@ -728,7 +997,6 @@ function probeMonitorOcclusion() {
   const boxGeometry = new THREE.BoxGeometry(1, 1, 1)
   const opaque = new THREE.MeshBasicMaterial()
   const blocker = new THREE.Mesh(boxGeometry, opaque)
-  blocker.position.z = 5
   const particles = new THREE.Points(new THREE.BufferGeometry().setAttribute('position',
     new THREE.Float32BufferAttribute([0, 0, 5], 3)), new THREE.PointsMaterial())
   const instances = new THREE.InstancedMesh(boxGeometry, opaque, 1)
@@ -738,6 +1006,15 @@ function probeMonitorOcclusion() {
   occlusionScene.add(monitors.group, occluders)
   occluders.add(blocker)
   monitors.update(1, .367)
+  monitors.group.updateMatrixWorld(true)
+  const panelCenter = monitors.group.children[1].getWorldPosition(new THREE.Vector3())
+  const projected = panelCenter.clone().project(probeCamera)
+  ndc.set(projected.x, projected.y)
+  const rayPoint = (z: number) => probeCamera.position.clone().lerp(panelCenter,
+    (z - probeCamera.position.z) / (panelCenter.z - probeCamera.position.z))
+  const blockingPoint = rayPoint(5)
+  blocker.position.copy(blockingPoint)
+  particles.geometry.attributes.position.setXYZ(0, blockingPoint.x, blockingPoint.y, blockingPoint.z)
   monitors.setOccluders([occluders])
   try {
     const foreground = pick()
@@ -749,7 +1026,7 @@ function probeMonitorOcclusion() {
     opaque.visible = false; ignored.push(pick()); opaque.visible = true
     opaque.depthWrite = false; ignored.push(pick()); opaque.depthWrite = true
     opaque.transparent = true; opaque.opacity = .5; ignored.push(pick()); opaque.opacity = 1
-    blocker.position.z = -4; ignored.push(pick())
+    blocker.position.copy(rayPoint(-4)); ignored.push(pick())
     blocker.position.set(20, 0, 5)
     let offRayCasts = 0
     const raycast = blocker.raycast
@@ -761,8 +1038,8 @@ function probeMonitorOcclusion() {
     ignored.push(pick())
     occluders.add(instances)
     monitors.setOccluders([occluders])
-    const instancePicks = [20, 0, 20].map(x => {
-      instances.setMatrixAt(0, matrix.makeTranslation(x, 0, 5))
+    const instancePicks = [20, blockingPoint.x, 20].map(x => {
+      instances.setMatrixAt(0, matrix.makeTranslation(x, blockingPoint.y, blockingPoint.z))
       instances.instanceMatrix.needsUpdate = true
       return pick()
     })
@@ -776,7 +1053,8 @@ function probeMonitorOcclusion() {
     probeCamera.updateMatrixWorld()
     worlds.update(10, .4)
     worldScene.updateMatrixWorld(true)
-    const visibleProduction = worlds.getMonitorHit(new THREE.Vector2(420 / 1440 * 2 - 1, 1 - 380 / 900 * 2), probeCamera)
+    const productionCenter = worldScene.getObjectByName('aether-monitor-1')!.getWorldPosition(new THREE.Vector3()).project(probeCamera)
+    const visibleProduction = worlds.getMonitorHit(new THREE.Vector2(productionCenter.x, productionCenter.y), probeCamera)
     return { foreground, hovered, ignored, offRayCasts, instancePicks, visibleProduction }
   } finally {
     monitors.dispose()
@@ -1003,12 +1281,15 @@ window.interactionHarness = {
   probeCurtainPixels,
   probeEmblemCurtainPixels,
   probeWorldSurfaceDepth,
+  probeProductionBoundaryPixels,
+  probeOutgoingBonePixels,
   probeScalePointer,
   probeDevicePointer,
   probeForestPointer,
   probeMonitorCapture,
   probeWaterCaptureVisibility,
   probeMonitorOcclusion,
+  probeMonitorMotion,
   sampleWorld(elapsed, progress) {
     worlds ??= createSceneWorlds(worldScene, true, false, undefined, worldFilm)
     worlds.update(elapsed, progress)
@@ -1017,6 +1298,7 @@ window.interactionHarness = {
     const vertebrae = worldScene.getObjectByName('aether-spine-vertebrae')
     const monitors = worldScene.getObjectByName('aether-monitors')
     const matter = worldScene.getObjectByName('aether-matter')
+    const bone = worldScene.getObjectByName('aether-spine-assembly')
     const chamber = worldScene.getObjectByName('aether-chamber-space')
     const machine = worldScene.getObjectByName('aether-machine-assembly')
     const floor = worldScene.getObjectByName('aether-separating-floor')
@@ -1024,7 +1306,7 @@ window.interactionHarness = {
     const tiles = worldScene.getObjectByName('aether-scale-tiles')
     if (!(chain instanceof THREE.InstancedMesh) || !(vertebrae instanceof THREE.InstancedMesh)
       || !(tiles instanceof THREE.InstancedMesh) || !machine || !floor || !scales
-      || !monitors || !matter || !chamber)
+      || !monitors || !matter || !chamber || !bone)
       throw new Error('The real spine, chain, monitors, matter, and chamber must be present')
     const modelY = matter.getWorldPosition(worldPosition).y
     const chamberY = chamber.getWorldPosition(worldPosition).y
@@ -1035,6 +1317,9 @@ window.interactionHarness = {
       modelY,
       chamberY,
       structureYaw: matter.rotation.y,
+      boneLocalY: bone.position.y,
+      boneWorldY: bone.getWorldPosition(worldPosition).y,
+      boneVisible: matter.visible && bone.visible,
       fixed: {
         machineY: machine.getWorldPosition(worldPosition).y,
         floorY: floor.getWorldPosition(worldPosition).y,

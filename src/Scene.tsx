@@ -8,6 +8,7 @@ import { createSceneGlow } from './SceneGlow'
 import { createSceneForest } from './SceneForest'
 import { createSceneLayers, sampleLayers } from './SceneLayers'
 import { createSceneVideo } from './SceneVideo'
+import { prepareSceneShaders } from './ScenePreparation'
 
 type SceneProps = {
   reducedMotion: boolean
@@ -698,6 +699,8 @@ export default function Scene({ reducedMotion, active, onReady, onSelectProject 
       let frameAverage = 16
       let qualityFrames = 0
       let foreground = true
+      let preparing = true
+      let preparationGeneration = 0
       const monitorPointer = new THREE.Vector2()
       let monitorPress: {
         id: number; x: number; y: number; started: number; scrollY: number; progress: number; panel: number
@@ -898,6 +901,7 @@ export default function Scene({ reducedMotion, active, onReady, onSelectProject 
             canvas.dataset.quality = quality.toFixed(2)
             canvas.dataset.geometries = String(activeRenderer.info.memory.geometries)
             canvas.dataset.textures = String(activeRenderer.info.memory.textures)
+            canvas.dataset.programs = String(activeRenderer.info.programs?.length ?? 0)
             canvas.dataset.renderFrame = String(renderedFrames)
           }
           if (canvas.dataset.renderState !== 'ready') {
@@ -939,8 +943,28 @@ export default function Scene({ reducedMotion, active, onReady, onSelectProject 
       }
 
       const requestRender = () => {
-        if (!frame && frameTimer === undefined && !disposed && !contextLost && !document.hidden)
+        if (!preparing && !frame && frameTimer === undefined && !disposed && !contextLost && !document.hidden)
           frame = requestAnimationFrame(render)
+      }
+      const prepare = async () => {
+        preparing = true
+        canvas.dataset.preparation = 'compiling'
+        const generation = ++preparationGeneration
+        const cancelled = () => disposed || contextLost || generation !== preparationGeneration
+        try {
+          // Draw wrapper canvases before shader preparation; no video is
+          // downloaded here and no future section is shown to the user.
+          layers.update(readProgress(), camera)
+          worlds.prepare(activeRenderer)
+          await prepareSceneShaders(activeRenderer, scene, camera, cancelled)
+          if (cancelled()) return
+          canvas.dataset.preparation = 'ready'
+          preparing = false
+          previousTime = 0
+          requestRender()
+        } catch {
+          if (!cancelled()) failScene()
+        }
       }
       // Hidden content views retain their last frame, releasing CPU/GPU time
       // for cards and dialogs without rebuilding the scene on navigation.
@@ -980,6 +1004,7 @@ export default function Scene({ reducedMotion, active, onReady, onSelectProject 
       const lost = (event: Event) => {
         event.preventDefault()
         contextLost = true
+        preparationGeneration++
         syncMedia()
         canvas.dataset.renderState = 'lost'
         cancelAnimationFrame(frame)
@@ -994,9 +1019,10 @@ export default function Scene({ reducedMotion, active, onReady, onSelectProject 
         try {
           refreshEnvironment()
           contextLost = false
+          preparing = true
           previousTime = 0
           resize()
-          requestRender()
+          void prepare()
         } catch {
           failScene()
         }
@@ -1046,7 +1072,7 @@ export default function Scene({ reducedMotion, active, onReady, onSelectProject 
         canvas.removeEventListener('webglcontextlost', lost)
         canvas.removeEventListener('webglcontextrestored', restored)
       }
-      requestRender()
+      void prepare()
     } catch {
       failScene()
     }

@@ -480,6 +480,14 @@ export function createSceneMonitors(software: boolean, mobile: boolean, external
       hoveredPanel = targetHit?.index ?? -1
       if (targetHit) pointerUv.lerp(targetHit.uv, ease)
     },
+    prepare(renderer: THREE.WebGLRenderer) {
+      if (disposed || !target) return
+      renderer.getDrawingBufferSize(drawingSize)
+      const w = Math.max(1, Math.min(720, Math.floor(drawingSize.x)))
+      const h = Math.max(1, Math.round(w * drawingSize.y / Math.max(1, drawingSize.x)))
+      if (target.width !== w || target.height !== h) target.setSize(w, h)
+      renderer.initRenderTarget(target)
+    },
     capture(renderer: THREE.WebGLRenderer, scene: THREE.Scene, camera: THREE.Camera) {
       if (disposed || !target || !group.visible || capturing || captureFailed) return
       renderer.getDrawingBufferSize(drawingSize)

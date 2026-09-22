@@ -568,8 +568,10 @@ export function createSceneWorlds(
     luminousRings.setMatrixAt(i, dummy.matrix)
   }
   const reactorLight = new THREE.PointLight(0xc4bdd2, 0, 10, 2)
-  reactorLight.position.set(0, -.8, 1.1)
-  chamber.add(reactorLight)
+  // Keep the light count stable as the chamber appears. Hiding a light's
+  // parent recompiles EVERY lit material with a different NUM_POINT_LIGHTS.
+  reactorLight.position.set(0, -40.4 - .8, 1.1)
+  scene.add(reactorLight)
 
   const chamberWorld = new THREE.Vector3()
   const cameraWorld = new THREE.Vector3()
@@ -582,8 +584,20 @@ export function createSceneWorlds(
     getChamberHeight() {
       return space.getWorldPosition(chamberWorld).y
     },
+    prepare(renderer: THREE.WebGLRenderer) {
+      monitorAssembly.prepare(renderer)
+      if (floorReflection) renderer.initRenderTarget(floorReflection.getRenderTarget())
+    },
     capture(renderer: THREE.WebGLRenderer, camera: THREE.Camera) {
-      monitorAssembly.capture(renderer, scene, camera)
+      // The monitor's low-resolution refraction must not recursively render
+      // another complete floor reflection during the chamber overlap.
+      const reflected = floorReflection?.visible
+      if (floorReflection) floorReflection.visible = false
+      try {
+        monitorAssembly.capture(renderer, scene, camera)
+      } finally {
+        if (floorReflection) floorReflection.visible = reflected ?? false
+      }
     },
     setMediaActive(active: boolean, reducedMotion: boolean) {
       monitorAssembly.setMediaActive(active, reducedMotion)
@@ -676,6 +690,7 @@ export function createSceneWorlds(
       spineAssembly.dispose()
       monitorAssembly.dispose()
       scene.remove(root)
+      scene.remove(reactorLight)
       floorReflection?.dispose()
       instances.forEach((item) => item.dispose())
       geometries.forEach((item) => item.dispose())

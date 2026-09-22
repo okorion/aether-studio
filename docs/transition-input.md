@@ -1,3 +1,5 @@
+<a id="장치-입자와-세로-카메라-입력-검증"></a>
+
 # 리액터 입자와 세로 카메라 입력 검증
 
 2026-09-22, 수정 전 `af57c87`과 수정 후 `da14095`의 production 빌드를 실제 GPU에서 실행했다. 뷰포트 1440×900, DPR 1, Chromium·ANGLE D3D11, 동일한 스크롤 비율·포인터 경로·정착 시간을 사용했다. 조명과 영상의 시간은 고정하지 않았으므로 화면 전체의 픽셀 일치 비교는 아니다. 세로 입력은 방향을 바꾸는 수정이므로 결과 카메라 각도가 달라지는 것이 기대 동작이다.
@@ -10,6 +12,8 @@
 | 상단, 위→아래로 320px 드래그 | ![이전 상단 입력](screenshots/transitions/before-vertical-0-down.jpg) | ![수정한 상단 입력](screenshots/transitions/vertical-0-down.jpg) | 상단이 앞으로 오고 위쪽에서 바라보는 시점으로 이동한다. |
 | 하단 98%, 위→아래로 320px 드래그 | ![이전 하단 입력](screenshots/transitions/before-vertical-0.98-down.jpg) | ![수정한 하단 입력](screenshots/transitions/vertical-0.98-down.jpg) | 하단 포레스트에서도 같은 세로 방향을 적용한다. |
 | 상단, 아래→위로 320px 드래그 | ![이전 역방향](screenshots/transitions/before-vertical-0-up.jpg) | ![수정한 역방향](screenshots/transitions/vertical-0-up.jpg) | 바닥이 앞으로 오고 아래쪽에서 바라보는 시점으로 이동한다. |
+
+<a id="장치-모양의-복귀"></a>
 
 ## 리액터 모양의 복귀
 

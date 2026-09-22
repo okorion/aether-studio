@@ -72,6 +72,8 @@
 | --- | --- | --- |
 | [![PR 4 · 60%](screenshots/history/pr04/scroll-060.jpg)](screenshots/history/pr04/scroll-060.jpg) | [![PR 4 · 80%](screenshots/history/pr04/scroll-080.jpg)](screenshots/history/pr04/scroll-080.jpg) | [![PR 4 · 98%](screenshots/history/pr04/scroll-098.jpg)](screenshots/history/pr04/scroll-098.jpg) |
 
+<a id="척추와-굴절-모니터--pr-6"></a>
+
 ### 본 컬럼과 굴절 모니터 · PR #6
 
 기준: [`f40a58f`](https://github.com/okorion/aether-studio/commit/f40a58fd07a6bf98fcb0184797b1d4dfcb280d33) · 본 컬럼 관절·체인, 나선형 유리 모니터와 배경 굴절. [당시 설명](spine-monitors.md)
@@ -85,6 +87,8 @@
 | 60% | 80% | 98% |
 | --- | --- | --- |
 | [![PR 6 · 60%](screenshots/history/pr06/scroll-060.jpg)](screenshots/history/pr06/scroll-060.jpg) | [![PR 6 · 80%](screenshots/history/pr06/scroll-080.jpg)](screenshots/history/pr06/scroll-080.jpg) | [![PR 6 · 98%](screenshots/history/pr06/scroll-098.jpg)](screenshots/history/pr06/scroll-098.jpg) |
+
+<a id="숲의-층-전환과-실제-영상--pr-8"></a>
 
 ### 포레스트의 층 전환과 실제 영상 · PR #8
 
@@ -100,6 +104,8 @@
 | --- | --- | --- |
 | [![PR 8 · 60%](screenshots/history/pr08/scroll-060.jpg)](screenshots/history/pr08/scroll-060.jpg) | [![PR 8 · 80%](screenshots/history/pr08/scroll-080.jpg)](screenshots/history/pr08/scroll-080.jpg) | [![PR 8 · 98%](screenshots/history/pr08/scroll-098.jpg)](screenshots/history/pr08/scroll-098.jpg) |
 
+<a id="입체-숲과-연속-입자-o--pr-9"></a>
+
 ### 입체 포레스트와 연속 입자 O · PR #9
 
 기준: [`af57c87`](https://github.com/okorion/aether-studio/commit/af57c8788ea7b068d57c5f59d619963c65def51c) · 월드 공간 포레스트, 유기적 본 컬럼과 감기는 체인, 리액터·단일 입자 O·전진 섬광. [당시 설명](living-worlds.md)
@@ -113,6 +119,8 @@
 | 60% | 80% | 98% |
 | --- | --- | --- |
 | [![PR 9 · 60%](screenshots/history/pr09/scroll-060.jpg)](screenshots/history/pr09/scroll-060.jpg) | [![PR 9 · 80%](screenshots/history/pr09/scroll-080.jpg)](screenshots/history/pr09/scroll-080.jpg) | [![PR 9 · 98%](screenshots/history/pr09/scroll-098.jpg)](screenshots/history/pr09/scroll-098.jpg) |
+
+<a id="전환-성능장치-입력세로-궤도--pr-10"></a>
 
 ### 전환 성능·리액터 입력·세로 궤도 · PR #10
 

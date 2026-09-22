@@ -1,3 +1,5 @@
+<a id="척추와-굴절-모니터--2026-09-22"></a>
+
 # 본 컬럼과 굴절 모니터 · 2026-09-22
 
 [운영 사이트](https://aether-studio-nu.vercel.app/) · [README](../README.md) · [카메라 잠금](mechanical-camera.md)

@@ -447,7 +447,7 @@ export function createSceneMonitors(software: boolean, mobile: boolean, external
         material.uniforms.uEntryEdge.value = layers.monitorEntry
         material.uniforms.uExitEdge.value = layers.monitorExit
       }
-      group.position.y = -5 * (1 - smooth(.23, .305, p)) + 3 * smooth(.615, .69, p)
+      group.position.y = -5 * (1 - smooth(.23, .305, p))
       group.visible = weight > .001 && curtainHasCoverage(layers.monitorEntry, layers.monitorExit)
       if (!group.visible) { captureVisible = false; captureDirty = true }
       media.update(mediaActive && group.visible, reducedMotion)
@@ -461,18 +461,17 @@ export function createSceneMonitors(software: boolean, mobile: boolean, external
       for (let i = 0; i < panels.length; i++) {
         const panel = panels[i]
         const step = i - passage
-        const turn = step * 1.13
-        const front = Math.cos(turn)
-        const proximity = Math.max(0, front)
+        const side = i % 2 === 0 ? 1 : -1
         hover[i] = THREE.MathUtils.lerp(hover[i], hoveredPanel === i && !reducedMotion ? 1 : 0, ease)
         if (hover[i] < .0001) hover[i] = 0
-        // No modulo/recycling: every screen travels from the lower-right,
-        // through the foreground, then above and behind the preceding screen.
-        panel.position.set(Math.sin(turn) * (mobile ? 2.8 : 4.2) * mobileScale,
-          -step * 1.8 * mobileScale + hover[i] * .045, front * 2.65 - .05 + hover[i] * .13)
-        panel.rotation.set(.015 + Math.sin(turn) * .025 + (pointerUv.y - .5) * hover[i] * .075,
-          -Math.sin(turn) * .86 + (pointerUv.x - .5) * hover[i] * .09, -Math.sin(turn) * .035)
-        panel.scale.setScalar(mobileScale * (.86 + proximity * .14) * (1 + hover[i] * .026))
+        // Each screen has an authored facing and front-of-chain depth. Scroll
+        // translates the stack vertically; it never swings a screen through
+        // the column. Hover moves toward the outside, preserving its facing.
+        const x = (i === 0 ? .35 : side * 3.55) * mobileScale
+        panel.position.set(x + side * hover[i] * .24 * mobileScale,
+          -step * 2.85 * mobileScale, 3.3 + hover[i] * .12)
+        panel.rotation.set(.012, i === 0 ? -.06 : -side * .24, -side * .015)
+        panel.scale.setScalar(mobileScale * (i === 0 ? .90 : .84))
         const localWeight = 1 - smooth(2.05, 3.05, Math.abs(step))
         panel.visible = localWeight > .001
         materials[i].uniforms.uOpacity.value = weight * localWeight

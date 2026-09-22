@@ -71,17 +71,17 @@ function vertebraGeometry(software: boolean) {
     new THREE.Vector3(-.40, .16, -.99), new THREE.Vector3(0, .18, -1.13),
     new THREE.Vector3(.43, .13, -1.01), new THREE.Vector3(.71, .05, -.59),
     new THREE.Vector3(.49, .02, -.09),
-  ], segments + 4, sides, .30, 1.08)
+  ], segments + 4, sides, .25, .92)
   const parts: THREE.BufferGeometry[] = [body, arch]
   for (const side of [-1, 1]) {
     parts.push(processGeometry([
       new THREE.Vector3(side * .50, -.01, -.05),
       new THREE.Vector3(side * .80, .11, -.26),
-      new THREE.Vector3(side * 1.04, .02, -.37),
-      new THREE.Vector3(side * (side > 0 ? 1.22 : 1.13), -.19, -.23),
-    ], segments, sides, .32, .98))
+      new THREE.Vector3(side * 1.10, .04, -.39),
+      new THREE.Vector3(side * (side > 0 ? 1.31 : 1.22), -.16, -.26),
+    ], segments, sides, .30, .76))
     const facet = new THREE.SphereGeometry(1, software ? 8 : 12, software ? 5 : 8)
-    facet.scale(.29, .24, .29)
+    facet.scale(.27, .17, .28)
     facet.rotateX(side * .22)
     facet.translate(side * .51, .30, -.58)
     parts.push(facet)
@@ -89,9 +89,12 @@ function vertebraGeometry(software: boolean) {
   parts.push(processGeometry([
     new THREE.Vector3(0, .12, -.92), new THREE.Vector3(.03, .08, -1.23),
     new THREE.Vector3(.01, -.17, -1.39), new THREE.Vector3(-.07, -.34, -1.53),
-  ], segments, sides, .31, 1.12))
+  ], segments, sides, .28, .86))
 
   const tint = new THREE.Color()
+  const silver = new THREE.Color(.72, .78, .82)
+  const teal = new THREE.Color(.28, .57, .61)
+  const violet = new THREE.Color(.48, .34, .65)
   for (const part of parts) {
     const p = part.getAttribute('position')
     const normals = part.getAttribute('normal')
@@ -99,13 +102,18 @@ function vertebraGeometry(software: boolean) {
     for (let i = 0; i < p.count; i++) {
       // Broad, non-periodic-looking dents break a lathed rim's straight highlight.
       const relief = Math.sin(p.getX(i) * 5.7 + p.getZ(i) * 3.1)
-        * Math.cos(p.getY(i) * 11.3 - p.getZ(i) * 4.2) * .037
+        * Math.cos(p.getY(i) * 11.3 - p.getZ(i) * 4.2) * .024
       p.setXYZ(i, p.getX(i) + normals.getX(i) * relief,
         p.getY(i) + normals.getY(i) * relief, p.getZ(i) + normals.getZ(i) * relief)
       const angle = Math.atan2(p.getX(i), p.getZ(i) - .13)
-      const shift = .5 + .5 * Math.sin(angle * 1.8 + p.getY(i) * 8.4)
+      const shift = .5 + .5 * Math.sin(angle * 1.35 + p.getY(i) * 3.2 + p.getZ(i) * 1.7)
       const weathering = .5 + .5 * Math.sin(p.getX(i) * 12.3 + p.getY(i) * 7.7 + p.getZ(i) * 9.1)
-      tint.setHSL(.08 + shift * .51, .08 + shift * .15, .40 + weathering * .23)
+      // Restrained patina leaves a silver base for reflected light instead of
+      // baking the old yellow/green stripes into every segment.
+      tint.copy(silver)
+        .lerp(teal, ease((shift - .46) / .54) * .52)
+        .lerp(violet, ease((.52 - shift) / .52) * .54)
+        .multiplyScalar(.88 + weathering * .12)
       tint.toArray(colors, i * 3)
     }
     part.setAttribute('color', new THREE.BufferAttribute(colors, 3))
@@ -122,7 +130,7 @@ function vertebraGeometry(software: boolean) {
 export function createSpineAssembly(software: boolean, mobile: boolean) {
   const group = new THREE.Group()
   group.name = 'aether-spine-assembly'
-  const rows = software ? 12 : mobile ? 16 : 18
+  const rows = software ? 9 : mobile ? 11 : 13
   const linksPerStrand = software ? 48 : mobile ? 76 : 104
   const spacing = HEIGHT / rows
   const boneGeometry = vertebraGeometry(software)
@@ -136,11 +144,11 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
   const linkGeometry = new THREE.TubeGeometry(new LinkCurve(), software ? 12 : 20,
     .024, software ? 5 : 6, true)
   const boneMaterial = new THREE.MeshPhysicalMaterial({
-    color: 0xd2cbbd, vertexColors: true, metalness: software ? .48 : .87,
-    roughness: software ? .58 : .47, envMapIntensity: 1.05,
-    iridescence: software ? 0 : .48, iridescenceIOR: 1.34,
-    iridescenceThicknessRange: [115, 430], clearcoat: software ? 0 : .045,
-    clearcoatRoughness: .54, transparent: true,
+    color: 0xdce2e6, vertexColors: true, metalness: software ? .48 : .93,
+    roughness: software ? .51 : .34, envMapIntensity: 1.28,
+    iridescence: software ? 0 : .66, iridescenceIOR: 1.34,
+    iridescenceThicknessRange: [170, 460], clearcoat: software ? 0 : .09,
+    clearcoatRoughness: .36, transparent: true,
   })
   if (!software) {
     // Texture-free micrograin stays attached to the bone through instancing.
@@ -164,22 +172,37 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
         float spineGrainWeight = 1.0 - smoothstep(1.5, 6.0, spineFootprint);
         vec3 spineGradient = dFdx(spineGrain) * spineRx + dFdy(spineGrain) * spineRy;
         normal = normalize(max(abs(spineDet), 0.0000001) * normal
-          - sign(spineDet) * spineGradient * 0.00065 * spineGrainWeight);
+          - sign(spineDet) * spineGradient * 0.00045 * spineGrainWeight);
         float spineWear = sin(dot(vSpineSurface, vec3(9.1, 13.7, 7.3)))
           * cos(dot(vSpineSurface, vec3(17.3, 5.7, 11.1)));
-        roughnessFactor = clamp(roughnessFactor + spineWear * .12
-          + spineGrain * spineGrainWeight * .045, .34, .69);
+        float spinePatina = .5 + .5 * sin(vSpineSurface.x * 2.3
+          + vSpineSurface.z * 2.8 + sin(vSpineSurface.y * 3.7) * .8);
+        float spinePolish = smoothstep(.50, .88, spinePatina);
+        roughnessFactor = clamp(roughnessFactor + spineWear * .075
+          + (1. - spinePolish) * .11 - spinePolish * .075
+          + spineGrain * spineGrainWeight * .025, .23, .56);
+      `)
+      // PhysicalMaterial otherwise uses only the maximum film thickness when
+      // no map is supplied. Vary it over the existing surface without a texture
+      // upload or a second material/draw, so violet and teal move with the view.
+      shader.fragmentShader = shader.fragmentShader.replace('#include <lights_physical_fragment>', `
+        #include <lights_physical_fragment>
+        #ifdef USE_IRIDESCENCE
+          material.iridescenceThickness = mix(iridescenceThicknessMinimum,
+            iridescenceThicknessMaximum, spinePatina);
+          material.iridescence *= .65 + spinePatina * .35;
+        #endif
       `)
     }
-    boneMaterial.customProgramCacheKey = () => 'aether-organic-spine-grain-v2'
+    boneMaterial.customProgramCacheKey = () => 'aether-open-spine-patina-v3'
   }
   const discMaterial = new THREE.MeshPhysicalMaterial({
-    color: 0x354766, metalness: software ? .45 : .86, roughness: .41,
-    envMapIntensity: .72, iridescence: software ? 0 : .65,
+    color: 0x26364a, metalness: software ? .45 : .86, roughness: .44,
+    envMapIntensity: .86, iridescence: software ? 0 : .50,
     iridescenceThicknessRange: [160, 380], transparent: true,
   })
   const linkMaterial = new THREE.MeshStandardMaterial({
-    color: 0xc5bc9f, metalness: software ? .5 : .94, roughness: .31,
+    color: 0xb5c4cf, metalness: software ? .5 : .94, roughness: .28,
     envMapIntensity: 1.35, transparent: true,
   })
   const entryEdge = { value: -0.25 }
@@ -260,6 +283,7 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
         dummy.rotation.set(Math.sin(i * .81 + travel) * .065,
           Math.sin(bend * .72) * .15 + Math.sin(i * 1.1) * .13,
           Math.sin(i * .72 + travel) * .055)
+        // Fewer, taller bodies retain narrow joints instead of widely spaced rings.
         dummy.scale.set((.97 + Math.sin(i * 1.37) * .045) * scale,
           spacing / .98 * scale, (.96 + Math.cos(i * .87) * .065) * scale)
         dummy.updateMatrix()

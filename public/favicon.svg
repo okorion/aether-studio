@@ -1,13 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
   <defs>
-    <linearGradient id="silver" x1="14" y1="7" x2="53" y2="60" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#effff7"/>
-      <stop offset=".44" stop-color="#a4ddcd"/>
-      <stop offset=".71" stop-color="#609f99"/>
-      <stop offset="1" stop-color="#d8f2d5"/>
+    <linearGradient id="titanium" x1="18" y1="10" x2="45" y2="55" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f1f5f1"/>
+      <stop offset=".43" stop-color="#c9d8d6"/>
+      <stop offset=".7" stop-color="#7eaaa6"/>
+      <stop offset="1" stop-color="#d9e4df"/>
     </linearGradient>
   </defs>
-  <rect width="64" height="64" rx="16" fill="#070d10"/>
-  <circle cx="32" cy="32" r="25" stroke="url(#silver)" stroke-width="1.5"/>
-  <ellipse cx="32" cy="32" rx="10" ry="15" stroke="url(#silver)" stroke-width="5.5"/>
+  <rect width="64" height="64" rx="15" fill="#0a1114"/>
+  <rect x=".5" y=".5" width="63" height="63" rx="14.5" stroke="#283638" stroke-opacity=".65"/>
+  <path fill="url(#titanium)" fill-rule="evenodd" d="M34 9C47 9 53 17 50.5 30L49.1 37C46.7 49 39.4 55 27.3 55C14.3 55 9 47 11.5 34L12.9 27C15.3 15 22.4 9 34 9ZM32.5 20C26.4 20 24 23.3 22.7 29.7L21.7 34.5C20.4 41 22.4 44 28.8 44C34.7 44 37.1 40.8 38.4 34.4L39.4 29.6C40.7 23.3 38.7 20 32.5 20Z"/>
+  <path d="M18 22C21.2 14.4 26.3 11 34 11" stroke="#f4f9f5" stroke-width="1.2" stroke-linecap="round" opacity=".65"/>
 </svg>

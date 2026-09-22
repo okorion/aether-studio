@@ -972,7 +972,14 @@ export default function Scene({ reducedMotion, active, onReady, onSelectProject 
           // downloaded here and no future section is shown to the user.
           layers.update(readProgress(), camera)
           worlds.prepare(activeRenderer)
-          await prepareSceneShaders(activeRenderer, scene, camera, cancelled)
+          // Exercise the film sampling branch with the black placeholder too.
+          // No media request is needed to prime an otherwise dormant GPU path.
+          lightFilm.ready.value = 1
+          try {
+            await prepareSceneShaders(activeRenderer, scene, camera, cancelled)
+          } finally {
+            lightFilm.ready.value = lightVideo.getReady() ? 1 : 0
+          }
           if (cancelled()) return
           canvas.dataset.preparation = 'ready'
           preparing = false

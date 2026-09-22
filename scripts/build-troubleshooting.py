@@ -10,9 +10,11 @@ import hashlib
 import html
 import json
 import mimetypes
+import os
 import re
 import shutil
 import sys
+import subprocess
 import zipfile
 from urllib.parse import quote, unquote, urlsplit
 
@@ -38,6 +40,9 @@ images = {}
 generated_files = set()
 files = [SOURCE / 'index.md', *sorted((SOURCE / 'posts').glob('*.md')),
          SOURCE / 'issue-index.md', SOURCE / 'runbook.md', SOURCE / 'sources.md']
+chapter_ids = {src: f'article-{n}' for n, src in enumerate(files, 1)}
+historical_paths = set(subprocess.check_output(
+    ['git', 'ls-tree', '-r', '--name-only', args.source_ref], cwd=ROOT, text=True).splitlines())
 
 
 def sha(data):
@@ -65,8 +70,9 @@ def online(src, url, image=False):
     path = local_path(src, url)
     if path is None:
         return url
-    ref = args.asset_ref if path.is_relative_to(SOURCE) else args.source_ref
     relative = path.relative_to(ROOT).as_posix()
+    ref = args.asset_ref if (image or path.is_relative_to(SOURCE)
+        or src.name.startswith('07-') or relative not in historical_paths) else args.source_ref
     suffix = '#' + quote(urlsplit(url).fragment) if urlsplit(url).fragment else ''
     return f'{raw_url if image else repo_url + "/blob"}/{ref}/{quote(relative)}{suffix}'
 
@@ -107,7 +113,10 @@ def render(src, number):
                 child.attrSet('src', image_asset(src, child.attrGet('src'))['dataUri'])
                 child.attrSet('loading', 'lazy')
             elif child.type == 'link_open':
-                child.attrSet('href', online(src, child.attrGet('href')))
+                url = child.attrGet('href')
+                target = local_path(src, url)
+                child.attrSet('href', '#' + chapter_ids[target]
+                    if target in chapter_ids and not urlsplit(url).fragment else online(src, url))
             children.extend(child.children or [])
     return md.renderer.render(tokens, md.options, {})
 
@@ -123,7 +132,9 @@ def rewrite_markdown(src, portable):
             asset = image_asset(src, url)
             target = '../../' + asset['file'] if portable and src.parent.name == 'posts' else '../' + asset['file'] if portable else online(src, url, True)
         else:
-            target = online(src, url)
+            path = local_path(src, url)
+            target = (Path(os.path.relpath(path, src.parent)).as_posix()
+                if portable and path in chapter_ids and not urlsplit(url).fragment else online(src, url))
         return label + '(' + target + ')'
     return ''.join(segment if segment.startswith('```') else pattern.sub(repl, segment) for segment in segments)
 
@@ -153,7 +164,7 @@ write_text(OUT / 'Aether-3D-Troubleshooting.html', document)
 guide='''# Aether Studio 트러블슈팅 보관 묶음
 
 - `Aether-3D-Troubleshooting.html`: 이미지가 파일 내부에 포함된 전체 문서. 이 파일만 옮겨도 인터넷 없이 열립니다.
-- `velog/`: 게시용 Markdown 6편. 본문은 보관본과 같고 이미지·근거 링크만 공개 저장소의 고정 커밋 URL로 바꿨습니다. 각 파일을 Velog 에디터에 복사해 미리보기를 확인한 뒤 직접 게시하면 됩니다. 실제 게시를 자동으로 수행하지 않았습니다.
+- `velog/`: 게시용 Markdown 기본 6편과 후속 기록. 본문은 보관본과 같고 이미지·근거 링크만 공개 저장소의 고정 커밋 URL로 바꿨습니다. 각 파일을 Velog 에디터에 복사해 미리보기를 확인한 뒤 직접 게시하면 됩니다. 실제 게시를 자동으로 수행하지 않았습니다.
 - `portable/`: 로컬 이미지 경로를 사용하는 Markdown 원본과 전체 이슈 색인·재사용 체크리스트.
 - `images/`: 실제 캡처 원본과 설명용 PNG 도식. SHA-256은 manifest.json에 있습니다. Velog 이미지 업로드를 선호하면 해당 파일을 업로드하고 주소만 교체할 수 있습니다.
 - `manifest.json`: 기준 커밋, 문서·이미지의 경로·해시·종류.

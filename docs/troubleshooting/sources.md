@@ -52,6 +52,10 @@
 
 릴리스 manifest는 문서화에 실제로 사용한 이미지 파일의 경로·바이트·SHA-256을 열거한다. 추가 부록에 새 캡처가 들어오면 그 파일의 조건과 기준 커밋도 별도로 남긴다.
 
+## 후속 기록: PR #18
+
+[장면 연속성 글](posts/07-scene-continuity.md)은 구현 `6654c71`·검사 `e61208b`를 기준으로 한다. [실행 기록](../scene-continuity.md), [26장 이미지 manifest](../screenshots/continuity-v18/manifest.json), [별도 왕복 성능 표본](../evidence/scene-continuity-performance.json)을 연결했다. 새 표본을 기본 6편의 과거 측정과 합산하지 않는다.
+
 ## 문체 참고: okorion Velog
 
 2026-09-22 공개된 작성자와 본문을 확인한 세 편이다. 제목·글의 구조와 설명 방식을 참고했으며 긴 문장이나 코드를 복제하지 않았다.

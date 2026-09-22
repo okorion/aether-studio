@@ -90,7 +90,7 @@ CDP Media 기록에서 VP8 모니터 두 편은 `VpxVideoDecoder`, 가속 디코
 
 ## 보이지 않는 캡처와 반사 생략
 
-사선 경계가 완전히 닫힌 경우 모니터·장치 그룹을 렌더하지 않습니다. 경계가 일부 열리면 모니터 판과 테두리의 투영 범위를 확인하고 화면에 기여할 수 있을 때만 공유 굴절 배경을 캡처합니다. 첫 등장·재진입·타깃 재준비 때는 기존 격프레임 갱신 일정과 무관하게 즉시 캡처해 오래된 배경이 한 프레임 보이는 것을 막습니다.
+사선 경계가 완전히 닫힌 경우 모니터·리액터 그룹을 렌더하지 않습니다. 경계가 일부 열리면 모니터 판과 테두리의 투영 범위를 확인하고 화면에 기여할 수 있을 때만 공유 굴절 배경을 캡처합니다. 첫 등장·재진입·타깃 재준비 때는 기존 격프레임 갱신 일정과 무관하게 즉시 캡처해 오래된 배경이 한 프레임 보이는 것을 막습니다.
 
 주 카메라 밖의 모니터라도 물 반사에 보일 수 있으면 캡처를 유지합니다. 물은 실제 해당 렌더 패스의 카메라와 전환 경계에서 보일 때만 512×512 반사를 계산합니다. 근접면 통과나 범위가 불확실한 경우에는 렌더를 유지하도록 여유를 두었습니다. 모델·입자 수·전체 해상도를 낮춘 변경이 아닙니다.
 
@@ -104,7 +104,7 @@ CDP Media 기록에서 VP8 모니터 두 편은 `VpxVideoDecoder`, 가속 디코
 
 최종 독립 첫 진입은 총 1,260개의 RAF 간격을 기록했습니다. 전체 스크롤을 포함해 이 비교의 모든 실행에서 품질 최솟값은 1.00이었고, **측정 스크롤 구간 안**의 longtask·셰이더 컴파일·링크는 0회, 기록된 브라우저 오류는 0개였습니다. 초기 로딩의 longtask까지 0회였다는 뜻은 아닙니다. 전체 왕복의 RAF p95는 전후 16.7~16.8ms입니다.
 
-### 척추·장치 겹침 59~69%
+### 본 컬럼·리액터 겹침 59~69%
 
 GL draw가 있었던 RAF 콜백을 요청 진행률 `p`의 `[.59,.69)` 구간으로 골라 두 반복을 합쳤습니다. draw와 CPU는 그 콜백에서, GPU는 같은 `(t,p)`에 대응하는 유효 쿼리에서 계산합니다. 마지막 미회수 쿼리와 이전 회차의 쿼리는 제외합니다. 화면에 보간된 모델의 진행률과 요청 진행률이 다를 수 있으며, 드물게 갱신되는 화면 telemetry의 draw를 표본으로 사용하지 않았습니다. 백분위수는 정렬 후 `floor(N×.95)` 위치를 사용합니다.
 
@@ -113,7 +113,7 @@ GL draw가 있었던 RAF 콜백을 요청 진행률 `p`의 `[.59,.69)` 구간으
 | 하강 | 152.71 → 133.83 | 3.8 → 3.9ms | 7.31 → 7.96ms | 9.04 → 9.35ms |
 | 상승 | 165.45 → 142.55 | 3.5 → 3.7ms | 6.46 → 5.71ms | 8.03 → 8.25ms |
 
-**하강 최대 217 draw는 남습니다.** 닫힌 경계의 호출은 줄었지만, 보이는 모니터·장치·물 반사가 동시에 필요한 구간은 계속 렌더합니다. GPU 실행 시간은 방향·반복에 따라 달라 일관되게 감소하지 않았습니다. 겹침 구간의 GPU 시간 개선이나 최대 부하 제거라고 주장하지 않습니다.
+**하강 최대 217 draw는 남습니다.** 닫힌 경계의 호출은 줄었지만, 보이는 모니터·리액터·물 반사가 동시에 필요한 구간은 계속 렌더합니다. GPU 실행 시간은 방향·반복에 따라 달라 일관되게 감소하지 않았습니다. 겹침 구간의 GPU 시간 개선이나 최대 부하 제거라고 주장하지 않습니다.
 
 ### 전체 타깃 호출을 렌더 횟수로 정규화
 
@@ -137,15 +137,15 @@ GL draw가 있었던 RAF 콜백을 요청 진행률 `p`의 `[.59,.69)` 구간으
 | 24% · 진입 직전 | ![24% 전](screenshots/performance/before/scroll-240.jpg) | ![24% 후](screenshots/performance/after/scroll-240.jpg) |
 | 26% · 첫 모니터 | ![26% 전](screenshots/performance/before/scroll-260.jpg) | ![26% 후](screenshots/performance/after/scroll-260.jpg) |
 | 28.5% · 영상·유리 | ![28.5% 전](screenshots/performance/before/scroll-285.jpg) | ![28.5% 후](screenshots/performance/after/scroll-285.jpg) |
-| 40% · 척추 | ![40% 전](screenshots/performance/before/scroll-400.jpg) | ![40% 후](screenshots/performance/after/scroll-400.jpg) |
-| 61% · 장치 진입 전 | ![61% 전](screenshots/performance/before/scroll-610.jpg) | ![61% 후](screenshots/performance/after/scroll-610.jpg) |
+| 40% · 본 컬럼 | ![40% 전](screenshots/performance/before/scroll-400.jpg) | ![40% 후](screenshots/performance/after/scroll-400.jpg) |
+| 61% · 리액터 진입 전 | ![61% 전](screenshots/performance/before/scroll-610.jpg) | ![61% 후](screenshots/performance/after/scroll-610.jpg) |
 | 63% · 경계 겹침 | ![63% 전](screenshots/performance/before/scroll-630.jpg) | ![63% 후](screenshots/performance/after/scroll-630.jpg) |
-| 65% · 모니터·장치 | ![65% 전](screenshots/performance/before/scroll-650.jpg) | ![65% 후](screenshots/performance/after/scroll-650.jpg) |
-| 67.5% · 장치 노출 | ![67.5% 전](screenshots/performance/before/scroll-675.jpg) | ![67.5% 후](screenshots/performance/after/scroll-675.jpg) |
-| 72% · 장치·반사 | ![72% 전](screenshots/performance/before/scroll-720.jpg) | ![72% 후](screenshots/performance/after/scroll-720.jpg) |
+| 65% · 모니터·리액터 | ![65% 전](screenshots/performance/before/scroll-650.jpg) | ![65% 후](screenshots/performance/after/scroll-650.jpg) |
+| 67.5% · 리액터 노출 | ![67.5% 전](screenshots/performance/before/scroll-675.jpg) | ![67.5% 후](screenshots/performance/after/scroll-675.jpg) |
+| 72% · 리액터·반사 | ![72% 전](screenshots/performance/before/scroll-720.jpg) | ![72% 후](screenshots/performance/after/scroll-720.jpg) |
 | 76% · 바닥 통과 | ![76% 전](screenshots/performance/before/scroll-760.jpg) | ![76% 후](screenshots/performance/after/scroll-760.jpg) |
-| 89% · 하부 숲 진입 | ![89% 전](screenshots/performance/before/scroll-890.jpg) | ![89% 후](screenshots/performance/after/scroll-890.jpg) |
-| 91.5% · 숲·링 | ![91.5% 전](screenshots/performance/before/scroll-915.jpg) | ![91.5% 후](screenshots/performance/after/scroll-915.jpg) |
+| 89% · 하단 포레스트 진입 | ![89% 전](screenshots/performance/before/scroll-890.jpg) | ![89% 후](screenshots/performance/after/scroll-890.jpg) |
+| 91.5% · 포레스트·링 | ![91.5% 전](screenshots/performance/before/scroll-915.jpg) | ![91.5% 후](screenshots/performance/after/scroll-915.jpg) |
 
 ## 검증
 

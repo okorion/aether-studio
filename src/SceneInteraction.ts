@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { createPointerFlow } from './PointerFlow'
 
 /** Bounded world-space ribbons and pointer-controlled camera input. */
 export function createSceneInteraction(
@@ -181,8 +182,17 @@ export function createSceneInteraction(
   let disposed = false
   let enabled = true
   // Shared lighting input stays independent of the scene's orbit permission.
-  const field = { ndc: new THREE.Vector2(), strength: 0, aspect: innerWidth / innerHeight, active: false }
+  const flow = createPointerFlow()
+  const field = {
+    ndc: new THREE.Vector2(), strength: 0, aspect: innerWidth / innerHeight, active: false,
+    flowTexture: flow.texture,
+  }
   let fieldTarget = 0
+  const clearField = () => {
+    field.active = false
+    fieldTarget = field.strength = 0
+    flow.clear()
+  }
   canvas.dataset.cameraMode = 'idle'
   canvas.dataset.orbitEnabled = 'true'
   const home = () => !location.hash || location.hash === '#home'
@@ -280,19 +290,18 @@ export function createSceneInteraction(
     if (!enabled || reducedMotion || document.hidden || event.pointerType === 'touch' || !home() || blocked() ||
       !Number.isFinite(event.clientX) || !Number.isFinite(event.clientY) ||
       event.clientX < 0 || event.clientX > innerWidth || event.clientY < 0 || event.clientY > innerHeight) {
-      field.active = false
-      fieldTarget = field.strength = 0
+      clearField()
       breakStroke()
       return
     }
     pointer.set((event.clientX / innerWidth) * 2 - 1, 1 - (event.clientY / innerHeight) * 2)
     if (interactive(event.target)) {
-      field.active = false
-      fieldTarget = field.strength = 0
+      clearField()
       breakStroke()
     } else {
       field.active = true
       fieldTarget = 1
+      flow.move(pointer.x, pointer.y, innerWidth / Math.max(1, innerHeight))
       const distance = pointer.distanceTo(last)
       if (last.x === -10 || (distance > .006 && event.timeStamp - lastSample >= (software ? 42 : 30))) {
         if (event.timeStamp - lastSample > 180) breakStroke()
@@ -315,8 +324,7 @@ export function createSceneInteraction(
   const down = (event: PointerEvent) => {
     if (!enabled || reducedMotion || document.hidden || !home() || blocked() ||
       event.pointerType === 'touch' || interactive(event.target)) {
-      field.active = false
-      fieldTarget = field.strength = 0
+      clearField()
       return
     }
     if (!orbitEnabled || event.button !== 0) return
@@ -334,8 +342,7 @@ export function createSceneInteraction(
   }
   const release = (event?: PointerEvent) => {
     if (event?.type === 'pointercancel') {
-      field.active = false
-      fieldTarget = field.strength = 0
+      clearField()
     }
     if (event instanceof PointerEvent && event.pointerId !== pointerId) return
     held = false
@@ -345,8 +352,7 @@ export function createSceneInteraction(
     document.documentElement.classList.remove('scene-dragging')
   }
   const leave = () => {
-    field.active = false
-    fieldTarget = field.strength = 0
+    clearField()
     breakStroke()
     release()
     velocityYaw = 0
@@ -405,9 +411,9 @@ export function createSceneInteraction(
       ribbonMaterial.uniforms.uHeight.value = innerHeight
       points.visible = ribbon.visible = enabled && !reducedMotion && home() && !blocked()
       if (!enabled || reducedMotion || !home() || blocked() || document.hidden) {
-        field.active = false
-        fieldTarget = field.strength = 0
+        clearField()
       }
+      flow.update(delta)
       field.ndc.lerp(pointer, 1 - Math.exp(-10 * delta))
       field.strength = THREE.MathUtils.damp(field.strength, fieldTarget, 9, delta)
       fieldTarget *= Math.exp(-1.35 * delta)
@@ -445,6 +451,7 @@ export function createSceneInteraction(
       material.dispose()
       ribbonGeometry.dispose()
       ribbonMaterial.dispose()
+      flow.dispose()
     },
   }
 }

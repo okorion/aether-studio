@@ -1,0 +1,159 @@
+{
+  "viewport": [
+    1440,
+    900
+  ],
+  "dpr": 1,
+  "runs": [
+    {
+      "label": "before",
+      "source": "7fcebb4",
+      "url": "https://aether-studio-nu.vercel.app/?v=7fcebb4",
+      "sha256": "29a718135599e37225afcdab51f004f842c0dc721cd249819a6e87b9548fdecb",
+      "notes": "One serial run per build; same hardware Chromium ANGLE D3D11. Controlled pointer events per RAF for 3.8 seconds plus 1.7 seconds decay. RAF intervals, not GPU duration. Navigation and scroll excluded.",
+      "errors": [],
+      "rounds": [
+        {
+          "progress": 0,
+          "median": 16.69999999999891,
+          "p95": 16.700000000000728,
+          "max": 16.80000000000109,
+          "over33": 0,
+          "minQuality": 1,
+          "maxDraws": 76,
+          "links": 0,
+          "longtasks": 0,
+          "frames": 331,
+          "tasks": []
+        },
+        {
+          "progress": 0.145,
+          "median": 16.700000000000728,
+          "p95": 16.799999999999272,
+          "max": 16.80000000000291,
+          "over33": 0,
+          "minQuality": 1,
+          "maxDraws": 40,
+          "links": 0,
+          "longtasks": 0,
+          "frames": 330,
+          "tasks": []
+        },
+        {
+          "progress": 0.72,
+          "median": 16.69999999999709,
+          "p95": 16.799999999999272,
+          "max": 16.80000000000291,
+          "over33": 0,
+          "minQuality": 1,
+          "maxDraws": 106,
+          "links": 0,
+          "longtasks": 0,
+          "frames": 330,
+          "tasks": []
+        },
+        {
+          "progress": 0.875,
+          "median": 16.69999999999709,
+          "p95": 16.799999999995634,
+          "max": 16.80000000000291,
+          "over33": 0,
+          "minQuality": 1,
+          "maxDraws": 50,
+          "links": 0,
+          "longtasks": 0,
+          "frames": 330,
+          "tasks": []
+        },
+        {
+          "progress": 0.98,
+          "median": 16.69999999999709,
+          "p95": 16.700000000004366,
+          "max": 16.80000000000291,
+          "over33": 0,
+          "minQuality": 1,
+          "maxDraws": 68,
+          "links": 0,
+          "longtasks": 0,
+          "frames": 330,
+          "tasks": []
+        }
+      ]
+    },
+    {
+      "label": "after",
+      "source": "8f4e430",
+      "url": "http://127.0.0.1:4173/",
+      "sha256": "5843181647e4143fd409d36909d492dc7fe0150b967676ea7e6c585addfb62f0",
+      "notes": "One serial run per build; same hardware Chromium ANGLE D3D11. Controlled pointer events per RAF for 3.8 seconds plus 1.7 seconds decay. RAF intervals, not GPU duration. Navigation and scroll excluded.",
+      "errors": [],
+      "rounds": [
+        {
+          "progress": 0,
+          "median": 16.69999999999891,
+          "p95": 16.700000000000728,
+          "max": 16.80000000000109,
+          "over33": 0,
+          "minQuality": 1,
+          "maxDraws": 76,
+          "links": 0,
+          "longtasks": 0,
+          "frames": 330,
+          "tasks": []
+        },
+        {
+          "progress": 0.145,
+          "median": 16.69999999999891,
+          "p95": 16.799999999999272,
+          "max": 16.80000000000291,
+          "over33": 0,
+          "minQuality": 1,
+          "maxDraws": 40,
+          "links": 0,
+          "longtasks": 0,
+          "frames": 330,
+          "tasks": []
+        },
+        {
+          "progress": 0.72,
+          "median": 16.700000000000728,
+          "p95": 16.799999999999272,
+          "max": 16.80000000000291,
+          "over33": 0,
+          "minQuality": 1,
+          "maxDraws": 106,
+          "links": 0,
+          "longtasks": 0,
+          "frames": 330,
+          "tasks": []
+        },
+        {
+          "progress": 0.875,
+          "median": 16.69999999999709,
+          "p95": 16.799999999999272,
+          "max": 16.80000000000291,
+          "over33": 0,
+          "minQuality": 1,
+          "maxDraws": 50,
+          "links": 0,
+          "longtasks": 0,
+          "frames": 330,
+          "tasks": []
+        },
+        {
+          "progress": 0.98,
+          "median": 16.69999999999709,
+          "p95": 16.799999999995634,
+          "max": 16.80000000000291,
+          "over33": 0,
+          "minQuality": 1,
+          "maxDraws": 68,
+          "links": 0,
+          "longtasks": 0,
+          "frames": 330,
+          "tasks": []
+        }
+      ]
+    }
+  ]
+}

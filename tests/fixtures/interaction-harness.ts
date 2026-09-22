@@ -3,6 +3,7 @@ import { createSceneInteraction } from '../../src/SceneInteraction'
 import { createSceneWorlds } from '../../src/SceneWorlds'
 import { createSceneMonitors } from '../../src/SceneMonitors'
 import { createAtmosphere } from '../../src/Atmosphere'
+import { createSceneForest } from '../../src/SceneForest'
 import { sampleJourney } from '../../src/Journey'
 import { createSceneLayers, sampleLayers } from '../../src/SceneLayers'
 import { bindCurtain, createCurtainBounds } from '../../src/SceneCurtains'
@@ -27,6 +28,7 @@ export type InteractionHarness = {
   probeCurtainPixels: typeof probeCurtainPixels
   probeScalePointer: typeof probeScalePointer
   probeDevicePointer: typeof probeDevicePointer
+  probeForestPointer: typeof probeForestPointer
   probeMonitorCapture: typeof probeMonitorCapture
   probeMonitorOcclusion: typeof probeMonitorOcclusion
   sampleWorld: (elapsed: number, progress: number) => {
@@ -85,7 +87,10 @@ function advanceInteraction(seconds: number) {
 
 function stepField(seconds: number) {
   const { yaw, pitch, field } = advanceInteraction(seconds)
-  return { yaw, pitch, ndc: field.ndc.toArray(), strength: field.strength, aspect: field.aspect }
+  const bytes=field.flowTexture.image.data as Uint8Array
+  let flowEnergy=0
+  for(let i=0;i<bytes.length;i+=4)flowEnergy+=Math.abs(bytes[i]-128)+Math.abs(bytes[i+1]-128)
+  return { yaw, pitch, ndc: field.ndc.toArray(), strength: field.strength, aspect: field.aspect, flowEnergy }
 }
 
 function sampleEditorial(progress: number) {
@@ -353,6 +358,64 @@ function probeDevicePointer() {
   }
 }
 
+function probeForestPointer(progress: number) {
+  const width=384, height=240, elapsed=10
+  const probeScene=new THREE.Scene()
+  const forest=createSceneForest(probeScene,false,false)
+  const state=sampleJourney(progress)
+  const probeCamera=new THREE.PerspectiveCamera(42,width/height,.1,120)
+  probeCamera.position.set(Math.sin(state.azimuth)*Math.cos(state.elevation)*state.radius,
+    state.height+Math.sin(state.elevation)*state.radius,
+    Math.cos(state.azimuth)*Math.cos(state.elevation)*state.radius)
+  probeCamera.lookAt(0,state.height,0);probeCamera.updateMatrixWorld()
+  const grove=probeScene.getObjectByName(progress<.5?'aether-forest-upper':'aether-forest-lower')!
+  const micro=grove.getObjectByName('aether-forest-microfoliage') as THREE.Points<THREE.BufferGeometry,THREE.ShaderMaterial>
+  grove.children.forEach(child=>{if(child!==micro)child.visible=false})
+  const original=Array.from(micro.geometry.attributes.position.array)
+  const flow=new THREE.DataTexture(new Uint8Array([128,128,0,255]),1,1)
+  flow.needsUpdate=true
+  const pointer={ndc:new THREE.Vector2(),strength:0,aspect:width/height,active:true,flowTexture:flow}
+  forest.update(elapsed,progress,probeCamera,pointer,1);probeScene.updateMatrixWorld(true)
+  const worldBefore=micro.matrixWorld.toArray()
+  const target=new THREE.WebGLRenderTarget(width,height)
+  const previous={target:renderer.getRenderTarget(),face:renderer.getActiveCubeFace(),mip:renderer.getActiveMipmapLevel(),
+    clear:renderer.getClearColor(new THREE.Color()),alpha:renderer.getClearAlpha(),auto:renderer.autoClear}
+  const render=(x:number,y:number,active=true)=>{
+    flow.image.data[0]=Math.round(128+x*127);flow.image.data[1]=Math.round(128+y*127);flow.needsUpdate=true
+    pointer.active=active
+    forest.update(elapsed,progress,probeCamera,pointer,1)
+    renderer.setRenderTarget(target);renderer.render(probeScene,probeCamera)
+    const pixels=new Uint8Array(width*height*4)
+    renderer.readRenderTargetPixels(target,0,0,width,height,pixels)
+    return pixels
+  }
+  const difference=(base:Uint8Array,moved:Uint8Array)=>{
+    let changed=0,added=0
+    for(let i=3;i<base.length;i+=4){if(base[i]!==moved[i])changed++;if(!base[i]&&moved[i])added++}
+    return{changed,added}
+  }
+  const centroid=(pixels:Uint8Array)=>{
+    let count=0,x=0,y=0
+    for(let i=3;i<pixels.length;i+=4)if(pixels[i]){count++;const p=(i-3)/4;x+=p%width;y+=Math.floor(p/width)}
+    return{count,x:x/Math.max(1,count),y:y/Math.max(1,count)}
+  }
+  try{
+    renderer.autoClear=true;renderer.setClearColor(0,0)
+    const base=render(0,0)
+    const right=render(.85,0),left=render(-.85,0),up=render(0,.85)
+    const reset=render(0,0),excluded=render(.85,0,false)
+    return {baseline:centroid(base),right:centroid(right),left:centroid(left),up:centroid(up),
+      moved:difference(base,right),restored:difference(base,reset),excluded:difference(base,excluded),
+      geometryUnchanged:original.every((v,i)=>v===micro.geometry.attributes.position.array[i]),
+      worldUnchanged:worldBefore.every((v,i)=>v===micro.matrixWorld.elements[i]),
+      pointerLight:micro.material.uniforms.uPointerStrength.value as number}
+  }finally{
+    renderer.setRenderTarget(previous.target,previous.face,previous.mip)
+    renderer.setClearColor(previous.clear,previous.alpha);renderer.autoClear=previous.auto
+    forest.dispose();target.dispose();flow.dispose()
+  }
+}
+
 function probeMonitorOcclusion() {
   const monitors = createSceneMonitors(true, false)
   const occlusionScene = new THREE.Scene()
@@ -564,6 +627,7 @@ window.interactionHarness = {
   probeCurtainPixels,
   probeScalePointer,
   probeDevicePointer,
+  probeForestPointer,
   probeMonitorCapture,
   probeMonitorOcclusion,
   sampleWorld(elapsed, progress) {

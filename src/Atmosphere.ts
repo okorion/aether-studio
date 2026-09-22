@@ -146,18 +146,26 @@ const dustVertex = /* glsl */ `
     }
     // The machine must react even with zero scroll delta, including anchored
     // grains. Work in view space so the cursor reaches the visible arc at any
-    // depth/aspect. Nearby grains share a smooth bend, preserving the O away
-    // from the pointer rather than translating or rotating the entire field.
+    // depth/aspect. A broad Gaussian has no circular cutoff, and a soft core
+    // avoids pushing every nearby grain onto the same hollow circumference.
     if (uDevicePointerStrength > .0001 && gl_Position.w > 0.0) {
       float distanceSquared = dot(pointerDelta, pointerDelta);
-      float influence = (1.0 - smoothstep(.0016, .1764, distanceSquared))
-        * uDevicePointerStrength;
-      vec2 away = pointerDelta / max(sqrt(distanceSquared), .06);
-      vec2 bend = (away * .135 + vec2(-away.y, away.x) * .038) * influence;
+      // Seeds stay attached to each grain; depth changes only with the base
+      // scroll shape. No clock or integrated velocity can leave residual drift.
+      float grainSeed = fract(phase * .618 + lane * 7.13 + position.x * 3.73);
+      float depthLayer = clamp(.5 + p.z * .65, 0., 1.);
+      vec2 fieldDelta = pointerDelta * vec2(mix(.90, 1.10, grainSeed), mix(1.08, .92, depthLayer));
+      float spread = mix(4.0, 6.6, grainSeed) * mix(.82, 1.08, depthLayer);
+      float influence = exp(-dot(fieldDelta, fieldDelta) * spread) * uDevicePointerStrength;
+      vec2 away = pointerDelta * inversesqrt(distanceSquared + .16);
+      vec2 tangent = vec2(-away.y, away.x);
+      vec2 drift = vec2(aDust.z, lane * 2. - 1.) * .016;
+      vec2 bend = (away * .082 + tangent * mix(-.028, .028, grainSeed) + drift)
+        * influence * mix(.70, 1., depthLayer);
       bend.x /= uAspect;
       mv.xy += bend * max(.01, gl_Position.w)
         / vec2(projectionMatrix[0][0], projectionMatrix[1][1]);
-      mv.z += influence * .16;
+      mv.z += influence * (.035 + aDust.z * .045);
     }
     gl_Position = projectionMatrix * mv;
     vFieldClip = gl_Position;

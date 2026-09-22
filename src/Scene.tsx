@@ -6,11 +6,13 @@ import { createSceneWorlds } from './SceneWorlds'
 import { sampleJourney, smooth } from './Journey'
 import { createSceneGlow } from './SceneGlow'
 import { createSceneForest } from './SceneForest'
-import { createSceneLayers, sampleLayers } from './SceneLayers'
+import { createSceneLayers, sampleLayers, sampleEmblemCurtain } from './SceneLayers'
+import { bindGroupCurtain, createCurtainBounds } from './SceneCurtains'
 import { createSceneVideo } from './SceneVideo'
 import { prepareSceneShaders } from './ScenePreparation'
 import { createSceneLightVideo } from './SceneLightVideo'
 import { createLightFilmUniforms, sampleLightChoreography } from './SceneLighting'
+import { createSceneLightShafts } from './SceneLightShafts'
 
 type SceneProps = {
   reducedMotion: boolean
@@ -634,6 +636,8 @@ export default function Scene({ reducedMotion, active, onReady, onSelectProject 
 
       const lightVideo = lightVideoRef.current ??= createSceneLightVideo()
       const lightFilm = createLightFilmUniforms(lightVideo.texture)
+      const lightShafts = createSceneLightShafts(scene, softwareRenderer, smallScreen, lightFilm)
+      effectDisposers.push(() => lightShafts.dispose())
       const atmosphere = createAtmosphere(scene, softwareRenderer, smallScreen, lightFilm)
       effectDisposers.push(() => atmosphere.dispose())
       const video = videoRef.current ??= createSceneVideo()
@@ -670,32 +674,10 @@ export default function Scene({ reducedMotion, active, onReady, onSelectProject 
       for (const surface of [ringSurface, innerSurface, tailChrome, tailDark]) surface.transparent = true
       ring.material = ringSurface
       ringInner.material = innerSurface
-      // The incoming monitor layer cuts through the ring on the same diagonal
-      // boundary as the flat wrapper, instead of fading one whole model away.
-      const emblemEdge = { value: -.25 }
-      const emblemWipe = { value: 0 }
-      for (const surface of [ringSurface, innerSurface, glyphChrome, luminous, tailChrome, tailDark]) {
-        const previousCompile = surface.onBeforeCompile
-        const previousKey = surface.customProgramCacheKey()
-        surface.onBeforeCompile = (shader, renderer) => {
-          previousCompile.call(surface, shader, renderer)
-          shader.uniforms.uEmblemEdge = emblemEdge
-          shader.uniforms.uEmblemWipe = emblemWipe
-          shader.vertexShader = `varying vec4 vEmblemClip;\n${shader.vertexShader}`.replace(
-            '#include <project_vertex>', '#include <project_vertex>\nvEmblemClip = gl_Position;',
-          )
-          shader.fragmentShader = `varying vec4 vEmblemClip;
-            uniform float uEmblemEdge; uniform float uEmblemWipe;\n${shader.fragmentShader}`.replace(
-            '#include <clipping_planes_fragment>',
-            `#include <clipping_planes_fragment>
-            vec2 screen = vEmblemClip.xy / vEmblemClip.w * .5 + .5;
-            float grain = fract(sin(dot(floor(screen * vec2(1800.,1100.)), vec2(12.9898,78.233))) * 43758.5453);
-            float edge = screen.y - (screen.x - .5) * .20 + (grain - .5) * .009;
-            if (uEmblemWipe > .5 && edge < uEmblemEdge) discard;`,
-          )
-        }
-        surface.customProgramCacheKey = () => `${previousKey}-layer-wipe-v1`
-      }
+      // Both transitions share the visible scene's edge: the emblem belongs
+      // above incoming monitors and below the returning forest canopy.
+      const emblemCurtain = createCurtainBounds()
+      bindGroupCurtain(emblem, emblemCurtain)
       const centre = new THREE.Vector3(0, 0, 0)
       const projectedCentre = new THREE.Vector3()
       const modelCentre = new THREE.Vector3()
@@ -822,8 +804,9 @@ export default function Scene({ reducedMotion, active, onReady, onSelectProject 
         // The original organism unfolds into the spine. Keep its free tails
         // from crossing the project screens after that transformation settles.
         const emblemOpacity = (1 - smooth(.305, .32, scroll)) + smooth(.88, .955, scroll)
-        emblemEdge.value = sampleLayers(scroll).monitorEntry
-        emblemWipe.value = scroll > .22 && scroll < .33 ? 1 : 0
+        const emblemBounds = sampleEmblemCurtain(scroll)
+        emblemCurtain.upper.value = emblemBounds.upper
+        emblemCurtain.lower.value = emblemBounds.lower
         emblem.visible = emblemOpacity > .001
         ringSurface.opacity = innerSurface.opacity = tailChrome.opacity = tailDark.opacity = emblemOpacity
         luminous.opacity = .26 * emblemOpacity
@@ -883,7 +866,8 @@ export default function Scene({ reducedMotion, active, onReady, onSelectProject 
         canvas.dataset.monitorHover = String(monitorHover)
         document.documentElement.classList.toggle('scene-monitor-hover', monitorHover >= 0)
         canvas.dataset.videoState = JSON.stringify(worlds.getVideoStatus())
-        atmosphere.update(elapsed, scroll, activeRenderer.getPixelRatio(), input.field)
+        atmosphere.update(elapsed, scroll, activeRenderer.getPixelRatio(), input.field, camera)
+        lightShafts.update(elapsed, scroll, camera)
         forest.update(elapsed, scroll, camera, input.field, activeRenderer.getPixelRatio())
         layers.update(scroll, camera)
 

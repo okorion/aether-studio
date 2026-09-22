@@ -15,6 +15,14 @@ export function sampleLayers(progress: number) {
   }
 }
 
+/** The emblem belongs above the incoming monitors, below the incoming forest. */
+export function sampleEmblemCurtain(progress: number) {
+  const layers = sampleLayers(progress)
+  return progress < .5
+    ? { upper: 1.5, lower: layers.monitorEntry }
+    : { upper: layers.forestEntry, lower: -.5 }
+}
+
 /** Flat editorial wrappers live inside the scene, behind the actual 3D ring. */
 export function createSceneLayers(scene: THREE.Scene) {
   const group = new THREE.Group()

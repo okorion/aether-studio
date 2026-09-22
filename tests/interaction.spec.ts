@@ -504,9 +504,40 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
       expect(state.fixed.scaleY).toBeCloseTo(-48, 8)
       expect(state.scaleTiles).toEqual(result.fixed[0].scaleTiles)
     }
-    expect(result.fixed[2].fixed.machineVisible).toBe(true)
+    expect(result.fixed[0].fixed.machineVisible).toBe(true)
+    expect(result.fixed[2].fixed.machineVisible).toBe(false)
     expect(result.fixed[2].fixed.scaleVisible).toBe(true)
     expect(result.fixed[5]).toEqual(result.fixed[2])
+
+    const surfaces = await page.evaluate(() => window.interactionHarness.probeWorldSurfaceDepth())
+    const contact = surfaces.contact
+    // The footing intersects the real displaced floor, and the solid lid
+    // overlaps the annular socket instead of leaving its centre open.
+    expect(contact.plinthBottom).toBeLessThan(contact.floorMin)
+    expect(contact.floorMin - contact.plinthBottom).toBeLessThan(.06)
+    expect(contact.floorMax - contact.floorMin).toBeGreaterThan(.02)
+    expect(contact.capBottom).toBeLessThan(contact.socketTop)
+    expect(contact.capTop).toBeGreaterThan(contact.socketTop)
+    expect(contact.capTop).toBeCloseTo(-37.12, 5)
+    // StandardMaterial.clone resets custom defines unless explicitly restored.
+    expect(contact.capFilmDefine).toBe(1)
+    expect(contact.ceilingY).toBeCloseTo(-34.6, 5)
+    expect(contact.ceilingWidth).toBeCloseTo(64, 5)
+    expect(contact.undersideY).toBeLessThan(contact.floorMin)
+    expect(contact.undersideWidth).toBeCloseTo(64, 5)
+    expect(surfaces.visibility[0]).toMatchObject({ machine: true, ruins: true, upperStructure: true, underside: false })
+    expect(surfaces.visibility[1]).toMatchObject({ machine: false, ruins: false, upperStructure: false, underside: true })
+    expect(surfaces.visibility[1].eyeY).toBeLessThan(-44.13)
+    expect(surfaces.visibility[2]).toEqual(surfaces.visibility[0])
+    expect(surfaces.cases).toHaveLength(4)
+    for (const surface of surfaces.cases) {
+      expect(surface.effectivelyVisible, surface.name).toBe(true)
+      expect(surface.depthWrite, surface.name).toBe(true)
+      expect(surface.markerPixels, surface.name).toBeGreaterThan(40)
+      expect(surface.checkedOccluded, surface.name).toBeGreaterThanOrEqual(40)
+      expect(surface.checkedOccluded + surface.exposedMarker + surface.outsideCurtain, surface.name).toBe(surface.markerPixels)
+      expect(surface.leakedPixels, surface.name).toBe(0)
+    }
   })
 
   test('screen curtains clip standard and custom shaders at the same edge without hidden depth leaks', async ({ page }) => {
@@ -535,6 +566,29 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
         }
       }
     }
+    const emblem = await page.evaluate(() => window.interactionHarness.probeEmblemCurtainPixels())
+    expect(emblem.map(result => result.progress)).toEqual([.89, .90, .915])
+    for (const result of emblem) {
+      const label = `end emblem at ${result.progress}`
+      expect(result.baselineRingPixels, label).toBeGreaterThan(1000)
+      expect(result.visibleRingPixels, label).toBeGreaterThan(500)
+      expect(result.redAbove, label).toBe(0)
+      expect(result.depthHoles, label).toBe(0)
+      expect(result.missingBelow, label).toBe(0)
+      expect(result.changedBackground, label).toBe(0)
+      if (result.progress < .915) {
+        // Non-vacuous: both stages would expose red geometry above the seam
+        // without the real emblem mask, while some red remains below it.
+        expect(result.checkedAbove, label).toBeGreaterThan(1000)
+        expect(result.hiddenRingPixels, label).toBeGreaterThan(100)
+      } else {
+        // By .915 forestEntry has left the viewport (maximum slanted UV 1.1).
+        // There is no remaining scale region to invent a hidden-pixel sample.
+        expect(result.upper, label).toBeGreaterThan(1.1)
+        expect(result.checkedAbove, label).toBe(0)
+        expect(result.visibleRingPixels, label).toBe(result.baselineRingPixels)
+      }
+    }
   })
 
   test('scale surface pixels respond locally to pointer position and recover without CPU matrix changes', async ({ page }) => {
@@ -560,6 +614,16 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
     expect(pixels.moved.addedCoverage).toBeGreaterThan(6)
     expect(pixels.restored.changedBytes).toBe(0)
     expect(pixels.seedsUnchanged).toBe(true)
+    expect(pixels.chamberEntry.map(entry => entry.progress)).toEqual([.635, .65])
+    for (const entry of pixels.chamberEntry) {
+      const label = `converging grains at ${entry.progress}`
+      expect(entry.wipe, label).toBe(1)
+      expect(entry.hiddenBaseline, label).toBeGreaterThan(20)
+      expect(entry.leakedAbove, label).toBe(0)
+      expect(entry.changedBelow, label).toBe(0)
+    }
+    expect(pixels.chamberEntry[1].visibleBelow).toBeGreaterThan(20)
+    expect(pixels.roomVisibility).toEqual([[true, true, true], [false, false, false], [true, true, true]])
   })
 
   test('forest grains move at both endpoints and visible curtain boundaries without moving their anchors', async ({ page }) => {

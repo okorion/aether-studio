@@ -1,0 +1,600 @@
+{
+  "viewport": [
+    1440,
+    900
+  ],
+  "dpr": 1,
+  "renderer": "Chromium ANGLE D3D11; one GPU browser at a time",
+  "method": "19 seconds downward + 19 seconds upward; one run per build; ready+1s; requestAnimationFrame intervals, not GPU timers",
+  "limitation": "Remote baseline vs local production build; network and decoder warm-up differ; no cross-device FPS guarantee.",
+  "summaries": [
+    {
+      "name": "perf-before",
+      "url": "https://aether-studio-nu.vercel.app/",
+      "source": "65ffa684a68d4eb1bfb095f6dd0743bc73b3afce",
+      "rawSha256": "97b61a1a072a7dd2ea734fee254e60a98e8a9f4ba33be4c7cf99a36c48010f70",
+      "errors": [],
+      "initial": {
+        "readyMs": 6149.600000023842,
+        "canvas": {
+          "engine": "three.js r186",
+          "renderProfile": "gpu",
+          "renderState": "ready",
+          "cameraMode": "idle",
+          "orbitEnabled": "true",
+          "preparation": "ready",
+          "videoState": "{\"active\":false,\"disposed\":false,\"ready\":[false,false],\"playing\":[false,false],\"state\":[\"idle\",\"idle\"],\"errors\":[null,null]}",
+          "lightVideoState": "{\"active\":true,\"ready\":true,\"playing\":true,\"attached\":true,\"state\":\"playing\",\"error\":null}",
+          "monitorHover": "-1",
+          "journeyStep": "1",
+          "focusX": "0.0000",
+          "focusY": "0.0000",
+          "orbitYaw": "0.0000",
+          "renderProgress": "0.000000",
+          "pointerStrength": "0.0000",
+          "cameraY": "0.3479",
+          "targetY": "0.0000",
+          "modelY": "0.0000",
+          "viewAzimuth": "0.0000",
+          "structureYaw": "0.0000",
+          "ringRoll": "0.0000",
+          "chainPhase": "0.000000",
+          "chamberY": "-40.4000",
+          "frameMs": "18.1",
+          "drawCalls": "76",
+          "quality": "1.00",
+          "geometries": "207",
+          "textures": "31",
+          "programs": "86",
+          "renderFrame": "15"
+        }
+      },
+      "rounds": [
+        {
+          "direction": "down",
+          "frameCount": 1137,
+          "medianMs": 16.7,
+          "p95Ms": 16.8,
+          "maxMs": 83.4,
+          "over33_5": 1,
+          "drawCallsMax": 209,
+          "qualityMin": 1,
+          "compileCalls": 0,
+          "linkCalls": 0,
+          "longTasks": [],
+          "bins": [
+            {
+              "from": 0,
+              "to": 0.1,
+              "n": 115,
+              "median": 16.69999999999891,
+              "p95": 16.799999999999272,
+              "max": 16.800000000000182,
+              "over33": 0,
+              "draws": 76,
+              "quality": 1
+            },
+            {
+              "from": 0.1,
+              "to": 0.2,
+              "n": 115,
+              "median": 16.69999999999891,
+              "p95": 16.799999999999272,
+              "max": 16.80000000000109,
+              "over33": 0,
+              "draws": 45,
+              "quality": 1
+            },
+            {
+              "from": 0.2,
+              "to": 0.3,
+              "n": 111,
+              "median": 16.69999999999891,
+              "p95": 16.700000000000728,
+              "max": 83.40000000000146,
+              "over33": 1,
+              "draws": 126,
+              "quality": 1
+            },
+            {
+              "from": 0.3,
+              "to": 0.4,
+              "n": 116,
+              "median": 16.69999999999891,
+              "p95": 16.700000000000728,
+              "max": 16.80000000000109,
+              "over33": 0,
+              "draws": 144,
+              "quality": 1
+            },
+            {
+              "from": 0.4,
+              "to": 0.5,
+              "n": 115,
+              "median": 16.69999999999891,
+              "p95": 16.700000000000728,
+              "max": 16.80000000000109,
+              "over33": 0,
+              "draws": 130,
+              "quality": 1
+            },
+            {
+              "from": 0.5,
+              "to": 0.6,
+              "n": 115,
+              "median": 16.69999999999709,
+              "p95": 16.799999999999272,
+              "max": 16.799999999999272,
+              "over33": 0,
+              "draws": 84,
+              "quality": 1
+            },
+            {
+              "from": 0.6,
+              "to": 0.7,
+              "n": 115,
+              "median": 16.700000000000728,
+              "p95": 16.799999999999272,
+              "max": 16.80000000000291,
+              "over33": 0,
+              "draws": 208,
+              "quality": 1
+            },
+            {
+              "from": 0.7,
+              "to": 0.8,
+              "n": 115,
+              "median": 16.69999999999709,
+              "p95": 16.700000000000728,
+              "max": 16.799999999999272,
+              "over33": 0,
+              "draws": 209,
+              "quality": 1
+            },
+            {
+              "from": 0.8,
+              "to": 0.9,
+              "n": 115,
+              "median": 16.700000000000728,
+              "p95": 16.799999999999272,
+              "max": 16.80000000000291,
+              "over33": 0,
+              "draws": 71,
+              "quality": 1
+            },
+            {
+              "from": 0.9,
+              "to": 1,
+              "n": 105,
+              "median": 16.69999999999709,
+              "p95": 16.700000000000728,
+              "max": 16.799999999999272,
+              "over33": 0,
+              "draws": 59,
+              "quality": 1
+            }
+          ]
+        },
+        {
+          "direction": "up",
+          "frameCount": 1141,
+          "medianMs": 16.7,
+          "p95Ms": 16.7,
+          "maxMs": 16.8,
+          "over33_5": 0,
+          "drawCallsMax": 206,
+          "qualityMin": 1,
+          "compileCalls": 0,
+          "linkCalls": 0,
+          "longTasks": [],
+          "bins": [
+            {
+              "from": 0,
+              "to": 0.1,
+              "n": 116,
+              "median": 16.69999999999709,
+              "p95": 16.799999999995634,
+              "max": 16.80000000000291,
+              "over33": 0,
+              "draws": 76,
+              "quality": 1
+            },
+            {
+              "from": 0.1,
+              "to": 0.2,
+              "n": 116,
+              "median": 16.69999999999709,
+              "p95": 16.799999999995634,
+              "max": 16.80000000000291,
+              "over33": 0,
+              "draws": 40,
+              "quality": 1
+            },
+            {
+              "from": 0.2,
+              "to": 0.3,
+              "n": 115,
+              "median": 16.69999999999709,
+              "p95": 16.799999999995634,
+              "max": 16.80000000000291,
+              "over33": 0,
+              "draws": 144,
+              "quality": 1
+            },
+            {
+              "from": 0.3,
+              "to": 0.4,
+              "n": 115,
+              "median": 16.69999999999709,
+              "p95": 16.700000000004366,
+              "max": 16.80000000000291,
+              "over33": 0,
+              "draws": 144,
+              "quality": 1
+            },
+            {
+              "from": 0.4,
+              "to": 0.5,
+              "n": 115,
+              "median": 16.69999999999709,
+              "p95": 16.700000000004366,
+              "max": 16.80000000000291,
+              "over33": 0,
+              "draws": 94,
+              "quality": 1
+            },
+            {
+              "from": 0.5,
+              "to": 0.6,
+              "n": 115,
+              "median": 16.69999999999709,
+              "p95": 16.799999999995634,
+              "max": 16.80000000000291,
+              "over33": 0,
+              "draws": 135,
+              "quality": 1
+            },
+            {
+              "from": 0.6,
+              "to": 0.7,
+              "n": 115,
+              "median": 16.69999999999709,
+              "p95": 16.700000000004366,
+              "max": 16.80000000000291,
+              "over33": 0,
+              "draws": 206,
+              "quality": 1
+            },
+            {
+              "from": 0.7,
+              "to": 0.8,
+              "n": 115,
+              "median": 16.700000000000728,
+              "p95": 16.799999999999272,
+              "max": 16.80000000000291,
+              "over33": 0,
+              "draws": 112,
+              "quality": 1
+            },
+            {
+              "from": 0.8,
+              "to": 0.9,
+              "n": 116,
+              "median": 16.69999999999709,
+              "p95": 16.700000000000728,
+              "max": 16.799999999999272,
+              "over33": 0,
+              "draws": 63,
+              "quality": 1
+            },
+            {
+              "from": 0.9,
+              "to": 1,
+              "n": 103,
+              "median": 16.700000000000728,
+              "p95": 16.700000000000728,
+              "max": 16.80000000000291,
+              "over33": 0,
+              "draws": 68,
+              "quality": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "perf-after",
+      "url": "http://127.0.0.1:4173/",
+      "source": "4219d2e",
+      "rawSha256": "ac7f3a29359c6d57615312814e6a006446a831ca276e09511ad43da3bdabf951",
+      "errors": [],
+      "initial": {
+        "readyMs": 3796.7000000476837,
+        "canvas": {
+          "engine": "three.js r186",
+          "renderProfile": "gpu",
+          "renderState": "ready",
+          "cameraMode": "idle",
+          "orbitEnabled": "true",
+          "preparation": "ready",
+          "videoState": "{\"active\":false,\"disposed\":false,\"ready\":[false,false],\"playing\":[false,false],\"state\":[\"idle\",\"idle\"],\"errors\":[null,null]}",
+          "lightVideoState": "{\"active\":true,\"ready\":true,\"playing\":true,\"attached\":true,\"state\":\"playing\",\"error\":null}",
+          "monitorHover": "-1",
+          "journeyStep": "1",
+          "focusX": "0.0000",
+          "focusY": "0.0000",
+          "orbitYaw": "0.0000",
+          "renderProgress": "0.000000",
+          "pointerStrength": "0.0000",
+          "cameraY": "0.3479",
+          "targetY": "0.0000",
+          "modelY": "0.0000",
+          "viewAzimuth": "0.0000",
+          "structureYaw": "0.0000",
+          "ringRoll": "0.0000",
+          "chainPhase": "0.000000",
+          "chamberY": "-40.4000",
+          "frameMs": "16.0",
+          "drawCalls": "78",
+          "quality": "1.00",
+          "geometries": "211",
+          "textures": "29",
+          "programs": "96",
+          "renderFrame": "1"
+        }
+      },
+      "rounds": [
+        {
+          "direction": "down",
+          "frameCount": 1137,
+          "medianMs": 16.7,
+          "p95Ms": 16.8,
+          "maxMs": 83.3,
+          "over33_5": 1,
+          "drawCallsMax": 217,
+          "qualityMin": 1,
+          "compileCalls": 0,
+          "linkCalls": 0,
+          "longTasks": [],
+          "bins": [
+            {
+              "from": 0,
+              "to": 0.1,
+              "n": 115,
+              "median": 16.699999999999818,
+              "p95": 16.800000000000182,
+              "max": 16.800000000000182,
+              "over33": 0,
+              "draws": 78,
+              "quality": 1
+            },
+            {
+              "from": 0.1,
+              "to": 0.2,
+              "n": 115,
+              "median": 16.699999999999818,
+              "p95": 16.700000000000728,
+              "max": 16.800000000000182,
+              "over33": 0,
+              "draws": 56,
+              "quality": 1
+            },
+            {
+              "from": 0.2,
+              "to": 0.3,
+              "n": 111,
+              "median": 16.69999999999891,
+              "p95": 16.700000000000728,
+              "max": 83.29999999999927,
+              "over33": 1,
+              "draws": 144,
+              "quality": 1
+            },
+            {
+              "from": 0.3,
+              "to": 0.4,
+              "n": 115,
+              "median": 16.69999999999891,
+              "p95": 16.700000000000728,
+              "max": 16.80000000000109,
+              "over33": 0,
+              "draws": 144,
+              "quality": 1
+            },
+            {
+              "from": 0.4,
+              "to": 0.5,
+              "n": 116,
+              "median": 16.69999999999891,
+              "p95": 16.700000000000728,
+              "max": 16.80000000000109,
+              "over33": 0,
+              "draws": 130,
+              "quality": 1
+            },
+            {
+              "from": 0.5,
+              "to": 0.6,
+              "n": 115,
+              "median": 16.69999999999891,
+              "p95": 16.700000000000728,
+              "max": 16.80000000000109,
+              "over33": 0,
+              "draws": 84,
+              "quality": 1
+            },
+            {
+              "from": 0.6,
+              "to": 0.7,
+              "n": 115,
+              "median": 16.69999999999709,
+              "p95": 16.799999999999272,
+              "max": 16.799999999999272,
+              "over33": 0,
+              "draws": 217,
+              "quality": 1
+            },
+            {
+              "from": 0.7,
+              "to": 0.8,
+              "n": 115,
+              "median": 16.69999999999709,
+              "p95": 16.700000000000728,
+              "max": 16.80000000000291,
+              "over33": 0,
+              "draws": 143,
+              "quality": 1
+            },
+            {
+              "from": 0.8,
+              "to": 0.9,
+              "n": 115,
+              "median": 16.700000000000728,
+              "p95": 16.799999999999272,
+              "max": 16.80000000000291,
+              "over33": 0,
+              "draws": 60,
+              "quality": 1
+            },
+            {
+              "from": 0.9,
+              "to": 1,
+              "n": 105,
+              "median": 16.69999999999709,
+              "p95": 16.799999999999272,
+              "max": 16.799999999999272,
+              "over33": 0,
+              "draws": 66,
+              "quality": 1
+            }
+          ]
+        },
+        {
+          "direction": "up",
+          "frameCount": 1141,
+          "medianMs": 16.7,
+          "p95Ms": 16.7,
+          "maxMs": 16.8,
+          "over33_5": 0,
+          "drawCallsMax": 215,
+          "qualityMin": 1,
+          "compileCalls": 0,
+          "linkCalls": 0,
+          "longTasks": [],
+          "bins": [
+            {
+              "from": 0,
+              "to": 0.1,
+              "n": 116,
+              "median": 16.69999999999709,
+              "p95": 16.799999999995634,
+              "max": 16.80000000000291,
+              "over33": 0,
+              "draws": 78,
+              "quality": 1
+            },
+            {
+              "from": 0.1,
+              "to": 0.2,
+              "n": 116,
+              "median": 16.69999999999709,
+              "p95": 16.700000000004366,
+              "max": 16.80000000000291,
+              "over33": 0,
+              "draws": 42,
+              "quality": 1
+            },
+            {
+              "from": 0.2,
+              "to": 0.3,
+              "n": 115,
+              "median": 16.69999999999709,
+              "p95": 16.700000000004366,
+              "max": 16.80000000000291,
+              "over33": 0,
+              "draws": 144,
+              "quality": 1
+            },
+            {
+              "from": 0.3,
+              "to": 0.4,
+              "n": 115,
+              "median": 16.69999999999709,
+              "p95": 16.700000000004366,
+              "max": 16.80000000000291,
+              "over33": 0,
+              "draws": 130,
+              "quality": 1
+            },
+            {
+              "from": 0.4,
+              "to": 0.5,
+              "n": 115,
+              "median": 16.69999999999709,
+              "p95": 16.700000000004366,
+              "max": 16.80000000000291,
+              "over33": 0,
+              "draws": 118,
+              "quality": 1
+            },
+            {
+              "from": 0.5,
+              "to": 0.6,
+              "n": 115,
+              "median": 16.69999999999709,
+              "p95": 16.700000000004366,
+              "max": 16.799999999999272,
+              "over33": 0,
+              "draws": 187,
+              "quality": 1
+            },
+            {
+              "from": 0.6,
+              "to": 0.7,
+              "n": 115,
+              "median": 16.69999999999709,
+              "p95": 16.799999999999272,
+              "max": 16.799999999999272,
+              "over33": 0,
+              "draws": 215,
+              "quality": 1
+            },
+            {
+              "from": 0.7,
+              "to": 0.8,
+              "n": 116,
+              "median": 16.700000000000728,
+              "p95": 16.799999999999272,
+              "max": 16.80000000000291,
+              "over33": 0,
+              "draws": 125,
+              "quality": 1
+            },
+            {
+              "from": 0.8,
+              "to": 0.9,
+              "n": 115,
+              "median": 16.69999999999709,
+              "p95": 16.700000000000728,
+              "max": 16.799999999999272,
+              "over33": 0,
+              "draws": 49,
+              "quality": 1
+            },
+            {
+              "from": 0.9,
+              "to": 1,
+              "n": 103,
+              "median": 16.700000000000728,
+              "p95": 16.700000000000728,
+              "max": 16.80000000000291,
+              "over33": 0,
+              "draws": 66,
+              "quality": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

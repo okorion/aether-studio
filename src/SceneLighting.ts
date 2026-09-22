@@ -32,12 +32,29 @@ export function sampleLightChoreography(time: number, progress: number) {
   }
 }
 
-/** Linear radiance, evaluated at a fixed world position. No texture or new pass. */
+/** Shared linear radiance; optional film sampling never adds a render pass. */
 export const lightChoreographyGLSL = /* glsl */ `
   #ifdef AETHER_LIGHT_FILM
     uniform sampler2D uLightFilm;
     uniform float uLightFilmReady;
   #endif
+  vec3 aetherFilmColor(vec2 uv) {
+    #ifdef AETHER_LIGHT_FILM
+      if (uLightFilmReady > .5) {
+        vec3 encoded = texture2D(uLightFilm, clamp(uv, vec2(.002), vec2(.998))).rgb;
+        // Three uploads VideoTexture into a linear-transfer internal format.
+        // Custom shader samples therefore need this one explicit sRGB decode.
+        return mix(encoded / 12.92,
+          pow((encoded + .055) / 1.055, vec3(2.4)), step(vec3(.04045), encoded));
+      }
+    #endif
+    return vec3(0.);
+  }
+  vec3 aetherFilmRadiance(vec3 worldPosition) {
+    vec2 filmUv = .5 + .5 * sin(worldPosition.xz * vec2(.115, .13)
+      + vec2(.8, 2.3) + worldPosition.y * .018);
+    return aetherFilmColor(filmUv);
+  }
   vec3 aetherLightCloud(vec3 worldPosition, vec3 worldNormal, float time, float depth) {
     // Different depths intersect different parts of the same slowly drifting
     // field. Domain warping interrupts straight, evenly spaced light stripes.
@@ -67,14 +84,13 @@ export const lightChoreographyGLSL = /* glsl */ `
       // Smooth mirrored coordinates avoid seams where repeat tiles would meet.
       // Readiness swaps uniforms only; the shader variant stays fixed.
       if (uLightFilmReady > .5) {
-        vec2 filmUv = .5 + .5 * sin(worldPosition.xz * vec2(.115, .13)
-          + vec2(.8, 2.3) + worldPosition.y * .018);
-        vec3 filmSrgb = texture2D(uLightFilm, filmUv).rgb;
-        vec3 filmLinear = mix(filmSrgb / 12.92,
-          pow((filmSrgb + .055) / 1.055, vec3(2.4)), step(vec3(.04045), filmSrgb));
+        vec3 filmLinear = aetherFilmRadiance(worldPosition);
         float filmLuminance = dot(filmLinear, vec3(.2126, .7152, .0722));
-        light = light * (.68 + filmLuminance * .55)
-          + filmLinear * .50 * (.45 + coolFacing * .55);
+        // Preserve the film's dark intervals instead of washing every frame
+        // with the same procedural base. Bright areas cast their actual color.
+        float projected = smoothstep(.015, .58, filmLuminance);
+        light = light * (.25 + projected * .82)
+          + filmLinear * (.72 + projected * .45) * (.45 + coolFacing * .55);
       }
     #endif
     return light * mix(1., .84, clamp(depth, 0., 1.));

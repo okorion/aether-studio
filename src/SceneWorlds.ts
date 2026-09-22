@@ -418,10 +418,32 @@ export function createSceneWorlds(
   water.surface.position.set(0, -3.635, platformZ)
   water.surface.rotation.x = -Math.PI / 2
   space.add(water.surface)
-  const ceiling = mesh(space, geo(new THREE.PlaneGeometry(24, 24)), architecture, 0, 5.8)
+  // Unlike the translucent wall dressing, the room ceiling seals the next
+  // chamber while the incoming current is still converging behind it.
+  const ceilingMaterial = mat(new THREE.MeshStandardMaterial({
+    color: 0x101217, metalness: .55, roughness: .56, envMapIntensity: .55,
+    side: THREE.DoubleSide, depthWrite: true,
+  }))
+  const ceiling = mesh(space, geo(new THREE.PlaneGeometry(64, 64)), ceilingMaterial, 0, 5.8, platformZ)
+  ceiling.name = 'aether-chamber-ceiling'
   ceiling.rotation.x = Math.PI / 2
+  ceiling.renderOrder = -2
+  // A separate, opaque underside keeps the device behind the lower room's
+  // ceiling. Its extent covers the camera path beyond the finite flooded bed.
+  const undersideMaterial = mat(new THREE.MeshStandardMaterial({
+    color: 0x090d12, metalness: .43, roughness: .57, envMapIntensity: .42,
+    depthWrite: true,
+  }))
+  const underside = mesh(space, geo(new THREE.PlaneGeometry(64, 64)), undersideMaterial, 0, -3.755, platformZ)
+  underside.name = 'aether-floor-underside'
+  underside.rotation.x = Math.PI / 2
+  underside.renderOrder = -2
   const causticMaterial = mat(new THREE.ShaderMaterial({
-    uniforms: { uTime: { value: 0 }, uOpacity: { value: 0 }, uLightDepth: { value: 0 } },
+    uniforms: {
+      uTime: { value: 0 }, uOpacity: { value: 0 }, uLightDepth: { value: 0 },
+      ...(lightFilm ? { uLightFilm: lightFilm.map, uLightFilmReady: lightFilm.ready } : {}),
+    },
+    defines: lightFilm ? { AETHER_LIGHT_FILM: 1 } : {},
     vertexShader: /* glsl */ `
       varying vec3 vCeilingWorld;
       varying vec2 vCeilingUv;
@@ -475,7 +497,13 @@ export function createSceneWorlds(
           max(abs(vCeilingUv.x - .5), abs(vCeilingUv.y - .5)));
         vec3 cloud = aetherLightCloud(vCeilingWorld, vec3(0., -1., 0.), uTime, uLightDepth);
         vec3 color = vec3(.10, .19, .21) + cloud * .16;
-        gl_FragColor = vec4(color, light * edge * uOpacity);
+        // Reuse the one low-resolution film decoder. Recognizable moving
+        // light masses sit over the fine caustic network, with a static fallback.
+        vec3 film = aetherFilmRadiance(vCeilingWorld);
+        float filmLuma = dot(film, vec3(.2126, .7152, .0722));
+        color += film * .30;
+        float coverage = light + smoothstep(.05, .45, filmLuma) * .48;
+        gl_FragColor = vec4(color, min(1., coverage) * edge * uOpacity);
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
       }
@@ -484,16 +512,21 @@ export function createSceneWorlds(
   }))
   // The underside of the floor becomes the next chamber's illuminated ceiling.
   const caustics = mesh(space, geo(new THREE.PlaneGeometry(platformWidth, platformDepth)),
-    causticMaterial, 0, -4.055, platformZ)
+    causticMaterial, 0, -3.770, platformZ)
   caustics.rotation.x = Math.PI / 2
+  caustics.renderOrder = 1
   const ruins = createSceneRuins(space, software, mobile)
   floorMaterial.bumpMap = ruins.relief
   floorMaterial.bumpScale = .018
   floorMaterial.roughness = .42
+  ceilingMaterial.bumpMap = undersideMaterial.bumpMap = ruins.relief
+  ceilingMaterial.bumpScale = .014
+  undersideMaterial.bumpScale = .009
   machineMetal.bumpMap = ruins.relief
   machineMetal.bumpScale = .008
   const wallGeometry = geo(new THREE.BoxGeometry(1, 1, 1))
   const architectureBars = instanced(space, wallGeometry, architecture, 28, false)
+  architectureBars.name = 'aether-upper-room-structure'
   for (let i = 0; i < 28; i++) {
     const side = i % 2 === 0 ? -1 : 1
     const row = Math.floor(i / 2)
@@ -505,9 +538,15 @@ export function createSceneWorlds(
     architectureBars.setMatrixAt(i, dummy.matrix)
   }
   const backWall = mesh(space, wallGeometry, architecture, 0, -7, -12)
+  backWall.name = 'aether-room-back-wall'
   backWall.scale.set(16, 28, .3)
+  // The old plinth bottom was -3.215, leaving a .485 gap above the -3.7 bed.
+  // Keep its top and the O/assembly anchor fixed; extend only the footing.
+  const plinthTop = -3.045
+  const plinthBottom = floor.position.y - .03
   const plinth = mesh(chamber,
-    geo(new THREE.CylinderGeometry(2.13, 2.32, .17, software ? 32 : 64)), dark, 0, -3.13)
+    geo(new THREE.CylinderGeometry(2.13, 2.32, plinthTop - plinthBottom, software ? 32 : 64)),
+    dark, 0, (plinthTop + plinthBottom) * .5)
   plinth.name = 'aether-machine-plinth'
   const socketProfile = [[1.40, -.085], [2.05, -.085], [2.05, -.025],
     [1.89, .025], [1.82, .095], [1.40, .095], [1.40, -.085]]
@@ -521,6 +560,20 @@ export function createSceneWorlds(
   const upperSocket = mesh(chamber,
     geo(new THREE.LatheGeometry(upperProfile, software ? 32 : 64)), machineMetal, 0, 2.85)
   upperSocket.name = 'aether-machine-upper-socket'
+  // The annular socket alone leaves its entire centre open. A solid lid
+  // closes it without moving the supports or the converging particle target.
+  const capMaterial = mat(machineMetal.clone())
+  // MeshStandardMaterial.copy resets defines; retain the shared film branch.
+  capMaterial.defines = { ...machineMetal.defines }
+  capMaterial.transparent = false
+  capMaterial.depthWrite = true
+  capMaterial.opacity = 1
+  capMaterial.onBeforeCompile = machineMetal.onBeforeCompile
+  capMaterial.customProgramCacheKey = machineMetal.customProgramCacheKey
+  const closedCap = mesh(chamber,
+    geo(new THREE.CylinderGeometry(1.93, 1.93, .26, software ? 32 : 64)), capMaterial, 0, 3.15)
+  closedCap.name = 'aether-machine-closed-cap'
+  closedCap.renderOrder = -1
   const bolts = instanced(chamber, geo(new THREE.CylinderGeometry(.037, .041, .055, 6)), silver,
     software ? 32 : 64, false)
   bolts.name = 'aether-machine-fasteners'
@@ -699,7 +752,6 @@ export function createSceneWorlds(
         * (1 - journey.scales * .35) * (1 - smooth(.86, .94, progress) * .85)
       space.visible = architectureWeight > .001
       architecture.opacity = architectureWeight
-      ruins.update(architectureWeight)
       // The underside remains legible as a ceiling after the camera crosses it.
       floorMaterial.opacity = smooth(.60, .68, progress) * (1 - smooth(.87, .95, progress)) * .97
       floor.visible = floorMaterial.opacity > .001
@@ -725,9 +777,19 @@ export function createSceneWorlds(
       // side as a screen-filling bar. Only its thickness dissolves near the eye;
       // the zero-thickness floor skin and the lower ceiling light stay intact.
       const eyeHeight = camera ? cameraWorld.y : journey.height
+      const inLowerRoom = eyeHeight <= floorHeight - .03
+      // Once the eye enters the lower room, no upper-floor device can remain
+      // visible through a near-plane gap or beyond a screen-diagonal seam.
+      chamber.visible = deviceWeight > .001 && !inLowerRoom
+      // Broken banks and long upper-room supports cross below the bed in world
+      // space. A ceiling cannot occlude those protruding bottoms from below.
+      // Keep only the plain back wall as the lower room's distant enclosure.
+      ruins.update(inLowerRoom ? 0 : architectureWeight)
+      architectureBars.visible = !inLowerRoom
+      underside.visible = scaleWeight > .001 && eyeHeight < floorHeight
       const slabDistance = Math.abs(eyeHeight - (floorHeight - .17))
       slabMaterial.opacity = floorMaterial.opacity * smooth(.55, 1.10, slabDistance)
-      slab.visible = floor.visible && slabMaterial.opacity > .015
+      slab.visible = aboveFloor && floor.visible && slabMaterial.opacity > .015
       // The extended bed now reaches behind the camera. Its grazing near-plane
       // projection would otherwise cover half the viewport at the crossing.
       floorMaterial.opacity *= smooth(.07, .55, Math.abs(eyeHeight - floorHeight))

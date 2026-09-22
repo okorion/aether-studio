@@ -10,8 +10,8 @@ export function createSceneInteraction(
   initialView = { yaw: 0, pitch: 0 },
 ) {
   const lifetime = 2.35
-  const capacity = software ? 96 : 176
-  const subdivisions = software ? 8 : 12
+  const capacity = software ? 64 : 112
+  const subdivisions = software ? 10 : 16
   const maxQuads = (capacity - 1) * subdivisions
   const history = new Float32Array(capacity * 3)
   const historyBirths = new Float32Array(capacity)
@@ -52,6 +52,12 @@ export function createSceneInteraction(
       attribute float aBirth; attribute float aSide; attribute float aStrand; attribute float aAlong;
       uniform float uTime; uniform float uHeight;
       varying float vSide; varying float vLife; varying float vAlong; varying float vSeed;
+      vec2 flight(float age, vec2 direction, vec2 normal, float seed) {
+        float turn = (seed - .5) * .72;
+        float speed = 42. + seed * 38.;
+        return direction * speed * age + normal * (turn * age * age * 17.
+          + sin(age * 1.1 + seed * 6.28) * age * 8.);
+      }
       void main() {
         float age = max(0., uTime - aBirth);
         float life = clamp(1. - age / 2.35, 0., 1.);
@@ -60,23 +66,16 @@ export function createSceneInteraction(
         vec2 direction = tangent / max(length(tangent), .0001);
         vec2 normal = vec2(-direction.y, direction.x);
         float seed = fract(sin(aStrand * 12.9898) * 43758.5453);
-        float bendSeed = fract(sin(aStrand * 7.713) * 17293.183);
-        float growth = 1. - exp(-age * 3.2);
-        float trailLength = (95. + seed * 155.) * growth + age * 12.;
         float t = aAlong;
-        // Each sampled point grows its own curved streamer. Different ages and
-        // seeds spread the trailing ends into a fan instead of parallel staff lines.
-        float bend = (bendSeed - .5) * 39. * growth;
-        vec2 offset = -direction * trailLength * t;
-        offset += normal * (sin(t * 3.14159) * bend + t * t * sin(aStrand * 1.7 + age * .65) * age * 8.);
-        offset += vec2(sin(aStrand) * age * 3., -age * age * 3.2) * t * t;
-        float taper = pow(max(0., 1. - t), .95);
-        float head = 1. - smoothstep(.025, .19, t);
-        // Only the leading reflection widens; the curved tail still narrows
-        // to a hairline rather than becoming a continuous neon beam.
-        float width = (1.7 + seed * 1.3) * pow(life, .4) * (.08 + taper * .9 + head * .65);
-        vec2 curveTangent = -direction * trailLength;
-        curveTangent += normal * (cos(t * 3.14159) * 3.14159 * bend + 2. * t * sin(aStrand * 1.7 + age * .65) * age * 8.);
+        // The luminous head actually advances after input stops. Every tail
+        // vertex samples the same curved flight at an earlier age.
+        float history = min(age + .045, 1.45);
+        float sampleAge = max(-.045, age - t * history);
+        vec2 offset = flight(sampleAge, direction, normal, seed);
+        float head = exp(-t * t * 430.);
+        float taper = pow(max(0., 1. - t), 1.4);
+        float width = (.90 + seed * .35 + head * 2.7) * (.25 + taper * .75) * pow(life, .25);
+        vec2 curveTangent = flight(sampleAge + .01, direction, normal, seed) - offset;
         vec2 edge = vec2(-curveTangent.y, curveTangent.x) / max(length(curveTangent), .0001);
         offset += edge * aSide * width;
         // CSS-pixel widths remain silky when the camera descends or orbits.
@@ -87,15 +86,15 @@ export function createSceneInteraction(
     fragmentShader: `
       varying float vSide; varying float vLife; varying float vAlong; varying float vSeed;
       void main() {
-        float head = 1. - smoothstep(.025, .19, vAlong);
-        float soft = exp(-vSide * vSide * 4.);
-        float silver = exp(-vSide * vSide * mix(9., 6., head));
+        float head = exp(-vAlong * vAlong * 430.);
+        float soft = exp(-vSide * vSide * 3.);
+        float silver = exp(-vSide * vSide * mix(5., 13., head));
         float fade = smoothstep(0., .3, vLife) * pow(vLife, .4);
         float tip = 1. - smoothstep(.76, 1., vAlong);
         float reflection = .9 + .1 * sin(vAlong * 18. + vSeed * 9.);
         vec3 reflectionColor = mix(vec3(.57,.72,.71), vec3(.97,.99,.90), head);
         vec3 color = mix(vec3(.22,.39,.40), reflectionColor, silver);
-        float alpha = (soft * .12 + silver * (.3 + head * .28)) * fade * tip * reflection;
+        float alpha = (soft * (.13 + head * .32) + silver * (.45 + head * .6)) * fade * tip * reflection;
         alpha *= .85 + vSeed * .15;
         gl_FragColor = vec4(color, alpha);
       }`,
@@ -205,7 +204,9 @@ export function createSceneInteraction(
     last.set(-10, -10)
     lastSample = -Infinity
   }
+  let ribbonDirty = true
   const addSample = (x: number, y: number) => {
+    ribbonDirty = true
     const p = pointAt(x, y)
     if (historySize === capacity) {
       historyStart = (historyStart + 1) % capacity
@@ -224,13 +225,16 @@ export function createSceneInteraction(
       dirty = true
     }
   }
-  // Catmull-Rom positions/tangents smooth the birth path. Each birth grows a
-  // separate streamer with an independent length, curvature and reflection.
+  // Catmull-Rom positions/tangents smooth the birth path. The GPU advances
+  // each independent head and samples its curved flight history for the tail.
   const buildRibbon = () => {
     while (historySize && time - historyBirths[historyStart] > lifetime) {
       historyStart = (historyStart + 1) % capacity
       historySize--
+      ribbonDirty = true
     }
+    if (!ribbonDirty) return
+    ribbonDirty = false
     let quads = 0
     for (let i = 0; i < historySize - 1; i++) {
       const b = (historyStart + i) % capacity
@@ -290,7 +294,7 @@ export function createSceneInteraction(
       field.active = true
       fieldTarget = 1
       const distance = pointer.distanceTo(last)
-      if (last.x === -10 || (distance > .0025 && event.timeStamp - lastSample >= (software ? 24 : 14))) {
+      if (last.x === -10 || (distance > .006 && event.timeStamp - lastSample >= (software ? 42 : 30))) {
         if (event.timeStamp - lastSample > 180) breakStroke()
         addSample(pointer.x, pointer.y)
         last.copy(pointer)
@@ -352,6 +356,7 @@ export function createSceneInteraction(
   }
   const navigate = () => {
     historySize = 0
+    ribbonDirty = true
     births.fill(-100)
     dirty = true
     reset()

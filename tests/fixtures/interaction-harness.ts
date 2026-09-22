@@ -11,6 +11,7 @@ type Snapshot = {
   zoom: number
   burst: number
   illuminatedPixels: number
+  rightmostPixel: number
 }
 
 export type InteractionHarness = {
@@ -346,10 +347,14 @@ window.interactionHarness = {
     const gl = renderer.getContext()
     gl.readPixels(0, 0, innerWidth, innerHeight, gl.RGBA, gl.UNSIGNED_BYTE, pixels)
     let illuminatedPixels = 0
+    let rightmostPixel = -1
     for (let i = 0; i < pixels.length; i += 4) {
-      if (pixels[i] + pixels[i + 1] + pixels[i + 2] > 30) illuminatedPixels++
+      if (pixels[i] + pixels[i + 1] + pixels[i + 2] > 30) {
+        illuminatedPixels++
+        rightmostPixel = Math.max(rightmostPixel, (i / 4) % innerWidth)
+      }
     }
-    return { yaw, pitch, zoom, burst, illuminatedPixels }
+    return { yaw, pitch, zoom, burst, illuminatedPixels, rightmostPixel }
   },
   reset(reducedMotion = false) {
     interaction.dispose()

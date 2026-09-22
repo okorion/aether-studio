@@ -314,7 +314,7 @@ test('@interaction device and late scales reject pointer camera input until the 
     expect(Math.abs(after.targetY - before.targetY)).toBeLessThan(.0002)
   }
 
-  for (const progress of [.72, .83, .90, .95]) {
+  for (const progress of [.72, .83, .90, .94]) {
     const before = await moveToProgress(progress)
     await expect(canvas).toHaveAttribute('data-orbit-enabled', 'false')
     const savedYaw = Number(await canvas.getAttribute('data-orbit-yaw'))
@@ -341,7 +341,7 @@ test('@interaction device and late scales reject pointer camera input until the 
   expect(Math.abs(turned.viewAzimuth - lowerRing.viewAzimuth)).toBeGreaterThan(.2)
 
   // Returning into the visible scale curtain cancels an already-held drag.
-  const lockedAgain = await moveToProgress(.95)
+  const lockedAgain = await moveToProgress(.94)
   await expect(canvas).toHaveAttribute('data-orbit-enabled', 'false')
   await expect(canvas).toHaveAttribute('data-camera-mode', 'idle')
   await expect(page.locator('html')).not.toHaveClass(/scene-dragging/)
@@ -551,6 +551,20 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
     expect(faded.illuminatedPixels).toBe(0)
   })
 
+  test('a flash head keeps advancing after the pointer stops instead of growing a fixed spike', async ({ page }) => {
+    await page.mouse.move(100, 240)
+    for (const x of [140, 180, 220, 260]) {
+      await page.waitForTimeout(50)
+      await page.mouse.move(x, 240)
+    }
+    const started = await page.evaluate(() => window.interactionHarness.step(.1))
+    const flying = await page.evaluate(() => window.interactionHarness.step(.85))
+    expect(started.illuminatedPixels).toBeGreaterThan(0)
+    expect(flying.rightmostPixel - started.rightmostPixel).toBeGreaterThan(20)
+    const ended = await page.evaluate(() => window.interactionHarness.step(2.1))
+    expect(ended.illuminatedPixels).toBe(0)
+  })
+
   test('drag retains its viewpoint after release, cancel, blur, and hidden tab; double click resets', async ({
     page,
   }) => {
@@ -593,7 +607,7 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
     await page.mouse.down()
     await page.mouse.move(480, 160, { steps: 4 })
     const reduced = await page.evaluate(() => window.interactionHarness.step(0.5))
-    expect(reduced).toEqual({ yaw: 0, pitch: 0, zoom: 0, burst: 0, illuminatedPixels: 0 })
+    expect(reduced).toEqual({ yaw: 0, pitch: 0, zoom: 0, burst: 0, illuminatedPixels: 0, rightmostPixel: -1 })
     await page.mouse.up()
     await page.evaluate(() => window.interactionHarness.reset())
     await page.locator('#interaction-canvas').dispatchEvent('pointerdown', {
@@ -617,13 +631,13 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
       clientY: 15,
     })
     const excluded = await page.evaluate(() => window.interactionHarness.step(0.5))
-    expect(excluded).toEqual({ yaw: 0, pitch: 0, zoom: 0, burst: 0, illuminatedPixels: 0 })
+    expect(excluded).toEqual({ yaw: 0, pitch: 0, zoom: 0, burst: 0, illuminatedPixels: 0, rightmostPixel: -1 })
     await expect(page.locator('#interaction-canvas')).toHaveAttribute('data-camera-mode', 'idle')
   })
 
   test('orbit locks preserve the chosen view and mechanical scroll can stop and reverse', async ({ page }) => {
     const lockedBoundaries = await page.evaluate(() =>
-      [.235, .24, .45, .72, .83, .86, .89, .90, .94, .95, .96]
+      [.235, .24, .45, .72, .83, .86, .89, .90, .94]
         .map((progress) => window.interactionHarness.sampleJourney(progress)),
     )
     for (const state of lockedBoundaries) {
@@ -631,7 +645,7 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
       expect(state.orbitWeight).toBe(0)
     }
     const returningOrbit = await page.evaluate(() =>
-      [0, .97, 1].map((progress) => window.interactionHarness.sampleJourney(progress)),
+      [0, .95, .975, 1].map((progress) => window.interactionHarness.sampleJourney(progress)),
     )
     for (const state of returningOrbit) {
       expect(state.orbitEnabled).toBe(true)
@@ -653,7 +667,8 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
     await page.mouse.move(320, 240)
     await page.mouse.move(420, 280, { steps: 6 })
     const trace = await page.evaluate(() => window.interactionHarness.step(.15))
-    expect(trace.illuminatedPixels).toBeGreaterThan(20)
+    // Camera locks must leave sparse flashes available; their area is intentionally small.
+    expect(trace.illuminatedPixels).toBeGreaterThan(0)
 
     // Disable orbit while held, then try movement, a new drag, and double click.
     // None may queue a hidden yaw change; pointer trails must still be allowed.
@@ -672,7 +687,7 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
     const locked = await page.evaluate(() => window.interactionHarness.step(.15))
     expect(Math.abs(locked.yaw - retained.yaw)).toBeLessThan(.001)
     expect(Math.abs(locked.pitch - retained.pitch)).toBeLessThan(.001)
-    expect(locked.illuminatedPixels).toBeGreaterThan(20)
+    expect(locked.illuminatedPixels).toBeGreaterThan(0)
     await page.evaluate(() => window.interactionHarness.setOrbitEnabled(true))
     const unlocked = await page.evaluate(() => window.interactionHarness.step(4))
     expect(Math.abs(unlocked.yaw - retained.yaw)).toBeLessThan(.001)

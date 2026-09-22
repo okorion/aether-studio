@@ -1,7 +1,9 @@
 import * as THREE from 'three'
 import { Reflector } from 'three/addons/objects/Reflector.js'
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
 import { createSpineAssembly } from './SceneSpine'
 import { createSceneMonitors } from './SceneMonitors'
+import { createSceneRuins } from './SceneRuins'
 import type { createSceneVideo } from './SceneVideo'
 import { sampleJourney, smooth } from './Journey'
 
@@ -140,17 +142,65 @@ export function createSceneWorlds(
   }
   metal.customProgramCacheKey = () => 'aether-radial-hex-pointer-v4'
   const silver = mat(new THREE.MeshStandardMaterial({
-    color: 0x4d5964, metalness: software ? .35 : .9, roughness: .43, envMapIntensity: .70, transparent: true,
-  }))
-  const chainsMaterial = mat(new THREE.MeshStandardMaterial({
-    color: 0x4d5864, metalness: software ? .35 : .9, roughness: .42, envMapIntensity: .65, transparent: true,
+    color: 0x929197, metalness: software ? .45 : .96, roughness: .24, envMapIntensity: 1.25, transparent: true,
   }))
   const dark = mat(new THREE.MeshStandardMaterial({
-    color: 0x15282c, metalness: software ? .35 : .9, roughness: .29, envMapIntensity: 1.2, transparent: true,
+    color: 0x19191d, metalness: software ? .35 : .86, roughness: .38, envMapIntensity: .95, transparent: true,
   }))
   const machineMetal = mat(new THREE.MeshStandardMaterial({
-    color: 0x414b56, metalness: software ? .4 : .92, roughness: .46, envMapIntensity: .65, transparent: true,
+    color: 0x56535a, metalness: software ? .4 : .94, roughness: .32, envMapIntensity: 1.05, transparent: true,
   }))
+  const cableMaterial = mat(new THREE.MeshStandardMaterial({
+    color: 0x242326, metalness: software ? .3 : .76, roughness: .43, envMapIntensity: .9, transparent: true,
+  }))
+  // Broad oxidation and fine machining break the uniform teal wash. Coordinates
+  // are shared in world space, so adjacent collars retain different highlights
+  // without a texture, extra pass, or animated surface drift.
+  for (const surface of [silver, dark, machineMetal, cableMaterial]) {
+    surface.onBeforeCompile = shader => {
+      shader.vertexShader = 'varying vec3 vMachinePoint;\n' + shader.vertexShader
+      shader.vertexShader = shader.vertexShader.replace('#include <begin_vertex>', `
+        #include <begin_vertex>
+        vec4 machinePoint = vec4(transformed, 1.);
+        #ifdef USE_INSTANCING
+          machinePoint = instanceMatrix * machinePoint;
+        #endif
+        vMachinePoint = (modelMatrix * machinePoint).xyz;
+      `)
+      shader.fragmentShader = `
+        varying vec3 vMachinePoint;
+        float machinePatina(vec3 p) {
+          return .5 + .5 * sin(p.x * 2.7 + sin(p.z * 4.1))
+            * sin(p.y * 5.8 + p.z * 1.9);
+        }
+      ` + shader.fragmentShader
+      shader.fragmentShader = shader.fragmentShader.replace('#include <color_fragment>', `
+        #include <color_fragment>
+        float patina = machinePatina(vMachinePoint);
+        diffuseColor.rgb *= mix(vec3(.48, .49, .55), vec3(1.0, .96, .88), patina);
+      `)
+      shader.fragmentShader = shader.fragmentShader.replace('#include <roughnessmap_fragment>', `
+        #include <roughnessmap_fragment>
+        roughnessFactor = clamp(roughnessFactor + (1. - machinePatina(vMachinePoint)) * .17
+          - .055 * sin(vMachinePoint.y * 39. + vMachinePoint.x * 7.), .18, .62);
+      `)
+      if (!software) shader.fragmentShader = shader.fragmentShader.replace('#include <normal_fragment_maps>', `
+        #include <normal_fragment_maps>
+        float fineFade = 1. - smoothstep(.012, .065, length(fwidth(vMachinePoint)));
+        float relief = sin(vMachinePoint.y * 147. + sin(vMachinePoint.x * 29.) * .7)
+          * .00075 * fineFade;
+        relief += sin(vMachinePoint.x * 27. + vMachinePoint.z * 31.)
+          * sin(vMachinePoint.y * 43. - vMachinePoint.z * 19.) * .00115;
+        vec3 machineDx = dFdx(-vViewPosition), machineDy = dFdy(-vViewPosition);
+        vec3 machineR1 = cross(machineDy, normal), machineR2 = cross(normal, machineDx);
+        float machineDet = dot(machineDx, machineR1);
+        vec3 machineGradient = sign(machineDet)
+          * (dFdx(relief) * machineR1 + dFdy(relief) * machineR2);
+        normal = normalize(max(abs(machineDet), .00000001) * normal - machineGradient);
+      `)
+    }
+    surface.customProgramCacheKey = () => `aether-machined-steel-${software ? 'lite' : 'detailed'}-v1`
+  }
   const glow = mat(new THREE.MeshBasicMaterial({
     color: 0x537b8a, transparent: true, opacity: .3,
     blending: THREE.AdditiveBlending, depthWrite: false,
@@ -199,35 +249,30 @@ export function createSceneWorlds(
     color.multiplyScalar(.84 + Math.sin(wallX * .7 + wallY * .93) * .10)
     feathers.setColorAt(i, color)
   }
+  // A broad, bevelled annular cross-section reads as stamped metal flanges,
+  // unlike round torus tubes that resemble stacked rubber tyres.
+  const collarProfile = [
+    [.84, -.022], [.98, -.022], [1.0, -.009], [1.0, .010],
+    [.98, .023], [.84, .023], [.825, .009], [.825, -.009], [.84, -.022],
+  ].map(([radius, y]) => new THREE.Vector2(radius, y))
   const joints = instanced(chamber,
-    geo(new THREE.TorusGeometry(1, .09, software ? 5 : 8, software ? 20 : 36)), silver,
-    software ? 4 : 6, false)
+    geo(new THREE.LatheGeometry(collarProfile, software ? 28 : 64)), silver,
+    software ? 6 : 10, false)
+  joints.name = 'aether-machine-collars'
   for (let i = 0; i < joints.count; i++) {
     const half = joints.count / 2
     const lower = i < half
-    dummy.position.set(0, (lower ? -1 : 1) * (2.05 + i % half * .24), 0)
-    dummy.rotation.set(Math.PI / 2, 0, 0)
-    dummy.scale.setScalar(1.35 + i % half * .12)
+    const layer = i % half
+    dummy.position.set(0, lower ? -2.38 - layer * .12 : 2.10 + layer * .18, 0)
+    dummy.rotation.set(0, layer * .12, 0)
+    dummy.scale.setScalar((lower ? 1.73 : 1.81) + layer * .045)
     dummy.updateMatrix()
     joints.setMatrixAt(i, dummy.matrix)
-  }
-  const chainCount = software ? 56 : mobile ? 100 : 152
-  const links = instanced(chamber,
-    geo(new THREE.TorusGeometry(1, .18, 5, software ? 8 : 12)), chainsMaterial, chainCount, false)
-  links.name = 'aether-mechanical-chain'
-  for (let i = 0; i < chainCount; i++) {
-    const strand = i % 2
-    const t = Math.floor(i / 2) / (chainCount / 2 - 1)
-    const angle = t * TAU * .8 + strand * Math.PI
-    dummy.position.set(Math.sin(angle) * 1.88, (t - .5) * 5.4, Math.cos(angle) * 1.88)
-    dummy.rotation.set(.5 + (Math.floor(i / 2) % 2) * Math.PI / 2, angle + Math.PI / 2, Math.sin(angle) * .25)
-    dummy.scale.set(.065, .115, .065)
-    dummy.updateMatrix()
-    links.setMatrixAt(i, dummy.matrix)
+    joints.setColorAt(i, color.setScalar(.74 + (i % 3) * .13))
   }
 
-  // Each layer keeps its own particle field; the camera passes through the floor
-  // between them rather than morphing the device's core into the scale wall.
+  // Scale highlights only. Atmosphere owns the single masked spine current
+  // that gathers into the machine O; no duplicate spine or reactor cloud.
   const pointCount = software ? 420 : mobile ? 1100 : 2300
   const seeds = new Float32Array(pointCount * 3)
   for (let i = 0; i < pointCount; i++) seeds.set([i / pointCount, (i * .61803398875) % 1, (i * .754877666) % 1], i * 3)
@@ -308,9 +353,6 @@ export function createSceneWorlds(
       }
     `,
   }))
-  const core = new THREE.Points(pointGeometry, coreMaterial)
-  core.frustumCulled = false
-  matter.add(core)
   const createLayerCore = (parent: THREE.Group, weights: THREE.Vector3, name: string,
     geometry = pointGeometry) => {
     const material = mat(coreMaterial.clone())
@@ -324,19 +366,6 @@ export function createSceneWorlds(
     parent.add(points)
     return { material, points }
   }
-  const machinePointCount = software ? 600 : mobile ? 1800 : 4200
-  const machineSeeds = new Float32Array(machinePointCount * 3)
-  for (let i = 0; i < machinePointCount; i++) {
-    machineSeeds.set([i / machinePointCount, (i * .61803398875) % 1, (i * .754877666) % 1], i * 3)
-  }
-  const machinePointGeometry = geo(new THREE.BufferGeometry())
-  machinePointGeometry.setAttribute('position', new THREE.BufferAttribute(machineSeeds, 3))
-  const machineCore = createLayerCore(chamber, new THREE.Vector3(0, 1, 0), 'aether-machine-core', machinePointGeometry)
-  machineCore.material.uniforms.uSize.value = 45
-  machineCore.material.uniforms.uPointMax.value = 8
-  machineCore.material.uniforms.uPearl.value = 1
-  machineCore.material.blending = THREE.NormalBlending
-  machineCore.material.depthWrite = true
   const scaleCore = createLayerCore(scaleWall, new THREE.Vector3(0, 0, 1), 'aether-scale-core')
 
   // Architecture appears around the centre and remains behind the final ring.
@@ -421,17 +450,12 @@ export function createSceneWorlds(
   const caustics = mesh(space, geo(new THREE.PlaneGeometry(platformWidth, platformDepth)),
     causticMaterial, 0, -4.01, platformZ)
   caustics.rotation.x = Math.PI / 2
-  const rocks = instanced(space, geo(new THREE.IcosahedronGeometry(1, software ? 0 : 1)),
-    architecture, software ? 16 : mobile ? 28 : 48, false)
-  for (let i = 0; i < rocks.count; i++) {
-    const a = i * 2.399963
-    const radius = 2.9 + (i % 9) * .42
-    dummy.position.set(Math.cos(a) * radius, -3.51, Math.min(1.8 + Math.sin(i * .7) * .35, Math.sin(a) * radius))
-    dummy.rotation.set(i * .7, i * 1.3, i * .37)
-    dummy.scale.set(.24 + (i % 4) * .14, .05 + (i % 3) * .055, .3 + (i % 6) * .12)
-    dummy.updateMatrix()
-    rocks.setMatrixAt(i, dummy.matrix)
-  }
+  const ruins = createSceneRuins(space, software, mobile)
+  floorMaterial.bumpMap = ruins.relief
+  floorMaterial.bumpScale = .045
+  floorMaterial.roughness = .28
+  machineMetal.bumpMap = ruins.relief
+  machineMetal.bumpScale = .008
   const wallGeometry = geo(new THREE.BoxGeometry(1, 1, 1))
   const architectureBars = instanced(space, wallGeometry, architecture, 28, false)
   for (let i = 0; i < 28; i++) {
@@ -447,52 +471,103 @@ export function createSceneWorlds(
   const backWall = mesh(space, wallGeometry, architecture, 0, -7, -12)
   backWall.scale.set(16, 28, .3)
   const plinth = mesh(chamber,
-    geo(new THREE.CylinderGeometry(2.25, 2.55, .27, software ? 32 : 64)), dark, 0, -3.13)
+    geo(new THREE.CylinderGeometry(2.13, 2.32, .17, software ? 32 : 64)), dark, 0, -3.13)
   plinth.name = 'aether-machine-plinth'
+  const socketProfile = [[1.40, -.085], [2.05, -.085], [2.05, -.025],
+    [1.89, .025], [1.82, .095], [1.40, .095], [1.40, -.085]]
+    .map(([radius, y]) => new THREE.Vector2(radius, y))
   const socket = mesh(chamber,
-    geo(new THREE.CylinderGeometry(1.75, 2.2, .2, software ? 32 : 64)), machineMetal, 0, -2.89)
+    geo(new THREE.LatheGeometry(socketProfile, software ? 32 : 64)), machineMetal, 0, -2.89)
   socket.name = 'aether-machine-lower-socket'
+  const upperProfile = [[1.59, -.07], [1.96, -.07], [1.96, .10], [1.88, .15],
+    [1.88, .34], [1.61, .34], [1.61, .28], [1.80, .28], [1.80, -.01],
+    [1.59, -.01], [1.59, -.07]].map(([radius, y]) => new THREE.Vector2(radius, y))
   const upperSocket = mesh(chamber,
-    geo(new THREE.CylinderGeometry(1.95, 1.6, .24, software ? 32 : 64)), machineMetal, 0, 2.85)
+    geo(new THREE.LatheGeometry(upperProfile, software ? 32 : 64)), machineMetal, 0, 2.85)
   upperSocket.name = 'aether-machine-upper-socket'
-  const bolts = instanced(chamber, geo(new THREE.CylinderGeometry(.045, .045, .1, 6)), machineMetal, 64, false)
+  const bolts = instanced(chamber, geo(new THREE.CylinderGeometry(.037, .041, .055, 6)), silver,
+    software ? 32 : 64, false)
+  bolts.name = 'aether-machine-fasteners'
   for (let i = 0; i < bolts.count; i++) {
-    const a = (i % 32) / 32 * TAU
-    dummy.position.set(Math.sin(a) * 1.92, i < 32 ? -2.99 : 2.98, Math.cos(a) * 1.92)
+    const half = bolts.count / 2
+    const a = (i % half) / half * TAU + .035
+    const radius = i < half ? 1.98 : 1.84
+    dummy.position.set(Math.sin(a) * radius, i < half ? -2.90 : 3.215, Math.cos(a) * radius)
     dummy.rotation.set(0, a, 0)
     dummy.scale.setScalar(1)
     dummy.updateMatrix()
     bolts.setMatrixAt(i, dummy.matrix)
   }
+  const supportAngles = [.13, .49, 1.18, 1.47, 2.22, 2.72, 3.12, 3.79, 4.06, 4.88, 5.36, 5.91]
+    .filter((_, i) => !software || i % 2 === 0)
   const rods = instanced(chamber,
-    geo(new THREE.CylinderGeometry(.025, .025, 1, 6)), machineMetal, software ? 12 : 24, false)
+    geo(new THREE.CylinderGeometry(.019, .024, 1, 6)), machineMetal, supportAngles.length, false)
+  rods.name = 'aether-machine-supports'
   for (let i = 0; i < rods.count; i++) {
-    const angle = i / rods.count * TAU
-    dummy.position.set(Math.sin(angle) * 1.7, -.02, Math.cos(angle) * 1.7)
-    dummy.rotation.set(0, 0, 0)
-    dummy.scale.set(1, 5.6, 1)
+    const angle = supportAngles[i]
+    const radius = 1.72 + Math.sin(i * 2.3) * .055
+    dummy.position.set(Math.sin(angle) * radius, -.015, Math.cos(angle) * radius)
+    dummy.rotation.set(Math.sin(angle) * .017, angle, Math.cos(angle) * .013)
+    dummy.scale.set(i % 4 === 0 ? 1.4 : 1, 5.64, 1)
     dummy.updateMatrix()
     rods.setMatrixAt(i, dummy.matrix)
   }
-  const conduits = instanced(chamber,
-    geo(new THREE.CylinderGeometry(.008, .008, 1, 5)), glow, software ? 8 : 16)
-  const conduitCount = software ? 6 : mobile ? 10 : 14
-  const cableGeometry = geo(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([
-    new THREE.Vector3(0, 2.85, 1.65), new THREE.Vector3(0, 2.15, 2.2),
-    new THREE.Vector3(0, 1.3, 3.1), new THREE.Vector3(0, 2.4, 4.7),
-    new THREE.Vector3(0, 5.7, 5.4),
-  ]), software ? 18 : 40, .024, 5, false))
-  const cables = instanced(chamber, cableGeometry, machineMetal, conduitCount, false)
-  for (let i = 0; i < conduitCount; i++) {
-    dummy.position.set(0, 0, 0)
-    dummy.rotation.set(0, i / conduitCount * TAU, 0)
-    dummy.scale.setScalar(1)
+  const ribs = instanced(chamber, geo(new THREE.BoxGeometry(1, 1, 1)), machineMetal,
+    supportAngles.length * 2 + (software ? 24 : 48), false)
+  ribs.name = 'aether-machine-clamps-ribs'
+  for (let i = 0; i < ribs.count; i++) {
+    const isClamp = i < supportAngles.length * 2
+    const index = i % supportAngles.length
+    const ribIndex = i - supportAngles.length * 2
+    const ribsPerBand = software ? 12 : 24
+    const angle = isClamp ? supportAngles[index] : (ribIndex % ribsPerBand) / ribsPerBand * TAU
+    const upper = isClamp ? i < supportAngles.length : ribIndex < ribsPerBand
+    const radius = isClamp ? 1.75 : 1.91
+    dummy.position.set(Math.sin(angle) * radius, isClamp ? (upper ? 1.72 : -1.89) : (upper ? 3.01 : -2.86), Math.cos(angle) * radius)
+    dummy.rotation.set(0, angle, 0)
+    dummy.scale.set(isClamp ? .15 : .026, isClamp ? .040 : .14, isClamp ? .10 : .06)
     dummy.updateMatrix()
-    cables.setMatrixAt(i, dummy.matrix)
+    ribs.setMatrixAt(i, dummy.matrix)
+    ribs.setColorAt(i, color.setScalar(isClamp ? .92 : .50))
   }
+  // Different attachment heights, diameters and sag make these independent
+  // heavy feeds rather than repeated decorative loops. They share one draw.
+  const cableParts: THREE.BufferGeometry[] = []
+  const cableCount = software ? 7 : mobile ? 10 : 14
+  const polar = (angle: number, radius: number, y: number) =>
+    new THREE.Vector3(Math.sin(angle) * radius, y, Math.cos(angle) * radius)
+  for (let i = 0; i < cableCount; i++) {
+    const angle = i * 2.399963 + .27
+    const lean = Math.sin(i * 2.1) * .37
+    const lower = i % 5 === 4
+    const path = new THREE.CatmullRomCurve3(lower ? [
+      polar(angle, 1.74, -2.82), polar(angle + .10, 2.12, -3.05),
+      polar(angle + lean, 3.12, -3.19), polar(angle + lean * .5, 5.7, -3.35),
+    ] : [
+      polar(angle, 1.71, 2.87 + (i % 3) * .065),
+      polar(angle + lean * .3, 2.20, 1.98 + Math.sin(i * 1.3) * .3),
+      polar(angle + lean, 3.15, 1.45 + Math.cos(i * 1.9) * .72),
+      polar(angle - lean * .25, 4.45, 2.43 + Math.sin(i * 1.7) * .85),
+      polar(angle - lean * .6, 6.35, 5.35 + Math.cos(i * 1.5)),
+    ])
+    cableParts.push(new THREE.TubeGeometry(path, software ? 18 : 38,
+      i % 4 === 0 ? .065 : .021 + (i % 3) * .009, software ? 5 : 7, false))
+  }
+  const mergedCables = mergeGeometries(cableParts)
+  cableParts.forEach(part => part.dispose())
+  if (!mergedCables) throw new Error('Unable to build machine cable feeds')
+  const cables = mesh(chamber, geo(mergedCables), cableMaterial)
+  cables.name = 'aether-machine-cable-feeds'
   const luminousRings = instanced(chamber,
-    geo(new THREE.TorusGeometry(1, .009, 5, software ? 36 : 80)), glow, 5)
-  const reactorLight = new THREE.PointLight(0x7fa8d8, 0, 10, 2)
+    geo(new THREE.TorusGeometry(1, .005, 4, software ? 36 : 80)), glow, 4, false)
+  for (let i = 0; i < luminousRings.count; i++) {
+    dummy.position.set(0, i < 2 ? -2.40 - i * .24 : 2.13 + (i - 2) * .36, 0)
+    dummy.rotation.set(Math.PI / 2, 0, 0)
+    dummy.scale.setScalar(1.77 + (i % 2) * .1)
+    dummy.updateMatrix()
+    luminousRings.setMatrixAt(i, dummy.matrix)
+  }
+  const reactorLight = new THREE.PointLight(0xc4bdd2, 0, 10, 2)
   reactorLight.position.set(0, -.8, 1.1)
   chamber.add(reactorLight)
 
@@ -538,16 +613,14 @@ export function createSceneWorlds(
       const spineWeight = journey.spine * (1 - smooth(.61, .67, progress))
       const spineOffset = -12 * (1 - emergence) + 10 * smooth(.60, .67, progress)
       spineAssembly.group.position.y = spineOffset
-      core.position.y = spineOffset
       matter.visible = spineWeight > .001
       spineAssembly.update(progress, journey.core * spineWeight, emergence)
       const deviceWeight = smooth(.60, .69, progress) * (1 - smooth(.79, .88, progress))
-      const scaleWeight = smooth(.735, .785, progress) * (1 - smooth(.91, .985, progress))
+      const scaleWeight = smooth(.735, .785, progress) * (1 - smooth(.91, .94, progress))
       chamber.visible = deviceWeight > .001
       scaleWall.visible = scaleWeight > .001
       metal.opacity = scaleWeight
       silver.opacity = deviceWeight
-      chainsMaterial.opacity = deviceWeight * .60
       pointerStrength.value = pointer && Number.isFinite(pointer.strength)
         ? THREE.MathUtils.clamp(pointer.strength, 0, 1) : 0
       if (pointer && Number.isFinite(pointer.ndc.x) && Number.isFinite(pointer.ndc.y)) {
@@ -558,12 +631,6 @@ export function createSceneWorlds(
       pointerAspect.value = pointer && Number.isFinite(pointer.aspect)
         ? Math.max(.25, Math.min(5, pointer.aspect)) : 1
       surfaceTime.value = time
-      coreMaterial.uniforms.uTime.value = time
-      coreMaterial.uniforms.uScroll.value = progress * 55
-      coreMaterial.uniforms.uWeights.value.set(1, 0, 0)
-      coreMaterial.uniforms.uOpacity.value = journey.core * spineWeight * .48
-      machineCore.material.uniforms.uTime.value = time
-      machineCore.material.uniforms.uOpacity.value = deviceWeight * .96
       scaleCore.material.uniforms.uTime.value = time
       scaleCore.material.uniforms.uOpacity.value = scaleWeight * .40
 
@@ -571,6 +638,7 @@ export function createSceneWorlds(
         * (1 - journey.scales * .35) * (1 - smooth(.86, .94, progress) * .85)
       space.visible = architectureWeight > .001
       architecture.opacity = architectureWeight
+      ruins.update(architectureWeight)
       // The underside remains legible as a ceiling after the camera crosses it.
       floorMaterial.opacity = smooth(.60, .68, progress) * (1 - smooth(.87, .95, progress)) * .97
       floor.visible = floorMaterial.opacity > .001
@@ -598,32 +666,13 @@ export function createSceneWorlds(
       if (floorReflection) floorReflection.visible = architectureWeight > .1 && aboveFloor
       dark.opacity = deviceWeight
       machineMetal.opacity = deviceWeight
-      glow.opacity = deviceWeight * (.24 + coreProximity * .08)
-      if (deviceWeight > .01) {
-        for (let i = 0; i < conduits.count; i++) {
-          const angle = i / conduits.count * TAU + time * .15
-          const pulse = .5 + Math.sin(time * 1.2 + i) * .12
-          dummy.position.set(Math.sin(angle) * .75, Math.sin(time * .6 + i) * .8, Math.cos(angle) * .75)
-          dummy.rotation.set(0, 0, 0)
-          dummy.scale.set(1, pulse + 1.8, 1)
-          dummy.updateMatrix()
-          conduits.setMatrixAt(i, dummy.matrix)
-        }
-        conduits.instanceMatrix.needsUpdate = true
-        for (let i = 0; i < luminousRings.count; i++) {
-          const y = i < 2 ? -2.73 + i * .14 : 2.72 + (i - 2) * .08
-          dummy.position.set(0, y, 0)
-          dummy.rotation.set(Math.PI / 2, 0, 0)
-          dummy.scale.setScalar(1.73 + Math.sin(time + i) * .013)
-          dummy.updateMatrix()
-          luminousRings.setMatrixAt(i, dummy.matrix)
-        }
-        luminousRings.instanceMatrix.needsUpdate = true
-      }
-      reactorLight.intensity = software ? 0 : deviceWeight * (7 + Math.sin(time * 1.5) * .8 + coreProximity * 2.5)
+      cableMaterial.opacity = deviceWeight
+      glow.opacity = deviceWeight * (.12 + coreProximity * .045)
+      reactorLight.intensity = software ? 0 : deviceWeight * (4.3 + Math.sin(time * 1.5) * .35 + coreProximity * 1.7)
       monitorAssembly.update(time, progress, pointer, camera)
     },
     dispose() {
+      ruins.dispose()
       spineAssembly.dispose()
       monitorAssembly.dispose()
       scene.remove(root)

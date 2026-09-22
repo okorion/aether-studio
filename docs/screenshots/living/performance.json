@@ -1,0 +1,46 @@
+{
+  "viewport": [
+    1440,
+    900
+  ],
+  "dpr": 1,
+  "profile": "Windows Chromium D3D11; 120 requestAnimationFrame intervals per settled stage",
+  "timings": [
+    {
+      "p": 0,
+      "median": 16.700000000000728,
+      "p95": 16.799999999999272,
+      "quality": "1.00",
+      "drawCalls": "76"
+    },
+    {
+      "p": 0.34,
+      "median": 16.700000000000728,
+      "p95": 16.799999999999272,
+      "quality": "1.00",
+      "drawCalls": "75"
+    },
+    {
+      "p": 0.7,
+      "median": 16.69999999999709,
+      "p95": 16.799999999995634,
+      "quality": "1.00",
+      "drawCalls": "120"
+    },
+    {
+      "p": 0.84,
+      "median": 16.69999999999709,
+      "p95": 16.700000000004366,
+      "quality": "1.00",
+      "drawCalls": "49"
+    },
+    {
+      "p": 0.98,
+      "median": 16.69999999999709,
+      "p95": 16.80000000000291,
+      "quality": "1.00",
+      "drawCalls": "68"
+    }
+  ],
+  "errors": []
+}

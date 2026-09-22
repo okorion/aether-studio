@@ -37,6 +37,7 @@ const currentField = /* glsl */ `
   uniform vec2 uPointer;
   uniform float uPointerStrength;
   uniform float uDevicePointerStrength;
+  uniform float uReactorScale;
   uniform float uAspect;
   uniform float uFieldOpacity;
   varying vec4 vFieldClip;
@@ -58,8 +59,8 @@ const currentField = /* glsl */ `
     // use the same envelope without the scroll-advection phase.
     float arm = floor(lane * 2.0);
     float armPhase = arm * PI;
-    float angle = t * PI * 4.3 + armPhase + sin(t * 12.0 + armPhase) * 0.16 + scrollPhase * 0.36;
-    float radius = 1.68 + sin(t * 10.0 + armPhase) * 0.18 + fract(lane * 2.0) * .55;
+    float angle = t * PI * 2.65 + armPhase + sin(t * 8.0 + armPhase) * .42 + scrollPhase * .20;
+    float radius = 2.2 + sin(t * 10.0 + armPhase) * .45 + fract(lane * 2.0) * .65;
     vec3 spine = vec3(
       cos(angle) * radius + sin(t * 9.0) * 0.16,
       (t - 0.5) * 12.3,
@@ -116,12 +117,12 @@ const dustVertex = /* glsl */ `
     float lane = aDust.x;
     float phase = position.y;
     // Phase advection travels the full current. Faded ends hide loop wrapping.
-    float speed = 0.028 + uWeights.x * 0.074 + uWeights.y * 0.055 + uWeights.z * 0.038;
+    float speed = 0.028 + uWeights.x * 0.004 + uWeights.y * 0.055 + uWeights.z * 0.038;
     float phaseScroll = motionTime() * aAdvected;
     float t = fract(position.x + phaseScroll * speed * (0.76 + lane * 0.48));
     vec3 p = current(t, lane, phaseScroll);
     float cluster = 0.32 + 0.68 * pow(sin(t * 35.0 + lane * 8.0) * 0.5 + 0.5, 2.0);
-    float width = (0.13 + position.z * (0.72 + uWeights.x * 0.28)) * cluster;
+    float width = (0.13 + position.z * (0.72 + uWeights.x * .73)) * cluster;
     width *= 1.0 - uWeights.y * 0.90;
     float turn = phase + t * 37.0 + phaseScroll * 0.6;
     p += vec3(cos(turn), sin(turn * 0.83) * 0.62, sin(turn)) * width;
@@ -138,6 +139,8 @@ const dustVertex = /* glsl */ `
       vec3 anchored = vec3((lane - 0.5) * 14.0, (position.x - 0.5) * 13.0 + uWeights.w * 3.0, -2.0 + aDust.z * 6.0);
       p = mix(anchored, p, uWeights.y);
     }
+    // Scale the complete ring, including its diffuse rim, about its own centre.
+    p.xy *= mix(1.0, uReactorScale, uWeights.y);
     vec4 mv = modelViewMatrix * vec4(p, 1.0);
     gl_Position = projectionMatrix * mv;
     vec2 pointerDelta = gl_Position.xy / max(.01, gl_Position.w) - uPointer;
@@ -252,6 +255,7 @@ const filamentVertex = /* glsl */ `
     float fan = sin(t * PI);
     p.x += sin(t * 32.0 + position.z + motionTime() * 0.4) * 0.11 * fan;
     p.z += cos(t * 32.0 + position.z) * 0.11 * fan;
+    p.xy *= mix(1.0, uReactorScale, uWeights.y);
     gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
     vFieldClip = gl_Position;
     vColor = currentColor(lane, t);
@@ -343,8 +347,8 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
       : (software ? 0.9 : 0.64) + Math.pow(random(), 3.4) * (mobile ? 3.1 : 3.7)
     positions.set([random(), random() * Math.PI * 2, Math.pow(random(), 1.6)], i * 3)
     dust.set([random(), size, random() * 2 - 1, bokeh ? 1 : 0], i * 4)
-    // Forty percent are anchored in the field; sixty percent ride the helix.
-    advected[i] = !bokeh && i % 5 >= 2 ? 1 : 0
+    // Dense anchored clouds provide the silhouette; one fifth follows scroll.
+    advected[i] = !bokeh && i % 10 >= 8 ? 1 : 0
     advectedCount += advected[i]
   }
 
@@ -360,6 +364,7 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
     uPointer: { value: new THREE.Vector2() },
     uPointerStrength: { value: 0 },
     uDevicePointerStrength: { value: 0 },
+    uReactorScale: { value: 2 / 3 },
     uAspect: { value: 1 },
     uFieldOpacity: { value: 1 },
     uEntryEdge: { value: -0.25 },

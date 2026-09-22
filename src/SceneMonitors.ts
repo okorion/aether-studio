@@ -461,18 +461,18 @@ export function createSceneMonitors(software: boolean, mobile: boolean, external
       for (let i = 0; i < panels.length; i++) {
         const panel = panels[i]
         const step = i - passage
-        const side = i % 2 === 0 ? 1 : -1
         hover[i] = THREE.MathUtils.lerp(hover[i], hoveredPanel === i && !reducedMotion ? 1 : 0, ease)
         if (hover[i] < .0001) hover[i] = 0
-        // Each screen has an authored facing and front-of-chain depth. Scroll
-        // translates the stack vertically; it never swings a screen through
-        // the column. Hover moves toward the outside, preserving its facing.
-        const x = (i === 0 ? .35 : side * 3.55) * mobileScale
-        panel.position.set(x + side * hover[i] * .24 * mobileScale,
-          -step * 2.85 * mobileScale, 3.3 + hover[i] * .12)
-        panel.rotation.set(.012, i === 0 ? -.06 : -side * .24, -side * .015)
-        panel.scale.setScalar(mobileScale * (i === 0 ? .90 : .84))
-        const localWeight = 1 - smooth(2.05, 3.05, Math.abs(step))
+        // A diagonal helix: the central card faces forward, its neighbours
+        // turn edge-on at the sides, and the remaining cards pass behind.
+        // Absolute scroll phase makes upward travel retrace the same orbit.
+        const angle = step * 1.30
+        const radialHover = hover[i] * .24
+        panel.position.set(Math.sin(angle) * (4.7 + radialHover) * mobileScale,
+          -step * 2.05 * mobileScale, Math.cos(angle) * (3.8 + radialHover))
+        panel.rotation.set(.018, angle, -Math.sin(angle) * .035)
+        panel.scale.setScalar(mobileScale * .86)
+        const localWeight = 1 - smooth(2.7, 3.6, Math.abs(step))
         panel.visible = localWeight > .001
         materials[i].uniforms.uOpacity.value = weight * localWeight
         const uniforms = materials[i].uniforms

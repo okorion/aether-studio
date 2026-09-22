@@ -1,10 +1,48 @@
 import * as THREE from 'three'
 import { lightChoreographyGLSL, type LightFilmUniforms } from './SceneLighting'
 
+/** Seeded metal wear, packed as oxidation / roughness / relief. No image fetch. */
+function createScaleFinish() {
+  const size = 256
+  const pixels = new Uint8Array(size * size * 4)
+  const hash = (x: number, y: number) => {
+    const n = Math.sin(x * 127.1 + y * 311.7) * 43758.5453
+    return n - Math.floor(n)
+  }
+  const noise = (x: number, y: number, period: number) => {
+    const ix = Math.floor(x), iy = Math.floor(y)
+    const fx = x - ix, fy = y - iy
+    const u = fx * fx * (3 - 2 * fx), v = fy * fy * (3 - 2 * fy)
+    const h = (dx: number, dy: number) => hash((ix + dx) % period, (iy + dy) % period)
+    return THREE.MathUtils.lerp(THREE.MathUtils.lerp(h(0, 0), h(1, 0), u),
+      THREE.MathUtils.lerp(h(0, 1), h(1, 1), u), v)
+  }
+  for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
+    const broad = noise(x / 32, y / 32, 8)
+    const pits = noise(x / 4, y / 4, 64)
+    const grain = hash(x, y)
+    const scratch = Math.pow(noise(x / 2, y / 32, 128), 5)
+    const offset = (y * size + x) * 4
+    pixels[offset] = Math.round((broad * .55 + pits * .30 + grain * .15) * 255)
+    pixels[offset + 1] = Math.round((pits * .65 + grain * .35) * 255)
+    pixels[offset + 2] = Math.round(Math.max(0, pits * .63 + grain * .27 - scratch * .2) * 255)
+    pixels[offset + 3] = 255
+  }
+  const texture = new THREE.DataTexture(pixels, size, size)
+  texture.name = 'aether-scale-metal-wear'
+  texture.wrapS = texture.wrapT = THREE.RepeatWrapping
+  texture.minFilter = THREE.LinearMipmapLinearFilter
+  texture.magFilter = THREE.LinearFilter
+  texture.generateMipmaps = true
+  texture.needsUpdate = true
+  return texture
+}
+
 export type ScaleSurfaceUniforms = {
   pointerNdc: { value: THREE.Vector2 }
   pointerStrength: { value: number }
   pointerAspect: { value: number }
+  pointerFlow: { value: THREE.Texture }
   surfaceTime: { value: number }
   lightDepth: { value: number }
 }
@@ -16,12 +54,13 @@ export function createScaleSurface(
   lightFilm?: LightFilmUniforms,
 ) {
   const filmEnabled = !software && Boolean(lightFilm)
+  const finish = createScaleFinish()
   const material = new THREE.MeshPhysicalMaterial({
-    color: 0x93969e,
-    metalness: software ? .45 : .96,
-    roughness: software ? .46 : .30,
-    envMapIntensity: .72,
-    clearcoat: software ? 0 : .065,
+    color: 0xb4b5bb,
+    metalness: software ? .45 : .86,
+    roughness: software ? .46 : .27,
+    envMapIntensity: 1.10,
+    clearcoat: software ? 0 : .12,
     clearcoatRoughness: .31,
     iridescence: software ? 0 : .62,
     iridescenceIOR: 1.36,
@@ -29,12 +68,15 @@ export function createScaleSurface(
     transparent: true,
   })
   if (filmEnabled) material.defines = { AETHER_LIGHT_FILM: 1 }
+  material.addEventListener('dispose', () => finish.dispose())
 
   material.onBeforeCompile = shader => {
     shader.uniforms.uSurfacePointer = uniforms.pointerNdc
     shader.uniforms.uSurfaceStrength = uniforms.pointerStrength
     shader.uniforms.uSurfaceAspect = uniforms.pointerAspect
+    shader.uniforms.uSurfaceFlow = uniforms.pointerFlow
     shader.uniforms.uSurfaceTime = uniforms.surfaceTime
+    shader.uniforms.uScaleFinish = { value: finish }
     if (lightFilm && filmEnabled) {
       shader.uniforms.uLightFilm = lightFilm.map
       shader.uniforms.uLightFilmReady = lightFilm.ready
@@ -47,9 +89,11 @@ export function createScaleSurface(
       uniform float uSurfaceStrength;
       uniform float uSurfaceAspect;
       uniform float uSurfaceTime;
+      uniform sampler2D uSurfaceFlow;
       varying float vSurfaceHeat;
       varying vec3 vTilePoint;
       varying vec3 vTileFinish;
+      varying vec2 vSheetPoint;
       ${filmEnabled ? 'varying vec3 vTileWorld;' : ''}
     ` + shader.vertexShader
     shader.vertexShader = shader.vertexShader.replace('#include <beginnormal_vertex>', /* glsl */ `
@@ -63,13 +107,20 @@ export function createScaleSurface(
       vec4 tileClip = projectionMatrix * modelViewMatrix * tileCentre;
       vec2 tileDelta = (tileClip.xy / max(tileClip.w, .001) - uSurfacePointer)
         * vec2(uSurfaceAspect, 1.0);
-      vSurfaceHeat = exp(-dot(tileDelta, tileDelta) * 20.0) * uSurfaceStrength
+      vec2 tileScreen = tileClip.xy / max(tileClip.w, .001) * .5 + .5;
+      vec2 tileFlow = (texture2D(uSurfaceFlow, clamp(tileScreen, 0., 1.)).rg
+        - vec2(128. / 255.)) * (255. / 127.);
+      float trail = clamp(length(tileFlow) * 4.5, 0., 1.);
+      vSurfaceHeat = max(exp(-dot(tileDelta, tileDelta) * 20.0) * uSurfaceStrength, trail)
         * step(.001, tileClip.w);
-      // Broad asymmetric folds vary reflected normals; preserve pointer lift.
-      float tilePhase = tileCentre.x * .48 + tileCentre.y * .31 - uSurfaceTime * .13;
-      float tileAngle = cos(tilePhase) * .42
-        + sin(tileCentre.y * .63 + uSurfaceTime * .09) * .17;
-      vec3 tileAxis = normalize(vec3(-.31, .48, 0.0));
+      // Ring waves roll individual facets through their edge and back face.
+      // The shared input field retains the wake after the cursor has moved on.
+      float tileRadius = length(tileCentre.xy);
+      float tilePhase = tileRadius * 2.9 - uSurfaceTime * .72;
+      float tileAngle = (sin(tilePhase) * .5 + .5) * 6.283185;
+      tileAngle += vSurfaceHeat * 1.8 + (tileFlow.x - tileFlow.y) * .65;
+      vec2 radial = tileCentre.xy / max(tileRadius, .001);
+      vec3 tileAxis = tileRadius > .001 ? vec3(radial.y, -radial.x, 0.) : vec3(0., 1., 0.);
       float tileCos = cos(tileAngle);
       float tileSin = sin(tileAngle);
       objectNormal = aArmourNormal * tileCos + cross(tileAxis, aArmourNormal) * tileSin
@@ -87,10 +138,9 @@ export function createScaleSurface(
       vec3 transformed = aArmour * tileCos + cross(tileAxis, aArmour) * tileSin
         + tileAxis * dot(tileAxis, aArmour) * (1.0 - tileCos);
       vTilePoint = aArmour;
-      float tileRipple = sin(tilePhase) * .42
-        + sin(tileCentre.y * .63 + uSurfaceTime * .09) * .17;
-      transformed.z += (tileRipple + vSurfaceHeat * .36) / tileUnit;
-      transformed.y += sin(uSurfaceTime * 1.4 + tileCentre.x * 2.0) * vSurfaceHeat * .045;
+      vSheetPoint = tileCentre.xy + aArmour.xy * tileUnit;
+      float tileRipple = (.28 + sin(tilePhase) * .48) * (1. - smoothstep(.4, 6., tileRadius));
+      transformed.z += (tileRipple + vSurfaceHeat * .28) / tileUnit;
       ${filmEnabled ? /* glsl */ `
         vec4 scalePoint = vec4(transformed, 1.);
         #ifdef USE_INSTANCING
@@ -103,6 +153,8 @@ export function createScaleSurface(
       varying float vSurfaceHeat;
       varying vec3 vTilePoint;
       varying vec3 vTileFinish;
+      varying vec2 vSheetPoint;
+      uniform sampler2D uScaleFinish;
       ${filmEnabled ? /* glsl */ `
         varying vec3 vTileWorld;
         uniform float uScaleDepth;
@@ -117,24 +169,30 @@ export function createScaleSurface(
         smoothstep(.38, .91, vTileFinish.x) * .46);
       scaleFinishTint = mix(scaleFinishTint, vec3(.83, .78, 1.),
         smoothstep(.54, .92, vTileFinish.z) * .24);
-      diffuseColor.rgb *= scaleFinishTint;
+      // A weathered continuous finish crosses tile boundaries; the small grain
+      // stays attached to the metal instead of crawling with the animation.
+      vec3 scaleWear = texture2D(uScaleFinish, vSheetPoint * .31).rgb;
+      diffuseColor.rgb *= scaleFinishTint * mix(.48, 1.38, scaleWear.r);
+      diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(1.19, .86, .68),
+        smoothstep(.55, .82, scaleWear.r) * .45);
+      diffuseColor.rgb *= 1. + vSurfaceHeat * .12;
     `)
     shader.fragmentShader = shader.fragmentShader.replace('#include <roughnessmap_fragment>', /* glsl */ `
       #include <roughnessmap_fragment>
       // Adjacent satin and polished tiles catch different widths of reflection.
       float scaleSatin = smoothstep(.24, .86, vTileFinish.y);
-      roughnessFactor = clamp(roughnessFactor + scaleSatin * .16
-        - (1. - scaleSatin) * .085 - vSurfaceHeat * .065, .19, .60);
+      roughnessFactor = clamp(roughnessFactor + scaleSatin * .12 + (scaleWear.g - .5) * .23
+        - (1. - scaleSatin) * .065 - vSurfaceHeat * .055, .17, .52);
     `)
     if (!software) {
       shader.fragmentShader = shader.fragmentShader.replace('#include <normal_fragment_maps>', /* glsl */ `
         #include <normal_fragment_maps>
         float scaleFootprint = max(length(dFdx(vTilePoint)), length(dFdy(vTilePoint)));
-        float scaleDetailFade = 1. - smoothstep(.008, .035, scaleFootprint);
+        float scaleDetailFade = 1. - smoothstep(.025, .09, scaleFootprint);
         float scaleHammer = sin(vTilePoint.x * 63. + sin(vTilePoint.y * 43.) * 1.4)
           * sin(vTilePoint.y * 67. + cos(vTilePoint.x * 29.));
         float scaleBrush = sin(vTilePoint.x * 153. + vTilePoint.y * 13.);
-        float scaleRelief = (scaleHammer * .00052 + scaleBrush * .00012) * scaleDetailFade;
+        float scaleRelief = (scaleWear.b * .006 + scaleHammer * .00035 + scaleBrush * .00012) * scaleDetailFade;
         vec3 scaleDx = dFdx(-vViewPosition), scaleDy = dFdy(-vViewPosition);
         vec3 scaleRx = cross(scaleDy, normal), scaleRy = cross(normal, scaleDx);
         float scaleDet = dot(scaleDx, scaleRx);
@@ -154,16 +212,15 @@ export function createScaleSurface(
     }
     shader.fragmentShader = shader.fragmentShader.replace('#include <emissivemap_fragment>', /* glsl */ `
       #include <emissivemap_fragment>
-      // Pointer light follows the same heat/lift; no extra interactive layer.
-      totalEmissiveRadiance += mix(vec3(.035, .15, .18), vec3(.13, .065, .17),
-        vTileFinish.z) * vSurfaceHeat;
+      // Pointer response changes the metal's angle and reflected light. Adding
+      // a colored emissive wash here would flatten its facets into pastel tiles.
       ${filmEnabled ? /* glsl */ `
         vec3 scaleFilm = aetherFilmRadiance(vTileWorld);
-        totalEmissiveRadiance += scaleFilm * .075 * (1. - clamp(uScaleDepth, 0., 1.) * .25);
+        totalEmissiveRadiance += scaleFilm * .10 * (1. - clamp(uScaleDepth, 0., 1.) * .25);
       ` : ''}
     `)
   }
   material.customProgramCacheKey = () =>
-    `aether-scale-satin-${software ? 'lite' : 'detailed'}-${filmEnabled ? 'film' : 'static'}-v2`
+    `aether-scale-radial-${software ? 'lite' : 'detailed'}-${filmEnabled ? 'film' : 'static'}-v3`
   return material
 }

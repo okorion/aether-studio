@@ -556,6 +556,11 @@ export default function Scene({ reducedMotion, active, onReady, onSelectProject 
 
       // Tiny translucent bell creatures lend scale to the surrounding space.
       const creatures: { group: THREE.Group; anchor: THREE.Vector3; phase: number }[] = []
+      const creatureRoot = new THREE.Group()
+      creatureRoot.name = 'aether-forest-creatures'
+      scene.add(creatureRoot)
+      const creatureCurtain = createCurtainBounds()
+      const creatureLipMaterial = material(chrome.clone())
       const bellMaterial = material(
         new THREE.MeshPhysicalMaterial({
           color: 0x6b9b9e,
@@ -584,7 +589,7 @@ export default function Scene({ reducedMotion, active, onReady, onSelectProject 
       )
       for (
         let creatureIndex = 0;
-        creatureIndex < (softwareRenderer ? 4 : smallScreen ? 8 : 16);
+        creatureIndex < (softwareRenderer ? 2 : smallScreen ? 4 : 8);
         creatureIndex += 1
       ) {
         const group = new THREE.Group()
@@ -594,7 +599,7 @@ export default function Scene({ reducedMotion, active, onReady, onSelectProject 
         )
         bell.scale.y = 0.5
         group.add(bell)
-        const lip = new THREE.Mesh(geometry(new THREE.TorusGeometry(0.23, 0.006, 5, 40)), chrome)
+        const lip = new THREE.Mesh(geometry(new THREE.TorusGeometry(0.23, 0.006, 5, 40)), creatureLipMaterial)
         lip.rotation.x = Math.PI * 0.5
         group.add(lip)
         const strandCount = softwareRenderer ? 4 : 8
@@ -625,14 +630,17 @@ export default function Scene({ reducedMotion, active, onReady, onSelectProject 
           [-4.4, 3.1, -8],
         ]
         const anchor = new THREE.Vector3(...(anchors[creatureIndex % 4] as [number, number, number]))
-        const level = softwareRenderer ? creatureIndex : smallScreen ? Math.floor(creatureIndex / 2) : Math.floor(creatureIndex / 4)
-        anchor.y -= level * 20
+        const perForest = softwareRenderer ? 1 : smallScreen ? 2 : 4
+        anchor.y -= creatureIndex >= perForest ? 61.5 : 0
         group.position.copy(anchor)
         const scale = creatureIndex === 0 ? 1 : 0.6 + random() * 0.5
         group.scale.setScalar(scale)
-        scene.add(group)
+        creatureRoot.add(group)
         creatures.push({ group, anchor, phase: random() * Math.PI * 2 })
       }
+      // Bell, rim and every tentacle share one boundary. Dedicated lip material
+      // prevents this curtain from leaking onto the other chrome objects.
+      bindGroupCurtain(creatureRoot, creatureCurtain)
 
       const lightVideo = lightVideoRef.current ??= createSceneLightVideo()
       const lightFilm = createLightFilmUniforms(lightVideo.texture)
@@ -849,6 +857,10 @@ export default function Scene({ reducedMotion, active, onReady, onSelectProject 
         warmLight.position.y = state.height - 3
         scene.fog!.color.set(0x03090d)
         particlesMaterial.uniforms.uOpacity.value = .35 * (1-state.darkness*.6)
+        const creatureLayers = sampleLayers(scroll)
+        creatureCurtain.upper.value = scroll < .5 ? 1.5 : creatureLayers.forestEntry
+        creatureCurtain.lower.value = scroll < .5 ? creatureLayers.forestExit : -.5
+        creatureRoot.visible = scroll < .20 || scroll > .855
         for (const creature of creatures) {
           creature.group.position.y =
             creature.anchor.y + Math.sin(elapsed * 0.24 + creature.phase) * 0.28

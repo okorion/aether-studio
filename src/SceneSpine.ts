@@ -279,10 +279,12 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
         const edge = ease((HEIGHT * .5 - Math.abs(y)) / .55)
         const bend = y * .48 + travel * 1.1
         const scale = edge * form
-        dummy.position.set(Math.sin(bend) * .14 * form, y * form, Math.cos(bend * .8) * .095)
-        dummy.rotation.set(Math.sin(i * .81 + travel) * .065,
-          Math.sin(bend * .72) * .15 + Math.sin(i * 1.1) * .13,
-          Math.sin(i * .72 + travel) * .055)
+        dummy.position.set(Math.sin(bend) * .29 * form, y * form, Math.cos(bend * .8) * .18)
+        // Consecutive bodies turn together along the column rather than
+        // jittering independently around one straight, front-facing axis.
+        dummy.rotation.set(Math.sin(bend * .8) * .07,
+          y * .25 + Math.sin(bend * .72) * .22,
+          -Math.cos(bend) * .13)
         // Fewer, taller bodies retain narrow joints instead of widely spaced rings.
         dummy.scale.set((.97 + Math.sin(i * 1.37) * .045) * scale,
           spacing / .98 * scale, (.96 + Math.cos(i * .87) * .065) * scale)
@@ -307,12 +309,12 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
           const edge = ease((HEIGHT * .5 - Math.abs(y)) / .30)
           // Both strands pass in front of AND behind the actual bone surface.
           // Their tangent is the analytic derivative of this same helix.
-          dummy.position.set((Math.cos(angle) * radius + Math.sin(bend) * .14) * form,
-            y * form, (Math.sin(angle) * radius + Math.cos(bend * .8) * .095) * form)
+          dummy.position.set((Math.cos(angle) * radius + Math.sin(bend) * .29) * form,
+            y * form, (Math.sin(angle) * radius + Math.cos(bend * .8) * .18) * form)
           tangent.set(radiusSlope * Math.cos(angle) - radius * Math.sin(angle) * turnSlope
-            + Math.cos(bend) * .14 * .48, 1,
+            + Math.cos(bend) * .29 * .48, 1,
           radiusSlope * Math.sin(angle) + radius * Math.cos(angle) * turnSlope
-            - Math.sin(bend * .8) * .095 * .48 * .8)
+            - Math.sin(bend * .8) * .18 * .48 * .8)
           const linkSpacing = tangent.length() * HEIGHT / linksPerStrand
           tangent.normalize()
           dummy.quaternion.setFromUnitVectors(up, tangent)

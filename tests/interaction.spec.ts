@@ -547,21 +547,24 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
     }
   })
 
-  test('monitor facing stays fixed on scroll while hover moves outward and screens remain ahead of chains', async ({ page }) => {
+  test('monitors follow a reversible diagonal orbit while the central screen stays ahead of chains', async ({ page }) => {
     const result = await page.evaluate(() => window.interactionHarness.probeMonitorMotion())
     const initial = result.scroll[0]
     for (const sample of result.scroll) for (const [index, panel] of sample.entries()) {
-      expect(panel.quaternion).toEqual(initial[index].quaternion)
       expect(panel.scale).toEqual(initial[index].scale)
-      expect(panel.position[0]).toBe(initial[index].position[0])
-      expect(panel.position[2]).toBe(initial[index].position[2])
+      expect(panel.position.every(Number.isFinite)).toBe(true)
+      expect(panel.quaternion.every(Number.isFinite)).toBe(true)
     }
+    expect(result.scroll[1][1].quaternion).not.toEqual(initial[1].quaternion)
+    expect(result.scroll[1][1].position[0]).not.toBe(initial[1].position[0])
+    expect(initial.some(panel => panel.position[2] < 0)).toBe(true)
+    expect(initial.some(panel => panel.position[2] > 0)).toBe(true)
     expect(result.scroll[1][1].position[1]).not.toBe(initial[1].position[1])
     expect(result.scroll.at(-1)).toEqual(initial)
     for (const sample of result.hover) {
       expect(sample.selected).toBe(sample.index)
       expect(sample.after.quaternion).toEqual(sample.before.quaternion)
-      expect(Math.abs(sample.after.position[0]) - Math.abs(sample.before.position[0])).toBeGreaterThan(.2)
+      // Hover at the frontmost point expands the helix toward the eye.
       expect(sample.after.position[2] - sample.before.position[2]).toBeGreaterThan(.1)
       expect(sample.after.position[1]).toBe(sample.before.position[1])
       expect(sample.restored).toEqual(sample.before)
@@ -683,7 +686,27 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
     expect(pixels.left.centroidX).toBeLessThan(.45)
     expect(pixels.right.centroidX).toBeGreaterThan(.55)
     expect(pixels.reset.changed).toBe(0)
+    expect(pixels.wake.changed).toBeGreaterThan(20)
+    expect(pixels.wake.centroidX).toBeLessThan(.5)
+    expect(pixels.wakeReset.changed).toBe(0)
+    expect(pixels.wave.changed).toBeGreaterThan(300)
     expect(pixels.matricesUnchanged).toBe(true)
+  })
+
+  test('pointer ribbons and individual white motes leave no pixels in the middle scenes or beyond forest seams', async ({ page }) => {
+    const cases = await page.evaluate(() => window.interactionHarness.probePointerForestPixels())
+    for (const sample of cases) {
+      expect(sample.together.leaked, `all effects at ${sample.progress}`).toBe(0)
+      expect(sample.pointsOnly.leaked, `white motes at ${sample.progress}`).toBe(0)
+      if (sample.progress >= .2 && sample.progress <= .855) {
+        expect(sample.together.lit).toBe(0)
+        expect(sample.pointsOnly.lit).toBe(0)
+        expect(sample.motesVisible).toBe(false)
+      } else {
+        expect(sample.together.lit, `forest at ${sample.progress}`).toBeGreaterThan(20)
+        expect(sample.pointsOnly.lit, `motes at ${sample.progress}`).toBeGreaterThan(0)
+      }
+    }
   })
 
   test('stationary device particles change pixel coverage under the pointer and exactly recover', async ({ page }) => {
@@ -691,6 +714,7 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
     expect(pixels.illuminatedPixels).toBeGreaterThan(100)
     expect(pixels.scrollSteps).toEqual([0, 0, 0])
     expect(pixels.fieldY).toBeCloseTo(-40.4, 8)
+    for (const ratio of pixels.diameterRatio) expect(Math.abs(ratio - 2 / 3)).toBeLessThan(.04)
     expect(pixels.pointer.every(value => Math.abs(value) < 1)).toBe(true)
     expect(pixels.moved.changedRgbPixels).toBeGreaterThan(20)
     expect(pixels.moved.changedAlphaPixels).toBeGreaterThan(20)

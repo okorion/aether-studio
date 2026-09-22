@@ -53,6 +53,21 @@ test('@interaction spine links wrap in front and behind the bones and reverse wi
     }
     const scale = new THREE.Vector3()
     const quaternion = new THREE.Quaternion()
+    const twists: { y: number; yaw: number }[] = []
+    for (let i = 0; i < bones.count; i++) {
+      const position = new THREE.Vector3()
+      bones.getMatrixAt(i, matrix)
+      matrix.decompose(position, quaternion, scale)
+      if (scale.length() < .1) continue
+      const facing = new THREE.Vector3(0, 0, 1).applyQuaternion(quaternion)
+      twists.push({ y: position.y, yaw: Math.atan2(facing.x, facing.z) })
+    }
+    twists.sort((a, b) => a.y - b.y)
+    expect(twists.at(-1)!.yaw - twists[0].yaw).toBeGreaterThan(1.5)
+    for (let i = 1; i < twists.length; i++) {
+      expect(twists[i].yaw - twists[i - 1].yaw).toBeGreaterThan(0)
+      expect(twists[i].yaw - twists[i - 1].yaw).toBeLessThan(.5)
+    }
     // Check each actual strand independently; parallel hanging chains fail
     // even if one is placed in front and the other behind the whole spine.
     for (let strand = 0; strand < 2; strand++) {
@@ -100,6 +115,9 @@ test('@interaction particle flow keeps anchors separate and stops its scroll dri
     expect(roles.some(role => role === 0)).toBe(true)
     expect(roles.some(role => role === 1)).toBe(true)
     expect(roles.every(role => role === 0 || role === 1)).toBe(true)
+    const movingFraction = roles.filter(role => role === 1).length / roles.length
+    expect(movingFraction).toBeGreaterThan(.18)
+    expect(movingFraction).toBeLessThanOrEqual(.2)
     for (let i = 0; i < roles.length; i++) if (bokeh.getW(i) > .5) expect(roles[i]).toBe(0)
     atmosphere.update(10, .4, 1, pointer)
     const initial = current()

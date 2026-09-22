@@ -10,6 +10,7 @@ import { createSceneLayers, sampleEmblemCurtain, sampleLayers } from '../../src/
 import { bindCurtain, bindGroupCurtain, createCurtainBounds } from '../../src/SceneCurtains'
 import { createLightFilmUniforms } from '../../src/SceneLighting'
 import { createWaterSurface } from '../../src/SceneWater'
+import { createPointerFlow } from '../../src/PointerFlow'
 
 type Snapshot = {
   yaw: number
@@ -40,6 +41,7 @@ export type InteractionHarness = {
   probeWaterCaptureVisibility: typeof probeWaterCaptureVisibility
   probeMonitorOcclusion: typeof probeMonitorOcclusion
   probeMonitorMotion: typeof probeMonitorMotion
+  probePointerForestPixels: typeof probePointerForestPixels
   sampleWorld: (elapsed: number, progress: number) => {
     chain: number[]
     vertebrae: number[]
@@ -106,6 +108,64 @@ function stepField(seconds: number) {
   let flowEnergy=0
   for(let i=0;i<bytes.length;i+=4)flowEnergy+=Math.abs(bytes[i]-128)+Math.abs(bytes[i+1]-128)
   return { yaw, pitch, ndc: field.ndc.toArray(), strength: field.strength, aspect: field.aspect, flowEnergy }
+}
+
+function probePointerForestPixels() {
+  const isolated = new THREE.Scene()
+  const input = createSceneInteraction(isolated, camera, canvas, false, true)
+  const motes = isolated.getObjectByName('aether-pointer-motes')!
+  const ribbon = isolated.getObjectByName('aether-pointer-ribbons')!
+  const target = new THREE.WebGLRenderTarget(320, 240)
+  const previous = renderer.getRenderTarget()
+  const image = new Uint8Array(320 * 240 * 4)
+  let elapsed = 0
+  const sweep = (progress: number) => {
+    const rows = progress < .5 ? [.85, .5, .15] : [.15, .5, .85]
+    for (const y of rows) for (let x = .12; x < .9; x += .08) {
+      input.update(.08, elapsed += .08, 1, progress)
+      const event = new PointerEvent('pointermove', {
+        bubbles: true, pointerType: 'mouse', clientX: innerWidth * x, clientY: innerHeight * y,
+      })
+      Object.defineProperty(event, 'timeStamp', { value: elapsed * 1000 })
+      canvas.dispatchEvent(event)
+    }
+    input.update(.02, elapsed += .02, 1, progress)
+  }
+  try {
+    input.setOrbitEnabled(false)
+    return [0, .15, .4, .72, .765, .83, .89, 1, .45, 0].map(progress => {
+      // Seed a complete forest first, then move its boundary across live trails.
+      if (progress === .15) sweep(0)
+      if (progress === .89) sweep(1)
+      sweep(progress)
+      const layers = sampleLayers(progress)
+      const read = () => {
+        renderer.setRenderTarget(target)
+        renderer.render(isolated, camera)
+        renderer.readRenderTargetPixels(target, 0, 0, 320, 240, image)
+        let lit = 0, leaked = 0
+        for (let i = 0; i < image.length; i += 4) {
+          if (image[i] + image[i + 1] + image[i + 2] < 9) continue
+          lit++
+          const x = ((i / 4) % 320 + .5) / 320
+          const y = (Math.floor(i / 4 / 320) + .5) / 240 - (x - .5) * .2
+          // Exclude only the antialiased fringe, not whole point sprites.
+          if (y < layers.forestExit - .02 && y > layers.forestEntry + .02) leaked++
+        }
+        return { lit, leaked }
+      }
+      const together = read()
+      const ribbonVisible = ribbon.visible
+      ribbon.visible = false
+      const pointsOnly = read()
+      ribbon.visible = ribbonVisible
+      return { progress, together, pointsOnly, motesVisible: motes.visible }
+    })
+  } finally {
+    renderer.setRenderTarget(previous)
+    target.dispose()
+    input.dispose()
+  }
 }
 
 function sampleEditorial(progress: number) {
@@ -677,6 +737,7 @@ function probeOutgoingBonePixels() {
 }
 
 function probeScalePointer() {
+  const flow = createPointerFlow()
   const modelScene = new THREE.Scene()
   const assembly = createSceneWorlds(modelScene, true)
   const probeScene = new THREE.Scene()
@@ -696,8 +757,8 @@ function probeScalePointer() {
   const target = new THREE.WebGLRenderTarget(160, 120)
   const previousTarget = renderer.getRenderTarget()
   const previousAutoClear = renderer.autoClear
-  const draw = (x: number, strength: number) => {
-    assembly.update(10, .83, { ndc: new THREE.Vector2(x, 0), strength, aspect: 4 / 3 }, probeCamera)
+  const draw = (x: number, strength: number, flowTexture?: THREE.Texture, elapsed = 10) => {
+    assembly.update(elapsed, .83, { ndc: new THREE.Vector2(x, 0), strength, aspect: 4 / 3, flowTexture }, probeCamera)
     renderer.setRenderTarget(target)
     renderer.render(probeScene, probeCamera)
     const image = new Uint8Array(160 * 120 * 4)
@@ -722,9 +783,19 @@ function probeScalePointer() {
     const left = draw(-.4, 1)
     const right = draw(.4, 1)
     const reset = draw(.4, 0)
+    for (let i = 0; i < 8; i++) {
+      flow.move(-.55 + i * .05, 0, 4 / 3)
+      flow.update(.035)
+    }
+    const wake = draw(.9, 0, flow.texture)
+    for (let i = 0; i < 150; i++) flow.update(1 / 60)
+    const wakeReset = draw(.9, 0, flow.texture)
+    const wave = draw(.9, 0, flow.texture, 11)
     return {
       left: difference(baseline, left), right: difference(baseline, right),
       reset: difference(baseline, reset),
+      wake: difference(baseline, wake), wakeReset: difference(baseline, wakeReset),
+      wave: difference(baseline, wave),
       matricesUnchanged: originalMatrices.every((value, index) => value === tiles.instanceMatrix.array[index]),
     }
   } finally {
@@ -733,6 +804,7 @@ function probeScalePointer() {
     probeScene.clear()
     assembly.dispose()
     target.dispose()
+    flow.dispose()
   }
 }
 
@@ -798,6 +870,33 @@ function probeDevicePointer() {
     for (let i = 0; i < baseline.length; i += 4)
       if (baseline[i] + baseline[i + 1] + baseline[i + 2] > 10) illuminatedPixels++
     const fieldY = particles.position.y
+    const ringDiameter = (scale: number) => {
+      // Measure the requested diameter head-on; the oblique journey view also
+      // contains unscaled depth and point-sprite widths in its horizontal span.
+      probeCamera.position.set(0, -40.4, 12)
+      probeCamera.lookAt(0, -40.4, 0)
+      probeCamera.updateMatrixWorld()
+      particles.material.uniforms.uReactorScale.value = scale
+      const visibility = probeScene.children.map(object => object.visible)
+      probeScene.children.forEach(object => { object.visible = object === particles })
+      renderer.setRenderTarget(target)
+      renderer.render(probeScene, probeCamera)
+      const bytes = new Uint8Array(width * height * 4)
+      renderer.readRenderTargetPixels(target, 0, 0, width, height, bytes)
+      let minX = width, maxX = 0, minY = height, maxY = 0
+      for (let i = 0; i < bytes.length; i += 4) {
+        if (bytes[i] + bytes[i + 1] + bytes[i + 2] < 12) continue
+        const x = i / 4 % width, y = Math.floor(i / 4 / width)
+        minX = Math.min(minX, x); maxX = Math.max(maxX, x)
+        minY = Math.min(minY, y); maxY = Math.max(maxY, y)
+      }
+      probeScene.children.forEach((object, i) => { object.visible = visibility[i] })
+      return [maxX - minX + 1, maxY - minY + 1]
+    }
+    const authoredScale = particles.material.uniforms.uReactorScale.value as number
+    const fullDiameter = ringDiameter(1)
+    const reducedDiameter = ringDiameter(authoredScale)
+    const diameterRatio = reducedDiameter.map((diameter, i) => diameter / fullDiameter[i])
     const chamberEntry = [.635, .65].map(p => {
       positionCamera(p)
       atmosphere.update(elapsed, p, 1, undefined, probeCamera)
@@ -849,7 +948,7 @@ function probeDevicePointer() {
     })
     return {
       illuminatedPixels, moved: difference(baseline, moved), restored: difference(baseline, restored),
-      scrollSteps, fieldY, pointer: pointer.ndc.toArray(), chamberEntry, roomVisibility,
+      scrollSteps, fieldY, diameterRatio, pointer: pointer.ndc.toArray(), chamberEntry, roomVisibility,
       seedsUnchanged: initialSeeds.every((value, index) => value === particles.geometry.attributes.position.array[index]),
     }
   } finally {
@@ -1290,6 +1389,7 @@ window.interactionHarness = {
   probeWaterCaptureVisibility,
   probeMonitorOcclusion,
   probeMonitorMotion,
+  probePointerForestPixels,
   sampleWorld(elapsed, progress) {
     worlds ??= createSceneWorlds(worldScene, true, false, undefined, worldFilm)
     worlds.update(elapsed, progress)

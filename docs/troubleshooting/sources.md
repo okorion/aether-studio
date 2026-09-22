@@ -1,10 +1,10 @@
 # 출처·구현 기준·시각 자료
 
-기본 6편과 이슈 색인은 **`cfee1e1036f50482fd24e2e2c3239c67b1d2bb4d`까지의 역사 기록**이다. 문서화 시점에 저장된 코드, Git 변경 이력, 기존 검증 문서와 이미지·JSON을 대조했다. 문서를 작성했다는 이유만으로 해당 GPU 측정이나 모바일 검수를 새로 실행했다고 표시하지 않는다.
+1~6편과 기본 이슈 58항목의 기준은 `cfee1e1036f50482fd24e2e2c3239c67b1d2bb4d`다. 7편과 후속 8항목은 PR #18을 다룬다. 저장된 코드·Git 이력·검증 문서·이미지·JSON을 대조해 작성했다. 이번 개정에서는 문장과 설명 그림을 수정했다.
 
 [기준 커밋의 저장소](https://github.com/okorion/aether-studio/tree/cfee1e1036f50482fd24e2e2c3239c67b1d2bb4d) · [변경 이력](https://github.com/okorion/aether-studio/commits/main/) · [전체 이슈 색인](issue-index.md)
 
-현재 저장소는 공개되어 있다. 초기 [검증 기록](../verification.md)의 PRIVATE 설명은 최초 배포 당시 상태로 보존한다. 후속 부록은 해당 변경의 소스·검증 기준을 별도로 적고 기본 6편의 역사값에 합산하지 않는다.
+현재 저장소는 공개 상태다. 초기 [검증 기록](../verification.md)의 PRIVATE는 최초 배포 당시 설명이다. 각 실험은 당시 빌드와 조건으로 읽는다.
 
 ## 주제별 근거
 
@@ -18,23 +18,23 @@
 | 전환 준비·디코딩·겹침 비용 | [최초 준비](../transition-performance.md), [첫 영상 진입](../monitor-transition-performance.md), [표본·쿼리 매칭 방법](../evidence/monitor-performance-method.md) | [ScenePreparation](../../src/ScenePreparation.ts), [SceneVisibility](../../src/SceneVisibility.ts), [준비 취소·복구 검사](../../tests/preparation.spec.ts) |
 | 아이콘·OG·문서 명칭 | [메타데이터](../metadata.md), [장면 용어표](../scene-glossary.md), [PR #17](https://github.com/okorion/aether-studio/pull/17) | [자산 생성기](../../scripts/generate-metadata.mjs), [메타데이터 검사](../../tests/metadata.spec.ts) |
 
-본문의 짧은 코드는 실제 발췌인지, 설명을 위해 줄인 예시인지 표시했다. 예시는 앱 전체를 그대로 실행하는 완성 코드가 아니다. 본 컬럼이라는 이름도 Three.js `Bone`·`Skeleton`·`SkinnedMesh` 리깅을 구현했다는 의미가 아니다.
+본문의 코드는 실제 발췌와 설명용 예시를 구분했다. 본 컬럼은 금속 모델의 명칭이며 Three.js의 리깅 기능을 사용한 모델은 아니다.
 
 ## 수치 자료
 
-- [첫 준비 전](../performance/before.json)과 [후](../performance/after.json): PR #10의 최초 하강·상승 RAF, 긴 프레임, 컴파일·링크 기록. 비용을 초기 표시 전으로 옮긴 것과 제거한 것을 구분한다.
-- [공간 전환](../performance/spatial.json)과 [차폐 전환](../performance/occlusion-v13.json): PR #11·13에 남은 최초 모니터 지연. 앞선 실험과 콘텐츠·실행 조건이 달라 하나의 누적 개선율로 사용하지 않는다.
-- [포인터 비교](../performance/pointer.json): 같은 장비의 정착 후 입력 표본. 새로운 흐름이 추가되었다고 모든 환경의 성능이 향상된 자료로 해석하지 않는다.
-- [영상 경로·반복 측정](../evidence/monitor-performance.json): 요청 차단·코덱·디코딩 경로와 최종 첫 진입 반복. [측정 방법](../evidence/monitor-performance-method.md)에 구간, GPU query, 제외 표본과 시계 해석을 기록했다.
-- [챔버 왕복 표본](../evidence/chamber-art-performance.json): 후속 설비 추가 뒤 최대 draw 226과 방향별 GPU 시간. 단일 장비·버전별 한 번의 비교다.
-- [영상 색 공간](../performance/video-color-v13.json): SwiftShader에서 실제 MP4 두 정지 프레임을 비교한 결과. D3D11 성능 실험과 별개이며 다른 Three 버전의 업로드 방식까지 보장하지 않는다.
-- [모니터 인코딩 manifest](../../public/media/monitor-webm-manifest.json)와 [조명 영상 문서](../light-projection-media.md): 규격, 전체 디코딩, 화질·루프와 해시. 영상 파일의 밝기 값은 최종 셰이더·노출·bloom을 거친 화면 밝기와 다르다.
+- [첫 준비 전](../performance/before.json)과 [후](../performance/after.json): PR #10 최초 하강·상승의 RAF, 긴 프레임, 컴파일·링크 기록.
+- [공간 전환](../performance/spatial.json)과 [차폐 전환](../performance/occlusion-v13.json): PR #11·13의 첫 모니터 지연.
+- [포인터 비교](../performance/pointer.json): 같은 장비에서 장면이 정착한 뒤 입력한 표본.
+- [영상 경로·반복 측정](../evidence/monitor-performance.json): 요청 차단·코덱·디코더 비교와 최종 첫 진입. 구간·GPU query·제외 표본은 [측정 방법](../evidence/monitor-performance-method.md)에 있다.
+- [챔버 왕복 표본](../evidence/chamber-art-performance.json): PR #16의 최대 draw 226과 방향별 GPU 시간. 단일 장비에서 버전별 한 번 왕복했다.
+- [영상 색 공간](../performance/video-color-v13.json): SwiftShader에서 MP4의 두 정지 프레임을 비교한 결과.
+- [모니터 인코딩 manifest](../../public/media/monitor-webm-manifest.json)와 [조명 영상 문서](../light-projection-media.md): 규격·전체 디코딩·화질·루프·해시.
 
-보관된 해시는 파일 동일성을 확인하는 정보다. 원시 trace가 없는 곳에서 SHA-256만으로 trace를 복원할 수는 없다. 모의 renderer/DOM 검사, 실제 WebGL 픽셀 검사, 실제 디코더 검사, 최종 화면 캡처도 서로 다른 범위의 증거다.
+SHA-256은 파일 동일성을 확인하는 값이다. 원시 trace의 보관 여부는 별도로 확인해야 한다. 모의 renderer·DOM, 실제 WebGL·디코더, 화면 캡처는 각 자료에 표시한 검사 범위를 따른다.
 
 ## 실제 이미지와 설명 그림
 
-기본 6편에는 원본 Active Theory 화면을 삽입하지 않고 AETHER의 자체 실행 캡처와 새 설명 그림을 사용했다. 과거 비교 문서에는 원본 사이트 캡처가 남아 있으므로 두 종류를 혼동하지 않는다.
+본문 이미지는 AETHER의 실행 캡처와 설명 그림이다. 별도로 연결한 과거 비교 문서에는 Active Theory의 참고 화면도 있다.
 
 | 자료 | 종류·조건 |
 | --- | --- |
@@ -50,7 +50,7 @@
 | [render-target](images/render-target.png), [recovery](images/recovery.png) | DPR·상태 복구를 설명하는 도식. |
 | [frame-evidence](images/frame-evidence.png), [cold-warm](images/cold-warm.png) | 저장된 측정값 또는 관측 범위를 설명하는 차트. 새 GPU 측정 결과가 아니다. |
 
-릴리스 manifest는 문서화에 실제로 사용한 이미지 파일의 경로·바이트·SHA-256을 열거한다. 추가 부록에 새 캡처가 들어오면 그 파일의 조건과 기준 커밋도 별도로 남긴다.
+릴리스 manifest에서 사용한 이미지의 경로·바이트·SHA-256을 확인할 수 있다. 설명 그림의 제목·내부 문구·텍스트 영역은 [그림 문구 목록](editorial/figure-text.json)에 있다.
 
 ## 후속 기록: PR #18
 
@@ -64,7 +64,7 @@
 - [PWA 서비스워커가 MyHits 조회수 배지를 캐시한 문제 해결기](https://velog.io/@okorion/PWA-서비스워커가-MyHits-조회수-배지를-캐시한-문제-해결기-rfvfju0v): 접속 조건별 증상, 첫 가설, 실제 요청 경로, 수정 후 남는 상태를 나누는 방식.
 - [Codex App - Git Bash `max consoles is 32` 오류](https://velog.io/@okorion/Codex-App-Git-Bash-max-consoles-is-32-오류): 오류 메시지와 실행 환경·프로세스 수명을 연결하고 적용 순서를 분리하는 방식.
 
-과거 Velog의 절두체 컬링 결함을 AETHER의 실제 사고로 옮기지 않았다. 이번 AETHER 기록에서 확인한 컬링 범위는 반사 카메라의 기여, 근접면의 보수적 판정, 재진입 캡처를 보호한 코드와 검사다. 공개 글 세 편으로 블로그 전체의 문체를 통계적으로 대표한다고 보지도 않는다.
+이 세 글은 문체 참고 자료다. 각 글의 경험·코드를 AETHER의 작업으로 가져오지는 않았다. 추가로 조사한 라이팅 원칙·스킬·도구와 적용 기준은 [편집 기록](editorial/README.md)에 정리했다.
 
 ## 시각·구조 참고: Active Theory
 

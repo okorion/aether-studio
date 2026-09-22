@@ -30,6 +30,10 @@ sys.path.insert(0, str(ROOT / args.deps))
 from markdown_it import MarkdownIt
 
 OUT = (ROOT / args.out).resolve()
+if OUT.exists() and any(OUT.iterdir()):
+    raise ValueError(f'Use a new, empty output directory: {OUT}')
+if (OUT.parent / 'Aether-3D-Troubleshooting.zip').exists():
+    raise ValueError('Archive already exists; use a new release directory.')
 OUT.mkdir(parents=True, exist_ok=True)
 for folder in ('images', 'portable/posts', 'velog'):
     (OUT / folder).mkdir(parents=True, exist_ok=True)
@@ -157,19 +161,34 @@ for n, src in enumerate(files, 1):
     if src.parent.name == 'posts':
         write_text(OUT / 'velog' / src.name, rewrite_markdown(src, False))
     manifest_sources.append({'file': src.relative_to(ROOT).as_posix(), 'sha256': sha(src.read_bytes())})
+
+# Bundle the editorial rules and machine-readable figure labels with this edition.
+for src in [SOURCE / 'README.md', *sorted((SOURCE / 'editorial').rglob('*'))]:
+    if not src.is_file():
+        continue
+    dest = OUT / ('portable/README.md' if src.name == 'README.md' and src.parent == SOURCE
+                  else src.relative_to(SOURCE).as_posix())
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    if src.suffix == '.md':
+        write_text(dest, rewrite_markdown(src, False))
+    else:
+        dest.write_bytes(src.read_bytes())
+        generated_files.add(dest)
+    manifest_sources.append({'file': src.relative_to(ROOT).as_posix(), 'sha256': sha(src.read_bytes())})
 toc=''.join(f'<li><a href="#article-{n}">{html.escape(title)}</a></li>' for n,title,_ in chapters)
 body=''.join(f'<article id="article-{n}">{content}<a class="back" href="#contents">목차로 돌아가기</a></article>' for n,_,content in chapters)
-document=f'''<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Aether Studio · 3D 인터랙션 트러블슈팅 기록</title><style>{css}</style></head><body><header id="contents"><p>구현 기준 2026-09-22 · 이미지 내장 보관본</p><h1>3D 인터랙션 홈페이지에서<br>화면과 동작이 어긋났을 때</h1><p>실제 증상, 수정 근거, 전후 화면과 남은 문제를 모은 Aether Studio 기록</p><nav aria-label="문서 목차"><ol>{toc}</ol></nav></header><main>{body}</main><footer>이미지는 모두 이 HTML 안에 포함되어 있습니다. 외부 링크를 여는 경우에만 인터넷 연결이 필요합니다.</footer></body></html>'''
+document=f'''<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Aether Studio · 3D 화면과 입력을 고친 기록</title><style>{css}</style></head><body><header id="contents"><p>2026-09-22 문체 개정판 · 이미지 내장 보관본</p><h1>Aether Studio의<br>3D 화면과 입력을 고친 기록</h1><p>카메라·입자·장면 전환·영상·성능·오류 복구</p><nav aria-label="문서 목차"><ol>{toc}</ol></nav></header><main>{body}</main><footer>이미지는 파일에 내장되어 있습니다. 외부 근거 링크를 열 때는 인터넷 연결이 필요합니다.</footer></body></html>'''
 write_text(OUT / 'Aether-3D-Troubleshooting.html', document)
 guide='''# Aether Studio 트러블슈팅 보관 묶음
 
 - `Aether-3D-Troubleshooting.html`: 이미지가 파일 내부에 포함된 전체 문서. 이 파일만 옮겨도 인터넷 없이 열립니다.
-- `velog/`: 게시용 Markdown 기본 6편과 후속 기록. 본문은 보관본과 같고 이미지·근거 링크만 공개 저장소의 고정 커밋 URL로 바꿨습니다. 각 파일을 Velog 에디터에 복사해 미리보기를 확인한 뒤 직접 게시하면 됩니다. 실제 게시를 자동으로 수행하지 않았습니다.
+- `velog/`: 게시용 Markdown 7편. 원본과 같은 본문에 고정 커밋의 이미지·근거 URL을 적용했습니다. Velog 에디터에서 미리보기를 확인한 뒤 직접 게시하면 됩니다.
 - `portable/`: 로컬 이미지 경로를 사용하는 Markdown 원본과 전체 이슈 색인·재사용 체크리스트.
 - `images/`: 실제 캡처 원본과 설명용 PNG 도식. SHA-256은 manifest.json에 있습니다. Velog 이미지 업로드를 선호하면 해당 파일을 업로드하고 주소만 교체할 수 있습니다.
 - `manifest.json`: 기준 커밋, 문서·이미지의 경로·해시·종류.
+- `editorial/`: 편집 기준·조사 출처·스킬 사본·그림 문구 목록.
 
-기존 프로젝트의 캡처는 당시 화면입니다. 새로 촬영했다고 표시하지 않았으며, 도식은 실제 화면과 구분했습니다. 외부 링크는 고정 커밋에 연결되어 장기적으로 같은 근거를 가리킵니다.
+실제 캡처는 당시 화면이며 설명 그림은 개정한 자료입니다. 이 개정판은 초판과 별도로 보관합니다.
 '''
 write_text(OUT / 'README.md', guide)
 manifest={'implementationRef':args.source_ref,'articleAssetRef':args.asset_ref,'sources':manifest_sources,

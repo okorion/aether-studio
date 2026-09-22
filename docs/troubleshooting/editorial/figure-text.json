@@ -1,0 +1,1182 @@
+{
+  "figures": [
+    {
+      "file": "docs/troubleshooting/images/coordinates.png",
+      "width": 1440,
+      "height": 880,
+      "sha256": "4811b63012b0a8d17600c92bf5565a30a803762970a83bdbcfbec599100a5fea",
+      "labels": [
+        {
+          "role": "title",
+          "text": "링·리본의 부모 좌표계",
+          "size": 43,
+          "bbox": [
+            58,
+            45,
+            486,
+            86
+          ]
+        },
+        {
+          "role": "subtitle",
+          "text": "리본을 emblem의 자식으로 옮겨 링과 같은 변환 적용",
+          "size": 23,
+          "bbox": [
+            60,
+            106,
+            614,
+            128
+          ]
+        },
+        {
+          "role": "label",
+          "text": "이전 · 서로 다른 부모",
+          "size": 30,
+          "bbox": [
+            70,
+            189,
+            362,
+            218
+          ]
+        },
+        {
+          "role": "label",
+          "text": "수정 · 하나의 부모",
+          "size": 30,
+          "bbox": [
+            765,
+            189,
+            1016,
+            218
+          ]
+        },
+        {
+          "role": "box-title",
+          "text": "world",
+          "size": 28,
+          "bbox": [
+            109,
+            277,
+            186,
+            298
+          ]
+        },
+        {
+          "role": "label",
+          "text": "공간 전체의 변환",
+          "size": 23,
+          "bbox": [
+            110,
+            323,
+            287,
+            345
+          ]
+        },
+        {
+          "role": "box-title",
+          "text": "링 그룹",
+          "size": 28,
+          "bbox": [
+            110,
+            469,
+            204,
+            496
+          ]
+        },
+        {
+          "role": "label",
+          "text": "회전 A",
+          "size": 23,
+          "bbox": [
+            110,
+            518,
+            179,
+            540
+          ]
+        },
+        {
+          "role": "box-title",
+          "text": "리본",
+          "size": 28,
+          "bbox": [
+            425,
+            469,
+            481,
+            496
+          ]
+        },
+        {
+          "role": "label",
+          "text": "회전 B",
+          "size": 23,
+          "bbox": [
+            425,
+            518,
+            492,
+            540
+          ]
+        },
+        {
+          "role": "label",
+          "text": "각각 회전하는 링과 리본\n회전 후 벌어지는 연결점",
+          "size": 26,
+          "bbox": [
+            86,
+            647,
+            373,
+            712
+          ]
+        },
+        {
+          "role": "box-title",
+          "text": "emblem · 링의 부모 그룹",
+          "size": 28,
+          "bbox": [
+            805,
+            274,
+            1128,
+            301
+          ]
+        },
+        {
+          "role": "label",
+          "text": "링과 리본의 공통 이동·회전",
+          "size": 23,
+          "bbox": [
+            805,
+            323,
+            1087,
+            345
+          ]
+        },
+        {
+          "role": "box-title",
+          "text": "링",
+          "size": 28,
+          "bbox": [
+            805,
+            469,
+            833,
+            496
+          ]
+        },
+        {
+          "role": "label",
+          "text": "로컬 좌표",
+          "size": 23,
+          "bbox": [
+            805,
+            518,
+            905,
+            540
+          ]
+        },
+        {
+          "role": "box-title",
+          "text": "리본",
+          "size": 28,
+          "bbox": [
+            1120,
+            469,
+            1176,
+            496
+          ]
+        },
+        {
+          "role": "label",
+          "text": "로컬 좌표",
+          "size": 23,
+          "bbox": [
+            1120,
+            518,
+            1220,
+            540
+          ]
+        },
+        {
+          "role": "label",
+          "text": "worldPosition = parentMatrix × localPosition\n부모 안의 로컬 좌표로 지정한 연결점",
+          "size": 24,
+          "bbox": [
+            782,
+            649,
+            1265,
+            708
+          ]
+        },
+        {
+          "role": "caption",
+          "text": "설명용 개념도 · Aether Studio 구현 기록",
+          "size": 19,
+          "bbox": [
+            60,
+            828,
+            409,
+            846
+          ]
+        }
+      ]
+    },
+    {
+      "file": "docs/troubleshooting/images/particle-flow.png",
+      "width": 1440,
+      "height": 880,
+      "sha256": "dab5973e57ff2c1be32e27db1a2f0eaf381c86a38a3a73f571d33d720da789a8",
+      "labels": [
+        {
+          "role": "title",
+          "text": "효과별 이동 기준",
+          "size": 43,
+          "bbox": [
+            58,
+            45,
+            389,
+            86
+          ]
+        },
+        {
+          "role": "subtitle",
+          "text": "스크롤로 정하는 위치와 시간에 따라 재생하는 효과",
+          "size": 23,
+          "bbox": [
+            60,
+            106,
+            591,
+            128
+          ]
+        },
+        {
+          "role": "box-title",
+          "text": "스크롤 진행도 p",
+          "size": 28,
+          "bbox": [
+            105,
+            224,
+            311,
+            255
+          ]
+        },
+        {
+          "role": "label",
+          "text": "본 컬럼 · 체인 · 수렴 입자의 기본 위치",
+          "size": 23,
+          "bbox": [
+            105,
+            273,
+            501,
+            295
+          ]
+        },
+        {
+          "role": "box-title",
+          "text": "누적 시간 t",
+          "size": 28,
+          "bbox": [
+            795,
+            223,
+            938,
+            251
+          ]
+        },
+        {
+          "role": "label",
+          "text": "영상 · 조명 · 전진하는 섬광",
+          "size": 23,
+          "bbox": [
+            795,
+            273,
+            1075,
+            295
+          ]
+        },
+        {
+          "role": "box-title",
+          "text": "진행률에 따른 위치",
+          "size": 28,
+          "bbox": [
+            105,
+            434,
+            349,
+            462
+          ]
+        },
+        {
+          "role": "label",
+          "text": "p가 변한 만큼 이동\n스크롤 정지 후 같은 위치에 정착",
+          "size": 23,
+          "bbox": [
+            105,
+            484,
+            444,
+            544
+          ]
+        },
+        {
+          "role": "box-title",
+          "text": "프레임 간격 dt에 따른 재생",
+          "size": 28,
+          "bbox": [
+            795,
+            434,
+            1144,
+            462
+          ]
+        },
+        {
+          "role": "label",
+          "text": "스크롤 정지 중에도 재생\n모션 정지·탭 숨김에서는 일시정지",
+          "size": 23,
+          "bbox": [
+            795,
+            484,
+            1146,
+            544
+          ]
+        },
+        {
+          "role": "box-title",
+          "text": "기본 위치에 더하는 포인터 변위",
+          "size": 28,
+          "bbox": [
+            210,
+            668,
+            614,
+            696
+          ]
+        },
+        {
+          "role": "label",
+          "text": "base(p) + displacement(pointer) → 입력 해제 후 변위만 0으로 복귀",
+          "size": 23,
+          "bbox": [
+            210,
+            718,
+            912,
+            743
+          ]
+        },
+        {
+          "role": "caption",
+          "text": "설명용 개념도 · Aether Studio 구현 기록",
+          "size": 19,
+          "bbox": [
+            60,
+            828,
+            409,
+            846
+          ]
+        }
+      ]
+    },
+    {
+      "file": "docs/troubleshooting/images/layers.png",
+      "width": 1440,
+      "height": 880,
+      "sha256": "515fc2a3db04815c996862d80087b4bd7df874d45a2523c8212778a46d177b08",
+      "labels": [
+        {
+          "role": "title",
+          "text": "화면 마스크와 깊이 차폐",
+          "size": 43,
+          "bbox": [
+            58,
+            45,
+            533,
+            86
+          ]
+        },
+        {
+          "role": "subtitle",
+          "text": "화면에서 자르는 영역과 3D 공간에서 가리는 면",
+          "size": 23,
+          "bbox": [
+            60,
+            106,
+            552,
+            128
+          ]
+        },
+        {
+          "role": "box-title",
+          "text": "하나의 전환 경계 함수",
+          "size": 28,
+          "bbox": [
+            425,
+            208,
+            707,
+            236
+          ]
+        },
+        {
+          "role": "label",
+          "text": "스크롤 위치와 화면 좌표로 보이는 쪽을 계산",
+          "size": 23,
+          "bbox": [
+            425,
+            258,
+            887,
+            280
+          ]
+        },
+        {
+          "role": "box-title",
+          "text": "평면 소개 / 모니터",
+          "size": 28,
+          "bbox": [
+            100,
+            420,
+            338,
+            448
+          ]
+        },
+        {
+          "role": "label",
+          "text": "동일한 경계로 전환",
+          "size": 23,
+          "bbox": [
+            100,
+            470,
+            300,
+            492
+          ]
+        },
+        {
+          "role": "box-title",
+          "text": "링 / 리본",
+          "size": 28,
+          "bbox": [
+            555,
+            421,
+            671,
+            448
+          ]
+        },
+        {
+          "role": "label",
+          "text": "다음 층 안에서만 노출",
+          "size": 23,
+          "bbox": [
+            555,
+            470,
+            786,
+            492
+          ]
+        },
+        {
+          "role": "box-title",
+          "text": "입자 / 포레스트",
+          "size": 28,
+          "bbox": [
+            1010,
+            420,
+            1210,
+            448
+          ]
+        },
+        {
+          "role": "label",
+          "text": "경계 밖의 중복 노출 차단",
+          "size": 23,
+          "bbox": [
+            1010,
+            470,
+            1272,
+            492
+          ]
+        },
+        {
+          "role": "label",
+          "text": "월드 공간의 차폐",
+          "size": 29,
+          "bbox": [
+            85,
+            607,
+            308,
+            635
+          ]
+        },
+        {
+          "role": "label",
+          "text": "리액터 챔버의 바닥 = 아래층의 천장",
+          "size": 24,
+          "bbox": [
+            92,
+            724,
+            485,
+            747
+          ]
+        },
+        {
+          "role": "label",
+          "text": "별도 그룹의 영상빛",
+          "size": 29,
+          "bbox": [
+            785,
+            607,
+            1037,
+            635
+          ]
+        },
+        {
+          "role": "label",
+          "text": "구조가 가려져도\n천장의 산란광은 유지",
+          "size": 23,
+          "bbox": [
+            1010,
+            668,
+            1233,
+            728
+          ]
+        },
+        {
+          "role": "caption",
+          "text": "설명용 개념도 · Aether Studio 구현 기록",
+          "size": 19,
+          "bbox": [
+            60,
+            828,
+            409,
+            846
+          ]
+        }
+      ]
+    },
+    {
+      "file": "docs/troubleshooting/images/render-target.png",
+      "width": 1440,
+      "height": 880,
+      "sha256": "316c7fd7d4f4233b94fe7af08c79a1d062d87b390cd92b51686618267664418b",
+      "labels": [
+        {
+          "role": "title",
+          "text": "DPR 중복 적용과 렌더 타깃 크기",
+          "size": 43,
+          "bbox": [
+            58,
+            45,
+            692,
+            86
+          ]
+        },
+        {
+          "role": "subtitle",
+          "text": "CSS 픽셀 → 물리 픽셀 변환에서 생긴 크기 불일치",
+          "size": 23,
+          "bbox": [
+            60,
+            106,
+            576,
+            128
+          ]
+        },
+        {
+          "role": "box-title",
+          "text": "화면 크기 예시",
+          "size": 28,
+          "bbox": [
+            105,
+            218,
+            293,
+            246
+          ]
+        },
+        {
+          "role": "label",
+          "text": "CSS 800 × 500, DPR 2",
+          "size": 23,
+          "bbox": [
+            105,
+            271,
+            340,
+            291
+          ]
+        },
+        {
+          "role": "box-title",
+          "text": "물리 픽셀 예시",
+          "size": 28,
+          "bbox": [
+            795,
+            218,
+            983,
+            246
+          ]
+        },
+        {
+          "role": "label",
+          "text": "렌더 타깃 1600 × 1000",
+          "size": 23,
+          "bbox": [
+            795,
+            268,
+            1039,
+            290
+          ]
+        },
+        {
+          "role": "box-title",
+          "text": "중복 적용",
+          "size": 28,
+          "bbox": [
+            105,
+            441,
+            227,
+            469
+          ]
+        },
+        {
+          "role": "label",
+          "text": "이미 물리 크기인데 DPR 2를 또 곱함\n→ 3200 × 2000 기준으로 어긋남",
+          "size": 23,
+          "bbox": [
+            105,
+            491,
+            486,
+            551
+          ]
+        },
+        {
+          "role": "box-title",
+          "text": "타깃의 물리 viewport",
+          "size": 28,
+          "bbox": [
+            795,
+            441,
+            1072,
+            473
+          ]
+        },
+        {
+          "role": "label",
+          "text": "렌더 타깃에 지정한 물리 크기 사용\n→ 1600 × 1000 기준으로 일치",
+          "size": 23,
+          "bbox": [
+            795,
+            491,
+            1157,
+            551
+          ]
+        },
+        {
+          "role": "label",
+          "text": "캡처 전 저장",
+          "size": 28,
+          "bbox": [
+            80,
+            657,
+            240,
+            685
+          ]
+        },
+        {
+          "role": "label",
+          "text": "타깃 · viewport · scissor · XR · clear 상태",
+          "size": 23,
+          "bbox": [
+            80,
+            709,
+            500,
+            734
+          ]
+        },
+        {
+          "role": "label",
+          "text": "finally에서 복원",
+          "size": 28,
+          "bbox": [
+            800,
+            658,
+            1003,
+            689
+          ]
+        },
+        {
+          "role": "label",
+          "text": "성공과 실패 모두 같은 복원 경로",
+          "size": 23,
+          "bbox": [
+            800,
+            709,
+            1139,
+            731
+          ]
+        },
+        {
+          "role": "caption",
+          "text": "설명용 개념도 · 800 × 500과 DPR 2는 단위 설명을 위한 예시",
+          "size": 19,
+          "bbox": [
+            60,
+            828,
+            584,
+            846
+          ]
+        }
+      ]
+    },
+    {
+      "file": "docs/troubleshooting/images/cold-warm.png",
+      "width": 1440,
+      "height": 880,
+      "sha256": "9ea85319129de4a9d85f9f1a443d9bbd406016224df4569260f5b9432cf6e0e3",
+      "labels": [
+        {
+          "role": "title",
+          "text": "첫 진입의 GPU·영상 준비",
+          "size": 43,
+          "bbox": [
+            58,
+            45,
+            546,
+            86
+          ]
+        },
+        {
+          "role": "subtitle",
+          "text": "아직 사용하지 않은 경로와 이미 준비된 경로의 측정",
+          "size": 23,
+          "bbox": [
+            60,
+            106,
+            599,
+            128
+          ]
+        },
+        {
+          "role": "box-title",
+          "text": "셰이더 준비",
+          "size": 28,
+          "bbox": [
+            105,
+            240,
+            255,
+            268
+          ]
+        },
+        {
+          "role": "label",
+          "text": "compile / link",
+          "size": 23,
+          "bbox": [
+            105,
+            292,
+            250,
+            315
+          ]
+        },
+        {
+          "role": "box-title",
+          "text": "GPU 자원 준비",
+          "size": 28,
+          "bbox": [
+            560,
+            240,
+            749,
+            268
+          ]
+        },
+        {
+          "role": "label",
+          "text": "텍스처 · 버퍼 · RT",
+          "size": 23,
+          "bbox": [
+            560,
+            290,
+            743,
+            312
+          ]
+        },
+        {
+          "role": "box-title",
+          "text": "영상 첫 프레임",
+          "size": 28,
+          "bbox": [
+            1015,
+            241,
+            1203,
+            268
+          ]
+        },
+        {
+          "role": "label",
+          "text": "디코딩 · 업로드",
+          "size": 23,
+          "bbox": [
+            1015,
+            290,
+            1174,
+            312
+          ]
+        },
+        {
+          "role": "label",
+          "text": "컴파일 이후에 남는 업로드·첫 렌더 비용",
+          "size": 32,
+          "bbox": [
+            83,
+            451,
+            658,
+            482
+          ]
+        },
+        {
+          "role": "box-title",
+          "text": "사전 준비",
+          "size": 28,
+          "bbox": [
+            105,
+            555,
+            227,
+            583
+          ]
+        },
+        {
+          "role": "label",
+          "text": "실제 그리기 경로도 작게 실행\n스크롤 구간 밖의 준비 비용은 별도 기록",
+          "size": 23,
+          "bbox": [
+            105,
+            605,
+            521,
+            665
+          ]
+        },
+        {
+          "role": "box-title",
+          "text": "첫 진입·재진입 비교",
+          "size": 28,
+          "bbox": [
+            795,
+            555,
+            1046,
+            583
+          ]
+        },
+        {
+          "role": "label",
+          "text": "새 페이지의 첫 하강\n같은 페이지에서 다시 올라오는 경로",
+          "size": 23,
+          "bbox": [
+            795,
+            605,
+            1172,
+            665
+          ]
+        },
+        {
+          "role": "caption",
+          "text": "설명용 개념도 · Aether Studio 구현 기록",
+          "size": 19,
+          "bbox": [
+            60,
+            828,
+            409,
+            846
+          ]
+        }
+      ]
+    },
+    {
+      "file": "docs/troubleshooting/images/frame-evidence.png",
+      "width": 1440,
+      "height": 880,
+      "sha256": "45ef8e0f4f7a9eae8d6d3b8515b17099349865a422142aaf59238747c8b2ee39",
+      "labels": [
+        {
+          "role": "title",
+          "text": "실험별 최대 프레임 간격",
+          "size": 43,
+          "bbox": [
+            58,
+            45,
+            533,
+            86
+          ]
+        },
+        {
+          "role": "subtitle",
+          "text": "PR #10의 전체 하강과 PR #15의 첫 모니터 진입",
+          "size": 23,
+          "bbox": [
+            60,
+            106,
+            557,
+            128
+          ]
+        },
+        {
+          "role": "label",
+          "text": "PR #10 · 전체 최초 하강의 최장 RAF 간격",
+          "size": 28,
+          "bbox": [
+            70,
+            199,
+            602,
+            227
+          ]
+        },
+        {
+          "role": "label",
+          "text": "셰이더·GPU 자원 준비 전후 · 최댓값 발생 위치: 리액터 → 모니터",
+          "size": 22,
+          "bbox": [
+            70,
+            245,
+            713,
+            266
+          ]
+        },
+        {
+          "role": "label",
+          "text": "변경 전",
+          "size": 23,
+          "bbox": [
+            80,
+            309,
+            157,
+            330
+          ]
+        },
+        {
+          "role": "label",
+          "text": "2799.9 ms",
+          "size": 23,
+          "bbox": [
+            1147,
+            312,
+            1258,
+            329
+          ]
+        },
+        {
+          "role": "label",
+          "text": "변경 후",
+          "size": 23,
+          "bbox": [
+            80,
+            372,
+            157,
+            394
+          ]
+        },
+        {
+          "role": "label",
+          "text": "66.6 ms",
+          "size": 23,
+          "bbox": [
+            259,
+            375,
+            344,
+            392
+          ]
+        },
+        {
+          "role": "label",
+          "text": "PR #15 · 7초 첫 모니터 진입의 최장 RAF 간격",
+          "size": 28,
+          "bbox": [
+            70,
+            488,
+            656,
+            516
+          ]
+        },
+        {
+          "role": "label",
+          "text": "별도 실험 · 기존 2회 중 최장 / 최종 독립 3회 모두 16.8ms",
+          "size": 22,
+          "bbox": [
+            70,
+            534,
+            648,
+            556
+          ]
+        },
+        {
+          "role": "label",
+          "text": "변경 전",
+          "size": 23,
+          "bbox": [
+            80,
+            598,
+            157,
+            619
+          ]
+        },
+        {
+          "role": "label",
+          "text": "99.9 ms",
+          "size": 23,
+          "bbox": [
+            1123,
+            601,
+            1208,
+            618
+          ]
+        },
+        {
+          "role": "label",
+          "text": "변경 후",
+          "size": 23,
+          "bbox": [
+            80,
+            661,
+            157,
+            683
+          ]
+        },
+        {
+          "role": "label",
+          "text": "16.8 ms",
+          "size": 23,
+          "bbox": [
+            386,
+            664,
+            471,
+            681
+          ]
+        },
+        {
+          "role": "caption",
+          "text": "실측 기록 재시각화 · 패널별 가로축 범위 차이 · RAF 콜백 사이의 간격",
+          "size": 19,
+          "bbox": [
+            60,
+            828,
+            661,
+            846
+          ]
+        }
+      ]
+    },
+    {
+      "file": "docs/troubleshooting/images/recovery.png",
+      "width": 1440,
+      "height": 880,
+      "sha256": "f87ac59c7d65334707dc5626ccf7a47495c5620ef9fc8ae63a5e108a620fd8f4",
+      "labels": [
+        {
+          "role": "title",
+          "text": "WebGL·미디어 오류의 복구 경로",
+          "size": 43,
+          "bbox": [
+            57,
+            45,
+            691,
+            86
+          ]
+        },
+        {
+          "role": "subtitle",
+          "text": "본문 탐색을 유지하며 장면과 영상의 실패를 각각 처리",
+          "size": 23,
+          "bbox": [
+            60,
+            106,
+            622,
+            128
+          ]
+        },
+        {
+          "role": "box-title",
+          "text": "사이트 DOM",
+          "size": 28,
+          "bbox": [
+            105,
+            225,
+            269,
+            253
+          ]
+        },
+        {
+          "role": "label",
+          "text": "제목 · 본문 · Work / Contact · 상세 화면 · 키보드 초점",
+          "size": 23,
+          "bbox": [
+            105,
+            275,
+            666,
+            298
+          ]
+        },
+        {
+          "role": "box-title",
+          "text": "선택적 WebGL 장면",
+          "size": 28,
+          "bbox": [
+            105,
+            441,
+            360,
+            469
+          ]
+        },
+        {
+          "role": "label",
+          "text": "모듈 오류 → 오류 경계\n컨텍스트 손실 → 예약 취소 / 재준비",
+          "size": 23,
+          "bbox": [
+            105,
+            491,
+            483,
+            552
+          ]
+        },
+        {
+          "role": "box-title",
+          "text": "선택적 영상·조명",
+          "size": 28,
+          "bbox": [
+            795,
+            441,
+            1008,
+            469
+          ]
+        },
+        {
+          "role": "label",
+          "text": "다운로드·디코딩·재생 실패\n→ 절차적 대체 표현 / 무한 재시도 방지",
+          "size": 23,
+          "bbox": [
+            795,
+            491,
+            1204,
+            552
+          ]
+        },
+        {
+          "role": "box-title",
+          "text": "복귀 검사 항목",
+          "size": 28,
+          "bbox": [
+            210,
+            686,
+            398,
+            714
+          ]
+        },
+        {
+          "role": "label",
+          "text": "스크롤 · 시점 · 위상 · 미디어 위치 · canvas와 이벤트 리스너의 중복 여부",
+          "size": 23,
+          "bbox": [
+            210,
+            736,
+            955,
+            758
+          ]
+        },
+        {
+          "role": "caption",
+          "text": "설명용 개념도 · Aether Studio 구현 기록",
+          "size": 19,
+          "bbox": [
+            60,
+            828,
+            409,
+            846
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,10 +1,26 @@
 import * as THREE from 'three'
 import { sampleJourney, smooth } from './Journey'
+import { sampleLayers } from './SceneLayers'
+
+// The intro's tiny ambient field remains visible before the incoming spine.
+// All later particles and lights enter below the monitor's shared diagonal.
+const entryFragment = /* glsl */ `
+  uniform float uEntryEdge;
+  uniform float uEntryWipe;
+  varying vec4 vFieldClip;
+  float fieldEntry() {
+    vec2 screen = vFieldClip.xy / vFieldClip.w * .5 + .5;
+    float noise = fract(sin(dot(floor(screen * vec2(1800., 1100.)), vec2(12.9898, 78.233))) * 43758.5453);
+    float boundary = screen.y - (screen.x - .5) * .20 + (noise - .5) * .009;
+    return mix(1., 1. - smoothstep(uEntryEdge - .004, uEntryEdge + .004, boundary), uEntryWipe);
+  }
+`
 
 /** The same current deforms continuously around the journey's central axis. */
 const currentField = /* glsl */ `
   uniform float uTime;
   uniform float uScroll;
+  uniform float uScrollStep;
   uniform vec4 uWeights;
   uniform float uEnergy;
   uniform float uDarkness;
@@ -12,37 +28,37 @@ const currentField = /* glsl */ `
   uniform float uPointerStrength;
   uniform float uAspect;
   uniform float uFieldOpacity;
+  varying vec4 vFieldClip;
   const float PI = 3.14159265359;
-  float motionTime() { return mix(uTime, uScroll, uWeights.x); }
+  // Position is a function of scroll alone. Time is reserved for luminance.
+  float motionTime() { return uScroll; }
 
-  vec3 current(float t, float lane) {
+  vec3 current(float t, float lane, float scrollPhase) {
     float side = lane < 0.5 ? -1.0 : 1.0;
     float branch = fract(lane * 2.0);
-    float ripple = sin(t * 16.0 + branch * 8.0 + uTime * 0.21);
+    float ripple = sin(t * 16.0 + branch * 8.0 + scrollPhase * 0.21);
     vec3 arrival = vec3(
       side * (0.16 + pow(1.0 - t, 1.35) * 2.55) + ripple * 0.24,
       -6.6 + t * 6.9,
       -1.4 + sin(t * 8.0 + branch * 6.0) * 1.15
     );
-    // Six uneven tributaries open black pockets between dense clusters. Their
-    // changing radii read as turbulent clouds, not a constant-width cylinder.
-    float arm = floor(lane * 6.0);
-    float armPhase = arm * 2.39996;
-    float angle = t * 8.0 + armPhase + sin(t * 15.0 + armPhase) * 0.38 + uScroll * 0.22;
-    float radius = 0.72 + pow(sin(t * 12.0 + armPhase) * 0.5 + 0.5, 1.2) * 2.85;
-    radius += fract(lane * 6.0) * 0.28;
+    // Two coherent currents wrap the spine in depth; quieter anchored grains
+    // use the same envelope without the scroll-advection phase.
+    float arm = floor(lane * 2.0);
+    float armPhase = arm * PI;
+    float angle = t * PI * 4.3 + armPhase + sin(t * 12.0 + armPhase) * 0.16 + scrollPhase * 0.36;
+    float radius = 1.68 + sin(t * 10.0 + armPhase) * 0.18 + fract(lane * 2.0) * .55;
     vec3 spine = vec3(
-      cos(angle) * radius + sin(t * 17.0) * 0.32,
-      (t - 0.5) * 13.5 + sin(t * 8.0 + armPhase) * 0.3,
-      sin(angle) * radius * 0.72
+      cos(angle) * radius + sin(t * 9.0) * 0.16,
+      (t - 0.5) * 12.3,
+      sin(angle) * radius
     );
-    spine.y += -12.0 * (1.0 - smoothstep(.205, .29, uScroll / 55.0))
-      + 10.0 * smoothstep(.60, .67, uScroll / 55.0);
-    float orbit = t * PI * 2.0 + uTime * 0.35;
+    spine.y += -12.0 * (1.0 - smoothstep(.205, .29, uScroll / 55.0));
+    float orbit = t * PI * 2.0 + scrollPhase * 0.35;
     float cross = branch * PI * 2.0;
-    float torusRadius = 1.30 + cos(cross) * 0.34;
-    vec3 reactor = vec3(cos(orbit) * torusRadius, sin(orbit) * torusRadius, sin(cross) * 0.42);
-    float sheetAngle = t * PI * 2.0 + uTime * 0.12;
+    vec3 reactor = vec3(cos(orbit) * (1.47 + cos(cross) * .12),
+      sin(orbit) * (1.68 + cos(cross) * .12), sin(cross) * .17);
+    float sheetAngle = t * PI * 2.0 + scrollPhase * 0.12;
     vec3 scales = vec3(
       cos(sheetAngle) * (2.6 + branch * 1.45),
       sin(sheetAngle) * (1.7 + branch * 1.1),
@@ -78,47 +94,73 @@ const currentField = /* glsl */ `
 const dustVertex = /* glsl */ `
   ${currentField}
   attribute vec4 aDust;
+  attribute float aAdvected;
   uniform float uPixelRatio;
   varying vec3 vColor;
   varying float vAlpha;
   varying float vBokeh;
+  varying float vMachine;
   void main() {
     float lane = aDust.x;
     float phase = position.y;
     // Phase advection travels the full current. Faded ends hide loop wrapping.
     float speed = 0.028 + uWeights.x * 0.074 + uWeights.y * 0.055 + uWeights.z * 0.038;
-    float t = fract(position.x + motionTime() * speed * (0.76 + lane * 0.48));
-    vec3 p = current(t, lane);
+    float phaseScroll = motionTime() * aAdvected;
+    float t = fract(position.x + phaseScroll * speed * (0.76 + lane * 0.48));
+    vec3 p = current(t, lane, phaseScroll);
     float cluster = 0.32 + 0.68 * pow(sin(t * 35.0 + lane * 8.0) * 0.5 + 0.5, 2.0);
     float width = (0.13 + position.z * (0.72 + uWeights.x * 0.28)) * cluster;
-    width *= 1.0 - uWeights.y * 0.52;
-    float turn = phase + t * 37.0 + motionTime() * 0.6;
+    width *= 1.0 - uWeights.y * 0.90;
+    float turn = phase + t * 37.0 + phaseScroll * 0.6;
     p += vec3(cos(turn), sin(turn * 0.83) * 0.62, sin(turn)) * width;
     p.z += aDust.z * (0.18 + (1.0 - uWeights.y) * 0.38);
+    // Most device grains spread across a fine radial cloud, with a few smaller
+    // strays. This is still the same field, without a second opaque ring.
+    float stray = step(.94, position.z);
+    float radialScatter = aAdvected * aDust.z * .16 + stray * (.20 + lane * .28);
+    vec2 radial = normalize(p.xy / vec2(1.47, 1.68) + vec2(.0001));
+    p.xy += radial * radialScatter * uWeights.y;
+    p.z += sin(phase * 3.7) * stray * .28 * uWeights.y;
     float bokeh = aDust.w;
     if (bokeh > 0.5) {
-      p = vec3((lane - 0.5) * 14.0, (t - 0.5) * 13.0 + uWeights.w * 3.0, -2.0 + aDust.z * 6.0);
-      p.x += sin(uTime * 0.11 + phase) * 0.3;
+      vec3 anchored = vec3((lane - 0.5) * 14.0, (position.x - 0.5) * 13.0 + uWeights.w * 3.0, -2.0 + aDust.z * 6.0);
+      p = mix(anchored, p, uWeights.y);
     }
     vec4 mv = modelViewMatrix * vec4(p, 1.0);
     gl_Position = projectionMatrix * mv;
     vec2 pointerDelta = gl_Position.xy / max(.01, gl_Position.w) - uPointer;
     pointerDelta.x *= uAspect;
     float touch = exp(-dot(pointerDelta, pointerDelta) * 7.0) * uPointerStrength;
-    mv.xy += vec2(pointerDelta.x / uAspect, pointerDelta.y) * touch * .26;
+    // A transient extra displacement follows THIS scroll increment only.
+    // No velocity integration or time decay can move geometry after settling.
+    if (abs(uScrollStep) > .000001 && aAdvected > .5 && touch > .0001) {
+      vec3 flowTangent = current(min(.9999, t + .002), lane, phaseScroll)
+        - current(max(.0001, t - .002), lane, phaseScroll);
+      vec3 localPush = flowTangent / max(length(flowTangent), .001)
+        * uScrollStep * touch * .9;
+      mv.xyz += (modelViewMatrix * vec4(localPush, 0.0)).xyz;
+    }
     gl_Position = projectionMatrix * mv;
+    vFieldClip = gl_Position;
     float perspective = 12.0 / max(2.0, -mv.z);
     // Larger pearlescent grains fill the spine's turbulent clouds, while the
     // ring and the lower chamber retain their original fine dust density.
     float grainScale = 1.0 + uWeights.x * (0.30 + 0.28 * cluster);
+    grainScale *= mix(1., .70 * mix(1., .62, stray), uWeights.y);
     gl_PointSize = clamp(aDust.y * grainScale * perspective * uPixelRatio, 0.65, 12.0 * uPixelRatio);
-    vColor = currentColor(lane, t);
-    vColor += mix(vec3(.28, .72, .29), vec3(.58, .53, .85), uWeights.x) * touch * 1.8;
+    float pearl = .5 + .5 * sin(phase * 2.3 + lane * 11.);
+    vec3 deviceColor = mix(vec3(.22, .58, .63), vec3(.54, .28, .72), pearl);
+    deviceColor = mix(deviceColor, vec3(.72, .78, .74), pow(pearl, 7.) * .45);
+    vColor = mix(currentColor(lane, t), deviceColor, uWeights.y);
+    vColor += mix(vec3(.28, .72, .29), vec3(.58, .53, .85), uWeights.x)
+      * touch * 1.8 * mix(1., .45, uWeights.y);
     vBokeh = bokeh;
+    vMachine = uWeights.y;
     float shimmer = 0.73 + sin(uTime * 1.7 + phase * 7.0) * 0.2;
     float seam = smoothstep(0.0, 0.045, t) * (1.0 - smoothstep(0.94, 1.0, t));
     float distanceFade = exp(-max(0.0, -mv.z - 13.0) * 0.043);
-    vAlpha = shimmer * seam * distanceFade * mix(0.72, 0.19, bokeh);
+    vAlpha = shimmer * mix(seam, 1.0, uWeights.y) * distanceFade * mix(0.72, 0.19, bokeh);
+    vAlpha *= mix(1.0, .30 * mix(1., .22, bokeh), uWeights.y);
     vAlpha *= (1.0 - uDarkness * 0.23) * (1.0 + uWeights.x * 0.16);
     vAlpha *= uFieldOpacity;
   }
@@ -126,10 +168,14 @@ const dustVertex = /* glsl */ `
 
 const dustFragment = /* glsl */ `
   precision highp float;
+  ${entryFragment}
   varying vec3 vColor;
   varying float vAlpha;
   varying float vBokeh;
+  varying float vMachine;
   void main() {
+    float entry = fieldEntry();
+    if (entry < .003) discard;
     vec2 uv = gl_PointCoord * 2.0 - 1.0;
     float rr = dot(uv, uv);
     if (rr > 1.0) discard;
@@ -145,13 +191,13 @@ const dustFragment = /* glsl */ `
     float rim = (1.0 - z) * (1.0 - z);
     // Bound the reflection: dense overlapping micro-grains keep their color.
     vec3 color = vColor * (0.24 + diffuse * 0.87 + rim * 0.30);
-    color += vec3(0.61, 0.75, 0.84) * highlight * 0.48;
+    color += vec3(0.61, 0.75, 0.84) * highlight * mix(.48, .24, vMachine);
     float shape = 1.0 - smoothstep(0.68, 1.0, rr);
     if (vBokeh > 0.5) {
       shape = exp(-rr * 6.0) * 0.36 + (1.0 - smoothstep(0.06, 0.22, abs(rr - 0.52))) * 0.18;
       color = vColor;
     }
-    gl_FragColor = vec4(color, shape * vAlpha);
+    gl_FragColor = vec4(color, shape * vAlpha * entry);
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
   }
@@ -164,11 +210,12 @@ const filamentVertex = /* glsl */ `
   void main() {
     float t = position.x;
     float lane = position.y;
-    vec3 p = current(t, lane);
+    vec3 p = current(t, lane, uScroll);
     float fan = sin(t * PI);
     p.x += sin(t * 32.0 + position.z + motionTime() * 0.4) * 0.11 * fan;
     p.z += cos(t * 32.0 + position.z) * 0.11 * fan;
     gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
+    vFieldClip = gl_Position;
     vColor = currentColor(lane, t);
     float travel = fract(t * 3.0 - motionTime() * (0.13 + uEnergy * 0.16) + lane);
     float pulse = pow(max(0.0, 1.0 - abs(travel - 0.5) * 2.0), 7.0);
@@ -178,10 +225,13 @@ const filamentVertex = /* glsl */ `
 
 const filamentFragment = /* glsl */ `
   precision highp float;
+  ${entryFragment}
   varying vec3 vColor;
   varying float vAlpha;
   void main() {
-    gl_FragColor = vec4(vColor, vAlpha);
+    float entry = fieldEntry();
+    if (entry < .003) discard;
+    gl_FragColor = vec4(vColor, vAlpha * entry);
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
   }
@@ -195,7 +245,7 @@ const shaftVertex = /* glsl */ `
   varying float vAlpha;
   void main() {
     float t = position.y;
-    float angle = aBeam.x + sin(uTime * 0.07 + aBeam.w) * 0.12;
+    float angle = aBeam.x + sin(uScroll * 0.07 + aBeam.w) * 0.12;
     vec3 radial = vec3(cos(angle), 0.0, sin(angle));
     vec3 tangent = vec3(-sin(angle), 0.0, cos(angle));
     float height = mix(5.8, 3.4, uWeights.y);
@@ -205,23 +255,28 @@ const shaftVertex = /* glsl */ `
     p += tangent * position.x * aBeam.y * (0.18 + t * 2.2);
     p += radial * aBeam.z;
     gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
+    vFieldClip = gl_Position;
     vUv = position.xy;
     vColor = mix(currentColor(fract(aBeam.w), t), vec3(0.23, 0.68, 0.71), 0.24);
     vAlpha = (0.008 + uWeights.x * 0.006 + uWeights.y * 0.013) * (1.0 - uDarkness * 0.90);
     vAlpha *= 0.80 + sin(uTime * 0.23 + aBeam.w * 3.0) * 0.20;
+    vAlpha *= uFieldOpacity * (1.0 - uWeights.y * .80);
   }
 `
 
 const shaftFragment = /* glsl */ `
   precision highp float;
+  ${entryFragment}
   varying vec2 vUv;
   varying vec3 vColor;
   varying float vAlpha;
   void main() {
+    float entry = fieldEntry();
+    if (entry < .003) discard;
     float crossSection = max(0.0, 1.0 - vUv.x * vUv.x);
     crossSection *= crossSection;
     float endFade = smoothstep(0.0, 0.15, vUv.y) * (1.0 - smoothstep(0.65, 1.0, vUv.y));
-    gl_FragColor = vec4(vColor, crossSection * endFade * vAlpha);
+    gl_FragColor = vec4(vColor, crossSection * endFade * vAlpha * entry);
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
   }
@@ -242,17 +297,23 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
   const bokehCount = software ? 12 : mobile ? 40 : 100
   const positions = new Float32Array(count * 3)
   const dust = new Float32Array(count * 4)
+  const advected = new Float32Array(count)
+  let advectedCount = 0
   for (let i = 0; i < count; i += 1) {
     const bokeh = i < bokehCount
     const size = bokeh ? 3.2 + random() * 7.0
       : (software ? 0.9 : 0.64) + Math.pow(random(), 3.4) * (mobile ? 3.1 : 3.7)
     positions.set([random(), random() * Math.PI * 2, Math.pow(random(), 1.6)], i * 3)
     dust.set([random(), size, random() * 2 - 1, bokeh ? 1 : 0], i * 4)
+    // Forty percent are anchored in the field; sixty percent ride the helix.
+    advected[i] = !bokeh && i % 5 >= 2 ? 1 : 0
+    advectedCount += advected[i]
   }
 
   const uniforms = {
     uTime: { value: 0 },
     uScroll: { value: 0 },
+    uScrollStep: { value: 0 },
     uWeights: { value: new THREE.Vector4() },
     uEnergy: { value: 0 },
     uDarkness: { value: 0 },
@@ -261,10 +322,13 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
     uPointerStrength: { value: 0 },
     uAspect: { value: 1 },
     uFieldOpacity: { value: 1 },
+    uEntryEdge: { value: -0.25 },
+    uEntryWipe: { value: 0 },
   }
   const dustGeometry = new THREE.BufferGeometry()
   dustGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
   dustGeometry.setAttribute('aDust', new THREE.BufferAttribute(dust, 4))
+  dustGeometry.setAttribute('aAdvected', new THREE.BufferAttribute(advected, 1))
   const dustMaterial = new THREE.ShaderMaterial({
     uniforms,
     defines: software ? { SOFTWARE_RENDERER: 1 } : {},
@@ -277,6 +341,9 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
   const particles = new THREE.Points(dustGeometry, dustMaterial)
   particles.name = 'aether-current-particles'
   particles.frustumCulled = false
+  particles.userData.motion = 'scroll-only; time changes luminance'
+  particles.userData.fixedCount = count - advectedCount
+  particles.userData.advectedCount = advectedCount
 
   const lanes = software ? 6 : mobile ? 16 : 28
   const segments = software ? 52 : mobile ? 112 : 160
@@ -327,26 +394,44 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
   scene.add(particles, filaments, shafts)
 
   let disposed = false
+  let previousProgress = Number.NaN
   return {
     update(time: number, progress: number, pixelRatio?: number,
       pointer?: { ndc: THREE.Vector2; strength: number; aspect: number }) {
       if (disposed) return
       const journey = sampleJourney(progress)
+      const p = journey.progress
+      const morph = smooth(.60, .70, p)
+      const signedStep = Number.isFinite(previousProgress)
+        ? THREE.MathUtils.clamp((p - previousProgress) * 55, -.5, .5) : 0
+      previousProgress = p
       uniforms.uTime.value = Number.isFinite(time) ? time : 0
-      uniforms.uScroll.value = journey.progress * 55
-      particles.position.y = filaments.position.y = shafts.position.y = journey.height
-      uniforms.uWeights.value.set(journey.spine, journey.machine, journey.scales, journey.end)
+      uniforms.uScroll.value = p * 55
+      uniforms.uScrollStep.value = signedStep
+      // One field moves continuously into the device's fixed world-space core.
+      const fieldY = THREE.MathUtils.lerp(journey.height, -40.4, morph)
+      particles.position.y = filaments.position.y = shafts.position.y = fieldY
+      uniforms.uWeights.value.set(smooth(.205, .29, p), morph, 0, 0)
       uniforms.uEnergy.value = journey.energy
       uniforms.uDarkness.value = journey.darkness
-      uniforms.uFieldOpacity.value = .06 * (1 - smooth(.10, .18, progress))
-        + journey.spine * smooth(.245, .31, progress) * (1 - smooth(.61, .67, progress))
-        + journey.machine * .10 + journey.scales * .05
-      if (pointer) uniforms.uPointer.value.copy(pointer.ndc)
+      uniforms.uFieldOpacity.value = .06 * (1 - smooth(.10, .18, p))
+        + smooth(.245, .31, p) * (1 - smooth(.75, .81, p))
+      uniforms.uEntryEdge.value = sampleLayers(p).monitorEntry
+      uniforms.uEntryWipe.value = p >= .20 ? 1 : 0
+      const validPointer = pointer && Number.isFinite(pointer.ndc.x) && Number.isFinite(pointer.ndc.y)
+      if (validPointer) uniforms.uPointer.value.copy(pointer.ndc)
       else uniforms.uPointer.value.set(0, 0)
-      uniforms.uPointerStrength.value = pointer?.strength ?? 0
-      uniforms.uAspect.value = pointer?.aspect ?? 1
+      uniforms.uPointerStrength.value = validPointer && Number.isFinite(pointer.strength)
+        ? THREE.MathUtils.clamp(pointer.strength, 0, 1) : 0
+      uniforms.uAspect.value = pointer && Number.isFinite(pointer.aspect)
+        ? THREE.MathUtils.clamp(pointer.aspect, .25, 5) : 1
       const ratio = pixelRatio ?? window.devicePixelRatio ?? 1
       uniforms.uPixelRatio.value = THREE.MathUtils.clamp(Number.isFinite(ratio) ? ratio : 1, 0.4, 2)
+      const visible = uniforms.uFieldOpacity.value > .001
+      particles.visible = filaments.visible = shafts.visible = visible
+      particles.userData.scrollStep = signedStep
+      particles.userData.morph = morph
+      particles.userData.fieldY = fieldY
     },
     dispose() {
       if (disposed) return

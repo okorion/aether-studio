@@ -661,6 +661,32 @@ export default function Scene({ reducedMotion, active, onReady, onSelectProject 
       for (const surface of [ringSurface, innerSurface, tailChrome, tailDark]) surface.transparent = true
       ring.material = ringSurface
       ringInner.material = innerSurface
+      // The incoming monitor layer cuts through the ring on the same diagonal
+      // boundary as the flat wrapper, instead of fading one whole model away.
+      const emblemEdge = { value: -.25 }
+      const emblemWipe = { value: 0 }
+      for (const surface of [ringSurface, innerSurface, glyphChrome, luminous, tailChrome, tailDark]) {
+        const previousCompile = surface.onBeforeCompile
+        const previousKey = surface.customProgramCacheKey()
+        surface.onBeforeCompile = (shader, renderer) => {
+          previousCompile.call(surface, shader, renderer)
+          shader.uniforms.uEmblemEdge = emblemEdge
+          shader.uniforms.uEmblemWipe = emblemWipe
+          shader.vertexShader = `varying vec4 vEmblemClip;\n${shader.vertexShader}`.replace(
+            '#include <project_vertex>', '#include <project_vertex>\nvEmblemClip = gl_Position;',
+          )
+          shader.fragmentShader = `varying vec4 vEmblemClip;
+            uniform float uEmblemEdge; uniform float uEmblemWipe;\n${shader.fragmentShader}`.replace(
+            '#include <clipping_planes_fragment>',
+            `#include <clipping_planes_fragment>
+            vec2 screen = vEmblemClip.xy / vEmblemClip.w * .5 + .5;
+            float grain = fract(sin(dot(floor(screen * vec2(1800.,1100.)), vec2(12.9898,78.233))) * 43758.5453);
+            float edge = screen.y - (screen.x - .5) * .20 + (grain - .5) * .009;
+            if (uEmblemWipe > .5 && edge < uEmblemEdge) discard;`,
+          )
+        }
+        surface.customProgramCacheKey = () => `${previousKey}-layer-wipe-v1`
+      }
       const centre = new THREE.Vector3(0, 0, 0)
       const projectedCentre = new THREE.Vector3()
       const modelCentre = new THREE.Vector3()
@@ -781,7 +807,9 @@ export default function Scene({ reducedMotion, active, onReady, onSelectProject 
         const fold = smooth(.205, .295, scroll) * (1 - state.end)
         // The original organism unfolds into the spine. Keep its free tails
         // from crossing the project screens after that transformation settles.
-        const emblemOpacity = (1 - smooth(.24, .30, scroll)) + smooth(.88, .955, scroll)
+        const emblemOpacity = (1 - smooth(.305, .32, scroll)) + smooth(.88, .955, scroll)
+        emblemEdge.value = sampleLayers(scroll).monitorEntry
+        emblemWipe.value = scroll > .22 && scroll < .33 ? 1 : 0
         emblem.visible = emblemOpacity > .001
         ringSurface.opacity = innerSurface.opacity = tailChrome.opacity = tailDark.opacity = emblemOpacity
         luminous.opacity = .26 * emblemOpacity

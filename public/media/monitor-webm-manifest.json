@@ -21,8 +21,8 @@
   },
   "validation": {
     "mode": "adopted_prevalidated_balanced",
-    "method": "Byte-identical adoption of the previously validated PR14 balanced candidates",
-    "metadata_and_ssim_origin": "Prior PR14 candidate inspection and full-film SSIM comparison against the authored MP4s",
+    "method": "Byte-identical adoption of the previously validated performance-v14 balanced candidates",
+    "metadata_and_ssim_origin": "Prior performance-v14 candidate inspection and full-film SSIM comparison against the authored MP4s",
     "ssim_filter": "[0:v]settb=AVTB,setpts=N/24/TB[a];[1:v]settb=AVTB,setpts=N/24/TB[b];[a][b]ssim=shortest=1:repeatlast=0",
     "encoding_or_decode_repeated_during_adoption": false,
     "copied_bytes_sha256_verified": true,

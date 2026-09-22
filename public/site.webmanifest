@@ -1,0 +1,18 @@
+{
+  "id": "/",
+  "name": "Aether Studio",
+  "short_name": "Aether",
+  "description": "Explore luminous forests, sculptural forms and digital worlds in an interactive, real-time creative technology experience.",
+  "lang": "en",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "browser",
+  "background_color": "#070d10",
+  "theme_color": "#070d10",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

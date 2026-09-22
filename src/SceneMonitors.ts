@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import { smooth, windowWeight } from './Journey'
 import { sampleLayers } from './SceneLayers'
 import { createSceneVideo } from './SceneVideo'
+import { createCurtainVisibility, curtainHasCoverage } from './SceneVisibility'
 
 type MonitorPointer = { ndc: THREE.Vector2; strength: number; aspect: number; active?: boolean }
 
@@ -299,6 +300,9 @@ export function createSceneMonitors(software: boolean, mobile: boolean, external
     bevelSegments: 1, steps: 1, curveSegments: 6,
   })
   rimGeometry.translate(0, 0, -.028)
+  geometry.computeBoundingBox()
+  rimGeometry.computeBoundingBox()
+  const captureBounds = geometry.boundingBox!.clone().union(rimGeometry.boundingBox!)
   const rimMaterials = materials.map((material) => new THREE.ShaderMaterial({
     vertexShader, fragmentShader: rimFragment, uniforms: material.uniforms,
     transparent: true, depthWrite: false, side: THREE.DoubleSide, forceSinglePass: true,
@@ -325,6 +329,9 @@ export function createSceneMonitors(software: boolean, mobile: boolean, external
   let disposed = false
   let capturing = false
   let captureFailed = false
+  let captureVisible = false
+  let captureDirty = true
+  const captureVisibility = createCurtainVisibility()
   let lastTime = Number.NaN
   let hoveredPanel = -1
   const hover = new Float32Array(panels.length)
@@ -441,7 +448,8 @@ export function createSceneMonitors(software: boolean, mobile: boolean, external
         material.uniforms.uExitEdge.value = layers.monitorExit
       }
       group.position.y = -5 * (1 - smooth(.23, .305, p)) + 3 * smooth(.615, .69, p)
-      group.visible = weight > .001
+      group.visible = weight > .001 && curtainHasCoverage(layers.monitorEntry, layers.monitorExit)
+      if (!group.visible) { captureVisible = false; captureDirty = true }
       media.update(mediaActive && group.visible, reducedMotion)
       const video = media.status()
       const delta = Number.isFinite(lastTime) ? THREE.MathUtils.clamp(time - lastTime, 0, .05) : 1 / 60
@@ -487,9 +495,31 @@ export function createSceneMonitors(software: boolean, mobile: boolean, external
       const h = Math.max(1, Math.round(w * drawingSize.y / Math.max(1, drawingSize.x)))
       if (target.width !== w || target.height !== h) target.setSize(w, h)
       renderer.initRenderTarget(target)
+      captureDirty = true
     },
-    capture(renderer: THREE.WebGLRenderer, scene: THREE.Scene, camera: THREE.Camera) {
-      if (disposed || !target || !group.visible || capturing || captureFailed) return
+    capture(renderer: THREE.WebGLRenderer, scene: THREE.Scene, camera: THREE.Camera, scheduled = true, indirectVisible = false) {
+      if (disposed || !target || capturing || captureFailed) return
+      if (!group.visible) { captureVisible = false; captureDirty = true; return }
+      // The group may be reflected indirectly even outside the main camera.
+      // Restrict this camera's background capture, not the panel visibility.
+      // A visible planar reflector may show panels outside the main frustum.
+      // Keep their shared background live rather than freezing that reflection.
+      let visible = indirectVisible
+      if (!visible) {
+        captureVisibility.begin(camera)
+        for (const panel of panels) {
+          if (panel.visible && panel.material.uniforms.uOpacity.value > .001
+            && captureVisibility.intersects(panel, panel.material.uniforms.uEntryEdge.value,
+              panel.material.uniforms.uExitEdge.value, captureBounds)) {
+            visible = true
+            break
+          }
+        }
+      }
+      if (!visible) { captureVisible = false; captureDirty = true; return }
+      const entering = !captureVisible
+      captureVisible = true
+      if (!scheduled && !entering && !captureDirty) return
       renderer.getDrawingBufferSize(drawingSize)
       const w = Math.max(1, Math.min(720, Math.floor(drawingSize.x)))
       const h = Math.max(1, Math.round(w * drawingSize.y / Math.max(1, drawingSize.x)))
@@ -514,6 +544,7 @@ export function createSceneMonitors(software: boolean, mobile: boolean, external
           material.uniforms.uHasBackground.value = 1
         }
         group.userData.refraction = 'shared-render-target'
+        captureDirty = false
       } catch {
         // Keep readable, animated transparent screens if capture is unavailable.
         captureFailed = true

@@ -663,11 +663,34 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
       expect(capture.after).toEqual(capture.before)
       expect(capture.refraction).toBe('shared-render-target')
       expect(capture.backgroundFlags).toEqual([1, 1, 1, 1, 1, 1])
+      expect(capture.visibility).toEqual([
+        { name: 'visible-unscheduled', draws: 0, groupVisible: true },
+        { name: 'closed-entry', draws: 0, groupVisible: false },
+        { name: 'entry-first-unscheduled', draws: 1, groupVisible: true },
+        { name: 'visible-unscheduled-again', draws: 0, groupVisible: true },
+        { name: 'visible-scheduled', draws: 1, groupVisible: true },
+        { name: 'closed-exit', draws: 0, groupVisible: false },
+        { name: 'reverse-first-unscheduled', draws: 1, groupVisible: true },
+        { name: 'offscreen', draws: 0, groupVisible: true },
+        { name: 'indirect-reflection', draws: 1, groupVisible: true },
+        { name: 'offscreen-again', draws: 0, groupVisible: true },
+        { name: 'frustum-reentry-unscheduled', draws: 1, groupVisible: true },
+      ])
       expect(capture.failure.after).toEqual(capture.before)
       expect(capture.failure.refraction).toBe('capture-failed-fallback')
       expect(capture.failure.backgroundFlags).toEqual([0, 0, 0, 0, 0, 0])
       expect(capture.failure.attempts).toBe(1)
     }
+    const water = await page.evaluate(() => window.interactionHarness.probeWaterCaptureVisibility())
+    expect(water).toEqual([
+      { name: 'open', reflected: 1, visible: true },
+      { name: 'closed', reflected: 0, visible: false },
+      { name: 'open-reentry', reflected: 1, visible: true },
+      { name: 'open-moving-light', reflected: 1, visible: true },
+      { name: 'surface-below-band', reflected: 0, visible: true },
+      { name: 'other-camera-sees-band', reflected: 1, visible: true },
+      { name: 'open-reverse', reflected: 1, visible: true },
+    ])
   })
 
   test('movement leaves a trail after 1.6 seconds and completely fades by 3 seconds', async ({

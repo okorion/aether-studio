@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import type { Reflector } from 'three/addons/objects/Reflector.js'
 import { lightChoreographyGLSL, sampleLightChoreography } from './SceneLighting'
+import { createCurtainVisibility, curtainHasCoverage } from './SceneVisibility'
 
 /** A shallow water skin. Desktop reuses the existing planar reflection pass. */
 export function createWaterSurface(
@@ -119,10 +120,24 @@ export function createWaterSurface(
   material.needsUpdate = true
   const cameraWorld = new THREE.Vector3()
   const surfaceWorld = new THREE.Vector3()
+  const visibility = createCurtainVisibility()
+  surface.geometry.computeBoundingBox()
+  let upper = 1.5, lower = -.5
+  const reflect = surface.onBeforeRender
+  if (reflector) surface.onBeforeRender = function (...args) {
+    // Evaluate the camera of this actual render pass. The main camera must
+    // not decide which geometry can contribute indirectly to a reflection.
+    visibility.begin(args[2])
+    if (!visibility.intersects(surface, upper, lower)) return
+    reflect.apply(this, args)
+  }
 
   return {
     surface,
-    update(elapsed: number, progress: number, weight: number, aboveFloor: boolean, camera?: THREE.Camera) {
+    update(elapsed: number, progress: number, weight: number, aboveFloor: boolean, camera?: THREE.Camera,
+      curtain?: { upper: number; lower: number }) {
+      upper = curtain?.upper ?? 1.5
+      lower = curtain?.lower ?? -.5
       time.value = elapsed
       lightDepth.value = sampleLightChoreography(elapsed, progress).depth
       let crossingFade = 1
@@ -132,9 +147,10 @@ export function createWaterSurface(
         crossingFade = THREE.MathUtils.smoothstep(cameraWorld.y - surfaceWorld.y, .035, .30)
       }
       opacity.value = weight * crossingFade
-      surface.visible = aboveFloor && opacity.value > .015
+      surface.visible = aboveFloor && opacity.value > .015 && curtainHasCoverage(upper, lower)
     },
     dispose() {
+      if (reflector) surface.onBeforeRender = reflect
       // Reflector's existing owner disposes its target, geometry and material.
       if (!reflector) {
         surface.removeFromParent()

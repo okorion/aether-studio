@@ -9,6 +9,7 @@ import type { createSceneVideo } from './SceneVideo'
 import { sampleJourney, smooth } from './Journey'
 import { sampleLayers } from './SceneLayers'
 import { bindGroupCurtain, createCurtainBounds } from './SceneCurtains'
+import { curtainHasCoverage } from './SceneVisibility'
 import { lightChoreographyGLSL, sampleLightChoreography, type LightFilmUniforms } from './SceneLighting'
 
 const TAU = Math.PI * 2
@@ -684,13 +685,13 @@ export function createSceneWorlds(
       monitorAssembly.prepare(renderer)
       if (floorReflection) renderer.initRenderTarget(floorReflection.getRenderTarget())
     },
-    capture(renderer: THREE.WebGLRenderer, camera: THREE.Camera) {
+    capture(renderer: THREE.WebGLRenderer, camera: THREE.Camera, scheduled = true) {
       // The monitor's low-resolution refraction must not recursively render
       // another complete floor reflection during the chamber overlap.
       const reflected = floorReflection?.visible
       if (floorReflection) floorReflection.visible = false
       try {
-        monitorAssembly.capture(renderer, scene, camera)
+        monitorAssembly.capture(renderer, scene, camera, scheduled, Boolean(reflected && space.visible))
       } finally {
         if (floorReflection) floorReflection.visible = reflected ?? false
       }
@@ -713,6 +714,9 @@ export function createSceneWorlds(
       const layers = sampleLayers(progress)
       deviceCurtain.upper.value = layers.monitorExit
       deviceCurtain.lower.value = scaleCurtain.lower.value = layers.forestEntry
+      // Only a globally empty curtain can hide a whole room. Main-camera
+      // frustum culling here would incorrectly remove reflected geometry.
+      const deviceCoverage = curtainHasCoverage(layers.monitorExit, layers.forestEntry)
       lightDepth.value = journey.darkness
       root.position.y = journey.height
       // Root follows the travelling spine; both mechanical layers stay in world
@@ -750,7 +754,7 @@ export function createSceneWorlds(
 
       const architectureWeight = smooth(.59, .615, progress) * (1 - journey.darkness * .77)
         * (1 - journey.scales * .35) * (1 - smooth(.86, .94, progress) * .85)
-      space.visible = architectureWeight > .001
+      space.visible = architectureWeight > .001 && deviceCoverage
       architecture.opacity = architectureWeight
       // The underside remains legible as a ceiling after the camera crosses it.
       floorMaterial.opacity = smooth(.60, .68, progress) * (1 - smooth(.87, .95, progress)) * .97
@@ -780,7 +784,7 @@ export function createSceneWorlds(
       const inLowerRoom = eyeHeight <= floorHeight - .03
       // Once the eye enters the lower room, no upper-floor device can remain
       // visible through a near-plane gap or beyond a screen-diagonal seam.
-      chamber.visible = deviceWeight > .001 && !inLowerRoom
+      chamber.visible = deviceWeight > .001 && !inLowerRoom && deviceCoverage
       // Broken banks and long upper-room supports cross below the bed in world
       // space. A ceiling cannot occlude those protruding bottoms from below.
       // Keep only the plain back wall as the lower room's distant enclosure.
@@ -795,7 +799,8 @@ export function createSceneWorlds(
       floorMaterial.opacity *= smooth(.07, .55, Math.abs(eyeHeight - floorHeight))
       floorMaterial.depthWrite = floorMaterial.opacity > .94
       floor.visible = floorMaterial.opacity > .015
-      water.update(time, progress, architectureWeight, aboveFloor, camera)
+      water.update(time, progress, architectureWeight, aboveFloor, camera,
+        { upper: layers.monitorExit, lower: layers.forestEntry })
       dark.opacity = deviceWeight
       machineMetal.opacity = deviceWeight
       cableMaterial.opacity = deviceWeight

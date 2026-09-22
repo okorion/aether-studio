@@ -2,6 +2,8 @@ import * as THREE from 'three'
 import { sampleJourney } from './Journey'
 import { sampleLayers } from './SceneLayers'
 import { createForestGeometry } from './ForestGeometry'
+import { createLightFilmUniforms, lightChoreographyGLSL, sampleLightChoreography } from './SceneLighting'
+import type { LightFilmUniforms } from './SceneLighting'
 
 type ForestPointer = { ndc: THREE.Vector2; strength: number; aspect: number }
 
@@ -11,6 +13,8 @@ const sharedShader = /* glsl */ `
   uniform float uExit;
   uniform float uEntry;
   uniform float uDarkness;
+  uniform float uLightDepth;
+  uniform float uLightStrength;
   uniform vec2 uPointer;
   uniform float uPointerStrength;
   varying vec4 vClip;
@@ -77,8 +81,10 @@ const forestVertex = /* glsl */ `
 
 const barkFragment = /* glsl */ `
   ${sharedShader}
+  ${lightChoreographyGLSL}
   void main() {
-    if(groveCoverage()<hash(gl_FragCoord.xy)) discard;
+    float coverage=groveCoverage();
+    if(coverage<.003||coverage<hash(gl_FragCoord.xy)) discard;
     vec3 n=normalize(vNormal);
     float light=max(0.,dot(n,normalize(vec3(-.45,.8,.3))));
     float ridge=pow(.5+.5*sin(vUv.x*83.+noise(vUv*vec2(11.,23.))*3.4),5.);
@@ -88,6 +94,7 @@ const barkFragment = /* glsl */ `
     bark*=.33+light*.4;
     bark*=.83+ridge*.06+grain*.08;
     bark+=vec3(.004,.009,.003)*moss;
+    bark+=aetherLightCloud(vWorld,n,uTime,uLightDepth)*uLightStrength*.028*(.5+grain*.5);
     bark+=vec3(.016,.033,.021)*pointerLight()*(.3+light*.7);
     gl_FragColor=vec4(finishForest(bark),1.);
     #include <tonemapping_fragment>
@@ -97,8 +104,10 @@ const barkFragment = /* glsl */ `
 
 const leafFragment = /* glsl */ `
   ${sharedShader}
+  ${lightChoreographyGLSL}
   void main() {
-    if(groveCoverage()<hash(gl_FragCoord.xy)) discard;
+    float coverage=groveCoverage();
+    if(coverage<.003||coverage<hash(gl_FragCoord.xy)) discard;
     vec3 n=normalize(vNormal)*(gl_FrontFacing?1.:-1.);
     vec3 key=normalize(vec3(-.45,.8,.3));
     float diffuse=.20+max(0.,dot(n,key))*.65+max(0.,dot(-n,key))*.27;
@@ -113,6 +122,7 @@ const leafFragment = /* glsl */ `
     float rim=pow(1.-max(0.,dot(n,viewDir)),3.);
     color+=vec3(.019,.043,.014)*rim*(.25+diffuse);
     color+=vec3(.34,.43,.18)*reflection*(.10+vSeed.y*.17);
+    color+=aetherLightCloud(vWorld,n,uTime,uLightDepth)*uLightStrength*(.18+rim*.10+reflection*.16);
     color+=vec3(.16,.38,.24)*pointerLight()*(.3+reflection);
     gl_FragColor=vec4(finishForest(color),1.);
     #include <tonemapping_fragment>
@@ -144,18 +154,21 @@ const microVertex = /* glsl */ `
 
 const microFragment = /* glsl */ `
   ${sharedShader}
+  ${lightChoreographyGLSL}
   void main() {
     vec2 p=gl_PointCoord*2.-1.;
     float r=dot(p,p);
     if(r>1.)discard;
     float edge=1.-smoothstep(.64,1.,r);
-    if(groveCoverage()*edge<hash(gl_FragCoord.xy))discard;
+    float coverage=groveCoverage()*edge;
+    if(coverage<.003||coverage<hash(gl_FragCoord.xy))discard;
     vec3 n=vec3(p,sqrt(max(0.,1.-r)));
     float light=max(0.,dot(n,normalize(vec3(-.4,.65,.65))));
     vec3 olive=mix(vec3(.014,.028,.003),vec3(.17,.22,.026),vSeed.x);
     vec3 green=mix(vec3(.006,.026,.009),vec3(.036,.13,.046),vSeed.x);
     vec3 color=mix(olive,green,smoothstep(.27,.75,vSeed.z))*(.3+light*.65);
     color+=vec3(.24,.31,.10)*pow(light,16.)*(.12+vSeed.y*.3);
+    color+=aetherLightCloud(vWorld,vNormal,uTime,uLightDepth)*uLightStrength*(.13+light*.08);
     color+=vec3(.14,.35,.23)*pointerLight()*(.3+light*.4);
     gl_FragColor=vec4(finishForest(color),1.);
     #include <tonemapping_fragment>
@@ -164,19 +177,25 @@ const microFragment = /* glsl */ `
 `
 
 /** Fixed groves share geometry; foliage and fine grain retain one total budget. */
-export function createSceneForest(scene: THREE.Scene, software: boolean, mobile: boolean) {
+export function createSceneForest(scene: THREE.Scene, software: boolean, mobile: boolean, sharedFilm?: LightFilmUniforms) {
   const group=new THREE.Group()
   group.name='aether-forest'
   scene.add(group)
   const budget=software?4500:mobile?18000:60000
   const assets=createForestGeometry(budget,software,mobile)
+  const fallback=sharedFilm?null:new THREE.DataTexture(new Uint8Array([0,0,0,255]),1,1)
+  if(fallback){fallback.colorSpace=THREE.LinearSRGBColorSpace;fallback.needsUpdate=true}
+  const film=sharedFilm??createLightFilmUniforms(fallback!)
   const shared={
     uTime:{value:0}, uAspect:{value:1.6}, uExit:{value:-.35}, uEntry:{value:-.35},
     uDarkness:{value:0}, uPointer:{value:new THREE.Vector2(3,3)}, uPointerStrength:{value:0},
+    uLightDepth:{value:0},uLightStrength:{value:1},
+    uLightFilm:film.map,uLightFilmReady:film.ready,
     uViewportHeight:{value:900},uPixelRatio:{value:1},
   }
   const materials=[barkFragment,leafFragment].map((fragmentShader,i)=>new THREE.ShaderMaterial({
     uniforms:{...shared,uLeaf:{value:i}},vertexShader:forestVertex,fragmentShader,
+    defines:{AETHER_LIGHT_FILM:1},
     side:i?THREE.DoubleSide:THREE.FrontSide,depthWrite:true,depthTest:true,
   }))
   const makeMesh=(leaves:boolean)=>{
@@ -207,6 +226,7 @@ export function createSceneForest(scene: THREE.Scene, software: boolean, mobile:
   microGeometry.computeBoundingSphere()
   const microMaterial=new THREE.ShaderMaterial({
     uniforms:shared,vertexShader:microVertex,fragmentShader:microFragment,depthWrite:true,depthTest:true,
+    defines:{AETHER_LIGHT_FILM:1},
   })
   materials.push(microMaterial)
   const renderViewport=new THREE.Vector4()
@@ -247,7 +267,10 @@ export function createSceneForest(scene: THREE.Scene, software: boolean, mobile:
       const layers=sampleLayers(p)
       shared.uExit.value=layers.forestExit
       shared.uEntry.value=layers.forestEntry
-      shared.uTime.value=Number.isFinite(time)?time:0
+      const lighting=sampleLightChoreography(time,p)
+      shared.uTime.value=lighting.time
+      shared.uLightDepth.value=lighting.depth
+      shared.uLightStrength.value=lighting.cloudStrength
       shared.uDarkness.value=sampleJourney(p).darkness
       const projection=camera.projectionMatrix.elements
       const aspect=Math.abs(projection[5]/projection[0])
@@ -272,6 +295,7 @@ export function createSceneForest(scene: THREE.Scene, software: boolean, mobile:
       assets.leafGeometry.dispose()
       microGeometry.dispose()
       materials.forEach(material=>material.dispose())
+      fallback?.dispose()
       group.clear()
     },
   }

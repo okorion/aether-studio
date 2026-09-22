@@ -38,7 +38,9 @@ async function installVideoProbe(page: Page, blockPlayback = false) {
 }
 
 async function snapshots(page: Page) {
-  return page.evaluate(() => window.videoProbe.records.map(({ video, loads, playTimes }, id) => ({
+  return page.evaluate(() => window.videoProbe.records
+    .filter(({ video }) => video.dataset.mediaRole !== 'light-projection')
+    .map(({ video, loads, playTimes }, id) => ({
     id,
     src: video.getAttribute('src'),
     poster: video.getAttribute('poster'),

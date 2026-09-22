@@ -183,6 +183,7 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
     envMapIntensity: 1.35, transparent: true,
   })
   const entryEdge = { value: -0.25 }
+  const exitEdge = { value: -0.25 }
   for (const material of [boneMaterial, discMaterial, linkMaterial]) {
     // Keep the bone's micrograin hook and share the same diagonal boundary as
     // the outgoing ring and incoming monitors. Hidden fragments write no depth.
@@ -191,21 +192,23 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
     material.onBeforeCompile = (shader, renderer) => {
       previousCompile.call(material, shader, renderer)
       shader.uniforms.uSpineEntry = entryEdge
+      shader.uniforms.uSpineExit = exitEdge
       shader.vertexShader = 'varying vec4 vSpineClip;\n' + shader.vertexShader
       shader.vertexShader = shader.vertexShader.replace('#include <project_vertex>',
         '#include <project_vertex>\nvSpineClip = gl_Position;')
-      shader.fragmentShader = 'uniform float uSpineEntry;\nvarying vec4 vSpineClip;\n' + shader.fragmentShader
+      shader.fragmentShader = 'uniform float uSpineEntry; uniform float uSpineExit;\nvarying vec4 vSpineClip;\n' + shader.fragmentShader
       shader.fragmentShader = shader.fragmentShader.replace('#include <alphamap_fragment>', `
         #include <alphamap_fragment>
         vec2 spineScreen = vSpineClip.xy / vSpineClip.w * .5 + .5;
         float spineNoise = fract(sin(dot(floor(spineScreen * vec2(1800., 1100.)), vec2(12.9898, 78.233))) * 43758.5453);
         float spineBoundary = spineScreen.y - (spineScreen.x - .5) * .20 + (spineNoise - .5) * .009;
-        float spineEntry = 1. - smoothstep(uSpineEntry - .004, uSpineEntry + .004, spineBoundary);
+        float spineEntry = (1. - smoothstep(uSpineEntry - .006, uSpineEntry + .006, spineBoundary))
+          * smoothstep(uSpineExit - .006, uSpineExit + .006, spineBoundary);
         if (spineEntry < .003) discard;
         diffuseColor.a *= spineEntry;
       `)
     }
-    material.customProgramCacheKey = () => previousCacheKey + '-monitor-entry-v1'
+    material.customProgramCacheKey = () => previousCacheKey + '-monitor-passage-v2'
   }
   const bones = new THREE.InstancedMesh(boneGeometry, boneMaterial, rows)
   bones.name = 'aether-spine-vertebrae'
@@ -237,6 +240,7 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
       const form = ease(emergence)
       const progress = clamp(value)
       entryEdge.value = sampleLayers(progress).monitorEntry
+      exitEdge.value = sampleLayers(progress).monitorExit
       group.userData.entryEdge = entryEdge.value
       group.visible = alpha > .001 && form > .001
       boneMaterial.opacity = alpha

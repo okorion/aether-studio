@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { sampleJourney, smooth } from './Journey'
 import { sampleLayers } from './SceneLayers'
+import { lightChoreographyGLSL, type LightFilmUniforms } from './SceneLighting'
 
 // The intro's tiny ambient field remains visible before the incoming spine.
 // All later particles and lights enter below the monitor's shared diagonal.
@@ -18,6 +19,7 @@ const entryFragment = /* glsl */ `
 
 /** The same current deforms continuously around the journey's central axis. */
 const currentField = /* glsl */ `
+  ${lightChoreographyGLSL}
   uniform float uTime;
   uniform float uScroll;
   uniform float uScrollStep;
@@ -169,6 +171,9 @@ const dustVertex = /* glsl */ `
     vec3 deviceColor = mix(vec3(.22, .58, .63), vec3(.54, .28, .72), pearl);
     deviceColor = mix(deviceColor, vec3(.72, .78, .74), pow(pearl, 7.) * .45);
     vColor = mix(currentColor(lane, t), deviceColor, uWeights.y);
+    vec3 litWorld = (modelMatrix * vec4(p, 1.)).xyz;
+    vColor += aetherLightCloud(litWorld, vec3(0., .5, .866), uTime, uDarkness)
+      * (.20 + uWeights.y * .75);
     vColor += mix(vec3(.28, .72, .29), vec3(.58, .53, .85), uWeights.x)
       * touch * 1.8 * mix(1., .45, uWeights.y);
     vBokeh = bokeh;
@@ -308,7 +313,7 @@ function seededRandom() {
 }
 
 /** Three bounded draws; no per-particle CPU updates, textures or render targets. */
-export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: boolean) {
+export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: boolean, lightFilm?: LightFilmUniforms) {
   const random = seededRandom()
   const count = software ? 4800 : mobile ? 16000 : 42000
   const bokehCount = software ? 12 : mobile ? 40 : 100
@@ -328,6 +333,7 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
   }
 
   const uniforms = {
+    ...(lightFilm ? { uLightFilm: lightFilm.map, uLightFilmReady: lightFilm.ready } : {}),
     uTime: { value: 0 },
     uScroll: { value: 0 },
     uScrollStep: { value: 0 },
@@ -349,7 +355,7 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
   dustGeometry.setAttribute('aAdvected', new THREE.BufferAttribute(advected, 1))
   const dustMaterial = new THREE.ShaderMaterial({
     uniforms,
-    defines: software ? { SOFTWARE_RENDERER: 1 } : {},
+    defines: { ...(software ? { SOFTWARE_RENDERER: 1 } : {}), ...(lightFilm ? { AETHER_LIGHT_FILM: 1 } : {}) },
     vertexShader: dustVertex,
     fragmentShader: dustFragment,
     transparent: true,

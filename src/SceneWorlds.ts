@@ -4,8 +4,12 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
 import { createSpineAssembly } from './SceneSpine'
 import { createSceneMonitors } from './SceneMonitors'
 import { createSceneRuins } from './SceneRuins'
+import { createWaterSurface } from './SceneWater'
 import type { createSceneVideo } from './SceneVideo'
 import { sampleJourney, smooth } from './Journey'
+import { sampleLayers } from './SceneLayers'
+import { bindGroupCurtain, createCurtainBounds } from './SceneCurtains'
+import { lightChoreographyGLSL, sampleLightChoreography, type LightFilmUniforms } from './SceneLighting'
 
 const TAU = Math.PI * 2
 
@@ -30,18 +34,10 @@ function scaleGeometry(software: boolean) {
   return geometry
 }
 
-const screenVertex = /* glsl */ `
-  varying vec2 vUv;
-  void main() {
-    vUv = uv;
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-  }
-`
-
 /** Descending articulated matter inside an independently anchored shaft. */
 export function createSceneWorlds(
   scene: THREE.Scene, software: boolean, mobile = false,
-  externalMedia?: ReturnType<typeof createSceneVideo>,
+  externalMedia?: ReturnType<typeof createSceneVideo>, lightFilm?: LightFilmUniforms,
 ) {
   const geometries: THREE.BufferGeometry[] = []
   const materials: THREE.Material[] = []
@@ -76,6 +72,7 @@ export function createSceneWorlds(
   const pointerStrength = { value: 0 }
   const pointerAspect = { value: 1 }
   const surfaceTime = { value: 0 }
+  const lightDepth = { value: 0 }
   metal.onBeforeCompile = (shader) => {
     shader.uniforms.uSurfacePointer = pointerNdc
     shader.uniforms.uSurfaceStrength = pointerStrength
@@ -157,7 +154,14 @@ export function createSceneWorlds(
   // are shared in world space, so adjacent collars retain different highlights
   // without a texture, extra pass, or animated surface drift.
   for (const surface of [silver, dark, machineMetal, cableMaterial]) {
+    if (lightFilm) surface.defines = { ...surface.defines, AETHER_LIGHT_FILM: 1 }
     surface.onBeforeCompile = shader => {
+      shader.uniforms.uMachineTime = surfaceTime
+      shader.uniforms.uMachineDepth = lightDepth
+      if (lightFilm) {
+        shader.uniforms.uLightFilm = lightFilm.map
+        shader.uniforms.uLightFilmReady = lightFilm.ready
+      }
       shader.vertexShader = 'varying vec3 vMachinePoint;\n' + shader.vertexShader
       shader.vertexShader = shader.vertexShader.replace('#include <begin_vertex>', `
         #include <begin_vertex>
@@ -168,12 +172,20 @@ export function createSceneWorlds(
         vMachinePoint = (modelMatrix * machinePoint).xyz;
       `)
       shader.fragmentShader = `
+        uniform float uMachineTime;
+        uniform float uMachineDepth;
+        ${lightChoreographyGLSL}
         varying vec3 vMachinePoint;
         float machinePatina(vec3 p) {
           return .5 + .5 * sin(p.x * 2.7 + sin(p.z * 4.1))
             * sin(p.y * 5.8 + p.z * 1.9);
         }
       ` + shader.fragmentShader
+      shader.fragmentShader = shader.fragmentShader.replace('#include <emissivemap_fragment>', `
+        #include <emissivemap_fragment>
+        vec3 projectedLight = aetherLightCloud(vMachinePoint, vec3(0., .6, .8), uMachineTime, uMachineDepth);
+        totalEmissiveRadiance += projectedLight * .055;
+      `)
       shader.fragmentShader = shader.fragmentShader.replace('#include <color_fragment>', `
         #include <color_fragment>
         float patina = machinePatina(vMachinePoint);
@@ -377,10 +389,10 @@ export function createSceneWorlds(
   floorMaterial.side = THREE.DoubleSide
   floorMaterial.forceSinglePass = true
   floorMaterial.depthWrite = true
-  const platformWidth = 17
-  const platformDepth = 10.5
-  const platformZ = -2.75 // Back -8, front +2.5: the camera passes the visible edge.
-  const floorGeometry = geo(new THREE.PlaneGeometry(platformWidth, platformDepth, 18, 12))
+  const platformWidth = 22
+  const platformDepth = 26
+  const platformZ = -1.5 // Back -14.5, front +11.5: one bed continues under the camera.
+  const floorGeometry = geo(new THREE.PlaneGeometry(platformWidth, platformDepth, 22, 24))
   const vertices = floorGeometry.getAttribute('position')
   for (let i = 0; i < vertices.count; i++) {
     const x = vertices.getX(i)
@@ -393,53 +405,77 @@ export function createSceneWorlds(
   floor.rotation.x = -Math.PI / 2
   const slabMaterial = mat(new THREE.MeshStandardMaterial({
     color: 0x070c10, metalness: .45, roughness: .65, envMapIntensity: .3, transparent: true,
+    depthWrite: false,
   }))
-  const slab = mesh(space, geo(new THREE.BoxGeometry(platformWidth, .26, platformDepth)),
-    slabMaterial, 0, -3.86, platformZ)
+  const slab = mesh(space, geo(new THREE.BoxGeometry(platformWidth, .34, platformDepth)),
+    slabMaterial, 0, -3.87, platformZ)
   slab.name = 'aether-floor-edge'
-  // One small reflection target on desktop. Software/mobile keep the cheaper metal floor.
+  // Retain the single 512px target; the water shader adds no scene capture.
   const floorReflection = !software && !mobile ? new Reflector(geo(new THREE.PlaneGeometry(platformWidth, platformDepth)), {
     textureWidth: 512, textureHeight: 512, multisample: 0, clipBias: .004, color: 0x52676d,
   }) : null
-  const reflectionTime = { value: 0 }
-  const reflectionOpacity = { value: 0 }
-  if (floorReflection) {
-    floorReflection.position.y = -3.61
-    floorReflection.position.z = platformZ
-    floorReflection.rotation.x = -Math.PI / 2
-    const material = floorReflection.material as THREE.ShaderMaterial
-    material.transparent = true
-    material.depthWrite = false
-    material.uniforms.uTime = reflectionTime
-    material.uniforms.uOpacity = reflectionOpacity
-    material.fragmentShader = 'uniform float uTime; uniform float uOpacity;\n' + material.fragmentShader
-    material.fragmentShader = material.fragmentShader.replace(
-      'vec4 base = texture2DProj( tDiffuse, vUv );',
-      `vec4 warped = vUv;
-      warped.xy += vec2(sin(vUv.x * 130.0 + vUv.y * 90.0 + uTime * .6),
-        cos(vUv.y * 170.0 + uTime * .4)) * .0019 * vUv.w;
-      vec4 base = texture2DProj(tDiffuse, warped);`,
-    ).replace('vec4( blendOverlay( base.rgb, color ), 1.0 )',
-      'vec4(blendOverlay(base.rgb, color), uOpacity)')
-    space.add(floorReflection)
-  }
+  const water = createWaterSurface(floorReflection, platformWidth, platformDepth)
+  water.surface.position.set(0, -3.635, platformZ)
+  water.surface.rotation.x = -Math.PI / 2
+  space.add(water.surface)
   const ceiling = mesh(space, geo(new THREE.PlaneGeometry(24, 24)), architecture, 0, 5.8)
   ceiling.rotation.x = Math.PI / 2
   const causticMaterial = mat(new THREE.ShaderMaterial({
-    uniforms: { uTime: { value: 0 }, uOpacity: { value: 0 } },
-    vertexShader: screenVertex,
+    uniforms: { uTime: { value: 0 }, uOpacity: { value: 0 }, uLightDepth: { value: 0 } },
+    vertexShader: /* glsl */ `
+      varying vec3 vCeilingWorld;
+      varying vec2 vCeilingUv;
+      void main() {
+        vCeilingWorld = (modelMatrix * vec4(position, 1.)).xyz;
+        vCeilingUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.);
+      }
+    `,
     fragmentShader: /* glsl */ `
       uniform float uTime;
       uniform float uOpacity;
-      varying vec2 vUv;
+      uniform float uLightDepth;
+      varying vec3 vCeilingWorld;
+      varying vec2 vCeilingUv;
+      ${lightChoreographyGLSL}
+      vec2 causticSeed(vec2 p) {
+        vec3 h = fract(vec3(p.xyx) * vec3(.1031, .1030, .0973));
+        h += dot(h, h.yzx + 33.33);
+        return fract((h.xx + h.yz) * h.zy);
+      }
+      float causticNetwork(vec2 p) {
+        vec2 cell = floor(p);
+        vec2 local = fract(p);
+        float nearest = 8.;
+        float second = 8.;
+        // Nine cheap hash samples form connected, unequal cells. Domain
+        // warping below bends their boundaries into a fine moving light net.
+        for (int y = -1; y <= 1; y++) {
+          for (int x = -1; x <= 1; x++) {
+            vec2 offset = vec2(float(x), float(y));
+            vec2 delta = offset + .18 + causticSeed(cell + offset) * .64 - local;
+            float distanceSquared = dot(delta, delta);
+            second = min(second, max(nearest, distanceSquared));
+            nearest = min(nearest, distanceSquared);
+          }
+        }
+        float boundary = sqrt(second) - sqrt(nearest);
+        float antialias = clamp(fwidth(boundary), .008, .075);
+        return 1. - smoothstep(.018 - antialias, .062 + antialias, boundary);
+      }
       void main() {
-        vec2 p = vUv * 43.0;
-        float t = uTime * .38;
-        float f = sin(p.x + p.y + t) + sin(p.x * 1.5 - p.y * 1.3 - t * .8)
-          + sin(p.y * 1.9 + cos(p.x + t)) * .8;
-        float light = pow(max(0.0, 1.0 - abs(f)), 12.0);
-        vec3 color = mix(vec3(.14, .28, .32), vec3(.28, .34, .40), .5 + sin(p.x * .3) * .5);
-        gl_FragColor = vec4(color, light * uOpacity);
+        vec2 p = vCeilingWorld.xz * 4.3;
+        float t = uTime * .14;
+        p += vec2(sin(p.y * .61 + t), cos(p.x * .57 - t * .8)) * .43;
+        p += vec2(t * .09, -t * .07);
+        float detailFade = 1. - smoothstep(.12, .48, length(fwidth(p)));
+        float light = causticNetwork(p) * detailFade;
+        light *= .60 + .40 * sin(p.x * .29 + p.y * .17 + t);
+        float edge = 1. - smoothstep(.46, .5,
+          max(abs(vCeilingUv.x - .5), abs(vCeilingUv.y - .5)));
+        vec3 cloud = aetherLightCloud(vCeilingWorld, vec3(0., -1., 0.), uTime, uLightDepth);
+        vec3 color = vec3(.10, .19, .21) + cloud * .16;
+        gl_FragColor = vec4(color, light * edge * uOpacity);
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
       }
@@ -448,12 +484,12 @@ export function createSceneWorlds(
   }))
   // The underside of the floor becomes the next chamber's illuminated ceiling.
   const caustics = mesh(space, geo(new THREE.PlaneGeometry(platformWidth, platformDepth)),
-    causticMaterial, 0, -4.01, platformZ)
+    causticMaterial, 0, -4.055, platformZ)
   caustics.rotation.x = Math.PI / 2
   const ruins = createSceneRuins(space, software, mobile)
   floorMaterial.bumpMap = ruins.relief
-  floorMaterial.bumpScale = .045
-  floorMaterial.roughness = .28
+  floorMaterial.bumpScale = .018
+  floorMaterial.roughness = .42
   machineMetal.bumpMap = ruins.relief
   machineMetal.bumpScale = .008
   const wallGeometry = geo(new THREE.BoxGeometry(1, 1, 1))
@@ -580,6 +616,13 @@ export function createSceneWorlds(
   const floorHeight = chamberHeight - 3.7
   monitorAssembly.setOccluders([matter, chamber])
   const scaleHeight = -48.0
+  // Whole assemblies share a viewport edge. The surfaces remain real 3D,
+  // while the outgoing scene reads as a single flat, frayed wrapper.
+  const deviceCurtain = createCurtainBounds(-.25)
+  const scaleCurtain = createCurtainBounds()
+  bindGroupCurtain(chamber, deviceCurtain)
+  bindGroupCurtain(space, deviceCurtain)
+  bindGroupCurtain(scaleWall, scaleCurtain)
   return {
     getChamberHeight() {
       return space.getWorldPosition(chamberWorld).y
@@ -614,6 +657,10 @@ export function createSceneWorlds(
     update(time: number, progress: number,
       pointer?: { ndc: THREE.Vector2; strength: number; aspect: number; active?: boolean }, camera?: THREE.Camera) {
       const journey = sampleJourney(progress)
+      const layers = sampleLayers(progress)
+      deviceCurtain.upper.value = layers.monitorExit
+      deviceCurtain.lower.value = scaleCurtain.lower.value = layers.forestEntry
+      lightDepth.value = journey.darkness
       root.position.y = journey.height
       // Root follows the travelling spine; both mechanical layers stay in world
       // space. Their separation is real even while both are visible together.
@@ -624,13 +671,13 @@ export function createSceneWorlds(
       matter.rotation.y = journey.structureYaw
       scaleWall.rotation.y = 0
       const emergence = smooth(.205, .29, progress)
-      const spineWeight = journey.spine * (1 - smooth(.61, .67, progress))
+      const spineWeight = smooth(.20, .29, progress) * (1 - smooth(.685, .705, progress))
       const spineOffset = -12 * (1 - emergence) + 10 * smooth(.60, .67, progress)
       spineAssembly.group.position.y = spineOffset
       matter.visible = spineWeight > .001
       spineAssembly.update(progress, journey.core * spineWeight, emergence)
-      const deviceWeight = smooth(.60, .69, progress) * (1 - smooth(.79, .88, progress))
-      const scaleWeight = smooth(.735, .785, progress) * (1 - smooth(.91, .94, progress))
+      const deviceWeight = smooth(.59, .615, progress) * (1 - smooth(.79, .88, progress))
+      const scaleWeight = smooth(.725, .75, progress) * (1 - smooth(.93, .95, progress))
       chamber.visible = deviceWeight > .001
       scaleWall.visible = scaleWeight > .001
       metal.opacity = scaleWeight
@@ -648,7 +695,7 @@ export function createSceneWorlds(
       scaleCore.material.uniforms.uTime.value = time
       scaleCore.material.uniforms.uOpacity.value = scaleWeight * .40
 
-      const architectureWeight = smooth(.60, .69, progress) * (1 - journey.darkness * .77)
+      const architectureWeight = smooth(.59, .615, progress) * (1 - journey.darkness * .77)
         * (1 - journey.scales * .35) * (1 - smooth(.86, .94, progress) * .85)
       space.visible = architectureWeight > .001
       architecture.opacity = architectureWeight
@@ -656,13 +703,10 @@ export function createSceneWorlds(
       // The underside remains legible as a ceiling after the camera crosses it.
       floorMaterial.opacity = smooth(.60, .68, progress) * (1 - smooth(.87, .95, progress)) * .97
       floor.visible = floorMaterial.opacity > .001
-      slabMaterial.opacity = floorMaterial.opacity
-      slab.visible = floor.visible
       causticMaterial.uniforms.uTime.value = time
-      causticMaterial.uniforms.uOpacity.value = scaleWeight * .38
+      causticMaterial.uniforms.uOpacity.value = scaleWeight * .19
+      causticMaterial.uniforms.uLightDepth.value = sampleLightChoreography(time, progress).depth
       caustics.visible = scaleWeight > .001
-      reflectionTime.value = time
-      reflectionOpacity.value = architectureWeight * .68
       let aboveFloor = journey.height > floorHeight
       let coreProximity = 0
       if (camera) {
@@ -677,18 +721,33 @@ export function createSceneWorlds(
           }
         }
       }
-      if (floorReflection) floorReflection.visible = architectureWeight > .1 && aboveFloor
+      // A camera passing through the solid .34m slab otherwise sees its near
+      // side as a screen-filling bar. Only its thickness dissolves near the eye;
+      // the zero-thickness floor skin and the lower ceiling light stay intact.
+      const eyeHeight = camera ? cameraWorld.y : journey.height
+      const slabDistance = Math.abs(eyeHeight - (floorHeight - .17))
+      slabMaterial.opacity = floorMaterial.opacity * smooth(.55, 1.10, slabDistance)
+      slab.visible = floor.visible && slabMaterial.opacity > .015
+      // The extended bed now reaches behind the camera. Its grazing near-plane
+      // projection would otherwise cover half the viewport at the crossing.
+      floorMaterial.opacity *= smooth(.07, .55, Math.abs(eyeHeight - floorHeight))
+      floorMaterial.depthWrite = floorMaterial.opacity > .94
+      floor.visible = floorMaterial.opacity > .015
+      water.update(time, progress, architectureWeight, aboveFloor, camera)
       dark.opacity = deviceWeight
       machineMetal.opacity = deviceWeight
       cableMaterial.opacity = deviceWeight
       glow.opacity = deviceWeight * (.12 + coreProximity * .045)
-      reactorLight.intensity = software ? 0 : deviceWeight * (4.3 + Math.sin(time * 1.5) * .35 + coreProximity * 1.7)
+      const light = sampleLightChoreography(time, progress)
+      reactorLight.color.setHSL(light.rimHue, .34, .73)
+      reactorLight.intensity = software ? 0 : deviceWeight * (4.3 * light.rimIntensity + coreProximity * 1.7)
       monitorAssembly.update(time, progress, pointer, camera)
     },
     dispose() {
       ruins.dispose()
       spineAssembly.dispose()
       monitorAssembly.dispose()
+      water.dispose()
       scene.remove(root)
       scene.remove(reactorLight)
       floorReflection?.dispose()

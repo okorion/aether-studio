@@ -9,6 +9,8 @@ import { createSceneForest } from './SceneForest'
 import { createSceneLayers, sampleLayers } from './SceneLayers'
 import { createSceneVideo } from './SceneVideo'
 import { prepareSceneShaders } from './ScenePreparation'
+import { createSceneLightVideo } from './SceneLightVideo'
+import { createLightFilmUniforms, sampleLightChoreography } from './SceneLighting'
 
 type SceneProps = {
   reducedMotion: boolean
@@ -83,6 +85,7 @@ export default function Scene({ reducedMotion, active, onReady, onSelectProject 
   const wakeRef = useRef<(() => void) | null>(null)
   const selectProjectRef = useRef(onSelectProject)
   const videoRef = useRef<ReturnType<typeof createSceneVideo> | null>(null)
+  const lightVideoRef = useRef<ReturnType<typeof createSceneLightVideo> | null>(null)
   // Motion preference changes rebuild the render budget, preserving the view
   // and time so pausing cannot snap a user's chosen angle back to the front.
   const preserved = useRef({ yaw: 0, pitch: 0, elapsed: 0 })
@@ -100,6 +103,8 @@ export default function Scene({ reducedMotion, active, onReady, onSelectProject 
   useEffect(() => () => {
     videoRef.current?.dispose()
     videoRef.current = null
+    lightVideoRef.current?.dispose()
+    lightVideoRef.current = null
   }, [])
 
   useEffect(() => {
@@ -138,6 +143,7 @@ export default function Scene({ reducedMotion, active, onReady, onSelectProject 
     }
     const releaseResources = () => {
       videoRef.current?.update(false, true)
+      lightVideoRef.current?.setActive(false, true)
       document.documentElement.classList.remove('scene-monitor-hover')
       cleanup?.()
       cleanup = undefined
@@ -626,12 +632,14 @@ export default function Scene({ reducedMotion, active, onReady, onSelectProject 
         creatures.push({ group, anchor, phase: random() * Math.PI * 2 })
       }
 
-      const atmosphere = createAtmosphere(scene, softwareRenderer, smallScreen)
+      const lightVideo = lightVideoRef.current ??= createSceneLightVideo()
+      const lightFilm = createLightFilmUniforms(lightVideo.texture)
+      const atmosphere = createAtmosphere(scene, softwareRenderer, smallScreen, lightFilm)
       effectDisposers.push(() => atmosphere.dispose())
       const video = videoRef.current ??= createSceneVideo()
-      const worlds = createSceneWorlds(scene, softwareRenderer, smallScreen, video)
+      const worlds = createSceneWorlds(scene, softwareRenderer, smallScreen, video, lightFilm)
       effectDisposers.push(() => worlds.dispose())
-      const forest = createSceneForest(scene, softwareRenderer, smallScreen)
+      const forest = createSceneForest(scene, softwareRenderer, smallScreen, lightFilm)
       effectDisposers.push(() => forest.dispose())
       const layers = createSceneLayers(scene)
       effectDisposers.push(() => layers.dispose())
@@ -728,6 +736,8 @@ export default function Scene({ reducedMotion, active, onReady, onSelectProject 
           mask.monitorEntry > mask.monitorExit
         interaction.setActive(enabled)
         worlds.setMediaActive(enabled && targetHasMonitors, reducedMotion)
+        lightVideo.setActive(enabled && !softwareRenderer && !preparing &&
+          (targetProgress < .235 || targetProgress > .60), reducedMotion)
         canvas.dataset.videoState = JSON.stringify(worlds.getVideoStatus())
         if (!enabled || reducedMotion) {
           clearMonitorHover()
@@ -771,6 +781,7 @@ export default function Scene({ reducedMotion, active, onReady, onSelectProject 
         if (panel !== press.panel) return
         // Pause synchronously; the React dialog/active update follows this event.
         worlds.setMediaActive(false, reducedMotion)
+        lightVideo.setActive(false, reducedMotion)
         canvas.dataset.videoState = JSON.stringify(worlds.getVideoStatus())
         interaction.setActive(false)
         clearMonitorHover()
@@ -840,11 +851,13 @@ export default function Scene({ reducedMotion, active, onReady, onSelectProject 
         )
         activeRenderer.toneMappingExposure = state.exposure
         ambient.intensity = 1.1 - state.darkness * .68
-        keyLight.intensity = 3.4 - state.scales * .5 - state.darkness * 1.8
-        rimLight.color.setHSL(.55 + state.spine * .19 + state.scales * .25, .8, .64)
-        rimLight.intensity = 22 + state.energy * 12 + input.burst * 10
-        warmLight.color.setHSL(.16 + state.spine * .64, .7, .62)
-        warmLight.intensity = 10 + state.spine * 14 + state.scales * 6
+        const light = sampleLightChoreography(elapsed, scroll)
+        keyLight.color.setHSL(light.keyHue, .22, .88)
+        keyLight.intensity = (3.4 - state.scales * .5 - state.darkness * 1.8) * light.keyIntensity
+        rimLight.color.setHSL(light.rimHue, .8, .64)
+        rimLight.intensity = (22 + state.energy * 12 + input.burst * 10) * light.rimIntensity
+        warmLight.color.setHSL(light.warmHue, .7, .62)
+        warmLight.intensity = (10 + state.spine * 14 + state.scales * 6) * light.warmIntensity
         keyLight.position.y = state.height + 5
         keyLight.target.position.copy(centre)
         keyLight.target.updateMatrixWorld()
@@ -861,6 +874,9 @@ export default function Scene({ reducedMotion, active, onReady, onSelectProject 
         }
         camera.lookAt(centre)
         camera.updateMatrixWorld()
+        lightFilm.map.value = lightVideo.texture
+        lightFilm.ready.value = lightVideo.getReady() ? 1 : 0
+        canvas.dataset.lightVideoState = JSON.stringify(lightVideo.getStatus())
         // Projection-based surface interaction must use this frame's camera.
         worlds.update(elapsed, scroll, input.field, camera)
         const monitorHover = sceneAvailable() && input.field.active ? worlds.getHoveredPanel() : -1
@@ -956,7 +972,14 @@ export default function Scene({ reducedMotion, active, onReady, onSelectProject 
           // downloaded here and no future section is shown to the user.
           layers.update(readProgress(), camera)
           worlds.prepare(activeRenderer)
-          await prepareSceneShaders(activeRenderer, scene, camera, cancelled)
+          // Exercise the film sampling branch with the black placeholder too.
+          // No media request is needed to prime an otherwise dormant GPU path.
+          lightFilm.ready.value = 1
+          try {
+            await prepareSceneShaders(activeRenderer, scene, camera, cancelled)
+          } finally {
+            lightFilm.ready.value = lightVideo.getReady() ? 1 : 0
+          }
           if (cancelled()) return
           canvas.dataset.preparation = 'ready'
           preparing = false
@@ -1055,6 +1078,7 @@ export default function Scene({ reducedMotion, active, onReady, onSelectProject 
       canvas.addEventListener('webglcontextrestored', restored)
       cleanup = () => {
         worlds.setMediaActive(false, true)
+        lightVideo.setActive(false, true)
         canvas.dataset.videoState = JSON.stringify(worlds.getVideoStatus())
         leaveMonitor()
         wakeRef.current = null

@@ -5,6 +5,7 @@ import { createSceneMonitors } from '../../src/SceneMonitors'
 import { createAtmosphere } from '../../src/Atmosphere'
 import { sampleJourney } from '../../src/Journey'
 import { createSceneLayers, sampleLayers } from '../../src/SceneLayers'
+import { bindCurtain, createCurtainBounds } from '../../src/SceneCurtains'
 
 type Snapshot = {
   yaw: number
@@ -23,6 +24,7 @@ export type InteractionHarness = {
   sampleLayers: typeof sampleLayers
   sampleEditorial: typeof sampleEditorial
   stepField: typeof stepField
+  probeCurtainPixels: typeof probeCurtainPixels
   probeScalePointer: typeof probeScalePointer
   probeDevicePointer: typeof probeDevicePointer
   probeMonitorCapture: typeof probeMonitorCapture
@@ -100,6 +102,123 @@ function sampleEditorial(progress: number) {
       bottom: panel.material.uniforms.uBottom.value as number,
     }
   })
+}
+
+function probeCurtainPixels() {
+  const probeScene = new THREE.Scene()
+  const probeCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, .1, 10)
+  probeCamera.position.z = 3
+  probeCamera.updateMatrixWorld()
+  const bounds = createCurtainBounds()
+  const standard = new THREE.MeshStandardMaterial({
+    color: 0x000000, emissive: 0xff0000, depthWrite: true,
+  })
+  // Water and other custom shaders write gl_Position themselves. Exercise
+  // that production hook separately from MeshStandard's project_vertex chunk.
+  const custom = new THREE.ShaderMaterial({
+    depthWrite: true,
+    vertexShader: `void main() {
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.);
+    }`,
+    fragmentShader: 'void main() { gl_FragColor = vec4(1., 0., 0., 1.); }',
+  })
+  bindCurtain(standard, bounds)
+  bindCurtain(custom, bounds)
+  const geometry = new THREE.PlaneGeometry(2, 2)
+  const front = new THREE.Mesh<THREE.PlaneGeometry, THREE.Material>(geometry, standard)
+  const backgroundMaterial = new THREE.MeshBasicMaterial({ color: 0x0000ff })
+  const background = new THREE.Mesh(geometry, backgroundMaterial)
+  background.position.z = -1
+  // Render the blue background AFTER the depth-writing foreground. A cut-out
+  // which merely writes transparent color will leave a green depth hole.
+  front.renderOrder = 0
+  background.renderOrder = 1
+  probeScene.add(front, background)
+  const target = new THREE.WebGLRenderTarget(160, 120, { depthBuffer: true })
+  const saved = {
+    target: renderer.getRenderTarget(),
+    autoClear: renderer.autoClear,
+    clearColor: renderer.getClearColor(new THREE.Color()),
+    clearAlpha: renderer.getClearAlpha(),
+  }
+  const states = [
+    { name: 'first-band', upper: .78, lower: .24 },
+    { name: 'moved-band', upper: .47, lower: .06 },
+    { name: 'hidden-above', upper: -.25, lower: -.5 },
+    { name: 'hidden-below', upper: 1.5, lower: 1.25 },
+  ]
+  const results = []
+  try {
+    renderer.autoClear = true
+    renderer.setClearColor(0x00ff00, 1)
+    // Same aspect at two RT resolutions, then portrait. The edge must remain
+    // in normalized screen coordinates, independent of framebuffer pixels.
+    for (const [width, height] of [[160, 120], [320, 240], [120, 160]]) {
+      const aspect = width / height
+      probeCamera.left = -aspect
+      probeCamera.right = aspect
+      probeCamera.updateProjectionMatrix()
+      front.scale.set(aspect * 1.1, 1.1, 1)
+      background.scale.copy(front.scale)
+      target.setSize(width, height)
+      for (const state of states) {
+        bounds.upper.value = state.upper
+        bounds.lower.value = state.lower
+        const images = [standard, custom].map(material => {
+          front.material = material
+          renderer.setRenderTarget(target)
+          renderer.render(probeScene, probeCamera)
+          const image = new Uint8Array(width * height * 4)
+          renderer.readRenderTargetPixels(target, 0, 0, width, height, image)
+          return image
+        })
+        const samples = images.map(image => {
+          let foreground = 0, background = 0, unknown = 0
+          let checkedInside = 0, checkedOutside = 0, wrongInside = 0, wrongOutside = 0
+          const mask = new Uint8Array(width * height)
+          for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+            const pixel = y * width + x
+            const offset = pixel * 4
+            const red = image[offset] > 150 && image[offset + 1] < 10 && image[offset + 2] < 10
+            const blue = image[offset + 2] > 150 && image[offset] < 10 && image[offset + 1] < 10
+            if (red) foreground++
+            else if (blue) background++
+            else unknown++
+            mask[pixel] = Number(red)
+            // Readback starts at the framebuffer bottom, matching shader UVs.
+            // Exclude only the narrow stochastic fringe from absolute checks.
+            const edge = (y + .5) / height - ((x + .5) / width - .5) * .20
+            if (edge > state.lower + .022 && edge < state.upper - .022) {
+              checkedInside++
+              if (!red) wrongInside++
+            } else if (edge < state.lower - .022 || edge > state.upper + .022) {
+              checkedOutside++
+              if (!blue) wrongOutside++
+            }
+          }
+          return { mask, stats: { foreground, background, unknown, checkedInside, checkedOutside, wrongInside, wrongOutside } }
+        })
+        let maskMismatch = 0
+        for (let pixel = 0; pixel < width * height; pixel++)
+          if (samples[0].mask[pixel] !== samples[1].mask[pixel]) maskMismatch++
+        results.push({
+          size: [width, height], state: state.name, maskMismatch,
+          samples: samples.map(sample => sample.stats),
+        })
+      }
+    }
+    return results
+  } finally {
+    renderer.setRenderTarget(saved.target)
+    renderer.autoClear = saved.autoClear
+    renderer.setClearColor(saved.clearColor, saved.clearAlpha)
+    target.dispose()
+    standard.dispose()
+    custom.dispose()
+    backgroundMaterial.dispose()
+    geometry.dispose()
+    probeScene.clear()
+  }
 }
 
 function probeScalePointer() {
@@ -442,6 +561,7 @@ window.interactionHarness = {
   sampleLayers,
   sampleEditorial,
   stepField,
+  probeCurtainPixels,
   probeScalePointer,
   probeDevicePointer,
   probeMonitorCapture,

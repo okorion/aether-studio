@@ -1,17 +1,17 @@
 # AETHER STUDIO 시각 변천 기록
 
-초기 구현부터 현재까지 같은 문서 스크롤 비율에서 화면이 어떻게 바뀌었는지 비교합니다. 과거 6개 대표 버전은 `main`의 first-parent 병합 기록을 기준으로 골랐고, 마지막은 현재 개선본 `da14095`입니다. 총 **7개 버전·42장**을 수록했습니다. PR #3·#5·#7의 변화는 각각 후속 대표 버전에 포함됩니다.
+초기 구현부터 현재까지 같은 문서 스크롤 비율에서 화면이 어떻게 바뀌었는지 비교합니다. 과거 6개 대표 버전은 `main`의 first-parent 병합 기록을 기준으로 골랐고, PR #10과 #11의 확정 소스를 추가했습니다. 총 **8개 버전·48장**을 수록했습니다. PR #3·#5·#7의 변화는 각각 후속 대표 버전에 포함됩니다.
 
 ## 비교 조건
 
-- 과거 6개 병합 커밋의 원본 소스를 별도 `git archive`로 추출한 뒤 production 빌드로 재실행했습니다. 과거 소스는 수정하지 않았고, 현재 작업 트리를 되돌리지 않았습니다. 현재 #10은 확정된 소스 `da14095`의 production 빌드로 촬영했습니다.
+- 과거 6개 병합 커밋의 원본 소스를 별도 `git archive`로 추출한 뒤 production 빌드로 재실행했습니다. 과거 소스는 수정하지 않았고, 현재 작업 트리를 되돌리지 않았습니다. PR #10은 `da14095`, PR #11은 `b9b61fc`의 production 빌드로 촬영했습니다.
 - 공통 뷰포트는 **1440×900, 장치 DPR 1, Chromium·ANGLE D3D11**입니다. 실제 GPU canvas가 ready인 것을 확인하고 웹폰트 로딩을 기다렸습니다.
-- 각 버전의 실제 문서 길이를 기준으로 **0 / 20 / 40 / 60 / 80 / 98%**로 이동했습니다. 포인터 이동·드래그·모션 정지 없이 기본 카메라를 사용하며, 각 지점에서 2.4초 이상 기다리고 제공되는 렌더 진행률도 확인합니다.
+- 각 버전의 실제 문서 길이를 기준으로 **0 / 20 / 40 / 60 / 80 / 98%**로 이동했습니다. 포인터 이동·드래그·모션 정지 없이 기본 카메라를 사용하며, 각 지점에서 2.3초 이상 기다리고 제공되는 렌더 진행률도 확인합니다.
 - 버전마다 문서 길이와 장면 배치가 다릅니다. 같은 비율은 같은 이야기 장면이나 월드 좌표를 뜻하지 않습니다. 초기 버전은 Work와 Contact도 문서 스크롤 안에 있으므로 그대로 보존합니다.
 - 입자·조명·영상의 시간은 서로 동기화하지 않았습니다. 이 자료는 화면 구성의 변천 기록이며, 픽셀 일치율·시각 유사도·프레임률 비교가 아닙니다.
 - 모든 과거 버전의 `package-lock.json` Git blob이 동일함을 확인하여 같은 설치를 재사용했습니다. 소스 버전은 고정됐지만 과거 당시의 브라우저 바이너리까지 복원한 기록은 아닙니다.
 
-[전체 캡처 목록·소스 커밋·파일 SHA-256](screenshots/history/manifest.json)을 함께 보존합니다. 전체 7개 버전 42장의 원본 JPEG 합계는 약 8.96MB입니다.
+[전체 캡처 목록·소스 커밋·파일 SHA-256](screenshots/history/manifest.json)을 함께 보존합니다. 전체 8개 버전 48장의 원본 JPEG 합계는 약 10.64MB입니다.
 
 ## 개발 흐름
 
@@ -23,7 +23,8 @@
 | [PR #5](https://github.com/okorion/aether-studio/pull/5) → [#6](https://github.com/okorion/aether-studio/pull/6) | 중간 장면 카메라 잠금, 척추 관절·사슬과 굴절 모니터 | #6 병합본 |
 | [PR #7](https://github.com/okorion/aether-studio/pull/7) → [#8](https://github.com/okorion/aether-studio/pull/8) | 숲·문구·독립 지하층 전환, 실제 MP4와 모니터 호버·클릭 | #8 병합본 |
 | [PR #9](https://github.com/okorion/aether-studio/pull/9) | 입체 숲, 유기적 척추·감기는 사슬, 연속 입자 O와 지하 장치, 전진 섬광 | #9 병합본 |
-| 현재 #10 개선본 | 작은 타깃으로 장면 사전 준비, 장치 O 포인터 반응·세로 궤도, 사이트 메타데이터 | `da14095` production 빌드 |
+| PR #10 개선본 | 작은 타깃으로 장면 사전 준비, 장치 O 포인터 반응·세로 궤도, 사이트 메타데이터 | `da14095` production 빌드 |
+| [PR #11](https://github.com/okorion/aether-studio/pull/11) | 세 공간의 사선 경계·넓은 수면·상부 수관·공유 영상 조명 | `b9b61fc` production 빌드 |
 
 ## 실제 재실행 갤러리
 
@@ -113,7 +114,7 @@
 | --- | --- | --- |
 | [![PR 9 · 60%](screenshots/history/pr09/scroll-060.jpg)](screenshots/history/pr09/scroll-060.jpg) | [![PR 9 · 80%](screenshots/history/pr09/scroll-080.jpg)](screenshots/history/pr09/scroll-080.jpg) | [![PR 9 · 98%](screenshots/history/pr09/scroll-098.jpg)](screenshots/history/pr09/scroll-098.jpg) |
 
-### 현재 · 전환 성능·장치 입력·세로 궤도 · #10
+### 전환 성능·장치 입력·세로 궤도 · PR #10
 
 기준: [`da14095`](https://github.com/okorion/aether-studio/commit/da140951e28c4dd4e211eda76570962eabecd7c4) · 장면을 작은 렌더 타깃에서 사전 준비하고, 장치 O의 포인터 반응과 링 구간의 세로 궤도 입력을 보완했습니다. 사이트 제목·공유 카드·아이콘도 함께 정리했습니다. [메타데이터와 공유 이미지](metadata.md)
 
@@ -128,6 +129,18 @@
 | 60% | 80% | 98% |
 | --- | --- | --- |
 | [![현재 10 · 60%](screenshots/history/pr10/scroll-060.jpg)](screenshots/history/pr10/scroll-060.jpg) | [![현재 10 · 80%](screenshots/history/pr10/scroll-080.jpg)](screenshots/history/pr10/scroll-080.jpg) | [![현재 10 · 98%](screenshots/history/pr10/scroll-098.jpg)](screenshots/history/pr10/scroll-098.jpg) |
+
+### 공간 전환·수면·공유 영상 조명 · PR #11
+
+기준: `b9b61fc` · [세 전환의 전후 비교와 조명 조사](spatial-transitions.md) · [캡처 조건과 좌표](screenshots/history/pr11/report.json)
+
+| 0% | 20% | 40% |
+| --- | --- | --- |
+| ![PR11 0%](screenshots/history/pr11/scroll-000.jpg) | ![PR11 20%](screenshots/history/pr11/scroll-020.jpg) | ![PR11 40%](screenshots/history/pr11/scroll-040.jpg) |
+
+| 60% | 80% | 98% |
+| --- | --- | --- |
+| ![PR11 60%](screenshots/history/pr11/scroll-060.jpg) | ![PR11 80%](screenshots/history/pr11/scroll-080.jpg) | ![PR11 98%](screenshots/history/pr11/scroll-098.jpg) |
 
 ## 기존 검증 자료
 

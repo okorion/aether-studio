@@ -33,10 +33,13 @@ export function createForestGeometry(leafCount: number, software: boolean, mobil
   }
   type Frond = { origin: THREE.Vector3; forward: THREE.Vector3; side: THREE.Vector3; length: number; width: number; droop: number; hue: number }
   const fronds: Frond[] = []
-  const addFrond = (origin: THREE.Vector3, forward: THREE.Vector3, length: number, fern = false) => {
+  const canopyFronds: Frond[] = []
+  const canopySupports: Array<{ curve: THREE.CatmullRomCurve3; angle: number; radius: number }> = []
+  const addFrond = (origin: THREE.Vector3, forward: THREE.Vector3, length: number, fern = false, canopy = false) => {
     const side = new THREE.Vector3().crossVectors(forward, up).normalize()
     if (side.lengthSq() < .01) side.set(1, 0, 0)
-    fronds.push({ origin, forward: forward.normalize(), side,
+    const targetFronds = canopy ? canopyFronds : fronds
+    targetFronds.push({ origin, forward: forward.normalize(), side,
       length, width: length * (fern ? .33 : .23), droop: fern ? .6 : .35, hue: random() })
   }
   const treeCount = software ? 14 : mobile ? 22 : 28
@@ -55,6 +58,7 @@ export function createForestGeometry(leafCount: number, software: boolean, mobil
     })
     const trunk = new THREE.CatmullRomCurve3(trunkPoints)
     const trunkRadius = .026 + random() * .044
+    canopySupports.push({ curve: trunk, angle, radius: trunkRadius })
     appendBranch(trunk, trunkRadius, software ? 9 : 15, random())
     const limbCount = software ? 4 : 5
     for (let j = 0; j < limbCount; j++) {
@@ -99,15 +103,61 @@ export function createForestGeometry(leafCount: number, software: boolean, mobil
       addFrond(origin, new THREE.Vector3(Math.cos(a), .4, Math.sin(a)), 1.4 + random() * 1.5, true)
     }
   }
+  // Connected arches span the upper grove at unequal heights, not as
+  // disconnected spherical crowns. The lower grove meets this same canopy
+  // while the camera descends out of the scale ceiling.
+  const canopyCount = software ? 7 : mobile ? 10 : 12
+  const polar = (angle: number, radius: number, y: number) =>
+    new THREE.Vector3(Math.cos(angle) * radius, y, Math.sin(angle) * radius)
+  for (let i = 0; i < canopyCount; i++) {
+    const support = canopySupports[Math.floor(i * treeCount / canopyCount)]
+    const handed = i % 3 === 0 ? -1 : 1
+    const angle = support.angle + (random() - .5) * .28
+    const height = 8.1 + random() * 1.65
+    const crown = polar(angle + handed * .14, 6.0 + random() * 2.5, height)
+    const start = support.curve.getPoint(.76 + random() * .20)
+    const shoulder = clearance(start.clone().lerp(crown, .53).addScaledVector(up, 1.25))
+    appendBranch(new THREE.CatmullRomCurve3([start, shoulder, crown]), support.radius * .60,
+      software ? 5 : 8, random())
+    const end = polar(angle + handed * (.58 + random() * .46), 5.0 + random() * 3.0, height - .2 + random() * .8)
+    const middle = clearance(crown.clone().lerp(end, .52).addScaledVector(up, .35 + random() * .55))
+    const arch = new THREE.CatmullRomCurve3([crown, middle, end])
+    appendBranch(arch, support.radius * .43, software ? 6 : 9, random())
+    for (let j = 0; j < 4; j++) {
+      const t = .10 + j * .25
+      const origin = arch.getPoint(t)
+      const axis = arch.getTangent(t)
+      for (const side of [-1, 1]) {
+        const forward = axis.clone().applyAxisAngle(up, side * (.60 + random() * .35))
+        forward.y = -.08 + random() * .13
+        addFrond(origin.clone(), forward, 2.7 + random() * 1.6, true, true)
+      }
+    }
+    // A few unequal hanging vines keep the roof open between its long ferns.
+    const vineStart = arch.getPoint(.35 + random() * .45)
+    const drop = 1.1 + random() * 2.1
+    const vineEnd = clearance(vineStart.clone().add(new THREE.Vector3(
+      Math.cos(angle + .9) * .9, -drop, Math.sin(angle + .9) * .9)))
+    const vineMiddle = clearance(vineStart.clone().lerp(vineEnd, .55)
+      .add(new THREE.Vector3(Math.sin(angle) * .38, -.2, Math.cos(angle) * .38)))
+    appendBranch(new THREE.CatmullRomCurve3([vineStart, vineMiddle, vineEnd]), .007 + random() * .008,
+      software ? 4 : 6, random())
+  }
   const leafMatrices = new Float32Array(leafCount * 16), leafColors = new Float32Array(leafCount * 3)
   // Keep the branching skeleton, but concentrate its foliage in selected
   // connected fronds. The former even allocation left only a few tiny leaves
   // on every twig, producing an empty grove instead of overlapping thickets.
   const foliageFronds = fronds.filter(frond => frond.length > 2.2)
+  const canopyLeafCount = Math.floor(leafCount * .24)
+  let canopyIndex = 0, lowerIndex = 0
   const zAxis = new THREE.Vector3(), side = new THREE.Vector3(), tangent = new THREE.Vector3()
   const basis = new THREE.Matrix4()
   for (let i = 0; i < leafCount; i++) {
-    const frond = foliageFronds[i % foliageFronds.length]
+    // Interleave the reserved quarter so both the geometric-leaf prefix and
+    // the micro-foliage suffix retain the same upper/lower spatial balance.
+    const canopy = Math.floor((i + 1) * canopyLeafCount / leafCount) > Math.floor(i * canopyLeafCount / leafCount)
+    const frond = canopy ? canopyFronds[canopyIndex++ % canopyFronds.length]
+      : foliageFronds[lowerIndex++ % foliageFronds.length]
     const t = .04 + random() * .93, handed = random() < .5 ? -1 : 1
     const spread = Math.sin(Math.PI * t) ** .7
     center.copy(frond.origin).addScaledVector(frond.forward, t * frond.length)
@@ -131,7 +181,7 @@ export function createForestGeometry(leafCount: number, software: boolean, mobil
     rotation.setFromRotationMatrix(basis)
     // Tiny folded leaflets collect along each frond, reading as illuminated
     // micro-foliage at viewing distance instead of oversized polygon leaves.
-    const length = .052 + spread * .12 + random() * .052
+    const length = (.052 + spread * .12 + random() * .052) * (canopy ? 1.10 : 1)
     scale.set(length * (1.2 + random() * .7), length, length)
     matrix.compose(center, rotation, scale).toArray(leafMatrices, i * 16)
     leafColors.set([frond.hue, random(), random()], i * 3)
@@ -150,5 +200,5 @@ export function createForestGeometry(leafCount: number, software: boolean, mobil
   leafGeometry.computeVertexNormals()
   return { barkGeometry, leafGeometry, barkMatrices: new Float32Array(branches),
     barkColors: new Float32Array(barkColors), leafMatrices, leafColors, treeCount,
-    foliageClusterCount: foliageFronds.length }
+    foliageClusterCount: foliageFronds.length + canopyFronds.length, canopyLeafCount }
 }

@@ -41,11 +41,12 @@ export function createSceneRuins(parent: THREE.Group, software: boolean, mobile:
     envMapIntensity: .85 })
   for (const m of [stone, wetStone, steel]) {
     m.onBeforeCompile = shader => {
-      shader.vertexShader = 'varying vec3 vRuinsWorld;\n' + shader.vertexShader
+      shader.vertexShader = 'varying vec3 vRuinsWorld; varying float vRuinsDepth;\n' + shader.vertexShader
       shader.vertexShader = shader.vertexShader.replace('#include <project_vertex>', `
         #include <project_vertex>
-        vRuinsWorld = (modelMatrix * instanceMatrix * vec4(transformed, 1.)).xyz;`)
-      shader.fragmentShader = `varying vec3 vRuinsWorld;
+        vRuinsWorld = (modelMatrix * instanceMatrix * vec4(transformed, 1.)).xyz;
+        vRuinsDepth = -mvPosition.z;`)
+      shader.fragmentShader = `varying vec3 vRuinsWorld; varying float vRuinsDepth;
         float ruinHash(vec3 p) {return fract(sin(dot(p,vec3(127.1,311.7,74.7)))*43758.5453);}
         float ruinNoise(vec3 p) {
           vec3 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
@@ -54,21 +55,29 @@ export function createSceneRuins(parent: THREE.Group, software: boolean, mobile:
             mix(mix(ruinHash(i+vec3(0,0,1)),ruinHash(i+vec3(1,0,1)),f.x),
             mix(ruinHash(i+vec3(0,1,1)),ruinHash(i+vec3(1,1,1)),f.x),f.y),f.z);
         }\n` + shader.fragmentShader
+      // Wet foreground debris must dissolve before the descending camera
+      // intersects its triangles; distant banks keep their full silhouettes.
+      shader.fragmentShader = shader.fragmentShader.replace('void main() {', `void main() {
+        float nearCoverage = smoothstep(1.4, 3.6, vRuinsDepth);
+        if(nearCoverage < .003 || nearCoverage < ruinHash(vec3(floor(gl_FragCoord.xy),0.))) discard;`)
       shader.fragmentShader = shader.fragmentShader.replace('#include <color_fragment>', `
         #include <color_fragment>
         float erosion=ruinNoise(vRuinsWorld*3.7)*.58+ruinNoise(vRuinsWorld*21.)*.29+ruinNoise(vRuinsWorld*89.)*.13;
         float cracks=smoothstep(.44,.49,ruinNoise(vRuinsWorld*6.));
+        float waterline=1.-smoothstep(-44.035,-43.62,vRuinsWorld.y);
         diffuseColor.rgb*=.32+erosion*.84;
-        diffuseColor.rgb*=.64+cracks*.36;`)
+        diffuseColor.rgb*=.64+cracks*.36;
+        diffuseColor.rgb*=mix(1.,.68,waterline);`)
       shader.fragmentShader = shader.fragmentShader.replace('#include <roughnessmap_fragment>', `
         #include <roughnessmap_fragment>
-        roughnessFactor=clamp(roughnessFactor+(erosion-.5)*.45,.16,.96);`)
+        roughnessFactor=clamp(roughnessFactor+(erosion-.5)*.45,.16,.96);
+        roughnessFactor=mix(roughnessFactor,max(.14,roughnessFactor*.48),waterline*.72);`)
       shader.fragmentShader = shader.fragmentShader.replace('#include <normal_fragment_maps>', `
         #include <normal_fragment_maps>
         normal=normalize(normal+vec3(ruinNoise(vRuinsWorld*54.)-.5,
           ruinNoise(vRuinsWorld.zxy*54.+11.)-.5,0.)*.18);`)
     }
-    m.customProgramCacheKey = () => 'aether-eroded-ruins-v1'
+    m.customProgramCacheKey = () => 'aether-eroded-ruins-wet-v3'
   }
   const create = (geometry: THREE.BufferGeometry, m: THREE.Material, count: number, name: string) => {
     geometries.push(geometry)
@@ -96,9 +105,12 @@ export function createSceneRuins(parent: THREE.Group, software: boolean, mobile:
   const ledges = create(fragment, stone, software ? 30 : mobile ? 50 : 84, 'aether-fractured-strata')
   for (let i = 0; i < ledges.count; i++) {
     const a = i * 2.399963
-    const radius = 2.65 + random(i + 9) * 4.5
-    const x = Math.cos(a) * radius
-    const z = Math.min(1.7, Math.sin(a) * radius - 1.7)
+    const radius = 2.85 + random(i + 9) * 4.8
+    let x = Math.cos(a) * radius
+    const z = Math.sin(a) * (4.3 + random(i + 19) * 6.1) - .6
+    // Broken banks continue toward the camera, leaving an open central pool
+    // for the O reflection instead of covering it with foreground gravel.
+    if (z > 2) x = Math.sign(x) * Math.max(Math.abs(x), 2.5 + (z - 2) * .20)
     const side = Math.abs(x) > 4.7 ? 1 : 0
     dummy.position.set(x, -3.55 + side * random(i + 70) * .65, z)
     dummy.rotation.set((random(i) - .5) * .42, a, (random(i + 1) - .5) * .30)
@@ -109,7 +121,10 @@ export function createSceneRuins(parent: THREE.Group, software: boolean, mobile:
     software ? 14 : 26, 'aether-broken-floor-panels')
   for (let i = 0; i < brokenPanels.count; i++) {
     const side = i % 2 ? 1 : -1
-    dummy.position.set(side * (2.7 + random(i + 70) * 3.6), -3.45 + random(i + 71) * .13, 1.65 - random(i + 72) * 9)
+    const foreground = i >= brokenPanels.count / 2
+    dummy.position.set(side * ((foreground ? 3.7 : 2.7) + random(i + 70) * 3.6),
+      -3.53 + random(i + 71) * .18,
+      foreground ? 2.8 + random(i + 72) * 7.4 : 1.65 - random(i + 72) * 11)
     dummy.rotation.set((random(i + 2) - .5) * .13, random(i + 73) * 1.8, side * .05)
     dummy.scale.set(1.1 + random(i + 80) * 1.7, .07, .6 + random(i + 90))
     write(brokenPanels, i, .55 + random(i + 12) * .6)
@@ -119,15 +134,15 @@ export function createSceneRuins(parent: THREE.Group, software: boolean, mobile:
     const side = i % 2 ? 1 : -1
     const bay = Math.floor(i / 8)
     const part = Math.floor(i / 2) % 4
-    dummy.position.set(side * (part === 3 ? 4.45 : 5.9), part === 2 ? 3.8 : part === 3 ? -3.35 : .15, 1.2 - bay * 3.4)
+    dummy.position.set(side * (part === 3 ? 4.45 : 5.9), part === 2 ? 3.8 : part === 3 ? -3.35 : .15, 4.2 - bay * 4.5)
     dummy.rotation.set(0, 0, part === 1 ? side * .24 : 0)
     dummy.scale.set(part === 2 ? 2.7 : part === 3 ? 2.2 : .13, part < 2 ? 7.5 : .15, part === 3 ? .36 : .24)
     write(ribs, i, .6 + random(i) * .5)
   }
   const curve = new THREE.CatmullRomCurve3([
     new THREE.Vector3(1.9, -3.23, -.4), new THREE.Vector3(2.9, -3.37, .65),
-    new THREE.Vector3(4.2, -3.4, -.4), new THREE.Vector3(5.1, -3.36, -2.4),
-    new THREE.Vector3(5.8, -2.9, -5),
+    new THREE.Vector3(3.8, -3.56, 3.4), new THREE.Vector3(5.1, -3.53, 6.4),
+    new THREE.Vector3(5.8, -3.47, 9.1),
   ])
   const hoses = create(new THREE.TubeGeometry(curve, software ? 22 : 40, .047, 5, false), steel,
     software ? 4 : 8, 'aether-floor-conduits')

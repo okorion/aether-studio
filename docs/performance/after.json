@@ -1,0 +1,312 @@
+{
+  "schema": 1,
+  "sourceCommit": "da14095",
+  "sourceReport": ".qa/transitions-v10/primed/report.json",
+  "sourceSha256": "7246e5ff1565e9e1e09f3dd0d8800722ba94addf164dbddf3949cb472b3c4293",
+  "measurement": {
+    "date": "2026-09-22",
+    "browser": "Chromium via Playwright",
+    "graphics": "ANGLE D3D11",
+    "viewport": [
+      1440,
+      900
+    ],
+    "devicePixelRatio": 1,
+    "url": "http://localhost:4173/",
+    "durationPerDirectionMs": 19000,
+    "directions": [
+      "down 0..0.99",
+      "up 0.99..0"
+    ],
+    "frameTiming": "requestAnimationFrame callback intervals, not GPU timer queries",
+    "instrumentation": "PerformanceObserver longtask; WebGL method wrappers record compileShader/linkProgram and other observed calls >2ms",
+    "frameThresholdMs": 33.5,
+    "aggregateExcludesFirstCallbackInterval": true
+  },
+  "initialReadyMs": 3675.9,
+  "initialRenderer": {
+    "engine": "three.js r186",
+    "renderProfile": "gpu",
+    "programs": "86",
+    "geometries": "207",
+    "textures": "27",
+    "quality": "1.00"
+  },
+  "rounds": [
+    {
+      "direction": "down",
+      "observedFrameCount": 1138,
+      "summary": {
+        "medianMs": 16.7,
+        "p95Ms": 16.7,
+        "maximumMs": 66.6,
+        "framesOver33_5Ms": 1,
+        "minimumQuality": 1,
+        "maximumQuality": 1,
+        "maximumDraws": 200,
+        "longTaskCount": 0,
+        "compileShaderCount": 0,
+        "linkProgramCount": 0
+      },
+      "scrollBins": [
+        {
+          "from": 0,
+          "to": 0.1,
+          "n": 115,
+          "median": 16.7,
+          "p95": 16.7,
+          "max": 16.8,
+          "over33": 0,
+          "draws": 76,
+          "quality": 1
+        },
+        {
+          "from": 0.1,
+          "to": 0.2,
+          "n": 115,
+          "median": 16.7,
+          "p95": 16.7,
+          "max": 16.8,
+          "over33": 0,
+          "draws": 45,
+          "quality": 1
+        },
+        {
+          "from": 0.2,
+          "to": 0.3,
+          "n": 112,
+          "median": 16.7,
+          "p95": 16.7,
+          "max": 66.6,
+          "over33": 1,
+          "draws": 122,
+          "quality": 1
+        },
+        {
+          "from": 0.3,
+          "to": 0.4,
+          "n": 116,
+          "median": 16.7,
+          "p95": 16.7,
+          "max": 16.8,
+          "over33": 0,
+          "draws": 144,
+          "quality": 1
+        },
+        {
+          "from": 0.4,
+          "to": 0.5,
+          "n": 115,
+          "median": 16.7,
+          "p95": 16.8,
+          "max": 16.8,
+          "over33": 0,
+          "draws": 130,
+          "quality": 1
+        },
+        {
+          "from": 0.5,
+          "to": 0.6,
+          "n": 115,
+          "median": 16.7,
+          "p95": 16.7,
+          "max": 16.8,
+          "over33": 0,
+          "draws": 84,
+          "quality": 1
+        },
+        {
+          "from": 0.6,
+          "to": 0.7,
+          "n": 115,
+          "median": 16.7,
+          "p95": 16.7,
+          "max": 16.8,
+          "over33": 0,
+          "draws": 200,
+          "quality": 1
+        },
+        {
+          "from": 0.7,
+          "to": 0.8,
+          "n": 115,
+          "median": 16.7,
+          "p95": 16.7,
+          "max": 16.8,
+          "over33": 0,
+          "draws": 200,
+          "quality": 1
+        },
+        {
+          "from": 0.8,
+          "to": 0.9,
+          "n": 115,
+          "median": 16.7,
+          "p95": 16.8,
+          "max": 16.8,
+          "over33": 0,
+          "draws": 71,
+          "quality": 1
+        },
+        {
+          "from": 0.9,
+          "to": 1,
+          "n": 105,
+          "median": 16.7,
+          "p95": 16.8,
+          "max": 16.8,
+          "over33": 0,
+          "draws": 57,
+          "quality": 1
+        }
+      ],
+      "longFrames": [
+        {
+          "t": 9538.3,
+          "ms": 66.6,
+          "p": 0.2531,
+          "renderP": 0.2392,
+          "draws": 47,
+          "quality": 1,
+          "programs": "86"
+        }
+      ],
+      "longTasks": [],
+      "shaderLinks": [],
+      "observedGLCallsOver2Ms": []
+    },
+    {
+      "direction": "up",
+      "observedFrameCount": 1141,
+      "summary": {
+        "medianMs": 16.7,
+        "p95Ms": 16.8,
+        "maximumMs": 16.8,
+        "framesOver33_5Ms": 0,
+        "minimumQuality": 1,
+        "maximumQuality": 1,
+        "maximumDraws": 200,
+        "longTaskCount": 0,
+        "compileShaderCount": 0,
+        "linkProgramCount": 0
+      },
+      "scrollBins": [
+        {
+          "from": 0,
+          "to": 0.1,
+          "n": 116,
+          "median": 16.7,
+          "p95": 16.7,
+          "max": 16.8,
+          "over33": 0,
+          "draws": 76,
+          "quality": 1
+        },
+        {
+          "from": 0.1,
+          "to": 0.2,
+          "n": 116,
+          "median": 16.7,
+          "p95": 16.7,
+          "max": 16.8,
+          "over33": 0,
+          "draws": 40,
+          "quality": 1
+        },
+        {
+          "from": 0.2,
+          "to": 0.3,
+          "n": 115,
+          "median": 16.7,
+          "p95": 16.7,
+          "max": 16.8,
+          "over33": 0,
+          "draws": 144,
+          "quality": 1
+        },
+        {
+          "from": 0.3,
+          "to": 0.4,
+          "n": 115,
+          "median": 16.7,
+          "p95": 16.7,
+          "max": 16.8,
+          "over33": 0,
+          "draws": 144,
+          "quality": 1
+        },
+        {
+          "from": 0.4,
+          "to": 0.5,
+          "n": 115,
+          "median": 16.7,
+          "p95": 16.7,
+          "max": 16.8,
+          "over33": 0,
+          "draws": 88,
+          "quality": 1
+        },
+        {
+          "from": 0.5,
+          "to": 0.6,
+          "n": 115,
+          "median": 16.7,
+          "p95": 16.8,
+          "max": 16.8,
+          "over33": 0,
+          "draws": 84,
+          "quality": 1
+        },
+        {
+          "from": 0.6,
+          "to": 0.7,
+          "n": 115,
+          "median": 16.7,
+          "p95": 16.8,
+          "max": 16.8,
+          "over33": 0,
+          "draws": 200,
+          "quality": 1
+        },
+        {
+          "from": 0.7,
+          "to": 0.8,
+          "n": 116,
+          "median": 16.7,
+          "p95": 16.8,
+          "max": 16.8,
+          "over33": 0,
+          "draws": 109,
+          "quality": 1
+        },
+        {
+          "from": 0.8,
+          "to": 0.9,
+          "n": 115,
+          "median": 16.7,
+          "p95": 16.8,
+          "max": 16.8,
+          "over33": 0,
+          "draws": 63,
+          "quality": 1
+        },
+        {
+          "from": 0.9,
+          "to": 1,
+          "n": 103,
+          "median": 16.7,
+          "p95": 16.7,
+          "max": 16.8,
+          "over33": 0,
+          "draws": 68,
+          "quality": 1
+        }
+      ],
+      "longFrames": [],
+      "longTasks": [],
+      "shaderLinks": [],
+      "observedGLCallsOver2Ms": []
+    }
+  ],
+  "consoleErrors": []
+}

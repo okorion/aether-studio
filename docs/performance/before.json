@@ -1,0 +1,587 @@
+{
+  "schema": 1,
+  "sourceCommit": "af57c87",
+  "sourceReport": ".qa/transitions-v10/baseline/report.json",
+  "sourceSha256": "30b46e9f40963818f6760d57360d6780ab9f196356993fd7a3c40a19c293bce7",
+  "measurement": {
+    "date": "2026-09-22",
+    "browser": "Chromium via Playwright",
+    "graphics": "ANGLE D3D11",
+    "viewport": [
+      1440,
+      900
+    ],
+    "devicePixelRatio": 1,
+    "url": "http://localhost:4173/",
+    "durationPerDirectionMs": 19000,
+    "directions": [
+      "down 0..0.99",
+      "up 0.99..0"
+    ],
+    "frameTiming": "requestAnimationFrame callback intervals, not GPU timer queries",
+    "instrumentation": "PerformanceObserver longtask; WebGL method wrappers record compileShader/linkProgram and other observed calls >2ms",
+    "frameThresholdMs": 33.5,
+    "aggregateExcludesFirstCallbackInterval": true
+  },
+  "initialReadyMs": null,
+  "initialRenderer": null,
+  "rounds": [
+    {
+      "direction": "down",
+      "observedFrameCount": 853,
+      "summary": {
+        "medianMs": 16.7,
+        "p95Ms": 16.7,
+        "maximumMs": 2799.9,
+        "framesOver33_5Ms": 8,
+        "minimumQuality": 0.85,
+        "maximumQuality": 1,
+        "maximumDraws": 144,
+        "longTaskCount": 5,
+        "compileShaderCount": 66,
+        "linkProgramCount": 33
+      },
+      "scrollBins": [
+        {
+          "from": 0,
+          "to": 0.1,
+          "n": 115,
+          "median": 16.7,
+          "p95": 16.8,
+          "max": 16.8,
+          "over33": 0,
+          "draws": 76,
+          "quality": 1
+        },
+        {
+          "from": 0.1,
+          "to": 0.2,
+          "n": 113,
+          "median": 16.7,
+          "p95": 16.8,
+          "max": 50,
+          "over33": 1,
+          "draws": 54,
+          "quality": 1
+        },
+        {
+          "from": 0.2,
+          "to": 0.3,
+          "n": 61,
+          "median": 16.7,
+          "p95": 50,
+          "max": 649.9,
+          "over33": 4,
+          "draws": 134,
+          "quality": 0.85
+        },
+        {
+          "from": 0.3,
+          "to": 0.4,
+          "n": 115,
+          "median": 16.7,
+          "p95": 16.7,
+          "max": 16.8,
+          "over33": 0,
+          "draws": 144,
+          "quality": 0.85
+        },
+        {
+          "from": 0.4,
+          "to": 0.5,
+          "n": 115,
+          "median": 16.7,
+          "p95": 16.7,
+          "max": 16.8,
+          "over33": 0,
+          "draws": 130,
+          "quality": 0.85
+        },
+        {
+          "from": 0.5,
+          "to": 0.6,
+          "n": 115,
+          "median": 16.7,
+          "p95": 16.8,
+          "max": 16.8,
+          "over33": 0,
+          "draws": 84,
+          "quality": 0.85
+        },
+        {
+          "from": 0.6,
+          "to": 0.7,
+          "n": 12,
+          "median": 16.7,
+          "p95": 16.7,
+          "max": 16.7,
+          "over33": 0,
+          "draws": 84,
+          "quality": 0.95
+        },
+        {
+          "from": 0.7,
+          "to": 0.8,
+          "n": 34,
+          "median": 16.7,
+          "p95": 316.7,
+          "max": 2799.9,
+          "over33": 2,
+          "draws": 128,
+          "quality": 0.95
+        },
+        {
+          "from": 0.8,
+          "to": 0.9,
+          "n": 100,
+          "median": 16.7,
+          "p95": 16.8,
+          "max": 16.8,
+          "over33": 0,
+          "draws": 74,
+          "quality": 0.95
+        },
+        {
+          "from": 0.9,
+          "to": 1,
+          "n": 72,
+          "median": 16.7,
+          "p95": 16.8,
+          "max": 816.5,
+          "over33": 1,
+          "draws": 68,
+          "quality": 0.95
+        }
+      ],
+      "longFrames": [
+        {
+          "t": 6493.6,
+          "ms": 50,
+          "p": 0.1077,
+          "renderP": 0.0937,
+          "draws": 54,
+          "quality": 1
+        },
+        {
+          "t": 9310.1,
+          "ms": 649.9,
+          "p": 0.2544,
+          "renderP": 0.2127,
+          "draws": 36,
+          "quality": 1
+        },
+        {
+          "t": 9493.4,
+          "ms": 66.6,
+          "p": 0.264,
+          "renderP": 0.2127,
+          "draws": 36,
+          "quality": 1
+        },
+        {
+          "t": 9693.5,
+          "ms": 200.1,
+          "p": 0.2744,
+          "renderP": 0.2127,
+          "draws": 36,
+          "quality": 1
+        },
+        {
+          "t": 9743.5,
+          "ms": 50,
+          "p": 0.277,
+          "renderP": 0.2127,
+          "draws": 36,
+          "quality": 1
+        },
+        {
+          "t": 18926.4,
+          "ms": 2799.9,
+          "p": 0.7555,
+          "renderP": 0.5982,
+          "draws": 84,
+          "quality": 0.95
+        },
+        {
+          "t": 19493.1,
+          "ms": 316.7,
+          "p": 0.785,
+          "renderP": 0.7132,
+          "draws": 128,
+          "quality": 0.95
+        },
+        {
+          "t": 22259.6,
+          "ms": 816.5,
+          "p": 0.9291,
+          "renderP": 0.8761,
+          "draws": 50,
+          "quality": 0.95
+        }
+      ],
+      "longTasks": [
+        {
+          "t": 8661.4,
+          "ms": 658
+        },
+        {
+          "t": 9505.6,
+          "ms": 191
+        },
+        {
+          "t": 16126.9,
+          "ms": 2805
+        },
+        {
+          "t": 19177,
+          "ms": 329
+        },
+        {
+          "t": 21444,
+          "ms": 819
+        }
+      ],
+      "shaderLinks": [
+        {
+          "name": "linkProgram",
+          "t": 6428.8,
+          "ms": 0,
+          "p": 0.1033
+        },
+        {
+          "name": "linkProgram",
+          "t": 8664.3,
+          "ms": 0,
+          "p": 0.2197
+        },
+        {
+          "name": "linkProgram",
+          "t": 8793.5,
+          "ms": 0,
+          "p": 0.2197
+        },
+        {
+          "name": "linkProgram",
+          "t": 9082.6,
+          "ms": 0,
+          "p": 0.2197
+        },
+        {
+          "name": "linkProgram",
+          "t": 9507.9,
+          "ms": 0,
+          "p": 0.2605
+        },
+        {
+          "name": "linkProgram",
+          "t": 9539.7,
+          "ms": 0,
+          "p": 0.2605
+        },
+        {
+          "name": "linkProgram",
+          "t": 16129.3,
+          "ms": 0,
+          "p": 0.6087
+        },
+        {
+          "name": "linkProgram",
+          "t": 16438.4,
+          "ms": 0,
+          "p": 0.6087
+        },
+        {
+          "name": "linkProgram",
+          "t": 16566.6,
+          "ms": 0,
+          "p": 0.6087
+        },
+        {
+          "name": "linkProgram",
+          "t": 16701.6,
+          "ms": 0,
+          "p": 0.6087
+        },
+        {
+          "name": "linkProgram",
+          "t": 16835.6,
+          "ms": 0,
+          "p": 0.6087
+        },
+        {
+          "name": "linkProgram",
+          "t": 16971.8,
+          "ms": 0,
+          "p": 0.6087
+        },
+        {
+          "name": "linkProgram",
+          "t": 17189.5,
+          "ms": 0,
+          "p": 0.6087
+        },
+        {
+          "name": "linkProgram",
+          "t": 17317.4,
+          "ms": 0,
+          "p": 0.6087
+        },
+        {
+          "name": "linkProgram",
+          "t": 17327.6,
+          "ms": 0,
+          "p": 0.6087
+        },
+        {
+          "name": "linkProgram",
+          "t": 17471.9,
+          "ms": 0,
+          "p": 0.6087
+        },
+        {
+          "name": "linkProgram",
+          "t": 17626.9,
+          "ms": 0,
+          "p": 0.6087
+        },
+        {
+          "name": "linkProgram",
+          "t": 17780.9,
+          "ms": 0,
+          "p": 0.6087
+        },
+        {
+          "name": "linkProgram",
+          "t": 17921.3,
+          "ms": 0,
+          "p": 0.6087
+        },
+        {
+          "name": "linkProgram",
+          "t": 18071.8,
+          "ms": 0,
+          "p": 0.6087
+        },
+        {
+          "name": "linkProgram",
+          "t": 18223.4,
+          "ms": 0,
+          "p": 0.6087
+        },
+        {
+          "name": "linkProgram",
+          "t": 18372.8,
+          "ms": 0,
+          "p": 0.6087
+        },
+        {
+          "name": "linkProgram",
+          "t": 18688.6,
+          "ms": 0,
+          "p": 0.6087
+        },
+        {
+          "name": "linkProgram",
+          "t": 18948.4,
+          "ms": 0,
+          "p": 0.7555
+        },
+        {
+          "name": "linkProgram",
+          "t": 19178.3,
+          "ms": 0,
+          "p": 0.7676
+        },
+        {
+          "name": "linkProgram",
+          "t": 19188.8,
+          "ms": 0.1,
+          "p": 0.7676
+        },
+        {
+          "name": "linkProgram",
+          "t": 19205.7,
+          "ms": 0,
+          "p": 0.7676
+        },
+        {
+          "name": "linkProgram",
+          "t": 19513.5,
+          "ms": 0,
+          "p": 0.785
+        },
+        {
+          "name": "linkProgram",
+          "t": 21445.9,
+          "ms": 0,
+          "p": 0.8858
+        },
+        {
+          "name": "linkProgram",
+          "t": 21560,
+          "ms": 0,
+          "p": 0.8858
+        },
+        {
+          "name": "linkProgram",
+          "t": 21689.7,
+          "ms": 0,
+          "p": 0.8858
+        },
+        {
+          "name": "linkProgram",
+          "t": 21870.8,
+          "ms": 0,
+          "p": 0.8858
+        },
+        {
+          "name": "linkProgram",
+          "t": 21989.8,
+          "ms": 0,
+          "p": 0.8858
+        }
+      ],
+      "observedGLCallsOver2Ms": [
+        {
+          "name": "getProgramParameter",
+          "t": 18684.2,
+          "ms": 2.4,
+          "p": 0.6087
+        }
+      ]
+    },
+    {
+      "direction": "up",
+      "observedFrameCount": 1141,
+      "summary": {
+        "medianMs": 16.7,
+        "p95Ms": 16.7,
+        "maximumMs": 16.8,
+        "framesOver33_5Ms": 0,
+        "minimumQuality": 0.95,
+        "maximumQuality": 1,
+        "maximumDraws": 230,
+        "longTaskCount": 0,
+        "compileShaderCount": 0,
+        "linkProgramCount": 0
+      },
+      "scrollBins": [
+        {
+          "from": 0,
+          "to": 0.1,
+          "n": 116,
+          "median": 16.7,
+          "p95": 16.7,
+          "max": 16.8,
+          "over33": 0,
+          "draws": 76,
+          "quality": 1
+        },
+        {
+          "from": 0.1,
+          "to": 0.2,
+          "n": 115,
+          "median": 16.7,
+          "p95": 16.7,
+          "max": 16.8,
+          "over33": 0,
+          "draws": 43,
+          "quality": 1
+        },
+        {
+          "from": 0.2,
+          "to": 0.3,
+          "n": 115,
+          "median": 16.7,
+          "p95": 16.7,
+          "max": 16.8,
+          "over33": 0,
+          "draws": 144,
+          "quality": 1
+        },
+        {
+          "from": 0.3,
+          "to": 0.4,
+          "n": 115,
+          "median": 16.7,
+          "p95": 16.7,
+          "max": 16.8,
+          "over33": 0,
+          "draws": 144,
+          "quality": 1
+        },
+        {
+          "from": 0.4,
+          "to": 0.5,
+          "n": 115,
+          "median": 16.7,
+          "p95": 16.7,
+          "max": 16.8,
+          "over33": 0,
+          "draws": 102,
+          "quality": 1
+        },
+        {
+          "from": 0.5,
+          "to": 0.6,
+          "n": 116,
+          "median": 16.7,
+          "p95": 16.7,
+          "max": 16.8,
+          "over33": 0,
+          "draws": 86,
+          "quality": 1
+        },
+        {
+          "from": 0.6,
+          "to": 0.7,
+          "n": 115,
+          "median": 16.7,
+          "p95": 16.8,
+          "max": 16.8,
+          "over33": 0,
+          "draws": 230,
+          "quality": 1
+        },
+        {
+          "from": 0.7,
+          "to": 0.8,
+          "n": 115,
+          "median": 16.7,
+          "p95": 16.7,
+          "max": 16.8,
+          "over33": 0,
+          "draws": 109,
+          "quality": 1
+        },
+        {
+          "from": 0.8,
+          "to": 0.9,
+          "n": 115,
+          "median": 16.7,
+          "p95": 16.8,
+          "max": 16.8,
+          "over33": 0,
+          "draws": 60,
+          "quality": 1
+        },
+        {
+          "from": 0.9,
+          "to": 1,
+          "n": 104,
+          "median": 16.7,
+          "p95": 16.7,
+          "max": 16.8,
+          "over33": 0,
+          "draws": 68,
+          "quality": 0.95
+        }
+      ],
+      "longFrames": [],
+      "longTasks": [],
+      "shaderLinks": [],
+      "observedGLCallsOver2Ms": []
+    }
+  ],
+  "consoleErrors": []
+}

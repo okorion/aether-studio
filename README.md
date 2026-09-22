@@ -1,19 +1,21 @@
 # AETHER STUDIO
 
-[사이트 바로 보기](https://aether-studio-nu.vercel.app/) · [월드 공간 숲·척추·장치 개선](docs/living-worlds.md) · [영상 모니터](docs/monitor-cinema.md)
+[사이트 바로 보기](https://aether-studio-nu.vercel.app/) · [시각 변천: 7개 버전·42장](docs/visual-history.md) · [전환 성능](docs/transition-performance.md) · [메타데이터](docs/metadata.md) · [다음 개선](docs/next-improvements.md)
 
 [Active Theory](https://activetheory.net/)의 중앙 오브젝트, 연속된 공간 이동, 금속 반사와 움직이는 프로젝트 화면을 참고한 자체 3D 경험입니다. React + TypeScript + Three.js + Vite로 개발했습니다.
 
 런타임에는 원본의 소스·로고·모델·영상·음악을 사용하지 않습니다. AETHER STUDIO 브랜드와 가상 프로젝트, 절차적 모델, 수식으로 제작한 MP4 두 편과 대체 영상 셰이더를 직접 작성했습니다. 원본 화면은 비교 문서의 검수 증거에만 사용합니다.
 
-![월드 공간 숲과 O 심벌](docs/screenshots/living/after-000.jpg)
+![현재 구현의 월드 공간 숲과 O 심벌](docs/screenshots/history/pr10/scroll-000.jpg)
+
+초기 구현부터 현재까지 대표 소스 7개를 다시 빌드하고, 같은 뷰포트의 0·20·40·60·80·98% 스크롤 위치에서 촬영했습니다. [시각 변천 기록](docs/visual-history.md)에서 42장의 실제 화면과 기준 커밋·캡처 조건을 함께 비교할 수 있습니다.
 
 ## 스크롤로 내려가는 3D 여정
 
 1800svh 홈에 24개의 카메라 키프레임을 배치했습니다. 숲 속 링과 꼬리 → 평면 소개 위의 큰 3D O → 척추와 나선형 영상 모니터 → 지하 장치 → 바닥 아래 금속 비늘 → 하부 숲과 링으로 이어집니다. 중심은 총 61.5 월드 단위를 내려가고 카메라가 이를 따라가며, 주변 공간은 위로 지나갑니다. 숲과 모니터는 사선 경계로 다음 장면을 드러내며, 역스크롤하면 같은 경로를 되짚습니다.
 
-- 마우스 이동: 작은 섬광의 머리가 입력을 멈춘 뒤에도 전진하고, 곡선 궤적이 약 2.35초에 걸쳐 사라집니다. 숲·장치 O는 국소 조명으로, 비늘은 굴곡과 반사광으로 반응합니다. 버튼 위·화면 이탈·모션 축소에서는 조명 입력을 초기화합니다.
-- 초반·소개 로고·마지막 링에서 빈 공간 드래그: 중앙 오브젝트를 축으로 회전하고 놓은 뒤 선택한 시점을 유지합니다. 더블클릭하면 기본 시점으로 복귀합니다.
+- 마우스 이동: 작은 섬광의 머리가 입력을 멈춘 뒤에도 전진하고, 곡선 궤적이 약 2.35초에 걸쳐 사라집니다. 숲은 국소 조명으로, 비늘은 굴곡과 반사광으로 반응합니다. 장치 O의 입자는 포인터 주변에서 부드럽게 밀리고 휘어지며, 입력이 사라지면 기존 O 모양으로 복귀합니다. 스크롤에 따른 위치·형태 전환은 유지합니다. 버튼 위·화면 이탈·모션 축소에서는 입력 효과를 초기화합니다.
+- 초반·소개 로고·마지막 링에서 빈 공간 드래그: 중앙 오브젝트를 축으로 회전하고 놓은 뒤 선택한 시점을 유지합니다. 위에서 아래로 끌면 상단이 앞으로, 아래에서 위로 끌면 바닥이 앞으로 오도록 세로 방향을 적용했습니다. 더블클릭하면 기본 시점으로 복귀합니다.
 - 척추·모니터·지하 장치·비늘 구간: 드래그 궤도를 잠그고 스크롤로 카메라를 제어합니다. 비늘이 사라지는 전환 끝까지 마우스 이동·드래그·더블클릭이 카메라를 바꾸지 않습니다. [잠금 경계 검증](docs/mechanical-camera.md)
 - 척추·사슬: 두 줄의 사슬이 척추 앞뒤를 감으며 스크롤 위치에 따라 움직입니다. 입력이 멎으면 정착 뒤 멈추고, 역스크롤하면 반대 방향으로 돌아갑니다. 입자는 고정 역할과 스크롤 이동 역할로 나뉘며 하나의 흐름이 장치 O로 모입니다. 모니터 영상과 조명은 계속 움직입니다.
 - 숲은 고정된 월드 공간의 줄기·가지·잎·미세 입자로 구성됩니다. 상·하부에서 링 중심으로 드래그하면 숲의 원근과 가림도 함께 바뀝니다.
@@ -27,17 +29,17 @@
 | --- | --- |
 | ![실제 휠 연속 캡처](docs/screenshots/living/entry-wheel.gif) | ![실제 하강 연속 캡처](docs/screenshots/living/lower-wheel.gif) |
 
-위 GIF는 실제 wheel 입력 중 캡처한 화면을 일정 간격으로 재생한 요약입니다. 실시간 프레임률이나 입력 속도 측정 영상은 아닙니다.
+위 GIF는 PR #9에서 실제 wheel 입력 중 캡처한 화면을 일정 간격으로 재생한 요약입니다. 실시간 프레임률이나 입력 속도 측정 영상은 아닙니다. 현재 성능 수정 결과는 [전환 측정](docs/transition-performance.md)을 참고하세요.
 
-| 척추와 움직이는 모니터 | 지하 장치 |
+| 척추와 움직이는 모니터 · 40% | 지하 장치의 단일 O 입자 · 72% |
 | --- | --- |
-| ![척추와 실제 영상 모니터](docs/screenshots/living/after-340.jpg) | ![장치](docs/screenshots/living/after-700.jpg) |
+| ![현재 척추와 실제 영상 모니터](docs/screenshots/history/pr10/scroll-040.jpg) | ![현재 지하 장치와 O 입자](docs/screenshots/transitions/device-base.jpg) |
 
-| 금속 비늘 | 하부 링 |
+| 장치 바닥 아래 금속 비늘 · 80% | 하부 링 · 98% |
 | --- | --- |
-| ![비늘](docs/screenshots/living/after-840.jpg) | ![하부 링](docs/screenshots/living/after-980.jpg) |
+| ![현재 장치 바닥과 금속 비늘](docs/screenshots/history/pr10/scroll-080.jpg) | ![현재 하부 링](docs/screenshots/history/pr10/scroll-098.jpg) |
 
-실제 production 빌드의 1440×900 GPU 캡처입니다. [최신 모니터 문서](docs/monitor-cinema.md)에 원본 입력 관찰, 실제 MP4와 굴절의 합성, 호버·클릭과 재생 수명을 정리했습니다. 모바일은 공유 배경 캡처를 생략하고 영상과 유리 표면을 표시합니다. 시각적 유사도를 백분율로 측정하거나 인증하지 않습니다. [척추 개선](docs/spine-monitors.md), [이전 5개 지점 비교](docs/visual-comparison.md), [24단계 비교](docs/continuous-journey.md)는 이전 단계의 기록입니다.
+위 정지 화면은 현재 개선본 `da14095`의 production 빌드에서 촬영한 1440×900 GPU 캡처입니다. [모니터 문서](docs/monitor-cinema.md)에 원본 입력 관찰, 실제 MP4와 굴절의 합성, 호버·클릭과 재생 수명을 정리했습니다. 모바일은 공유 배경 캡처를 생략하고 영상과 유리 표면을 표시합니다. 시각적 유사도를 백분율로 측정하거나 인증하지 않습니다. [월드 공간 숲·척추·장치](docs/living-worlds.md), [척추 개선](docs/spine-monitors.md), [이전 5개 지점 비교](docs/visual-comparison.md), [24단계 비교](docs/continuous-journey.md)는 각 단계의 기록입니다.
 
 ![척추 구간 실제 스크롤](docs/screenshots/spine/scroll.gif)
 
@@ -98,6 +100,7 @@ npx vercel deploy --prod --scope okorions-projects
 - GPU 유동 입자 최대 42,000개, 구간별 숲 최대 60,000개, 인스턴싱 금속 구조
 - 유리 모니터 6장이 공유하는 MP4 두 편·VideoTexture 두 개, 영상 지연 로드와 재생 실패 시 절차적 대체 표현
 - 데스크톱 HDR bloom·512px 평면 반사, 프레임 시간 기반 적응형 DPR과 후처리 축소
+- 첫 표시 전 두 출력 경로의 셰이더·정적 텍스처·렌더 타깃 준비와 2px 시험 렌더, 모니터 캡처 안의 중복 바닥 반사 제거
 - Work / Contact / 홈 이동, 현재 챕터 표시
 - 프로젝트 4개 및 상세 dialog, 다음 프로젝트, Escape 닫기와 초점 복원
 - 사용자 조작으로 켜는 3가지 Web Audio 사운드스케이프
@@ -109,7 +112,17 @@ npx vercel deploy --prod --scope okorions-projects
 
 ## 전환과 포인터 반응
 
-[전환 검증 문서](docs/layered-transitions.md)에 동일 위치의 전후 캡처, 실제 휠 입력, 숲·장치 입자·비늘의 마우스 반응을 정리했습니다. 장치와 비늘은 서로 다른 높이에 고정되어 바닥이 두 공간을 구분합니다. 평면 문구도 3D 안에서 합성하므로 링과 숲의 가림 순서를 따릅니다.
+장치와 비늘은 서로 다른 높이에 고정되어 바닥이 두 공간을 구분합니다. 평면 문구도 3D 안에서 합성하므로 링과 숲의 가림 순서를 따릅니다. 장치의 단일 O 입자는 기존 스크롤 위상과 형태를 유지하면서 포인터 주변에서만 변형되고 복귀합니다. 상·하부의 세로 드래그 방향도 사용자가 끄는 쪽의 면이 앞으로 오는 방식으로 통일했습니다.
+
+첫 전환 때 멈추던 원인은 새 셰이더 변형과 첫 GPU 자원 사용이 몰리는 데 있었습니다. 광원 개수를 고정하고, 선형·직접 출력 경로를 비동기 사전 컴파일한 뒤 2×2 타깃에서 최초 사용을 준비합니다. 정적 텍스처·굴절·반사 타깃도 미리 올리며 모니터 캡처가 바닥 반사를 재실행하는 중복 패스를 제거했습니다. 영상은 기존처럼 모니터 진입 때 지연 로드합니다.
+
+통제된 최초 하강 측정에서 최장 RAF 간격은 **2799.9→66.6ms**, 전환 중 셰이더 링크는 **33→0회**로 줄었고 자동 품질은 1.00을 유지했습니다. 첫 모니터 진입의 66.6ms 한 프레임은 남아 있습니다. 이 수치는 특정 Chromium·D3D11 장비의 콜백 간격이며 GPU 실행 시간이나 모든 기기의 FPS를 뜻하지 않습니다. [원인·수정·전후 수치·측정 한계](docs/transition-performance.md)
+
+[장치 입력·카메라 전후 비교](docs/transition-input.md)에 동일한 마우스 입력의 실제 화면과 회귀 검증을 정리했습니다. [이전 전환 검증](docs/layered-transitions.md)의 전후 캡처와 실제 휠 입력 기록도 보존합니다.
+
+## 아이콘과 공유·검색 정보
+
+O 모티프의 SVG·PNG·ICO 파비콘, Apple·maskable 홈 화면 아이콘, 실제 숲 캡처 기반 1200×630 공유 카드를 포함합니다. canonical·Open Graph·Twitter·WebSite JSON-LD는 운영 URL로 통일했고 robots·sitemap·manifest도 설정했습니다. 확인되지 않은 사업자 정보나 소셜 계정은 넣지 않았습니다. [파일 목록·공유 카드·재생성·검증](docs/metadata.md)
 
 ## 실제 영상과 유리 모니터
 
@@ -126,8 +139,10 @@ npx vercel deploy --prod --scope okorions-projects
 | 대상 | 위치 |
 | --- | --- |
 | 브랜드·소개·연락처 | `src/App.tsx`, `index.html`, `public/favicon.svg` |
+| 공유·검색·아이콘 메타데이터 | `index.html`, `public/site.webmanifest`, `scripts/generate-metadata.mjs`, [설정 문서](docs/metadata.md) |
 | 프로젝트 내용 | `src/projects.ts` |
 | 3D 장면·적응형 해상도 | `src/Scene.tsx` |
+| 셰이더·정적 텍스처·첫 GPU 사용 준비 | `src/ScenePreparation.ts` |
 | 24단계 카메라·장면 타임라인 | `src/Journey.ts` |
 | HDR bloom | `src/SceneGlow.ts` |
 | 구체 입자·흐름 | `src/Atmosphere.ts` |
@@ -148,7 +163,11 @@ npx vercel deploy --prod --scope okorions-projects
 
 Playwright는 데스크톱 1440×900, 모바일 390×844, WebGL 비활성 환경을 사용합니다. 실제 wheel의 하강·역방향, 24개 렌더 상태의 높이·링 방향, 척추·사슬·모니터의 정지·왕복, 중간 구간 카메라 잠금, 탐색·상세 보기·초점·사운드·hash/history와 로딩 실패를 검사합니다. DPR 1.5·2의 실제 WebGL 캡처·상태 복구·실패 시 대체 표현, 흔적의 픽셀 발생·잔존·소멸, 포인터 조명 초기화와 실제 비늘 픽셀 반응·원복도 포함합니다. GitHub Actions에서는 lint·타입·빌드를 확인하고 production preview를 SwiftShader로 실행합니다.
 
-영상 재생·수명과 모니터 입력에 더해 실제 사슬 감기·정지·복귀, 입자 역할 분리, 숲의 월드 좌표와 시차, 섬광 머리의 픽셀 전진을 검사합니다. **검사 36개를 확인했습니다: 로컬 전체 34개 통과 후 테스트 계측·작은 섬광 기준을 수정하고 나머지 2개를 재검증했습니다.** lint·타입 검사·production build도 통과했습니다. 최종 실제 GPU에서 데스크톱·모바일·연속 휠 캡처의 오류는 없었고, 이 장비의 5개 지점 프레임 간격 중앙값은 16.7ms였습니다. [전후 이미지·검증 범위·성능](docs/living-worlds.md)
+영상 재생·수명과 모니터 입력에 더해 실제 사슬 감기·정지·복귀, 입자 역할 분리, 숲의 월드 좌표와 시차, 섬광 머리의 픽셀 전진을 검사합니다. 이번에는 장치 입자의 포인터 변형·정확한 복귀, 세로 드래그 방향, 장면 준비·취소·상태 복구, 메타데이터 정합성을 추가했습니다. **2026-09-22 기준 로컬 전체 47개 테스트가 재시도 없이 통과했고, lint·타입 검사·production build도 통과했습니다.**
+
+별도 실제 GPU 검수에서는 현재 여정 6개 지점, 상·하부의 양방향 세로 드래그, 장치 포인터 반응과 복귀, MP4 두 편 재생, WebGL 컨텍스트 손실 후 같은 위치 복원을 확인했습니다. 모바일 390×844의 6개 지점도 캡처했으며 기록된 브라우저 오류는 없었습니다. 프레임 간격·준비 시간은 [전환 성능 보고서](docs/transition-performance.md), 전체 시각 변화는 [7개 버전·42장 갤러리](docs/visual-history.md)에 정리했습니다.
+
+이전 36개 검사와 당시 성능 측정은 [PR #9 검증 기록](docs/living-worlds.md)에 그대로 남깁니다. 이후에는 잔여 모니터 프레임의 원인 분리, 실제 Safari/iOS·저사양 기기 검증, 겹침 구간 렌더 비용 순으로 개선하는 것을 권합니다. [다음 개선 3가지와 완료 기준](docs/next-improvements.md)
 
 [전환 검증 문서](docs/layered-transitions.md), [이전 동작·성능 기록](docs/dynamic-motion.md), [초기 검증 기록](docs/verification.md)도 보존합니다. WebGL과 영상 디코딩 성능은 기기와 브라우저에 따라 달라질 수 있습니다. 실제 Safari/iOS 기기 검증은 수행하지 않았습니다.
 
@@ -158,6 +177,7 @@ Playwright는 데스크톱 1440×900, 모바일 390×844, WebGL 비활성 환경
 src/
   App.tsx             페이지·내비게이션·상세 dialog
   Scene.tsx           절차적 Three.js 장면과 수명 관리
+  ScenePreparation.ts 셰이더·텍스처·첫 GPU 사용 사전 준비
   SceneMonitors.ts    유리 모니터·영상 합성·호버와 선택
   SceneVideo.ts       공유 영상 두 편의 재생 수명 관리
   SceneBoundary.tsx   선택적 3D 모듈 실패 격리

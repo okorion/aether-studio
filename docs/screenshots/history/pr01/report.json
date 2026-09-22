@@ -1,0 +1,110 @@
+{
+  "id": "pr01",
+  "pr": 1,
+  "sha": "4ba178dba238455102b4731323488fe40d51c443",
+  "title": "초기 스튜디오",
+  "note": "금속 A 링·꼬리, 입자 배경, 문서 안의 Work·Contact",
+  "evidence": "docs/verification.md",
+  "viewport": [
+    1440,
+    900
+  ],
+  "deviceScaleFactor": 1,
+  "renderer": "Chromium ANGLE D3D11",
+  "browserVersion": "153.0.8010.12",
+  "source": "Unmodified git archive rebuilt locally using the identical package-lock dependency tree",
+  "input": "Document scrollTo; no pointer movement, drag, camera reset or motion pause; 2400ms settle plus available renderProgress convergence",
+  "limits": "Same document percentages are not the same narrative scene across versions; animation and MP4 times are not synchronized; these captures are not FPS measurements",
+  "initial": {
+    "title": "Aether Studio — Digital worlds, human wonder.",
+    "content": 1103,
+    "links": [
+      "AETHERSTUDIO",
+      "Work",
+      "Contact"
+    ],
+    "overlay": false,
+    "profile": "gpu"
+  },
+  "frames": [
+    {
+      "progress": 0,
+      "name": "scroll-000.jpg",
+      "capturedAt": "2026-09-22T02:05:03.268Z",
+      "scrollY": 0,
+      "scrollHeight": 3607,
+      "innerHeight": 900,
+      "dataset": {
+        "engine": "three.js r186",
+        "renderProfile": "gpu",
+        "renderState": "ready"
+      }
+    },
+    {
+      "progress": 0.2,
+      "name": "scroll-020.jpg",
+      "capturedAt": "2026-09-22T02:05:05.729Z",
+      "scrollY": 541,
+      "scrollHeight": 3607,
+      "innerHeight": 900,
+      "dataset": {
+        "engine": "three.js r186",
+        "renderProfile": "gpu",
+        "renderState": "ready"
+      }
+    },
+    {
+      "progress": 0.4,
+      "name": "scroll-040.jpg",
+      "capturedAt": "2026-09-22T02:05:08.197Z",
+      "scrollY": 1083,
+      "scrollHeight": 3607,
+      "innerHeight": 900,
+      "dataset": {
+        "engine": "three.js r186",
+        "renderProfile": "gpu",
+        "renderState": "ready"
+      }
+    },
+    {
+      "progress": 0.6,
+      "name": "scroll-060.jpg",
+      "capturedAt": "2026-09-22T02:05:10.665Z",
+      "scrollY": 1624,
+      "scrollHeight": 3607,
+      "innerHeight": 900,
+      "dataset": {
+        "engine": "three.js r186",
+        "renderProfile": "gpu",
+        "renderState": "ready"
+      }
+    },
+    {
+      "progress": 0.8,
+      "name": "scroll-080.jpg",
+      "capturedAt": "2026-09-22T02:05:13.126Z",
+      "scrollY": 2166,
+      "scrollHeight": 3607,
+      "innerHeight": 900,
+      "dataset": {
+        "engine": "three.js r186",
+        "renderProfile": "gpu",
+        "renderState": "ready"
+      }
+    },
+    {
+      "progress": 0.98,
+      "name": "scroll-098.jpg",
+      "capturedAt": "2026-09-22T02:05:15.580Z",
+      "scrollY": 2653,
+      "scrollHeight": 3607,
+      "innerHeight": 900,
+      "dataset": {
+        "engine": "three.js r186",
+        "renderProfile": "gpu",
+        "renderState": "ready"
+      }
+    }
+  ],
+  "errors": []
+}

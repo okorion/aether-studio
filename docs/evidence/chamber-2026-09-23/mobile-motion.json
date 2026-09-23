@@ -163,13 +163,13 @@
   ],
   "paused": {
     "identical": true,
-    "first": "8dbb028be646d690f7fca6e719ca18346660677776d597008a9e206f3842d673",
-    "second": "8dbb028be646d690f7fca6e719ca18346660677776d597008a9e206f3842d673"
+    "first": "34e0a8552be6032b149b5b06cac85909dcc694d1a7cff912e0c611e2391c76e1",
+    "second": "34e0a8552be6032b149b5b06cac85909dcc694d1a7cff912e0c611e2391c76e1"
   },
-  "hiddenStart": "30",
-  "hiddenEnd": "30",
-  "returned": "75",
-  "pointer": "0.0000",
+  "hiddenStart": "15",
+  "hiddenEnd": "15",
+  "returned": "60",
+  "pointer": "0.5934",
   "reducedIdentical": true,
   "errors": []
 }

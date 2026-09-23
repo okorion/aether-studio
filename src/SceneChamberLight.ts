@@ -37,7 +37,7 @@ export function createChamberLight(space: THREE.Group, scene: THREE.Scene) {
   space.add(beam)
   // The light stays in the scene even at zero intensity: shader light counts
   // must not change when crossing a curtain or preparing a hidden chamber.
-  const light = new THREE.SpotLight(0xc6e4d5, 0, length, Math.atan(2.45 / length), .8, 1.4)
+  const light = new THREE.SpotLight(0xc6e4d5, 0, Math.hypot(length, 2.45) * 1.5, Math.atan(2.45 / length), .8, 1.4)
   light.name = 'aether-aperture-light'
   light.position.set(0, REACTOR.worldY + exit, 0)
   light.target.position.set(0, REACTOR.worldY + bottom, 0)
@@ -57,4 +57,20 @@ export function createChamberLight(space: THREE.Group, scene: THREE.Scene) {
       geometry.dispose(); material.dispose()
     },
   }
+}
+
+/** The lower room keeps its point/directional lights behind the opaque floor. */
+export function excludeChamberSpotlight(material: THREE.MeshStandardMaterial) {
+  const previous = material.onBeforeCompile
+  const previousKey = material.customProgramCacheKey()
+  material.onBeforeCompile = (shader, renderer) => {
+    previous.call(material, shader, renderer)
+    // The aperture light is the scene's only spotlight. Keep its stable light
+    // count, but remove its direct contribution on the other side of the floor.
+    const lights = THREE.ShaderChunk.lights_fragment_begin.replace(
+      'getSpotLightInfo( spotLight, geometryPosition, directLight );',
+      'getSpotLightInfo( spotLight, geometryPosition, directLight ); directLight.color = vec3(0.);')
+    shader.fragmentShader = shader.fragmentShader.replace('#include <lights_fragment_begin>', lights)
+  }
+  material.customProgramCacheKey = () => `${previousKey}-below-chamber-floor-v1`
 }

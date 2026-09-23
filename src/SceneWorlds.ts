@@ -13,7 +13,7 @@ import { bindGroupCurtain, createCurtainBounds } from './SceneCurtains'
 import { curtainHasCoverage } from './SceneVisibility'
 import { lightChoreographyGLSL, sampleLightChoreography, type LightFilmUniforms } from './SceneLighting'
 import { REACTOR } from './Reactor'
-import { createChamberLight } from './SceneChamberLight'
+import { createChamberLight, excludeChamberSpotlight } from './SceneChamberLight'
 
 const TAU = Math.PI * 2
 
@@ -560,6 +560,8 @@ export function createSceneWorlds(
   }
   bindGroupCurtain(chamber, deviceCurtain)
   bindGroupCurtain(space, deviceCurtain)
+  excludeChamberSpotlight(metal)
+  excludeChamberSpotlight(undersideMaterial)
   bindGroupCurtain(scaleWall, scaleCurtain)
   bindGroupCurtain(lowerSpace, scaleCurtain)
   return {

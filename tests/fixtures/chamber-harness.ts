@@ -3,6 +3,7 @@ import { Reflector } from 'three/addons/objects/Reflector.js'
 import { createWaterSurface } from '../../src/SceneWater'
 import { createSceneWorlds } from '../../src/SceneWorlds'
 import { REACTOR } from '../../src/Reactor'
+import { createChamberLight, excludeChamberSpotlight } from '../../src/SceneChamberLight'
 
 export function probeChamber(mobile: boolean) {
   const scene = new THREE.Scene()
@@ -21,7 +22,8 @@ export function probeChamber(mobile: boolean) {
   const ceilingHits = ray.intersectObject(roof).length
   const lightPosition = light.getWorldPosition(new THREE.Vector3()).toArray()
   const beamBounds = new THREE.Box3().setFromObject(beam)
-  const reachesBelowFloor = light.position.y - light.distance < REACTOR.worldY - 3.635
+  const floorEdgeDistance = Math.hypot(light.position.y - (REACTOR.worldY - 3.635), 2.45)
+  const reachesFloorEdge = light.distance > floorEdgeDistance
   const matrices = [beam, roof].map(o=>o.matrixWorld.toArray())
   worlds.update(18,.83); worlds.update(22,.66); worlds.update(12,.72);scene.updateMatrixWorld(true)
   const reverse = [beam, roof].map(o=>o.matrixWorld.toArray())
@@ -29,7 +31,7 @@ export function probeChamber(mobile: boolean) {
   beam.geometry.addEventListener('dispose',()=>disposed++)
   ;(beam.material as THREE.Material).addEventListener('dispose',()=>disposed++)
   worlds.dispose()
-  return { centreHits, rimHits, ceilingHits, lightPosition, beamTop: beamBounds.max.y, reachesBelowFloor, matrices, reverse, disposed,
+  return { centreHits, rimHits, ceilingHits, lightPosition, beamTop: beamBounds.max.y, reachesFloorEdge, matrices, reverse, disposed,
     lightRemoved: !light.parent && !light.target.parent, sceneChildren: scene.children.length }
 }
 
@@ -59,4 +61,46 @@ export function probeWater(reflection: boolean) {
   const result={moving:delta(a,b),stopped:delta(a,stopped),restored:delta(a,restored),reflection}
   water.dispose();mirror?.dispose();cubeGeo.dispose();cubeMat.dispose();target.dispose();renderer.dispose();renderer.forceContextLoss()
   return result
+}
+
+export function probeSpotlightFloor() {
+  const renderer = new THREE.WebGLRenderer({ antialias: false })
+  renderer.setSize(128, 128)
+  const target = new THREE.WebGLRenderTarget(128, 128)
+  const scene = new THREE.Scene()
+  const space = new THREE.Group()
+  space.position.y = REACTOR.worldY
+  scene.add(space)
+  const chamberLight = createChamberLight(space, scene)
+  scene.getObjectByName('aether-aperture-light-shaft')!.visible = false
+  const ambient = new THREE.AmbientLight(0xffffff, .1)
+  scene.add(ambient)
+  const geometry = new THREE.PlaneGeometry(6, 6)
+  const floorMaterial = new THREE.MeshStandardMaterial({ color: 0x777777, roughness: .7 })
+  const belowMaterial = floorMaterial.clone()
+  excludeChamberSpotlight(belowMaterial)
+  const plane = new THREE.Mesh(geometry, floorMaterial)
+  plane.rotation.x = -Math.PI / 2
+  scene.add(plane)
+  const camera = new THREE.PerspectiveCamera(55, 1, .1, 50)
+  const pixels = (height: number, lit: boolean, below: boolean) => {
+    plane.position.y = height
+    plane.material = below ? belowMaterial : floorMaterial
+    camera.position.set(0, height + 5, 2)
+    camera.lookAt(0, height, 0)
+    chamberLight.update(lit ? 1 : 0)
+    scene.getObjectByName('aether-aperture-light-shaft')!.visible = false
+    renderer.setRenderTarget(target)
+    renderer.render(scene, camera)
+    const bytes = new Uint8Array(128 * 128 * 4)
+    renderer.readRenderTargetPixels(target, 0, 0, 128, 128, bytes)
+    return bytes
+  }
+  const delta = (a: Uint8Array, b: Uint8Array) => a.reduce((sum, v, i) => sum + Math.abs(v - b[i]), 0)
+  const floor = delta(pixels(-44.1, true, false), pixels(-44.1, false, false))
+  const belowControl = delta(pixels(-45.3, true, false), pixels(-45.3, false, false))
+  const below = delta(pixels(-45.3, true, true), pixels(-45.3, false, true))
+  chamberLight.dispose(); geometry.dispose(); floorMaterial.dispose(); belowMaterial.dispose()
+  target.dispose(); renderer.dispose(); renderer.forceContextLoss()
+  return { floor, belowControl, below }
 }

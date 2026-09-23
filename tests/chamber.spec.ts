@@ -12,9 +12,13 @@ test('@interaction chamber roof keeps the aperture open and water renders evolvi
     const r=await page.evaluate(m=>(window as unknown as {ChamberProbe:typeof Probe}).ChamberProbe.probeChamber(m),mobile)
     expect(r.centreHits).toBe(0);expect(r.rimHits).toBeGreaterThan(0);expect(r.ceilingHits).toBeGreaterThan(0)
     expect(r.lightPosition[0]).toBe(0);expect(r.lightPosition[2]).toBe(0);expect(r.lightPosition[1]).toBeCloseTo(-37.38,5)
-    expect(r.beamTop).toBeCloseTo(-37.38, 5);expect(r.reachesBelowFloor).toBe(false)
+    expect(r.beamTop).toBeCloseTo(-37.38, 5);expect(r.reachesFloorEdge).toBe(true)
     expect(r.reverse).toEqual(r.matrices);expect(r.disposed).toBe(2);expect(r.lightRemoved).toBe(true);expect(r.sceneChildren).toBe(0)
   }
+  const lighting = await page.evaluate(() => (window as unknown as {ChamberProbe:typeof Probe}).ChamberProbe.probeSpotlightFloor())
+  expect(lighting.floor).toBeGreaterThan(1000)
+  expect(lighting.belowControl).toBeGreaterThan(1000)
+  expect(lighting.below).toBe(0)
   for(const reflection of [false,true]){
     const r=await page.evaluate(v=>(window as unknown as {ChamberProbe:typeof Probe}).ChamberProbe.probeWater(v),reflection)
     expect(r.moving).toBeGreaterThan(1000);expect(r.stopped).toBe(0);expect(r.restored).toBe(0)

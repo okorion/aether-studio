@@ -30,7 +30,7 @@
       "geometries": "66",
       "textures": "18",
       "programs": "88",
-      "renderFrame": "30"
+      "renderFrame": "45"
     },
     {
       "engine": "three.js r186",
@@ -163,8 +163,8 @@
   ],
   "paused": {
     "identical": true,
-    "first": "4cb6ce90b9a8060e579b93d1a9d3aa861fefd27d8c2db9612e8dc3ceb5f42aaa",
-    "second": "4cb6ce90b9a8060e579b93d1a9d3aa861fefd27d8c2db9612e8dc3ceb5f42aaa"
+    "first": "37f2b262a21dc5b88ac5cdd487400d18c7260e2e055d7504d054a80d1fbb5465",
+    "second": "37f2b262a21dc5b88ac5cdd487400d18c7260e2e055d7504d054a80d1fbb5465"
   },
   "hiddenStart": "15",
   "hiddenEnd": "15",

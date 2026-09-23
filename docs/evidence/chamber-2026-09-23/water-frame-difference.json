@@ -1,0 +1,52 @@
+{
+  "desktop": {
+    "waterCropMeanAbsoluteRgbDifference": [
+      [
+        1.3481977513227512,
+        2.3650462962962964,
+        1.8692184744268077
+      ],
+      [
+        1.534402557319224,
+        3.9507771164021164,
+        3.150567680776014
+      ],
+      [
+        1.8479111552028218,
+        5.440156525573192,
+        4.44211860670194
+      ],
+      [
+        2.273671737213404,
+        6.449994488536155,
+        5.651306216931217
+      ]
+    ],
+    "note": "Actual successive captures at fixed scroll .72, montage playback is not real time. Crop also includes other scene contributions."
+  },
+  "mobile": {
+    "waterCropMeanAbsoluteRgbDifference": [
+      [
+        1.1096479791395046,
+        1.780225988700565,
+        1.4813342025206433
+      ],
+      [
+        1.535723598435463,
+        2.994567579313342,
+        2.426032159930465
+      ],
+      [
+        1.6173402868318123,
+        4.112907431551499,
+        3.238483268144285
+      ],
+      [
+        1.8534332898739678,
+        5.250499782703173,
+        4.086810082572795
+      ]
+    ],
+    "note": "Actual successive captures at fixed scroll .72, montage playback is not real time. Crop also includes other scene contributions."
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "fonts": [
+    {
+      "family": "Barlow Condensed",
+      "status": "loaded"
+    },
+    {
+      "family": "DM Sans",
+      "status": "loaded"
+    },
+    {
+      "family": "DM Sans",
+      "status": "loaded"
+    },
+    {
+      "family": "IBM Plex Mono",
+      "status": "loaded"
+    }
+  ],
+  "errors": []
+}

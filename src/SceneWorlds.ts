@@ -13,6 +13,7 @@ import { bindGroupCurtain, createCurtainBounds } from './SceneCurtains'
 import { curtainHasCoverage } from './SceneVisibility'
 import { lightChoreographyGLSL, sampleLightChoreography, type LightFilmUniforms } from './SceneLighting'
 import { REACTOR } from './Reactor'
+import { createChamberLight } from './SceneChamberLight'
 
 const TAU = Math.PI * 2
 
@@ -280,6 +281,12 @@ export function createSceneWorlds(
   // Keep the contact reference, but reveal the chamber through the wrapper.
   // Its annular machine cap provides the particle aperture.
   ceiling.visible = false
+  // A separate annulus closes the room without filling the shared aperture.
+  const roof = mesh(space, geo(new THREE.RingGeometry(REACTOR.apertureRadius, 46, 96)),
+    mat(new THREE.MeshStandardMaterial({ color: 0x101217, metalness: .55, roughness: .56, envMapIntensity: .55, side: THREE.BackSide })), 0, ceilingY, 0)
+  roof.name = 'aether-chamber-aperture-roof'
+  roof.rotation.x = -Math.PI / 2
+  const chamberLight = createChamberLight(space, scene)
   // The scale room owns its ceiling and light, on the incoming side of
   // the same screen edge that clips every upper-room object.
   const undersideMaterial = mat(new THREE.MeshStandardMaterial({
@@ -532,6 +539,25 @@ export function createSceneWorlds(
   const scaleCurtain = createCurtainBounds()
   const boneCurtain = createCurtainBounds()
   bindGroupCurtain(matter, boneCurtain)
+  // Attenuate only chamber materials. Global lights also illuminate the
+  // incoming scale panels while both rooms share the viewport.
+  const chamberMaterials = new Set<THREE.MeshStandardMaterial>()
+  for (const room of [chamber, space]) room.traverse(object => {
+    if (!(object instanceof THREE.Mesh)) return
+    for (const material of Array.isArray(object.material) ? object.material : [object.material]) {
+      if (material instanceof THREE.MeshStandardMaterial) chamberMaterials.add(material)
+    }
+  })
+  for (const material of chamberMaterials) {
+    const previous = material.onBeforeCompile
+    const previousKey = material.customProgramCacheKey()
+    material.onBeforeCompile = (shader, renderer) => {
+      previous.call(material, shader, renderer)
+      shader.fragmentShader = shader.fragmentShader.replace('#include <opaque_fragment>',
+        'outgoingLight *= .52;\n#include <opaque_fragment>')
+    }
+    material.customProgramCacheKey = () => `${previousKey}-chamber-shade-v1`
+  }
   bindGroupCurtain(chamber, deviceCurtain)
   bindGroupCurtain(space, deviceCurtain)
   bindGroupCurtain(scaleWall, scaleCurtain)
@@ -665,12 +691,14 @@ export function createSceneWorlds(
       machineMetal.opacity = deviceWeight
       cableMaterial.opacity = deviceWeight
       glow.opacity = deviceWeight * (.12 + coreProximity * .045)
+      chamberLight.update(deviceCoverage ? deviceWeight : 0)
       const light = sampleLightChoreography(time, progress)
       reactorLight.color.setHSL(light.rimHue, .34, .73)
       reactorLight.intensity = software ? 0 : deviceWeight * (4.3 * light.rimIntensity + coreProximity * 1.7)
       monitorAssembly.update(time, progress, pointer, camera)
     },
     dispose() {
+      chamberLight.dispose()
       ruins.dispose()
       spineAssembly.dispose()
       monitorAssembly.dispose()

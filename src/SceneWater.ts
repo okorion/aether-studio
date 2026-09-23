@@ -61,6 +61,7 @@ export function createWaterSurface(
     ${lightChoreographyGLSL}
 
     vec2 waterSlope(vec2 p, float t) {
+      p -= vec2(.19, -.11) * t;
       vec2 drift = vec2(
         sin(dot(p, vec2(.73, 1.31)) + t * .47),
         cos(dot(p, vec2(1.19, -.61)) - t * .31)
@@ -75,7 +76,7 @@ export function createWaterSurface(
       vec2 ripple = drop / max(radius, .2)
         * sin(radius * 8.3 - t * 1.1) * exp(-radius * .48)
         * (.5 + .5 * sin(t * .29));
-      return drift * .035 + detail * .008 + ripple * .019;
+      return drift * .065 + detail * .016 + ripple * .024;
     }
 
     void main() {
@@ -90,7 +91,16 @@ export function createWaterSurface(
         + .12 * cos(p.y * .81 - p.x * .24);
       float shore = smoothstep(.24, .72, puddle);
       float edge = 1. - smoothstep(.465, .5, max(abs(vWaterUv.x - .5), abs(vWaterUv.y - .5)));
-      vec3 water = vec3(.018, .036, .040);
+      vec3 water = vec3(.012, .025, .029);
+      // Advected broken highlights make the flow readable without reflection
+      // targets on mobile/software. The aperture's pool stays world anchored.
+      vec2 flow = p - vec2(.19, -.11) * uTime;
+      float crests = pow(.5 + .5 * sin(flow.x * 3.8 + flow.y * 6.2
+        + sin(flow.x * 1.9 - flow.y * 2.3) * 1.4), 10.);
+      float pool = exp(-dot(p, p) * .045);
+      float breakup = smoothstep(.25, .8, .5 + .5 * sin(flow.x * 7.1 - flow.y * 4.3)
+        * sin(flow.y * 2.7 + sin(flow.x * 3.)));
+      water += vec3(.12, .19, .17) * crests * breakup * (.09 + pool * .38);
       vec3 cloud = aetherLightCloud(vWaterWorld, normal, uTime, uLightDepth);
       // Transmission is alpha over the visible stone bed; there is no second
       // scene capture or screen-space refraction buffer on any profile.

@@ -439,8 +439,8 @@ function probeWorldSurfaceDepth() {
     atProgress(.70)
     const plinth = new THREE.Box3().setFromObject(required('aether-machine-plinth'))
     const floor = new THREE.Box3().setFromObject(required('aether-separating-floor'))
-    const capMesh = required('aether-machine-closed-cap')
-    if (!(capMesh.material instanceof THREE.MeshStandardMaterial)) throw new Error('The closed cap must retain its production standard material')
+    const capMesh = required('aether-machine-aperture')
+    if (!(capMesh.material instanceof THREE.MeshStandardMaterial)) throw new Error('The annular cap must retain its production standard material')
     const cap = new THREE.Box3().setFromObject(capMesh)
     const socket = new THREE.Box3().setFromObject(required('aether-machine-upper-socket'))
     const ceiling = new THREE.Box3().setFromObject(required('aether-chamber-ceiling'))
@@ -465,7 +465,7 @@ function probeWorldSurfaceDepth() {
     const cases = [
       { name: 'aether-separating-floor', progress: .70, ndcY: -.55 },
       { name: 'aether-floor-underside', progress: .82, ndcY: .80 },
-      { name: 'aether-machine-closed-cap', progress: .67, ndcY: null },
+      { name: 'aether-machine-aperture', progress: .67, ndcY: null },
     ].map(entry => {
       atProgress(entry.progress)
       const source = required(entry.name)
@@ -561,7 +561,7 @@ function probeProductionBoundaryPixels() {
     color: renderer.getClearColor(new THREE.Color()), alpha: renderer.getClearAlpha() }
   const cases = [
     { name: 'aether-spine-vertebrae', region: 'bone', progress: [.635, .65, .665] },
-    { name: 'aether-machine-closed-cap', region: 'device', progress: [.755, .765, .78, .82] },
+    { name: 'aether-machine-aperture', region: 'device', progress: [.755, .765, .78, .82] },
     { name: 'aether-scale-tiles', region: 'scales', progress: [.755, .765, .775, .90] },
     { name: 'aether-floor-underside', region: 'scales', progress: [.765, .775] },
   ] as const
@@ -899,7 +899,7 @@ function probeDevicePointer() {
     const fullDiameter = ringDiameter(1)
     const reducedDiameter = ringDiameter(authoredScale)
     const diameterRatio = reducedDiameter.map((diameter, i) => diameter / fullDiameter[i])
-    const chamberEntry = [.635, .65].map(p => {
+    const chamberEntry = [.635, .65, .68].map(p => {
       positionCamera(p)
       atmosphere.update(elapsed, p, 1, undefined, probeCamera)
       atmosphere.update(elapsed, p, 1, undefined, probeCamera)

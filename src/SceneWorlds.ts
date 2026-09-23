@@ -12,6 +12,7 @@ import { sampleLayers } from './SceneLayers'
 import { bindGroupCurtain, createCurtainBounds } from './SceneCurtains'
 import { curtainHasCoverage } from './SceneVisibility'
 import { lightChoreographyGLSL, sampleLightChoreography, type LightFilmUniforms } from './SceneLighting'
+import { REACTOR } from './Reactor'
 
 const TAU = Math.PI * 2
 
@@ -264,8 +265,8 @@ export function createSceneWorlds(
   space.add(water.surface)
   // Preserve the authored contact plane as a non-rendering reference.
   // The compact machine lid still touches its underside.
-  const capThickness = .26
-  const capCentreY = 3.15
+  const capThickness = REACTOR.capThickness
+  const capCentreY = REACTOR.apertureY
   const ceilingY = capCentreY + capThickness * .5
   const ceilingThickness = .18
   const ceilingMaterial = mat(new THREE.MeshStandardMaterial({
@@ -277,7 +278,7 @@ export function createSceneWorlds(
   ceiling.name = 'aether-chamber-ceiling'
   ceiling.renderOrder = -2
   // Keep the contact reference, but reveal the chamber through the wrapper.
-  // Its small physical machine cap remains solid.
+  // Its annular machine cap provides the particle aperture.
   ceiling.visible = false
   // The scale room owns its ceiling and light, on the incoming side of
   // the same screen edge that clips every upper-room object.
@@ -412,8 +413,8 @@ export function createSceneWorlds(
   const upperSocket = mesh(chamber,
     geo(new THREE.LatheGeometry(upperProfile, software ? 32 : 64)), machineMetal, 0, 2.85)
   upperSocket.name = 'aether-machine-upper-socket'
-  // The annular socket alone leaves its entire centre open. A solid lid
-  // closes it without moving the supports or the converging particle target.
+  // An annular lid provides a real passage for the descending grains.
+  // Keep its outer contact and material while opening only the central bore.
   const capMaterial = mat(machineMetal.clone())
   // MeshStandardMaterial.copy resets defines; retain the shared film branch.
   capMaterial.defines = { ...machineMetal.defines }
@@ -422,10 +423,14 @@ export function createSceneWorlds(
   capMaterial.opacity = 1
   capMaterial.onBeforeCompile = machineMetal.onBeforeCompile
   capMaterial.customProgramCacheKey = machineMetal.customProgramCacheKey
-  const closedCap = mesh(chamber,
-    geo(new THREE.CylinderGeometry(1.93, 1.93, capThickness, software ? 32 : 64)), capMaterial, 0, capCentreY)
-  closedCap.name = 'aether-machine-closed-cap'
-  closedCap.renderOrder = -1
+  const apertureCap = mesh(chamber,
+    geo(new THREE.LatheGeometry([
+      [REACTOR.apertureRadius, -capThickness / 2], [REACTOR.capRadius, -capThickness / 2],
+      [REACTOR.capRadius, capThickness / 2], [REACTOR.apertureRadius, capThickness / 2],
+      [REACTOR.apertureRadius, -capThickness / 2],
+    ].map(([r, y]) => new THREE.Vector2(r, y)), software ? 32 : 64)), capMaterial, 0, capCentreY)
+  apertureCap.name = 'aether-machine-aperture'
+  apertureCap.renderOrder = -1
   const bolts = instanced(chamber, geo(new THREE.CylinderGeometry(.037, .041, .055, 6)), silver,
     software ? 32 : 64, false)
   bolts.name = 'aether-machine-fasteners'
@@ -517,7 +522,7 @@ export function createSceneWorlds(
   const chamberWorld = new THREE.Vector3()
   const cameraWorld = new THREE.Vector3()
   const projectedCore = new THREE.Vector3()
-  const chamberHeight = -40.4
+  const chamberHeight = REACTOR.worldY
   const floorHeight = chamberHeight - 3.7
   monitorAssembly.setOccluders([matter, chamber])
   const scaleHeight = -48.0

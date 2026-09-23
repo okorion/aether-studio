@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { REACTOR } from './Reactor'
 import { sampleJourney, smooth } from './Journey'
 import { sampleLayers } from './SceneLayers'
 import { curtainHasCoverage } from './SceneVisibility'
@@ -40,6 +41,7 @@ const currentField = /* glsl */ `
   uniform float uPointerStrength;
   uniform float uDevicePointerStrength;
   uniform float uReactorScale;
+  uniform vec2 uAperture;
   uniform float uAspect;
   uniform float uFieldOpacity;
   varying vec4 vFieldClip;
@@ -82,10 +84,22 @@ const currentField = /* glsl */ `
     spine.xz *= uSpineSpread;
     spine.y += -12.0 * (1.0 - smoothstep(.205, .29, uScroll / 55.0));
     spine = rotateSpineField(spine);
-    float orbit = t * PI * 2.0 + scrollPhase * 0.35;
+    float progress = uScroll / 55.;
+    float formed = smoothstep(.680, .715, progress);
+    float orbit = t * PI * 2.0 + scrollPhase * 0.35 * formed;
     float cross = branch * PI * 2.0;
     vec3 reactor = vec3(cos(orbit) * (1.47 + cos(cross) * .12),
       sin(orbit) * (1.68 + cos(cross) * .12), sin(cross) * .17);
+    // The disk is horizontal in the actual cap's bore. XY scaling happens
+    // after scatter, so undo it here for the aperture's world-space anchor.
+    float diskRadius = uAperture.y * .78 * sqrt(branch);
+    vec3 gathered = vec3(cos(t * PI * 2.) * diskRadius / uReactorScale,
+      (uAperture.x + sin(cross) * .035) / uReactorScale,
+      sin(t * PI * 2.) * diskRadius);
+    float fall = smoothstep(.665 + branch * .006, .710 + branch * .005, progress);
+    vec3 descending = gathered;
+    descending.y *= 1. - fall;
+    reactor = mix(descending, reactor, formed);
     float sheetAngle = t * PI * 2.0 + scrollPhase * 0.12;
     vec3 scales = vec3(
       cos(sheetAngle) * (2.6 + branch * 1.45),
@@ -133,7 +147,7 @@ const dustVertex = /* glsl */ `
     float phase = position.y;
     // Phase advection travels the full current. Faded ends hide loop wrapping.
     float speed = 0.028 + uWeights.x * 0.004 + uWeights.y * 0.055 + uWeights.z * 0.038;
-    float phaseScroll = motionTime() * aAdvected;
+    float phaseScroll = aAdvected * mix(motionTime(), max(0., uScroll - .715 * 55.), uWeights.y);
     float t = fract(position.x + phaseScroll * speed * (0.76 + lane * 0.48));
     vec3 p = current(t, lane, phaseScroll);
     float cluster = 0.32 + 0.68 * pow(sin(t * 35.0 + lane * 8.0) * 0.5 + 0.5, 2.0);
@@ -144,14 +158,16 @@ const dustVertex = /* glsl */ `
     float turn = phase + t * 37.0 + phaseScroll * 0.6 * (1.0 - spineWeight);
     vec3 scatter = vec3(cos(turn), sin(turn * 0.83) * 0.62, sin(turn)) * width;
     scatter.z += aDust.z * (0.18 + (1.0 - uWeights.y) * 0.38);
+    scatter *= mix(1., mix(.4, 1., smoothstep(.680, .715, uScroll / 55.)), uWeights.y);
     p += mix(scatter, rotateSpineField(scatter), spineWeight);
     // Most device grains spread across a fine radial cloud, with a few smaller
     // strays. This is still the same field, without a second opaque ring.
     float stray = step(.94, position.z);
     float radialScatter = aAdvected * aDust.z * .16 + stray * (.20 + lane * .28);
     vec2 radial = normalize(p.xy / vec2(1.47, 1.68) + vec2(.0001));
-    p.xy += radial * radialScatter * uWeights.y;
-    p.z += sin(phase * 3.7) * stray * .28 * uWeights.y;
+    float formed = smoothstep(.680, .715, uScroll / 55.);
+    p.xy += radial * radialScatter * uWeights.y * formed;
+    p.z += sin(phase * 3.7) * stray * .28 * uWeights.y * formed;
     float bokeh = aDust.w;
     if (bokeh > 0.5) {
       vec3 anchored = vec3((lane - 0.5) * 14.0, (position.x - 0.5) * 13.0 + uWeights.w * 3.0, -2.0 + aDust.z * 6.0);
@@ -387,7 +403,8 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
     uPointer: { value: new THREE.Vector2() },
     uPointerStrength: { value: 0 },
     uDevicePointerStrength: { value: 0 },
-    uReactorScale: { value: 2 / 3 },
+    uReactorScale: { value: REACTOR.ringScale },
+    uAperture: { value: new THREE.Vector2(REACTOR.apertureY, REACTOR.apertureRadius) },
     uAspect: { value: 1 },
     uFieldOpacity: { value: 1 },
     uEntryEdge: { value: -0.25 },
@@ -488,7 +505,9 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
       const journey = sampleJourney(progress)
       const p = journey.progress
       const layers = sampleLayers(p)
-      const morph = smooth(.60, .70, p)
+      // The incoming curtain hides the handoff at .60; the outgoing draw
+      // retains the flowers independently above that edge.
+      const morph = p >= .60 ? 1 : 0
       const signedStep = Number.isFinite(previousProgress)
         ? THREE.MathUtils.clamp((p - previousProgress) * 55, -.5, .5) : 0
       previousProgress = p
@@ -496,8 +515,8 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
       uniforms.uScroll.value = p * 55
       uniforms.uSpineYaw.value = journey.structureYaw
       uniforms.uScrollStep.value = signedStep
-      // One field moves continuously into the device's fixed world-space core.
-      const fieldY = THREE.MathUtils.lerp(journey.height, -40.4, morph)
+      // The incoming field uses the device anchor throughout its visible descent.
+      const fieldY = THREE.MathUtils.lerp(journey.height, REACTOR.worldY, morph)
       particles.position.y = filaments.position.y = shafts.position.y = fieldY
       uniforms.uWeights.value.set(smooth(.205, .29, p), morph, 0, 0)
       uniforms.uEnergy.value = journey.energy

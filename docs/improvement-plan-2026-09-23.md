@@ -1,6 +1,6 @@
 # 개선 요구사항과 작업 순서 · 2026-09-23
 
-이 문서는 개선 요구사항과 단계별 작업 상태를 기록한다. 현재 동작은 [장면과 입력 구조](architecture.md), 기존 검증 과제는 [후속 검증과 개선](next-improvements.md)을 함께 읽는다. 1단계 문서 PR 뒤 2단계 초기 로딩을 구현했다. 결과와 검증 한계는 [초기 로딩 진행률](loading-progress.md)에 기록했다. 3단계 본 컬럼 꽃 군집과 4단계 리액터 입자 동선을 구현했다. 5~8단계는 아직 구현하지 않았다.
+이 문서는 개선 요구사항과 단계별 작업 상태를 기록한다. 현재 동작은 [장면과 입력 구조](architecture.md), 기존 검증 과제는 [후속 검증과 개선](next-improvements.md)을 함께 읽는다. 1단계 문서 PR 뒤 2단계 초기 로딩을 구현했다. 결과와 검증 한계는 [초기 로딩 진행률](loading-progress.md)에 기록했다. 3단계 본 컬럼 꽃 군집과 4단계 리액터 입자 동선을 구현했다. 5단계 챔버 조명·수면·잔해를 구현했다. 6~8단계는 아직 구현하지 않았다.
 
 기준 소스는 `6e302ed`다. 이 계획을 정리하면서 Active Theory의 현재 화면을 새로 관찰하지는 않았다. AT와의 일치 여부, 영상의 반복 방식, 빛과 입자의 연결은 아직 검증하지 않았다.
 
@@ -23,7 +23,7 @@
 | 2 | 실제 준비 상태를 보여주는 초기 로딩 | [구현·검증](loading-progress.md) | App.tsx, Scene.tsx, ScenePreparation.ts, styles.css |
 | 3 | 본 컬럼 양쪽 꽃 형상의 입자 무리와 회전 방향 | 구현·검증, [기록](column-flowers-2026-09-23.md) | Atmosphere.ts, SceneSpine.ts, Journey.ts |
 | 4 | 천장에서 내려와 O를 이루는 리액터 입자 | 구현·검증, [기록](reactor-particles-2026-09-23.md) | Atmosphere.ts, SceneWorlds.ts, Journey.ts |
-| 5 | 리액터 챔버 조명·수면·파괴된 구조물 | 미착수 | SceneWorlds.ts, SceneWater.ts, SceneRuins.ts, SceneLighting.ts |
+| 5 | 리액터 챔버 조명·수면·파괴된 구조물 | 구현·검증, [기록](reactor-chamber-2026-09-23.md) | SceneWorlds.ts, SceneWater.ts, SceneRuins.ts, SceneLighting.ts |
 | 6 | 모니터 영상·포인터 반응·클릭 후 전환과 복귀 | 미착수 | SceneMonitors.ts, SceneVideo.ts, Scene.tsx, App.tsx |
 | 7 | 스케일 패널 파동·국소 입력 반응·부유 기포 | 미착수 | SceneScaleSurface.ts, SceneWorlds.ts, PointerFlow.ts, Atmosphere.ts |
 | 8 | 포레스트 경계 식물·입자·안개·영상과 빛 | 미착수 | SceneForest.ts, ForestGeometry.ts, SceneLayers.ts, SceneLightVideo.ts, SceneLightShafts.ts |
@@ -103,13 +103,13 @@ AT의 영상 표현, 호버·포인터 이동·클릭 반응과 전환을 최대
 ## 다음 세션에 붙여넣을 요청
 
 ```text
-Aether Studio의 5번 작업인 리액터 챔버 조명·수면·파괴된 구조물을 구현하고 검증해줘.
-
-AGENTS.md, docs/writing-guide.md, docs/scene-glossary.md, docs/improvement-plan-2026-09-23.md, docs/loading-progress.md, docs/column-flowers-2026-09-23.md, docs/reactor-particles-2026-09-23.md를 먼저 읽어줘.
-4단계 PR의 병합을 확인하고 최신 origin/main에서 별도 worktree·브랜치로 시작해줘. 한 세션 한 PR을 유지해줘.
-AT 챔버의 빛·수면 흐름·잔해 배치를 실제 정·역스크롤과 포인터 입력으로 관찰하고 사실·추정·자체 선택을 구분해줘. 원본 코드·모델·영상·로고는 복제하지 마.
-전체를 어둡게 하되 장치·수면·잔해를 구분할 수 있게 해줘. src/Reactor.ts의 실제 개구부를 광원 기준으로 사용해줘. 중심은 월드 (0,-37.25,0), 반경 1.12, 아래 출구 평면은 y=-37.38이야. 숨겨진 큰 천장 메시를 그대로 켜면 구멍을 막으므로 차폐와 개구부를 함께 검증해줘.
-4단계 입자 동선과 포인터 반응, 3단계 꽃 형상·공유 회전각, 초기 로딩 완료 이벤트·숨은 셰이더 준비·영상 지연 로딩을 유지해줘. 모니터 기능·스케일 파동·포레스트 개선은 넣지 마.
-독립 dependency install 또는 production preview에서 실제 글꼴 로드·실패 요청까지 확인하고 PC·모바일 전후 화면·연속 프레임, 천장 차폐·수면 반사·인접 전환과 lint/typecheck/관련 test/build를 검증해줘.
-PR에 목적·변경·검증·리스크와 시각적 변경 표를 남기고 최신 head 리뷰·스레드 대응과 CI 통과 후 승인된 squash merge를 진행해줘. 다음 단계 생성은 원래 조정 세션에 맡겨줘.
+Aether Studio 6단계 모니터 영상·포인터 반응·클릭 후 전환과 복귀를 구현하고 검증해줘.
+먼저 AGENTS.md, docs/writing-guide.md, docs/scene-glossary.md, docs/improvement-plan-2026-09-23.md와 2~5단계 기록을 읽어줘.
+5단계 PR 병합과 최신 origin/main을 확인한 뒤 별도 worktree/브랜치에서 한 PR로 진행해줘.
+Active Theory의 해당 구간을 포인터·클릭·닫기·복귀까지 실제 조작하고 사실·추정·자체 선택을 구분해 기록해줘. 원본 소스·영상·모델·로고는 복제하지 마.
+사용 가능한 자산으로 영상과 인터랙션을 구성하고 기존 Work/dialog와의 관계를 유지해줘. 새 URL 여부는 관찰 뒤 정하고 무관한 외부 페이지를 추가하지 마.
+호버·클릭·드래그 구분, 닫기·Escape·포커스 복귀, 영상 실패·정지·복귀, 모바일을 확인해줘. URL을 변경한다면 뒤로 가기와 직접 진입도 검사해줘.
+초기 로딩·숨은 shader 준비·영상 지연 로딩, 본 컬럼 공유 회전, 리액터 개구부 좌표·입자·천장·빛·수면 흐름을 보존해줘. 모니터 캡처와 물 반사의 재귀 렌더 방지도 유지해줘. excludeChamberSpotlight는 현재 유일한 개구부 SpotLight를 전제로 아래층의 모든 spot directLight를 차단하므로, 6~8단계에서 다른 스포트라이트를 추가하면 광원별 구분과 GPU 검사를 재검토해줘.
+lint/typecheck/관련 tests/build와 PC·모바일 실제 전후 캡처를 남기고 PR 리뷰에 응답해줘. 최신 head 리뷰·CI·Vercel 성공 및 미해결 결함 없음 확인 뒤 승인된 squash merge까지 진행해줘. 보호 규칙을 우회하지 마.
+계획의 6단계 상태와 7단계 시작 문구를 갱신하고 완료 후 원래 조정 세션에 인계해줘. 다음 세션 생성은 조정 세션이 맡아.
 ```

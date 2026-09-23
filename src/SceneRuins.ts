@@ -206,11 +206,20 @@ export function createSceneRuins(parent: THREE.Group, software: boolean, mobile:
   const ledges = create(fragment, stone, software ? 10 : mobile ? 16 : 22, 'aether-fractured-strata')
   for (let i = 0; i < ledges.count; i++) {
     const side = i % 2 ? 1 : -1
-    dummy.position.set(side * (5.55 + random(i + 9) * 2.0), -3.58,
+    dummy.position.set(side * (3.65 + random(i + 9) * 2.1), -3.35,
       hallZ + (random(i + 19) - .5) * hallDepth)
-    dummy.rotation.set((random(i) - .5) * .24, random(i + 1) * Math.PI, (random(i + 2) - .5) * .18)
-    dummy.scale.set(.32 + random(i + 12) * .66, .10 + random(i + 30) * .18, .25 + random(i + 24) * .44)
+    dummy.rotation.set((random(i) - .5) * .8, random(i + 1) * Math.PI, (random(i + 2) - .5) * .65)
+    dummy.scale.set(.8 + random(i + 12) * 1.25, .35 + random(i + 30) * .65, .55 + random(i + 24) * 1.1)
     write(ledges, i, .67 + random(i + 200) * .25)
+  }
+  // Fallen lintels interrupt the ordered bays, staying outside the central pool.
+  const fallen = create(new THREE.BoxGeometry(1, 1, 1), stone, 6, 'aether-broken-lintels')
+  for (let i = 0; i < fallen.count; i++) {
+    const side = i % 2 ? 1 : -1
+    dummy.position.set(side * (4.15 + random(i + 66) * .75), -3.18, 3.6 - Math.floor(i / 2) * 4.4)
+    dummy.rotation.set(.12 + random(i) * .25, side * (.3 + random(i + 7) * .8), side * .19)
+    dummy.scale.set(1.6 + random(i + 30), .34, .56)
+    write(fallen, i, .7 + random(i + 50) * .2)
   }
   for (const mesh of meshes) {
     mesh.instanceMatrix.needsUpdate = true
@@ -219,7 +228,7 @@ export function createSceneRuins(parent: THREE.Group, software: boolean, mobile:
   }
   group.userData.serviceBaysPerSide = bayCount
   group.userData.drawMeshes = meshes.length
-  group.userData.openPoolHalfWidth = 4.5
+  group.userData.openPoolHalfWidth = 2.4
   let disposed = false
   return {
     relief,

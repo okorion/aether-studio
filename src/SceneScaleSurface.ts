@@ -1,6 +1,9 @@
 import * as THREE from 'three'
 import { lightChoreographyGLSL, type LightFilmUniforms } from './SceneLighting'
 
+export const SCALE_WAVE_INTERVAL_SECONDS = 7
+export const SCALE_WAVE_TRAVEL_SECONDS = 3
+
 /** Seeded metal wear, packed as oxidation / roughness / relief. No image fetch. */
 function createScaleFinish() {
   const size = 256
@@ -44,6 +47,10 @@ export type ScaleSurfaceUniforms = {
   pointerAspect: { value: number }
   pointerFlow: { value: THREE.Texture }
   surfaceTime: { value: number }
+  surfaceExtent: { value: number }
+  pointerWaveOrigin: { value: THREE.Vector2 }
+  pointerWaveAge: { value: number }
+  pointerWaveStrength: { value: number }
   lightDepth: { value: number }
 }
 
@@ -76,6 +83,10 @@ export function createScaleSurface(
     shader.uniforms.uSurfaceAspect = uniforms.pointerAspect
     shader.uniforms.uSurfaceFlow = uniforms.pointerFlow
     shader.uniforms.uSurfaceTime = uniforms.surfaceTime
+    shader.uniforms.uSurfaceExtent = uniforms.surfaceExtent
+    shader.uniforms.uPointerWaveOrigin = uniforms.pointerWaveOrigin
+    shader.uniforms.uPointerWaveAge = uniforms.pointerWaveAge
+    shader.uniforms.uPointerWaveStrength = uniforms.pointerWaveStrength
     shader.uniforms.uScaleFinish = { value: finish }
     if (lightFilm && filmEnabled) {
       shader.uniforms.uLightFilm = lightFilm.map
@@ -89,6 +100,10 @@ export function createScaleSurface(
       uniform float uSurfaceStrength;
       uniform float uSurfaceAspect;
       uniform float uSurfaceTime;
+      uniform float uSurfaceExtent;
+      uniform vec2 uPointerWaveOrigin;
+      uniform float uPointerWaveAge;
+      uniform float uPointerWaveStrength;
       uniform sampler2D uSurfaceFlow;
       varying float vSurfaceHeat;
       varying vec3 vTilePoint;
@@ -110,18 +125,21 @@ export function createScaleSurface(
       vec2 tileScreen = tileClip.xy / max(tileClip.w, .001) * .5 + .5;
       vec2 tileFlow = (texture2D(uSurfaceFlow, clamp(tileScreen, 0., 1.)).rg
         - vec2(128. / 255.)) * (255. / 127.);
-      float trail = clamp(length(tileFlow) * 4.5, 0., 1.);
-      vSurfaceHeat = max(exp(-dot(tileDelta, tileDelta) * 20.0) * uSurfaceStrength, trail)
-        * step(.001, tileClip.w);
-      // Ring waves roll individual facets through their edge and back face.
-      // The shared input field retains the wake after the cursor has moved on.
+      float trail = clamp(length(tileFlow) * 2.0, 0., 1.);
+      vec2 waveDelta = (tileClip.xy / max(tileClip.w, .001) - uPointerWaveOrigin)
+        * vec2(uSurfaceAspect, 1.0);
+      float waveRadius = .035 + .245 * clamp(uPointerWaveAge / .72, 0., 1.);
+      float pointerWave = (1. - smoothstep(.018, .07, abs(length(waveDelta) - waveRadius)))
+        * (1. - smoothstep(.55, 1.12, uPointerWaveAge)) * uPointerWaveStrength;
+      float localTouch = exp(-dot(tileDelta, tileDelta) * 95.0)
+        * (uSurfaceStrength * .22 + trail * .12);
+      vSurfaceHeat = clamp(max(pointerWave, localTouch), 0., .8) * step(.001, tileClip.w);
+      // The automatic front crosses the entire tile sheet in three seconds.
       float tileRadius = length(tileCentre.xy);
-      // One outward heartbeat per second: a main pulse, a smaller echo, rest.
-      float beatPhase = fract(uSurfaceTime - tileRadius * .12);
-      float heartbeat = smoothstep(.02, .08, beatPhase) * (1. - smoothstep(.08, .22, beatPhase));
-      heartbeat += .32 * smoothstep(.22, .26, beatPhase) * (1. - smoothstep(.26, .38, beatPhase));
-      float tileAngle = heartbeat * 2.4;
-      tileAngle += vSurfaceHeat * 1.8 + (tileFlow.x - tileFlow.y) * .65;
+      float waveAge = mod(uSurfaceTime, ${SCALE_WAVE_INTERVAL_SECONDS.toFixed(1)})
+        - tileRadius / max(uSurfaceExtent, .001) * ${SCALE_WAVE_TRAVEL_SECONDS.toFixed(1)};
+      float heartbeat = smoothstep(.0, .09, waveAge) * (1. - smoothstep(.19, .39, waveAge));
+      float tileAngle = min(1.35, heartbeat * 1.12 + vSurfaceHeat * .90);
       vec2 radial = tileCentre.xy / max(tileRadius, .001);
       vec3 tileAxis = tileRadius > .001 ? vec3(radial.y, -radial.x, 0.) : vec3(0., 1., 0.);
       float tileCos = cos(tileAngle);
@@ -142,8 +160,7 @@ export function createScaleSurface(
         + tileAxis * dot(tileAxis, aArmour) * (1.0 - tileCos);
       vTilePoint = aArmour;
       vSheetPoint = tileCentre.xy + aArmour.xy * tileUnit;
-      float tileRipple = heartbeat * .48 * (1. - smoothstep(.4, 6., tileRadius));
-      transformed.z += (tileRipple + vSurfaceHeat * .28) / tileUnit;
+      transformed.z += (heartbeat * .27 + vSurfaceHeat * .20) / tileUnit;
       ${filmEnabled ? /* glsl */ `
         vec4 scalePoint = vec4(transformed, 1.);
         #ifdef USE_INSTANCING
@@ -224,6 +241,6 @@ export function createScaleSurface(
     `)
   }
   material.customProgramCacheKey = () =>
-    `aether-scale-radial-${software ? 'lite' : 'detailed'}-${filmEnabled ? 'film' : 'static'}-v3`
+    `aether-scale-radial-${software ? 'lite' : 'detailed'}-${filmEnabled ? 'film' : 'static'}-v4`
   return material
 }

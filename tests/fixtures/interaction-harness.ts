@@ -35,6 +35,7 @@ export type InteractionHarness = {
   probeProductionBoundaryPixels: typeof probeProductionBoundaryPixels
   probeOutgoingBonePixels: typeof probeOutgoingBonePixels
   probeScalePointer: typeof probeScalePointer
+  probeScaleBubbles: typeof probeScaleBubbles
   probeDevicePointer: typeof probeDevicePointer
   probeForestPointer: typeof probeForestPointer
   probeMonitorCapture: typeof probeMonitorCapture
@@ -757,8 +758,9 @@ function probeScalePointer() {
   const target = new THREE.WebGLRenderTarget(160, 120)
   const previousTarget = renderer.getRenderTarget()
   const previousAutoClear = renderer.autoClear
-  const draw = (x: number, strength: number, flowTexture?: THREE.Texture, elapsed = 10) => {
-    assembly.update(elapsed, .83, { ndc: new THREE.Vector2(x, 0), strength, aspect: 4 / 3, flowTexture }, probeCamera)
+  const draw = (x: number, strength: number, flowTexture?: THREE.Texture, elapsed = 6.5, rawX = x) => {
+    assembly.update(elapsed, .83, { ndc: new THREE.Vector2(x, 0), strength,
+      rawNdc: new THREE.Vector2(rawX, 0), active: strength > 0, aspect: 4 / 3, flowTexture }, probeCamera)
     renderer.setRenderTarget(target)
     renderer.render(probeScene, probeCamera)
     const image = new Uint8Array(160 * 120 * 4)
@@ -766,38 +768,59 @@ function probeScalePointer() {
     return image
   }
   const difference = (a: Uint8Array, b: Uint8Array) => {
-    let changed = 0, weight = 0, horizontal = 0
+    let changed = 0, weight = 0, horizontal = 0, radius = 0
     for (let i = 0; i < a.length; i += 4) {
       const delta = Math.abs(a[i] - b[i]) + Math.abs(a[i + 1] - b[i + 1]) + Math.abs(a[i + 2] - b[i + 2])
       if (delta > 12) {
         changed++
         weight += delta
         horizontal += ((i / 4) % 160) / 160 * delta
+        radius += Math.hypot(((i / 4) % 160) / 160 - .5,
+          Math.floor(i / 4 / 160) / 120 - .5) * delta
       }
     }
-    return { changed, centroidX: weight ? horizontal / weight : -1 }
+    return { changed, centroidX: weight ? horizontal / weight : -1,
+      centroidRadius: weight ? radius / weight : -1 }
   }
   try {
     renderer.autoClear = true
     const baseline = draw(0, 0)
+    const laterBaseline = draw(0, 0, undefined, 6.8)
+    const resetBaseline = draw(0, 0, undefined, 8.0)
     const left = draw(-.4, 1)
-    const right = draw(.4, 1)
-    const reset = draw(.4, 0)
+    const right = draw(.4, 1, undefined, 6.8)
+    const reset = draw(.4, 0, undefined, 8.0)
     for (let i = 0; i < 8; i++) {
       flow.move(-.55 + i * .05, 0, 4 / 3)
       flow.update(.035)
     }
-    const wake = draw(.9, 0, flow.texture)
+    const wake = draw(-.3, 0, flow.texture, 8.0)
     for (let i = 0; i < 150; i++) flow.update(1 / 60)
-    const wakeReset = draw(.9, 0, flow.texture)
-    const wave = draw(.9, 0, flow.texture, 10.3)
-    const nextBeat = draw(.9, 0, flow.texture, 11)
+    const wakeReset = draw(-.3, 0, flow.texture, 8.0)
+    const wave = draw(.9, 0, undefined, 7.15)
+    const middleWave = draw(.9, 0, undefined, 8.55)
+    const overlap = draw(-.4, 1, undefined, 8.55)
+    const outerWave = draw(.9, 0, undefined, 9.65)
+    const edgeWave = draw(.9, 0, undefined, 10.15)
+    const rest = draw(.9, 0, undefined, 11.2)
+    const nextBeat = draw(.9, 0, undefined, 14.15)
+    const edgeBaseline = draw(0, 0, undefined, 15.0)
+    const edge = draw(.98, 1, undefined, 15.0)
+    const rawBaseline = draw(0, 0, undefined, 16.2)
+    const raw = draw(0, 1, undefined, 16.2, -.4)
     return {
-      left: difference(baseline, left), right: difference(baseline, right),
-      reset: difference(baseline, reset),
-      wake: difference(baseline, wake), wakeReset: difference(baseline, wakeReset),
+      left: difference(baseline, left), right: difference(laterBaseline, right),
+      reset: difference(resetBaseline, reset),
+      edge: difference(edgeBaseline, edge),
+      raw: difference(rawBaseline, raw),
+      wake: difference(resetBaseline, wake), wakeReset: difference(resetBaseline, wakeReset),
       wave: difference(baseline, wave),
-      nextBeat: difference(baseline, nextBeat),
+      middleWave: difference(baseline, middleWave),
+      overlap: difference(middleWave, overlap),
+      outerWave: difference(baseline, outerWave),
+      edgeWave: difference(baseline, edgeWave),
+      rest: difference(baseline, rest),
+      nextBeat: difference(wave, nextBeat),
       matricesUnchanged: originalMatrices.every((value, index) => value === tiles.instanceMatrix.array[index]),
     }
   } finally {
@@ -808,6 +831,66 @@ function probeScalePointer() {
     target.dispose()
     flow.dispose()
   }
+}
+
+function probeScaleBubbles() {
+  const scene = new THREE.Scene()
+  const assembly = createSceneWorlds(scene, true)
+  assembly.update(0, .83)
+  const bubbles = scene.getObjectByName('aether-scale-bubbles')
+  if (!(bubbles instanceof THREE.Points) || !(bubbles.material instanceof THREE.ShaderMaterial))
+    throw new Error('Scale bubbles are missing')
+  const geometry = bubbles.geometry
+  const material = bubbles.material
+  const initialPositions = Array.from(geometry.getAttribute('position').array)
+  const probeScene = new THREE.Scene()
+  probeScene.attach(bubbles)
+  bubbles.position.set(0, 0, 0)
+  const camera = new THREE.PerspectiveCamera(42, 4 / 3, .1, 60)
+  camera.position.set(0, 0, 18)
+  camera.lookAt(0, 0, 0)
+  const target = new THREE.WebGLRenderTarget(160, 120)
+  const previousTarget = renderer.getRenderTarget()
+  const previousAutoClear = renderer.autoClear
+  const draw = (time: number) => {
+    material.uniforms.uTime.value = time
+    material.uniforms.uOpacity.value = 1
+    renderer.setRenderTarget(target)
+    renderer.render(probeScene, camera)
+    const image = new Uint8Array(160 * 120 * 4)
+    renderer.readRenderTargetPixels(target, 0, 0, 160, 120, image)
+    return image
+  }
+  const changed = (a: Uint8Array, b: Uint8Array) => {
+    let pixels = 0
+    for (let i = 0; i < a.length; i += 4)
+      if (Math.abs(a[i] - b[i]) + Math.abs(a[i + 1] - b[i + 1]) + Math.abs(a[i + 2] - b[i + 2]) > 2)
+        pixels++
+    return pixels
+  }
+  let geometryDisposed = false, materialDisposed = false
+  geometry.addEventListener('dispose', () => { geometryDisposed = true })
+  material.addEventListener('dispose', () => { materialDisposed = true })
+  let result: { count: number; movingPixels: number; frozenPixels: number; positionsUnchanged: boolean } | undefined
+  try {
+    renderer.autoClear = true
+    const first = draw(0)
+    const moved = draw(2)
+    const frozen = draw(2)
+    result = {
+      count: geometry.getAttribute('position').count,
+      movingPixels: changed(first, moved), frozenPixels: changed(moved, frozen),
+      positionsUnchanged: initialPositions.every((value, i) => value === geometry.getAttribute('position').array[i]),
+    }
+  } finally {
+    renderer.setRenderTarget(previousTarget)
+    renderer.autoClear = previousAutoClear
+    probeScene.clear()
+    assembly.dispose()
+    target.dispose()
+  }
+  if (!geometryDisposed || !materialDisposed || !result) throw new Error('Bubble resources were not disposed')
+  return result
 }
 
 function probeDevicePointer() {
@@ -1385,6 +1468,7 @@ window.interactionHarness = {
   probeProductionBoundaryPixels,
   probeOutgoingBonePixels,
   probeScalePointer,
+  probeScaleBubbles,
   probeDevicePointer,
   probeForestPointer,
   probeMonitorCapture,

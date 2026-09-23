@@ -93,7 +93,7 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
   const lightVideoRef = useRef<ReturnType<typeof createSceneLightVideo> | null>(null)
   // Motion preference changes rebuild the render budget, preserving the view
   // and time so pausing cannot snap a user's chosen angle back to the front.
-  const preserved = useRef({ yaw: 0, pitch: 0, elapsed: 0 })
+  const preserved = useRef({ yaw: 0, pitch: 0, elapsed: 0, scaleElapsed: 0 })
 
   useEffect(() => {
     loadingRef.current = onLoading
@@ -700,6 +700,7 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
       let targetProgress = readProgress()
       let progress = targetProgress
       let elapsed = preserved.current.elapsed
+      let scaleElapsed = preserved.current.scaleElapsed
       let previousTime = 0
       let renderedFrames = 0
       let frameAverage = 16
@@ -803,7 +804,12 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
         const wallDelta = previousTime ? (timestamp - previousTime) / 1000 : 0.016
         const delta = Math.min(wallDelta, 0.05)
         previousTime = timestamp
-        if (!reducedMotion) elapsed += delta
+        if (!reducedMotion) {
+          elapsed += delta
+          // Keep the panel's seven-second clock in wall seconds even when the
+          // software renderer takes longer than the shared animation step.
+          scaleElapsed += Math.max(0, wallDelta)
+        }
         progress = reducedMotion
           ? targetProgress
           : THREE.MathUtils.damp(progress, targetProgress, 7, Math.min(wallDelta, 0.4))
@@ -821,6 +827,7 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
         preserved.current.yaw = input.yaw
         preserved.current.pitch = input.pitch
         preserved.current.elapsed = elapsed
+        preserved.current.scaleElapsed = scaleElapsed
         const fold = smooth(.205, .295, scroll) * (1 - state.end)
         // The original organism unfolds into the spine. Keep its free tails
         // from crossing the project screens after that transformation settles.
@@ -887,7 +894,8 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
         lightFilm.ready.value = lightVideo.getReady() ? 1 : 0
         canvas.dataset.lightVideoState = JSON.stringify(lightVideo.getStatus())
         // Projection-based surface interaction must use this frame's camera.
-        worlds.update(elapsed, scroll, input.field, camera)
+        worlds.update(elapsed, scroll, input.field, camera, scaleElapsed)
+        canvas.dataset.scaleTime = scaleElapsed.toFixed(4)
         const monitorHover = sceneAvailable() && input.field.active ? worlds.getHoveredPanel() : -1
         canvas.dataset.monitorHover = String(monitorHover)
         document.documentElement.classList.toggle('scene-monitor-hover', monitorHover >= 0)

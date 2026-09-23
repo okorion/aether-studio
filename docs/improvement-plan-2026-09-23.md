@@ -21,7 +21,7 @@
 | --- | --- | --- | --- |
 | 1 | README를 개인 사이드 프로젝트 소개로 수정하고 이 계획 저장 | 이번 PR에 반영 | README.md, docs/README.md |
 | 2 | 실제 준비 상태를 보여주는 초기 로딩 | [구현·검증](loading-progress.md) | App.tsx, Scene.tsx, ScenePreparation.ts, styles.css |
-| 3 | 본 컬럼 양쪽 꽃 형상의 입자 무리와 회전 방향 | 미착수 | Atmosphere.ts, SceneSpine.ts, Journey.ts |
+| 3 | 본 컬럼 양쪽 꽃 형상의 입자 무리와 회전 방향 | 구현·검증, [기록](column-flowers-2026-09-23.md) | Atmosphere.ts, SceneSpine.ts, Journey.ts |
 | 4 | 천장에서 내려와 O를 이루는 리액터 입자 | 미착수 | Atmosphere.ts, SceneWorlds.ts, Journey.ts |
 | 5 | 리액터 챔버 조명·수면·파괴된 구조물 | 미착수 | SceneWorlds.ts, SceneWater.ts, SceneRuins.ts, SceneLighting.ts |
 | 6 | 모니터 영상·포인터 반응·클릭 후 전환과 복귀 | 미착수 | SceneMonitors.ts, SceneVideo.ts, Scene.tsx, App.tsx |
@@ -103,13 +103,13 @@ AT의 영상 표현, 호버·포인터 이동·클릭 반응과 전환을 최대
 ## 다음 세션에 붙여넣을 요청
 
 ```text
-Aether Studio의 3번 작업인 본 컬럼 양쪽 꽃 형상 입자 무리와 회전 방향을 구현하고 검증해줘.
+Aether Studio의 4번 작업인 리액터 입자 동선을 구현하고 검증해줘.
 
-AGENTS.md, docs/writing-guide.md, docs/scene-glossary.md, docs/improvement-plan-2026-09-23.md, docs/loading-progress.md를 먼저 읽어줘.
-2단계 초기 로딩 PR 병합을 확인하고 최신 origin/main에서 별도 worktree·브랜치로 시작해줘. 한 세션 한 PR을 유지해줘.
-AT의 본 컬럼 구간을 같은 뷰포트의 정·역스크롤 영상으로 직접 관찰하고 사실과 추정을 구분해줘. 양쪽 입자 무리의 전체 형상이 꽃으로 읽히도록 구성하고, 아래로 스크롤할 때 본 컬럼과 입자 무리가 화면에서 같은 반시계 방향으로 보이게 해줘. 개별 입자를 꽃 아이콘으로 바꾸는 요청은 아니야.
-같은 카메라·스크롤 조건에서 방향, 상대 속도, 모니터 가림과 역스크롤 복원을 확인해줘. 초기 로딩 완료 이벤트와 숨은 씬 셰이더 준비·영상 지연 로딩은 유지해줘.
-이번 범위 밖의 리액터·수면·모니터·스케일 패널·포레스트 요구사항은 구현하지 마.
-lint·typecheck·관련 테스트·build, 실제 PC·모바일 전후 화면과 연속 프레임을 검증하고 PR에 목적·변경·검증·리스크·시각적 변경 표를 남겨줘.
-최신 head 자동 리뷰의 요약과 실제 스레드를 확인해 답변·수정·resolve하고 CI가 통과하면 승인된 범위대로 squash merge해줘. 다음 4단계 세션 생성은 원래 조정 세션이 담당해.
+AGENTS.md, docs/writing-guide.md, docs/scene-glossary.md, docs/improvement-plan-2026-09-23.md, docs/loading-progress.md, docs/column-flowers-2026-09-23.md를 먼저 읽어줘.
+3단계 PR의 병합을 확인하고 최신 origin/main에서 별도 worktree·브랜치로 시작해줘. 한 세션 한 PR을 유지해줘.
+AT에서 개구부에 모임 → 하강 → O 형성을 실제 정·역스크롤과 포인터 입력으로 관찰해줘. 관찰과 추정을 나누고 원본 자산은 복제하지 마.
+천장 원형 개구부에서 출발하는 입자 동선과 스크롤 구간을 구현해줘. 정지·빠른 왕복·역스크롤에서 위치가 튀지 않아야 해. 기존 리액터 포인터 반응, 본 컬럼 꽃 형상·공유 회전각, 초기 로딩 완료 이벤트·숨은 셰이더 준비·영상 지연 로딩을 유지해줘.
+챔버 조명·수면·모니터 기능·스케일 파동·포레스트 개선은 이번 범위에 넣지 마.
+독립 dependency install 또는 production preview에서 실제 글꼴 로드·실패 요청까지 확인하고, PC·모바일 동일 조건 전후 화면·연속 프레임과 lint/typecheck/관련 test/build를 검증해줘.
+PR에 목적·변경·검증·리스크와 시각적 변경 표를 남기고 최신 head 리뷰·스레드 대응과 CI 통과 후 승인된 squash merge를 진행해줘. 다음 단계 생성은 원래 조정 세션에 맡겨줘.
 ```

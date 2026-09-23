@@ -10,21 +10,23 @@ test('@interaction anchored and moving grains share one rotating spine path', as
   if (!chunk || chunk.type !== 'chunk') throw new Error('Particle fixture did not compile')
   await page.goto('about:blank')
   await page.addScriptTag({ content: chunk.code })
-  const samples = await page.evaluate(() => (window as unknown as {
-    ParticleRotation: { sampleRotation(): Record<string, number[]> }
-  }).ParticleRotation.sampleRotation())
-  const { start, end, moving, matched, reverse } = samples
-  // GPU trigonometry varies slightly across drivers; 0.001 world-unit tolerance
-  // still rejects stationary anchors and the old, separately rotating path.
-  expect(start[3]).toBe(1)
-  expect(end[1]).toBeCloseTo(start[1], 3)
-  expect(Math.hypot(end[0], end[2])).toBeCloseTo(Math.hypot(start[0], start[2]), 3)
-  const angle = Math.atan2(end[2], end[0]) - Math.atan2(start[2], start[0])
-  expect(Math.atan2(Math.sin(angle), Math.cos(angle))).toBeCloseTo(.03 * 55 * .20, 3)
-  expect(Math.abs(moving[1] - end[1])).toBeGreaterThan(.1)
-  for (let axis = 0; axis < 3; axis++) {
-    expect(matched[axis]).toBeCloseTo(end[axis], 3)
-    expect(reverse[axis]).toBeCloseTo(start[axis], 3)
+  for (const mobile of [false, true]) for (const progress of [.30, .36, .4, .49, .55, .58]) {
+    const samples = await page.evaluate(({ progress, mobile }) => (window as unknown as {
+      ParticleRotation: { sampleRotation(progress: number, mobile: boolean): Record<string, number[]> }
+    }).ParticleRotation.sampleRotation(progress, mobile), { progress, mobile })
+    const { start, expected, end, moving, matched, reverse } = samples
+    // GPU trigonometry varies slightly across drivers; 0.005 world-unit tolerance
+    // still rejects stationary anchors and the old, separately rotating path.
+    expect(start[3]).toBe(1)
+    expect(Math.abs(end[1] - start[1])).toBeLessThan(.005)
+    expect(Math.abs(Math.hypot(end[0], end[2]) - Math.hypot(start[0], start[2]))).toBeLessThan(.005)
+    // Compare GPU motion with the actual SceneWorlds matter transform, not
+    // a second copy of the shader's rotation convention or a fixed sign.
+    expect(Math.abs(moving[1] - end[1])).toBeGreaterThan(.1)
+    for (let axis = 0; axis < 3; axis++) {
+      expect(Math.abs(end[axis] - expected[axis])).toBeLessThan(.005)
+      expect(Math.abs(matched[axis] - end[axis])).toBeLessThan(.005)
+      expect(reverse[axis]).toBeCloseTo(start[axis], 3)
+    }
   }
 })
-

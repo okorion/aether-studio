@@ -522,8 +522,8 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
 
     const surfaces = await page.evaluate(() => window.interactionHarness.probeWorldSurfaceDepth())
     const contact = surfaces.contact
-    // The footing intersects the real displaced floor, and the solid lid
-    // overlaps the annular socket instead of leaving its centre open.
+    // The footing intersects the real displaced floor, and the annular lid
+    // overlaps the socket while preserving the central particle passage.
     expect(contact.plinthBottom).toBeLessThan(contact.floorMin)
     expect(contact.floorMin - contact.plinthBottom).toBeLessThan(.06)
     expect(contact.floorMax - contact.floorMin).toBeGreaterThan(.02)
@@ -732,15 +732,17 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
     expect(pixels.moved.addedCoverage).toBeGreaterThan(6)
     expect(pixels.restored.changedBytes).toBe(0)
     expect(pixels.seedsUnchanged).toBe(true)
-    expect(pixels.chamberEntry.map(entry => entry.progress)).toEqual([.635, .65])
+    expect(pixels.chamberEntry.map(entry => entry.progress)).toEqual([.635, .65, .68])
     for (const entry of pixels.chamberEntry) {
       const label = `converging grains at ${entry.progress}`
       expect(entry.wipe, label).toBe(1)
-      expect(entry.hiddenBaseline, label).toBeGreaterThan(20)
+      if (entry.progress < .66) expect(entry.hiddenBaseline, label).toBeGreaterThan(20)
       expect(entry.leakedAbove, label).toBe(0)
       expect(entry.changedBelow, label).toBe(0)
     }
-    expect(pixels.chamberEntry[1].visibleBelow).toBeGreaterThan(20)
+    // Gathered grains stay behind the entering wrapper; descent is revealed later.
+    expect(pixels.chamberEntry[1].visibleBelow).toBe(0)
+    expect(pixels.chamberEntry[2].visibleBelow).toBeGreaterThan(20)
     expect(pixels.roomVisibility).toEqual([[true, true, true], [true, true, true], [false, false, false], [true, true, true]])
   })
 

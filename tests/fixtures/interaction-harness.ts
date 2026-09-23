@@ -808,6 +808,12 @@ function probeScalePointer() {
     const edge = draw(.98, 1, undefined, 15.0)
     const rawBaseline = draw(0, 0, undefined, 16.2)
     const raw = draw(0, 1, undefined, 16.2, -.4)
+    for (let i = 0; i <= 40; i++) {
+      const x = -.4 + i * .02
+      assembly.update(18 + i * .06, .83, { ndc: new THREE.Vector2(x, 0),
+        rawNdc: new THREE.Vector2(x, 0), active: true, strength: 1, aspect: 4 / 3 }, probeCamera)
+    }
+    const slowMove = assembly.getScaleWaveState()
     return {
       left: difference(baseline, left), right: difference(laterBaseline, right),
       reset: difference(resetBaseline, reset),
@@ -821,6 +827,7 @@ function probeScalePointer() {
       edgeWave: difference(baseline, edgeWave),
       rest: difference(baseline, rest),
       nextBeat: difference(wave, nextBeat),
+      slowMove: { originX: slowMove.origin.x, age: slowMove.age, strength: slowMove.strength },
       matricesUnchanged: originalMatrices.every((value, index) => value === tiles.instanceMatrix.array[index]),
     }
   } finally {

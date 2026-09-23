@@ -77,7 +77,6 @@ export function createSceneWorlds(
   const pointerWaveOrigin = { value: new THREE.Vector2() }
   const pointerWaveAge = { value: -1 }
   const pointerWaveStrength = { value: 0 }
-  const lastScalePointer = new THREE.Vector2()
   let scalePointerActive = false
   let pointerWaveStart = -Infinity
   const lightDepth = { value: 0 }
@@ -579,6 +578,10 @@ export function createSceneWorlds(
   bindGroupCurtain(scaleWall, scaleCurtain)
   bindGroupCurtain(lowerSpace, scaleCurtain)
   return {
+    getScaleWaveState() {
+      return { origin: pointerWaveOrigin.value.clone(), age: pointerWaveAge.value,
+        strength: pointerWaveStrength.value }
+    },
     getChamberHeight() {
       return space.getWorldPosition(chamberWorld).y
     },
@@ -659,13 +662,12 @@ export function createSceneWorlds(
       pointerFlow.value = pointer?.flowTexture ?? neutralFlow
       const nextPointerActive = Boolean(pointer?.active && pointerStrength.value > .1)
       if (nextPointerActive && scalePointer) {
-        const moved = lastScalePointer.distanceTo(scalePointer) > .035
+        const moved = pointerWaveOrigin.value.distanceTo(scalePointer) > .035
         if ((!scalePointerActive || moved) && scaleTime - pointerWaveStart >= .16) {
           pointerWaveOrigin.value.copy(scalePointer)
           pointerWaveStart = scaleTime
           pointerWaveStrength.value = Math.min(.7, pointerStrength.value * .7)
         }
-        lastScalePointer.copy(scalePointer)
       }
       scalePointerActive = nextPointerActive
       pointerWaveAge.value = Number.isFinite(pointerWaveStart) ? scaleTime - pointerWaveStart : -1

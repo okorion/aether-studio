@@ -1,6 +1,6 @@
 # 개선 요구사항과 작업 순서 · 2026-09-23
 
-이 문서는 2026-09-23에 정한 요구사항과 작업 순서를 보존한다. 1~7단계는 병합됐고, 8단계 구현과 검증은 [포레스트 경계 기록](forest-boundary-2026-09-23.md)에 정리한다. 현재 동작은 [장면과 입력 구조](architecture.md), 남은 실기기·성능 검증은 [후속 검증과 개선](next-improvements.md)을 함께 읽는다.
+이 문서는 2026-09-23에 정한 요구사항과 작업 순서를 보존한다. 1~7단계는 병합됐고, 8단계 구현과 검증은 [PR #31](https://github.com/okorion/aether-studio/pull/31)과 [포레스트 경계 기록](forest-boundary-2026-09-23.md)에 정리한다. 현재 동작은 [장면과 입력 구조](architecture.md), 남은 실기기·성능 검증은 [후속 검증과 개선](next-improvements.md)을 함께 읽는다.
 
 원래 계획의 기준 소스는 `6e302ed`다. 당시에는 Active Theory의 현재 화면을 새로 관찰하지 않았다. 후속 관찰과 자체 선택은 각 단계 기록에 남겼다. AT 영상의 반복 방식과 하드웨어 성능은 확정하지 않았다.
 
@@ -26,7 +26,7 @@
 | 5 | 리액터 챔버 조명·수면·파괴된 구조물 | 완료 · [PR #28](https://github.com/okorion/aether-studio/pull/28) · [기록](reactor-chamber-2026-09-23.md) | SceneWorlds.ts, SceneWater.ts, SceneRuins.ts, SceneLighting.ts |
 | 6 | 모니터 영상·포인터 반응·클릭 후 전환과 복귀 | 완료 · [PR #29](https://github.com/okorion/aether-studio/pull/29) · [기록](monitor-interactions-2026-09-23.md) | SceneMonitors.ts, SceneVideo.ts, Scene.tsx, App.tsx |
 | 7 | 스케일 패널 파동·국소 입력 반응·부유 기포 | 완료 · [PR #30](https://github.com/okorion/aether-studio/pull/30) · [기록](scale-surface-2026-09-23.md) | SceneScaleSurface.ts, SceneWorlds.ts, SceneScaleBubbles.ts |
-| 8 | 포레스트 경계 식물·입자·안개·영상과 빛 | 구현·검증 중 · [기록](forest-boundary-2026-09-23.md) | SceneForest.ts, SceneLightShafts.ts |
+| 8 | 포레스트 경계 식물·입자·안개·영상과 빛 | 완료 · [PR #31](https://github.com/okorion/aether-studio/pull/31) · [기록](forest-boundary-2026-09-23.md) | SceneForest.ts, SceneLightShafts.ts |
 
 파일 목록은 조사 출발점이며 수정 범위를 미리 확정하는 목록은 아니다. Scene.tsx, Atmosphere.ts, 포인터와 조명 관련 코드는 여러 씬이 공유하므로 시각 작업을 동시에 시작하지 않는다. 병행할 필요가 생기면 별도 worktree·브랜치와 파일 담당 범위를 정한다.
 

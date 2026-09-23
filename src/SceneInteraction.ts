@@ -315,7 +315,8 @@ export function createSceneInteraction(
       }
     }
   }
-  const move = (event: PointerEvent) => {
+  const move = (event: Pick<PointerEvent, 'clientX' | 'clientY' | 'pointerType' | 'pointerId' | 'target' | 'timeStamp'>) => {
+    if (event.pointerType === 'touch' && touchId !== null) return
     if (!enabled && retiringSurface) return
     if (!enabled || reducedMotion || document.hidden || event.pointerType === 'touch' || !home() || blocked() ||
       !Number.isFinite(event.clientX) || !Number.isFinite(event.clientY)) {
@@ -374,6 +375,9 @@ export function createSceneInteraction(
     document.documentElement.classList.add('scene-dragging')
   }
   const release = (event?: PointerEvent) => {
+    // Native pan cancels Pointer Events, while passive Touch Events continue.
+    // Let the touch stream own its lifetime without cancelling browser scroll.
+    if (event?.pointerType === 'touch') return
     if (event?.type === 'pointercancel') {
       clearField()
     }
@@ -385,12 +389,14 @@ export function createSceneInteraction(
     document.documentElement.classList.remove('scene-dragging')
   }
   const leave = () => {
+    touchId = null
     clearField()
     breakStroke()
     release()
     velocityYaw = 0
   }
   const leaveViewport = () => {
+    touchId = null
     // Keep the surface response alive while it decays. Re-entry starts a new
     // flow stroke, so crossing the window edge cannot inject a long segment.
     field.active = false
@@ -399,6 +405,10 @@ export function createSceneInteraction(
     breakStroke()
     release()
     velocityYaw = 0
+  }
+  const leaveDocument = (event: Event) => {
+    if (event instanceof PointerEvent && event.pointerType === 'touch') return
+    leaveViewport()
   }
   const reset = () => {
     leave()
@@ -415,6 +425,46 @@ export function createSceneInteraction(
   const doubleClick = (event: MouseEvent) => {
     if (enabled && !reducedMotion && orbitEnabled && !interactive(event.target) && !blocked() && home()) reset()
   }
+  let touchId: number | null = null
+  const touchMove = (event: TouchEvent) => {
+    if (touchId === null) return
+    if (event.touches.length !== 1) { leave(); return }
+    const touch = Array.from(event.touches).find(item => item.identifier === touchId)
+    if (!touch) return
+    move({ clientX: touch.clientX, clientY: touch.clientY, pointerType: 'touch-surface',
+      pointerId: -2, target: event.target, timeStamp: event.timeStamp })
+  }
+  const touchStart = (event: TouchEvent) => {
+    if (!enabled || reducedMotion || document.hidden || !home() || blocked() ||
+      interactive(event.target) || event.touches.length !== 1) { leave(); return }
+    release()
+    velocityYaw = 0
+    breakStroke()
+    touchId = event.touches[0].identifier
+    touchMove(event)
+    // Even a light tap launches one short head. Subsequent drag samples use
+    // the ordinary forest trail and the shared scale-panel flow texture.
+    if (field.active) {
+      addSample(pointer.x + .008, pointer.y + .004)
+      flow.move(pointer.x + .008, pointer.y + .004, field.aspect)
+    }
+  }
+  const touchEnd = (event: TouchEvent) => {
+    if (touchId === null || !Array.from(event.changedTouches).some(t => t.identifier === touchId)) return
+    touchId = null
+    // A tap may begin/end between two animation frames. Preserve a small
+    // decaying impulse so the scale surface still responds to that tap.
+    fieldTarget = Math.min(fieldTarget, .6)
+    flow.release()
+    breakStroke()
+    if (event.type === 'touchcancel') clearField()
+  }
+  // No preventDefault, pointer capture or touch-action override: vertical
+  // dragging and momentum stay owned by the browser, including after cancel.
+  window.addEventListener('touchstart', touchStart, { passive: true })
+  window.addEventListener('touchmove', touchMove, { passive: true })
+  window.addEventListener('touchend', touchEnd, { passive: true })
+  window.addEventListener('touchcancel', touchEnd, { passive: true })
   window.addEventListener('pointermove', move, { passive: true })
   window.addEventListener('pointerdown', down, { passive: true })
   window.addEventListener('pointerup', release)
@@ -422,7 +472,7 @@ export function createSceneInteraction(
   window.addEventListener('blur', leaveViewport)
   window.addEventListener('hashchange', navigate)
   window.addEventListener('dblclick', doubleClick)
-  document.addEventListener('pointerleave', leaveViewport)
+  document.addEventListener('pointerleave', leaveDocument)
   const visibility = () => {
     if (document.hidden) leave()
   }
@@ -503,13 +553,17 @@ export function createSceneInteraction(
       disposed = true
       leave()
       window.removeEventListener('pointermove', move)
+      window.removeEventListener('touchstart', touchStart)
+      window.removeEventListener('touchmove', touchMove)
+      window.removeEventListener('touchend', touchEnd)
+      window.removeEventListener('touchcancel', touchEnd)
       window.removeEventListener('pointerdown', down)
       window.removeEventListener('pointerup', release)
       window.removeEventListener('pointercancel', release)
       window.removeEventListener('blur', leaveViewport)
       window.removeEventListener('hashchange', navigate)
       window.removeEventListener('dblclick', doubleClick)
-      document.removeEventListener('pointerleave', leaveViewport)
+      document.removeEventListener('pointerleave', leaveDocument)
       document.removeEventListener('visibilitychange', visibility)
       scene.remove(points, ribbon)
       geometry.dispose()

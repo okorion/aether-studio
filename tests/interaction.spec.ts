@@ -903,7 +903,7 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
     }
   })
 
-  test('reduced motion, touch input, and UI controls never begin an orbit or trail', async ({
+  test('reduced motion, unpaired touch pointers, and UI controls never begin an orbit or trail', async ({
     page,
   }) => {
     await page.evaluate(() => window.interactionHarness.reset(true))
@@ -937,6 +937,45 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
     const excluded = await page.evaluate(() => window.interactionHarness.step(0.5))
     expect(excluded).toEqual({ yaw: 0, pitch: 0, zoom: 0, burst: 0, illuminatedPixels: 0, rightmostPixel: -1 })
     await expect(page.locator('#interaction-canvas')).toHaveAttribute('data-camera-mode', 'idle')
+  })
+
+  test('passive native touch launches light, drives surface flow and survives scroll pointercancel', async ({ page }) => {
+    const result = await page.evaluate(() => {
+      const h = window.interactionHarness
+      h.reset()
+      const canvas = document.getElementById('interaction-canvas')!
+      const touch = (type: string, x: number, y: number, fingers = 1) => {
+        const point = new Touch({ identifier: 7, target: canvas, clientX: x, clientY: y })
+        const points = fingers ? [point] : []
+        if (fingers === 2) points.push(new Touch({ identifier: 8, target: canvas, clientX: x + 80, clientY: y }))
+        const event = new TouchEvent(type, { bubbles: true, cancelable: true,
+          touches: points, targetTouches: points, changedTouches: [point] })
+        canvas.dispatchEvent(event)
+        return event.defaultPrevented
+      }
+      const prevented = [touch('touchstart', 300, 220)]
+      const tap = h.step(.12)
+      canvas.dispatchEvent(new PointerEvent('pointercancel', { bubbles: true, pointerType: 'touch', pointerId: 7 }))
+      prevented.push(touch('touchmove', 340, 180))
+      h.stepField(.08)
+      prevented.push(touch('touchmove', 400, 140))
+      const drag = h.stepField(.12)
+      prevented.push(touch('touchend', 400, 140, 0))
+      const decay = h.stepField(6)
+      touch('touchstart', 300, 220)
+      touch('touchstart', 300, 220, 2)
+      const pinch = h.stepField(.1)
+      return { prevented, tap, drag, decay, pinch }
+    })
+    expect(result.prevented.every(value => !value)).toBe(true)
+    expect(result.tap.illuminatedPixels).toBeGreaterThan(0)
+    expect(result.drag.flowEnergy).toBeGreaterThan(0)
+    expect(result.drag.strength).toBeGreaterThan(.1)
+    expect(result.drag.yaw).toBe(0)
+    expect(result.drag.pitch).toBe(0)
+    expect(result.decay.strength).toBeLessThan(.001)
+    expect(result.pinch.strength).toBe(0)
+    expect(result.pinch.active).toBe(false)
   })
 
   test('orbit locks preserve the chosen view and mechanical scroll can stop and reverse', async ({ page }) => {

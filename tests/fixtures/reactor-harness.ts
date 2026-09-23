@@ -39,7 +39,7 @@ export function probeReactor(mobile: boolean, software: boolean) {
     return Array.from({ length: count }, (_, i) => Array.from(pixels.slice(i * 4, i * 4 + 3)))
   }
   try {
-    const start = read(.665)
+    const start = read(.640)
     const centre = aperture.getWorldPosition(new THREE.Vector3())
     const box = new THREE.Box3().setFromObject(aperture)
     const attr = aperture.geometry.getAttribute('position')
@@ -49,14 +49,14 @@ export function probeReactor(mobile: boolean, software: boolean) {
     const centreHits = ray.intersectObject(aperture).length
     ray.ray.origin.x += (bore + (box.max.x - centre.x)) / 2
     const rimHits = ray.intersectObject(aperture).length
-    const j = sampleJourney(.665)
+    const j = sampleJourney(.640)
     const radius = j.radius + (mobile ? 4.8 : 0)
     camera.position.set(Math.sin(j.azimuth) * Math.cos(j.elevation) * radius, j.height + Math.sin(j.elevation) * radius, Math.cos(j.azimuth) * Math.cos(j.elevation) * radius)
     camera.lookAt(0, j.height, 0); camera.updateMatrixWorld(true)
     const projection = start.map(p => new THREE.Vector3(...p as [number, number, number]).project(camera).toArray())
-    const mid = read(.690), end = read(.720), stopped = read(.690, 200)
+    const mid = read(.690), end = read(.735), stopped = read(.690, 200)
     read(.78); read(.61); read(.74)
-    const reverse = read(.665)
+    const reverse = read(.640)
     return { start, mid, end, stopped, reverse, centre: centre.toArray(), bore, centreHits, rimHits,
       projection, centreProjection: centre.clone().project(camera).toArray() }
   } finally { worlds.dispose(); atmosphere.dispose(); geometry.dispose(); material.dispose(); target.dispose(); renderer.dispose() }

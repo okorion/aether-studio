@@ -14,7 +14,8 @@ test('@interaction anchored and moving grains share one rotating spine path', as
     const samples = await page.evaluate(({ progress, mobile }) => (window as unknown as {
       ParticleRotation: { sampleRotation(progress: number, mobile: boolean): Record<string, number[]> }
     }).ParticleRotation.sampleRotation(progress, mobile), { progress, mobile })
-    const { start, expected, end, moving, matched, reverse } = samples
+    const { start, expected, end, moving, matched, reverse, anchors } = samples
+    expect(anchors).toEqual([-29.8, -29.8, -29.8])
     // GPU trigonometry varies slightly across drivers; 0.005 world-unit tolerance
     // still rejects stationary anchors and the old, separately rotating path.
     expect(start[3]).toBe(1)

@@ -9,6 +9,7 @@ const boundaryGLSL = /* glsl */ `
   uniform float uForestEntry;
   uniform float uDeviceEntry;
   uniform float uTime;
+  uniform vec2 uBoundaryMist;
   varying vec4 vClip;
   varying float vZone;
   float sceneWeight() {
@@ -31,6 +32,7 @@ export function createSceneLightShafts(
   const shared = {
     uLightFilm: film.map, uLightFilmReady: film.ready,
     uTime: { value: 0 }, uWeights: { value: new THREE.Vector4() },
+    uBoundaryMist: { value: new THREE.Vector2() },
     uForestExit: { value: -.35 }, uForestEntry: { value: -.35 },
     uDeviceEntry: { value: -.25 },
     uCameraRight: { value: new THREE.Vector3(1, 0, 0) },
@@ -76,7 +78,8 @@ export function createSceneLightShafts(
         window *= smoothstep(.015, .10, uv.x) * (1. - smoothstep(.90, .985, uv.x));
         float cloud = .60 + .40 * sin(vWorld.x * .21 + sin(vWorld.z * .17) + vUv.y * 5.);
         float presence = smoothstep(.008, .38, luminance);
-        float alpha = weight * window * (.06 + presence * .22) * cloud;
+        float edgeMist = vZone < .5 ? uBoundaryMist.x : uBoundaryMist.y;
+        float alpha = weight * window * (.06 + presence * .22 + edgeMist * .16) * cloud;
         if (uLightFilmReady < .5) {
           color = aetherLightCloud(vWorld, vec3(0., 1., 0.), uTime, vZone) * .22;
           alpha *= .24;
@@ -188,7 +191,9 @@ export function createSceneLightShafts(
           color = aetherLightCloud(vWorld, vec3(0., 1., 0.), uTime, step(.5, vZone)) * .32;
           illumination = .20;
         }
-        float alpha = envelope * density * illumination * weight * (vZone > 1.5 ? .065 : .08);
+        float edgeMist = vZone < .5 ? uBoundaryMist.x : vZone < 1.5 ? uBoundaryMist.y : 0.;
+        float alpha = envelope * density * illumination * weight
+          * (vZone > 1.5 ? .065 : .08 + edgeMist * .07);
         if (alpha < .0007) discard;
         gl_FragColor = vec4(color, alpha);
         #include <tonemapping_fragment>
@@ -217,6 +222,8 @@ export function createSceneLightShafts(
       shared.uDeviceEntry.value = layers.monitorExit
       shared.uWeights.value.set(1 - smooth(.18, .235, p), smooth(.855, .925, p),
         windowWeight(p, .595, .655, .79, .865), windowWeight(p, .725, .775, .89, .945))
+      shared.uBoundaryMist.value.set(windowWeight(p,.055,.12,.175,.205),
+        windowWeight(p,.845,.895,.955,.985))
       camera.updateMatrixWorld()
       right.setFromMatrixColumn(camera.matrixWorld, 0)
       right.y = 0

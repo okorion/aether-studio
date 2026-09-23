@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { sampleJourney } from './Journey'
+import { sampleJourney, windowWeight } from './Journey'
 import { sampleLayers } from './SceneLayers'
 import { createForestGeometry } from './ForestGeometry'
 import { createLightFilmUniforms, lightChoreographyGLSL, sampleLightChoreography } from './SceneLighting'
@@ -200,6 +200,118 @@ const microFragment = /* glsl */ `
   }
 `
 
+// Short branching clusters sit on the forest side of each curtain. The same
+// screen-space wake and film projection used by the existing foliage also
+// reach these points; the curtain still clips their final fragments.
+const boundaryVertex = /* glsl */ `
+  ${sharedShader}
+  ${forestFlowVertex}
+  attribute vec3 aSeed;
+  attribute float aSize;
+  attribute float aKind;
+  uniform float uViewportHeight;
+  uniform float uPixelRatio;
+  uniform float uBoundaryStrength;
+  varying float vKind;
+  void main() {
+    vSeed=aSeed;
+    vKind=aKind;
+    vec3 p=position;
+    float sway=sin(uTime*.45+aSeed.y*19.+p.x*.6)*.035;
+    p.x+=sway*step(.5,aKind);
+    p.y+=sin(uTime*.37+aSeed.z*23.)*.025;
+    vec4 world=modelMatrix*vec4(p,1.);
+    vec4 view=viewMatrix*world;
+    world.xyz+=forestFlow(view,aSeed)*(.65+.35*step(.5,aKind));
+    view=viewMatrix*world;
+    vWorld=world.xyz;
+    vDepth=-view.z;
+    vClip=projectionMatrix*view;
+    vNormal=vec3(0.,1.,0.);
+    vUv=vec2(.5);
+    gl_Position=vClip;
+    float size=aSize*uViewportHeight*projectionMatrix[1][1]*.5/max(.1,vDepth);
+    gl_PointSize=clamp(size*uBoundaryStrength,.1,12.*uPixelRatio);
+  }
+`
+
+const boundaryFragment = /* glsl */ `
+  ${sharedShader}
+  ${lightChoreographyGLSL}
+  uniform float uBoundaryStrength;
+  varying float vKind;
+  void main() {
+    vec2 q=gl_PointCoord*2.-1.;
+    float r=dot(q,q);
+    if(r>1.)discard;
+    float plant=step(.5,vKind);
+    float mist=step(1.5,vKind);
+    float core=1.-smoothstep(mix(.32,.05,mist),1.,r);
+    float coverage=groveCoverage()*uBoundaryStrength*core;
+    if(coverage<.003||coverage<hash(gl_FragCoord.xy))discard;
+    vec3 n=normalize(vec3(q,sqrt(max(.01,1.-r))));
+    float facing=.25+.75*max(0.,dot(n,normalize(vec3(-.4,.7,.6))));
+    vec3 green=mix(vec3(.025,.085,.035),vec3(.22,.32,.075),vSeed.x);
+    vec3 color=green*facing*(plant>.5?1.15:.75);
+    vec3 cloud=aetherLightCloud(vWorld,n,uTime,uLightDepth);
+    color+=cloud*uLightStrength*(mist>.5?.38:.22);
+    color+=vec3(.16,.42,.29)*pointerLight()*(.35+plant*.45);
+    if(mist>.5) color=mix(color,cloud*.9,.7);
+    gl_FragColor=vec4(finishForest(color),1.);
+    #include <tonemapping_fragment>
+    #include <colorspace_fragment>
+  }
+`
+
+function createBoundaryGeometry(software:boolean,mobile:boolean) {
+  let state=0x51f0e57
+  const random=()=>((state=Math.imul(state,1664525)+1013904223>>>0)/4294967296)
+  const positions:number[]=[], seeds:number[]=[], sizes:number[]=[], kinds:number[]=[]
+  const add=(x:number,y:number,z:number,size:number,kind:number)=>{
+    positions.push(x,y,z);seeds.push(random(),random(),random());sizes.push(size);kinds.push(kind)
+  }
+  const clusters=software?65:mobile?135:250
+  for(let i=0;i<clusters;i++) {
+    const angle=i*2.399963+(random()-.5)*.55
+    const radius=3.6+random()*7.8
+    const rootX=Math.cos(angle)*radius,rootZ=Math.sin(angle)*radius
+    const height=.55+random()*1.1
+    const shoots=2+(i%3)
+    for(let shoot=0;shoot<shoots;shoot++) {
+      const spread=angle+shoot*2.399963
+      const length=height*(.6+random()*.55)
+      for(let step=0;step<6;step++) {
+        const t=step/5
+        const fan=t*t*(.16+shoot*.085)
+        const x=rootX+Math.cos(spread)*fan
+        const z=rootZ+Math.sin(spread)*fan
+        add(x,t*length,z,.025+t*.035,1)
+        if(step>1&&step<5) {
+          const side=spread+(step%2?1:-1)*1.05
+          add(x+Math.cos(side)*t*.17,t*length-.045,z+Math.sin(side)*t*.17,.045+t*.055,1)
+        }
+      }
+    }
+  }
+  const motes=software?220:mobile?600:1400
+  for(let i=0;i<motes;i++) {
+    const angle=random()*Math.PI*2,radius=3.4+random()*9
+    add(Math.cos(angle)*radius,(random()-.3)*3,Math.sin(angle)*radius,.025+random()*.055,0)
+  }
+  const clouds=software?40:mobile?75:120
+  for(let i=0;i<clouds;i++) {
+    const angle=random()*Math.PI*2,radius=4+random()*8
+    add(Math.cos(angle)*radius,(random()-.5)*2.8,Math.sin(angle)*radius,.22+random()*.28,2)
+  }
+  const geometry=new THREE.BufferGeometry()
+  geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3))
+  geometry.setAttribute('aSeed',new THREE.Float32BufferAttribute(seeds,3))
+  geometry.setAttribute('aSize',new THREE.Float32BufferAttribute(sizes,1))
+  geometry.setAttribute('aKind',new THREE.Float32BufferAttribute(kinds,1))
+  geometry.computeBoundingSphere()
+  return {geometry,count:kinds.length,clusters,motes,clouds}
+}
+
 /** Fixed groves share geometry; foliage and fine grain retain one total budget. */
 export function createSceneForest(scene: THREE.Scene, software: boolean, mobile: boolean, sharedFilm?: LightFilmUniforms) {
   const group=new THREE.Group()
@@ -256,6 +368,13 @@ export function createSceneForest(scene: THREE.Scene, software: boolean, mobile:
     defines:{AETHER_LIGHT_FILM:1},
   })
   materials.push(microMaterial)
+  const boundary=createBoundaryGeometry(software,mobile)
+  const boundaryUniforms={...shared,uBoundaryStrength:{value:0}}
+  const boundaryMaterial=new THREE.ShaderMaterial({
+    uniforms:boundaryUniforms,vertexShader:boundaryVertex,fragmentShader:boundaryFragment,
+    depthWrite:false,depthTest:true,defines:{AETHER_LIGHT_FILM:1},
+  })
+  materials.push(boundaryMaterial)
   const renderViewport=new THREE.Vector4()
   const groves=[0,1].map(index=>{
     const grove=new THREE.Group()
@@ -273,7 +392,12 @@ export function createSceneForest(scene: THREE.Scene, software: boolean, mobile:
       shared.uViewportHeight.value=renderViewport.w
       shared.uPixelRatio.value=renderViewport.w/(typeof window==='undefined'?900:Math.max(1,window.innerHeight))
     }
-    grove.add(makeMesh(false),makeMesh(true),micro)
+    const edge=new THREE.Points(boundary.geometry,boundaryMaterial)
+    edge.name='aether-forest-boundary-plants-motes-mist'
+    edge.position.y=index?6.8:-8.7
+    if(!index) edge.scale.set(.82,1,.82)
+    edge.onBeforeRender=micro.onBeforeRender
+    grove.add(makeMesh(false),makeMesh(true),micro,edge)
     group.add(grove)
     return grove
   })
@@ -281,7 +405,8 @@ export function createSceneForest(scene: THREE.Scene, software: boolean, mobile:
   group.userData.worldSpace=true
   group.userData.treeCount=assets.treeCount
   group.userData.foliageClusterCount=assets.foliageClusterCount
-  group.userData.drawCalls=3
+  group.userData.drawCalls=4
+  group.userData.boundary= {clusters:boundary.clusters,motes:boundary.motes,clouds:boundary.clouds,count:boundary.count}
   let disposed=false
   return {
     update(time:number,progress:number,camera:THREE.Camera,pointer?:ForestPointer,pixelRatio?:number) {
@@ -298,6 +423,9 @@ export function createSceneForest(scene: THREE.Scene, software: boolean, mobile:
       shared.uTime.value=lighting.time
       shared.uLightDepth.value=lighting.depth
       shared.uLightStrength.value=lighting.cloudStrength
+      boundaryUniforms.uBoundaryStrength.value=p<.5
+        ?windowWeight(p,.055,.12,.175,.205)
+        :windowWeight(p,.845,.895,.955,.985)
       shared.uDarkness.value=sampleJourney(p).darkness
       const projection=camera.projectionMatrix.elements
       const aspect=Math.abs(projection[5]/projection[0])
@@ -328,6 +456,7 @@ export function createSceneForest(scene: THREE.Scene, software: boolean, mobile:
       assets.barkGeometry.dispose()
       assets.leafGeometry.dispose()
       microGeometry.dispose()
+      boundary.geometry.dispose()
       materials.forEach(material=>material.dispose())
       fallback?.dispose()
       neutralFlow.dispose()

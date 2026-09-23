@@ -1,8 +1,8 @@
 # 개선 요구사항과 작업 순서 · 2026-09-23
 
-이 문서는 개선 요구사항과 단계별 작업 상태를 기록한다. 현재 동작은 [장면과 입력 구조](architecture.md), 기존 검증 과제는 [후속 검증과 개선](next-improvements.md)을 함께 읽는다. 1단계 문서 PR 뒤 2단계 초기 로딩을 구현했다. 결과와 검증 한계는 [초기 로딩 진행률](loading-progress.md)에 기록했다. 3단계 본 컬럼 꽃 군집과 4단계 리액터 입자 동선을 구현했다. 5단계 챔버 조명·수면·잔해를 구현했다. 6단계 모니터 호버와 영상 상세 전환·복귀를 구현했다. 7단계 스케일 패널 파동·국소 입력·기포를 구현했고 [선택과 검증](scale-surface-2026-09-23.md)을 기록했다. 8단계는 아직 구현하지 않았다.
+이 문서는 2026-09-23에 정한 요구사항과 작업 순서를 보존한다. 1~7단계는 병합됐고, 8단계 구현과 검증은 [PR #31](https://github.com/okorion/aether-studio/pull/31)과 [포레스트 경계 기록](forest-boundary-2026-09-23.md)에 정리한다. 현재 동작은 [장면과 입력 구조](architecture.md), 남은 실기기·성능 검증은 [후속 검증과 개선](next-improvements.md)을 함께 읽는다.
 
-기준 소스는 `6e302ed`다. 이 계획을 정리하면서 Active Theory의 현재 화면을 새로 관찰하지는 않았다. AT와의 일치 여부, 영상의 반복 방식, 빛과 입자의 연결은 아직 검증하지 않았다.
+원래 계획의 기준 소스는 `6e302ed`다. 당시에는 Active Theory의 현재 화면을 새로 관찰하지 않았다. 후속 관찰과 자체 선택은 각 단계 기록에 남겼다. AT 영상의 반복 방식과 하드웨어 성능은 확정하지 않았다.
 
 ## 공통 기준
 
@@ -19,14 +19,14 @@
 
 | 번호 | PR 범위 | 시작 상태 | 주요 확인 위치 |
 | --- | --- | --- | --- |
-| 1 | README를 개인 사이드 프로젝트 소개로 수정하고 이 계획 저장 | 이번 PR에 반영 | README.md, docs/README.md |
-| 2 | 실제 준비 상태를 보여주는 초기 로딩 | [구현·검증](loading-progress.md) | App.tsx, Scene.tsx, ScenePreparation.ts, styles.css |
-| 3 | 본 컬럼 양쪽 꽃 형상의 입자 무리와 회전 방향 | 구현·검증, [기록](column-flowers-2026-09-23.md) | Atmosphere.ts, SceneSpine.ts, Journey.ts |
-| 4 | 천장에서 내려와 O를 이루는 리액터 입자 | 구현·검증, [기록](reactor-particles-2026-09-23.md) | Atmosphere.ts, SceneWorlds.ts, Journey.ts |
-| 5 | 리액터 챔버 조명·수면·파괴된 구조물 | 구현·검증, [기록](reactor-chamber-2026-09-23.md) | SceneWorlds.ts, SceneWater.ts, SceneRuins.ts, SceneLighting.ts |
-| 6 | 모니터 영상·포인터 반응·클릭 후 전환과 복귀 | 구현·검증, [기록](monitor-interactions-2026-09-23.md) | SceneMonitors.ts, SceneVideo.ts, Scene.tsx, App.tsx |
-| 7 | 스케일 패널 파동·국소 입력 반응·부유 기포 | 구현·로컬 검증 완료 | SceneScaleSurface.ts, SceneWorlds.ts, SceneScaleBubbles.ts |
-| 8 | 포레스트 경계 식물·입자·안개·영상과 빛 | 미착수 | SceneForest.ts, ForestGeometry.ts, SceneLayers.ts, SceneLightVideo.ts, SceneLightShafts.ts |
+| 1 | README를 개인 사이드 프로젝트 소개로 수정하고 이 계획 저장 | 완료 · [PR #24](https://github.com/okorion/aether-studio/pull/24) | README.md, docs/README.md |
+| 2 | 실제 준비 상태를 보여주는 초기 로딩 | 완료 · [PR #25](https://github.com/okorion/aether-studio/pull/25) · [기록](loading-progress.md) | App.tsx, Scene.tsx, ScenePreparation.ts, styles.css |
+| 3 | 본 컬럼 양쪽 꽃 형상의 입자 무리와 회전 방향 | 완료 · [PR #26](https://github.com/okorion/aether-studio/pull/26) · [기록](column-flowers-2026-09-23.md) | Atmosphere.ts, SceneSpine.ts, Journey.ts |
+| 4 | 천장에서 내려와 O를 이루는 리액터 입자 | 완료 · [PR #27](https://github.com/okorion/aether-studio/pull/27) · [기록](reactor-particles-2026-09-23.md) | Atmosphere.ts, SceneWorlds.ts, Journey.ts |
+| 5 | 리액터 챔버 조명·수면·파괴된 구조물 | 완료 · [PR #28](https://github.com/okorion/aether-studio/pull/28) · [기록](reactor-chamber-2026-09-23.md) | SceneWorlds.ts, SceneWater.ts, SceneRuins.ts, SceneLighting.ts |
+| 6 | 모니터 영상·포인터 반응·클릭 후 전환과 복귀 | 완료 · [PR #29](https://github.com/okorion/aether-studio/pull/29) · [기록](monitor-interactions-2026-09-23.md) | SceneMonitors.ts, SceneVideo.ts, Scene.tsx, App.tsx |
+| 7 | 스케일 패널 파동·국소 입력 반응·부유 기포 | 완료 · [PR #30](https://github.com/okorion/aether-studio/pull/30) · [기록](scale-surface-2026-09-23.md) | SceneScaleSurface.ts, SceneWorlds.ts, SceneScaleBubbles.ts |
+| 8 | 포레스트 경계 식물·입자·안개·영상과 빛 | 완료 · [PR #31](https://github.com/okorion/aether-studio/pull/31) · [기록](forest-boundary-2026-09-23.md) | SceneForest.ts, SceneLightShafts.ts |
 
 파일 목록은 조사 출발점이며 수정 범위를 미리 확정하는 목록은 아니다. Scene.tsx, Atmosphere.ts, 포인터와 조명 관련 코드는 여러 씬이 공유하므로 시각 작업을 동시에 시작하지 않는다. 병행할 필요가 생기면 별도 worktree·브랜치와 파일 담당 범위를 정한다.
 
@@ -100,7 +100,9 @@ AT의 영상 표현, 호버·포인터 이동·클릭 반응과 전환을 최대
 
 문서만 바꾸는 1번은 링크·명령·문체·Markdown 렌더를 확인하고, 앱 화면 변경이 없음을 PR에 명시한다. 후속 PR은 관찰 근거·선택한 값·실행한 검사·남은 한계를 기록하고 이 문서의 해당 상태를 갱신한다. 마지막 시각 작업 후에는 자원 변경을 반영해 초기 로딩의 진행률과 첫 화면 표시도 다시 확인한다.
 
-## 다음 세션에 붙여넣을 요청
+## 과거 8단계 요청 원본
+
+아래 문구는 당시 인계 요청을 보존한다. 현재의 새 세션 지시가 아니다. 8단계 뒤 추가 구현 세션은 계획하지 않는다.
 
 ```text
 Aether Studio 8단계 포레스트 경계의 식물형 입자·안개·영상과 빛을 구현하고 검증해줘.

@@ -27,9 +27,14 @@ test('cold and cached preparation reaches 100 only after a rendered frame; motio
   test.setTimeout(120_000)
   await page.addInitScript(() => {
     const violations: string[] = []
-    Object.assign(window, { loadingViolations: violations })
+    const seen: number[] = []
+    Object.assign(window, { loadingViolations: violations, loadingSeen: seen })
     new MutationObserver(() => {
       const app = document.querySelector<HTMLElement>('.experience')
+      if (app) {
+        const value = Number(app.dataset.loadingProgress)
+        if (seen.at(-1) !== value) seen.push(value)
+      }
       if (app?.dataset.loadingState === 'ready' && app.dataset.loadingProgress === '100' &&
         document.querySelector('.scene-canvas')?.getAttribute('data-render-state') !== 'ready') {
         violations.push('100 before frame')
@@ -43,6 +48,7 @@ test('cold and cached preparation reaches 100 only after a rendered frame; motio
     await expect(page.locator('.scene-canvas')).toHaveAttribute('data-preparation', 'ready')
     await expect(page.locator('.experience')).toHaveAttribute('data-loading-progress', '100')
     expect(await page.evaluate(() => Reflect.get(window, 'loadingViolations'))).toEqual([])
+    expect(await page.evaluate(() => Reflect.get(window, 'loadingSeen'))).toEqual(Array.from({ length: 101 }, (_, i) => i))
   }
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await expect(page.locator('.experience')).toHaveClass(/motion-paused/)

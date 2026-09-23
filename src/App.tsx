@@ -184,8 +184,9 @@ export default function App() {
   const [motionPaused, setMotionPaused] = useState(false)
   const reducedMotion = systemReducedMotion || motionPaused
   const [loading, setLoading] = useState(initialLoading)
+  const [displayPercent, setDisplayPercent] = useState(0)
   const [sceneEnabled, setSceneEnabled] = useState(true)
-  const ready = loading.status !== 'loading'
+  const ready = loading.status === 'unavailable' || (loading.status === 'ready' && displayPercent === 100)
   const [activeSection, setActiveSection] = useState<View>(currentView)
   const [project, setProject] = useState<Project | null>(null)
   const [audioEnabled, setAudioEnabled] = useState(false)
@@ -194,10 +195,20 @@ export default function App() {
   const [track, setTrack] = useState(0)
   const audio = useRef<ReturnType<(typeof import('./audio'))['createAmbientAudio']> | null>(null)
   const journey = useRef<HTMLDivElement>(null)
-  const onLoading = useCallback((stage: LoadingStage) => setLoading(loadingState(stage)), [])
+  const onLoading = useCallback((stage: LoadingStage) => {
+    if (stage === 'module') setDisplayPercent(0)
+    setLoading(loadingState(stage))
+  }, [])
   const onUnavailable = useCallback(() => setLoading(state => ({
     ...state, status: 'unavailable', label: '3D unavailable. You can still explore the site.',
   })), [])
+  useEffect(() => {
+    if (loading.status === 'unavailable' || displayPercent >= loading.percent) return
+    // Commit every integer separately, even when several preparation stages
+    // finish in one frame. Completion remains gated by the first rendered frame.
+    const tick = window.setTimeout(() => setDisplayPercent(value => value + 1), 24)
+    return () => window.clearTimeout(tick)
+  }, [displayPercent, loading.percent, loading.status])
   useEffect(() => {
     if (loading.status !== 'loading') return
     let timeout: number | undefined
@@ -214,7 +225,7 @@ export default function App() {
       window.clearTimeout(timeout)
       document.removeEventListener('visibilitychange', watch)
     }
-  }, [loading, onUnavailable])
+  }, [loading.status, onUnavailable])
   const onSelectProject = useCallback((index: number) => {
     if (Number.isInteger(index) && index >= 0) setProject(projects[index % projects.length])
   }, [])
@@ -308,8 +319,8 @@ export default function App() {
     <div
       className={`experience ${ready ? 'is-ready' : ''} ${reducedMotion ? 'motion-paused' : ''}`}
       data-view={activeSection}
-      data-loading-state={loading.status}
-      data-loading-progress={loading.percent}
+      data-loading-state={ready ? loading.status : 'loading'}
+      data-loading-progress={displayPercent}
     >
       <a className="skip-link" href="#work">
         Skip to selected work
@@ -329,10 +340,10 @@ export default function App() {
           />}
         </Suspense>
       </SceneBoundary>
-      <div className="scene-loading" data-state={loading.status} hidden={activeSection !== 'home' || loading.status === 'unavailable'}>
+      <div className="scene-loading" data-state={ready ? loading.status : 'loading'} hidden={activeSection !== 'home' || loading.status === 'unavailable'}>
         <div className="loading-readout" role="progressbar" aria-label="Scene preparation"
-          aria-valuemin={0} aria-valuemax={100} aria-valuenow={loading.percent}
-          aria-valuetext={loading.percent + '% — ' + loading.label}>
+          aria-valuemin={0} aria-valuemax={100} aria-valuenow={displayPercent}
+          aria-valuetext={displayPercent + '% — ' + loading.label}>
           <svg className="loading-orbit" viewBox="0 0 160 160" fill="none" aria-hidden="true">
             <circle cx="80" cy="80" r="33" />
             {[0, 60, 120].map(angle => (
@@ -342,7 +353,7 @@ export default function App() {
             ))}
           </svg>
           <span className="loading-glyphs" aria-hidden="true"><i>/</i><i>/</i><i>/</i></span>
-          <span className="loading-number" aria-hidden="true">{String(loading.percent).padStart(3, '0')}<small>%</small></span>
+          <span className="loading-number" aria-hidden="true">{String(displayPercent).padStart(3, '0')}<small>%</small></span>
           <span className="loading-label" aria-hidden="true">{loading.label}</span>
         </div>
       </div>

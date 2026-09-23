@@ -117,3 +117,40 @@ test('@interaction forest shares film updates without owning the external textur
   isolatedForest.dispose()
   expect(ownDisposals).toBe(1)
 })
+
+test('@interaction short forest plants stay at both transition shelves and fade outside them', () => {
+  const scene = new THREE.Scene()
+  const forest = createSceneForest(scene, false, false)
+  const camera = new THREE.PerspectiveCamera(42, 1.6, .1, 90)
+  camera.position.set(0, -8, 11)
+  camera.lookAt(0, -8, 0)
+  const upper = scene.getObjectByName('aether-forest-upper')!
+  const lower = scene.getObjectByName('aether-forest-lower')!
+  const edge = (grove: THREE.Object3D) =>
+    grove.getObjectByName('aether-forest-boundary-plants-motes-mist') as THREE.Points<THREE.BufferGeometry, THREE.ShaderMaterial>
+  const plants = edge(upper)
+  const kinds = plants.geometry.getAttribute('aKind') as THREE.BufferAttribute
+  const positions = plants.geometry.getAttribute('position') as THREE.BufferAttribute
+  try {
+    expect(edge(lower).geometry).toBe(plants.geometry)
+    expect(plants.position.y).toBe(-8.7)
+    expect(edge(lower).position.y).toBe(6.8)
+    expect(kinds.count).toBeGreaterThan(5000)
+    expect(Array.from({ length: kinds.count }, (_, i) => kinds.getX(i)).filter(kind => kind === 1).length)
+      .toBeGreaterThan(3000)
+    expect(Array.from({ length: positions.count }, (_, i) => positions.getY(i))
+      .every(value => value > -2 && value < 3)).toBe(true)
+    const strength = () => plants.material.uniforms.uBoundaryStrength.value as number
+    for (const [p,minimum,maximum] of [[0,0,0],[.15,.99,1],[.2,0,1],
+      [.91,.99,1],[1,0,0]] as const) {
+      forest.update(2,p,camera,undefined,1)
+      expect(strength()).toBeGreaterThanOrEqual(minimum)
+      expect(strength()).toBeLessThanOrEqual(maximum)
+    }
+    forest.update(2,.5,camera,undefined,1)
+    expect(scene.getObjectByName('aether-forest')!.visible).toBe(false)
+    forest.update(2,.17,camera,{ndc:new THREE.Vector2(.1,.2),strength:.8,aspect:1.6},1)
+    expect(plants.material.uniforms.uPointerStrength.value).toBe(.8)
+  } finally { forest.dispose() }
+  expect(scene.children).toHaveLength(0)
+})

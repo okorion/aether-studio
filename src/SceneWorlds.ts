@@ -3,6 +3,7 @@ import { Reflector } from 'three/addons/objects/Reflector.js'
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
 import { createSpineAssembly } from './SceneSpine'
 import { createScaleSurface } from './SceneScaleSurface'
+import { createScaleBubbles } from './SceneScaleBubbles'
 import { createSceneMonitors } from './SceneMonitors'
 import { createSceneRuins } from './SceneRuins'
 import { createWaterSurface } from './SceneWater'
@@ -72,13 +73,20 @@ export function createSceneWorlds(
   const pointerStrength = { value: 0 }
   const pointerAspect = { value: 1 }
   const surfaceTime = { value: 0 }
+  const surfaceExtent = { value: 1 }
+  const pointerWaveOrigin = { value: new THREE.Vector2() }
+  const pointerWaveAge = { value: -1 }
+  const pointerWaveStrength = { value: 0 }
+  let scalePointerActive = false
+  let pointerWaveStart = -Infinity
   const lightDepth = { value: 0 }
   const neutralFlow = new THREE.DataTexture(new Uint8Array([128, 128, 0, 255]), 1, 1)
   neutralFlow.needsUpdate = true
   textures.push(neutralFlow)
   const pointerFlow = { value: neutralFlow as THREE.Texture }
   const metal = mat(createScaleSurface(software,
-    { pointerNdc, pointerStrength, pointerAspect, pointerFlow, surfaceTime, lightDepth }, lightFilm))
+    { pointerNdc, pointerStrength, pointerAspect, pointerFlow, surfaceTime, surfaceExtent,
+      pointerWaveOrigin, pointerWaveAge, pointerWaveStrength, lightDepth }, lightFilm))
   const silver = mat(new THREE.MeshStandardMaterial({
     color: 0x929197, metalness: software ? .45 : .96, roughness: .24, envMapIntensity: 1.25, transparent: true,
   }))
@@ -183,6 +191,10 @@ export function createSceneWorlds(
   const tileWidth = tileHeight * Math.sqrt(3) / 2
   const feathers = instanced(scaleWall, geo(scaleGeometry(software)), metal, count, false)
   feathers.name = 'aether-scale-tiles'
+  const bubbles = createScaleBubbles(software, mobile)
+  scaleWall.add(bubbles.points)
+  geo(bubbles.geometry)
+  mat(bubbles.material)
   const bronze = new THREE.Color().setRGB(.45, .40, .29)
   const teal = new THREE.Color().setRGB(.13, .32, .29)
   const violet = new THREE.Color().setRGB(.36, .18, .41)
@@ -190,6 +202,7 @@ export function createSceneWorlds(
     const wallRow = Math.floor(i / wallColumns)
     const wallX = ((i % wallColumns) - (wallColumns - 1) * .5 + ((wallRow % 2) - .5) * .5) * tileWidth
     const wallY = (wallRow - (wallRows - 1) * .5) * tileHeight * .75
+    surfaceExtent.value = Math.max(surfaceExtent.value, Math.hypot(wallX, wallY))
     dummy.position.set(wallX, wallY, -.65)
     dummy.rotation.set(0, 0, 0)
     dummy.scale.setScalar(tileHeight * .965)
@@ -565,6 +578,10 @@ export function createSceneWorlds(
   bindGroupCurtain(scaleWall, scaleCurtain)
   bindGroupCurtain(lowerSpace, scaleCurtain)
   return {
+    getScaleWaveState() {
+      return { origin: pointerWaveOrigin.value.clone(), age: pointerWaveAge.value,
+        strength: pointerWaveStrength.value }
+    },
     getChamberHeight() {
       return space.getWorldPosition(chamberWorld).y
     },
@@ -596,7 +613,8 @@ export function createSceneWorlds(
       return monitorAssembly.pick(ndc, camera)
     },
     update(time: number, progress: number,
-      pointer?: { ndc: THREE.Vector2; strength: number; aspect: number; active?: boolean; flowTexture?: THREE.Texture }, camera?: THREE.Camera) {
+      pointer?: { ndc: THREE.Vector2; rawNdc?: THREE.Vector2; strength: number; aspect: number; active?: boolean; flowTexture?: THREE.Texture }, camera?: THREE.Camera,
+      scaleTime = time) {
       const journey = sampleJourney(progress)
       const layers = sampleLayers(progress)
       deviceCurtain.upper.value = layers.monitorExit
@@ -630,17 +648,33 @@ export function createSceneWorlds(
       scaleWall.visible = scaleWeight > .001
       metal.opacity = scaleWeight
       silver.opacity = deviceWeight
-      pointerStrength.value = pointer && Number.isFinite(pointer.strength)
+      pointerStrength.value = pointer?.active && Number.isFinite(pointer.strength)
         ? THREE.MathUtils.clamp(pointer.strength, 0, 1) : 0
-      if (pointer && Number.isFinite(pointer.ndc.x) && Number.isFinite(pointer.ndc.y)) {
-        pointerNdc.value.copy(pointer.ndc)
+      const scalePointer = pointer?.rawNdc ?? pointer?.ndc
+      if (scalePointer && Number.isFinite(scalePointer.x) && Number.isFinite(scalePointer.y)) {
+        pointerNdc.value.copy(scalePointer)
       } else {
         pointerStrength.value = 0
       }
       pointerAspect.value = pointer && Number.isFinite(pointer.aspect)
         ? Math.max(.25, Math.min(5, pointer.aspect)) : 1
-      surfaceTime.value = time
+      surfaceTime.value = scaleTime
       pointerFlow.value = pointer?.flowTexture ?? neutralFlow
+      const nextPointerActive = Boolean(pointer?.active && pointerStrength.value > .1)
+      if (nextPointerActive && scalePointer) {
+        const moved = pointerWaveOrigin.value.distanceTo(scalePointer) > .035
+        if ((!scalePointerActive || moved) && scaleTime - pointerWaveStart >= .16) {
+          pointerWaveOrigin.value.copy(scalePointer)
+          pointerWaveStart = scaleTime
+          pointerWaveStrength.value = Math.min(.7, pointerStrength.value * .7)
+        }
+      }
+      scalePointerActive = nextPointerActive
+      pointerWaveAge.value = Number.isFinite(pointerWaveStart) ? scaleTime - pointerWaveStart : -1
+      if (pointerWaveAge.value > 1.12) pointerWaveStrength.value = 0
+      bubbles.material.uniforms.uTime.value = scaleTime
+      bubbles.material.uniforms.uOpacity.value = scaleWeight
+      bubbles.points.visible = scaleWeight > .001
 
       const architectureWeight = smooth(.59, .615, progress) * (1 - journey.darkness * .77)
         * (1 - journey.scales * .35) * (1 - smooth(.86, .94, progress) * .85)

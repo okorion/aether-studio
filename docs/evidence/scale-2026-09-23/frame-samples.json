@@ -1,0 +1,186 @@
+[
+  {
+    "label": "before",
+    "device": "desktop",
+    "samples": [
+      {
+        "frameMs": 16,
+        "drawCalls": 5,
+        "geometries": 66,
+        "textures": 16,
+        "programs": 88,
+        "quality": 1
+      },
+      {
+        "frameMs": 16,
+        "drawCalls": 5,
+        "geometries": 66,
+        "textures": 16,
+        "programs": 88,
+        "quality": 1
+      },
+      {
+        "frameMs": 16,
+        "drawCalls": 5,
+        "geometries": 66,
+        "textures": 16,
+        "programs": 88,
+        "quality": 1
+      },
+      {
+        "frameMs": 16,
+        "drawCalls": 5,
+        "geometries": 66,
+        "textures": 16,
+        "programs": 88,
+        "quality": 1
+      },
+      {
+        "frameMs": 16,
+        "drawCalls": 5,
+        "geometries": 66,
+        "textures": 16,
+        "programs": 88,
+        "quality": 1
+      }
+    ]
+  },
+  {
+    "label": "before",
+    "device": "mobile",
+    "samples": [
+      {
+        "frameMs": 16,
+        "drawCalls": 5,
+        "geometries": 66,
+        "textures": 16,
+        "programs": 88,
+        "quality": 1
+      },
+      {
+        "frameMs": 16,
+        "drawCalls": 5,
+        "geometries": 66,
+        "textures": 16,
+        "programs": 88,
+        "quality": 1
+      },
+      {
+        "frameMs": 16,
+        "drawCalls": 5,
+        "geometries": 66,
+        "textures": 16,
+        "programs": 88,
+        "quality": 1
+      },
+      {
+        "frameMs": 16,
+        "drawCalls": 5,
+        "geometries": 66,
+        "textures": 16,
+        "programs": 88,
+        "quality": 1
+      },
+      {
+        "frameMs": 16,
+        "drawCalls": 5,
+        "geometries": 66,
+        "textures": 16,
+        "programs": 88,
+        "quality": 1
+      }
+    ]
+  },
+  {
+    "label": "after",
+    "device": "desktop",
+    "samples": [
+      {
+        "frameMs": 16,
+        "drawCalls": 6,
+        "geometries": 67,
+        "textures": 16,
+        "programs": 90,
+        "quality": 1
+      },
+      {
+        "frameMs": 16,
+        "drawCalls": 6,
+        "geometries": 67,
+        "textures": 16,
+        "programs": 90,
+        "quality": 1
+      },
+      {
+        "frameMs": 16,
+        "drawCalls": 6,
+        "geometries": 67,
+        "textures": 16,
+        "programs": 90,
+        "quality": 1
+      },
+      {
+        "frameMs": 16,
+        "drawCalls": 6,
+        "geometries": 67,
+        "textures": 16,
+        "programs": 90,
+        "quality": 1
+      },
+      {
+        "frameMs": 16,
+        "drawCalls": 6,
+        "geometries": 67,
+        "textures": 16,
+        "programs": 90,
+        "quality": 1
+      }
+    ]
+  },
+  {
+    "label": "after",
+    "device": "mobile",
+    "samples": [
+      {
+        "frameMs": 16,
+        "drawCalls": 6,
+        "geometries": 67,
+        "textures": 16,
+        "programs": 90,
+        "quality": 1
+      },
+      {
+        "frameMs": 16,
+        "drawCalls": 6,
+        "geometries": 67,
+        "textures": 16,
+        "programs": 90,
+        "quality": 1
+      },
+      {
+        "frameMs": 16,
+        "drawCalls": 6,
+        "geometries": 67,
+        "textures": 16,
+        "programs": 90,
+        "quality": 1
+      },
+      {
+        "frameMs": 16,
+        "drawCalls": 6,
+        "geometries": 67,
+        "textures": 16,
+        "programs": 90,
+        "quality": 1
+      },
+      {
+        "frameMs": 16,
+        "drawCalls": 6,
+        "geometries": 67,
+        "textures": 16,
+        "programs": 90,
+        "quality": 1
+      }
+    ]
+  }
+]

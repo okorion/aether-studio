@@ -206,6 +206,7 @@ export function createSceneInteraction(
   const flow = createPointerFlow()
   const field = {
     ndc: new THREE.Vector2(), strength: 0, aspect: innerWidth / innerHeight, active: false,
+    rawNdc: pointer,
     flowTexture: flow.texture,
   }
   let fieldTarget = 0

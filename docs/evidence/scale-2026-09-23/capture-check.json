@@ -1,0 +1,54 @@
+[
+  {
+    "label": "before",
+    "device": "desktop",
+    "progress": "0.830000",
+    "fonts": {
+      "status": "loaded",
+      "barlow": true,
+      "dm": true,
+      "ibm": true
+    },
+    "fontFailures": [],
+    "pageErrors": []
+  },
+  {
+    "label": "before",
+    "device": "mobile",
+    "progress": "0.830011",
+    "fonts": {
+      "status": "loaded",
+      "barlow": true,
+      "dm": true,
+      "ibm": true
+    },
+    "fontFailures": [],
+    "pageErrors": []
+  },
+  {
+    "label": "after",
+    "device": "desktop",
+    "progress": "0.830000",
+    "fonts": {
+      "status": "loaded",
+      "barlow": true,
+      "dm": true,
+      "ibm": true
+    },
+    "fontFailures": [],
+    "pageErrors": []
+  },
+  {
+    "label": "after",
+    "device": "mobile",
+    "progress": "0.830011",
+    "fonts": {
+      "status": "loaded",
+      "barlow": true,
+      "dm": true,
+      "ibm": true
+    },
+    "fontFailures": [],
+    "pageErrors": []
+  }
+]

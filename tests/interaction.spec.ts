@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import { build } from 'vite'
+import { SCALE_WAVE_INTERVAL_SECONDS, SCALE_WAVE_TRAVEL_SECONDS } from '../src/SceneScaleSurface'
 import type {} from './fixtures/interaction-harness'
 
 declare global {
@@ -688,20 +689,46 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
   })
 
   test('scale surface pixels respond locally to pointer position and recover without CPU matrix changes', async ({ page }) => {
+    expect(SCALE_WAVE_INTERVAL_SECONDS).toBe(7)
+    expect(SCALE_WAVE_TRAVEL_SECONDS).toBe(3)
     const pixels = await page.evaluate(() => window.interactionHarness.probeScalePointer())
-    expect(pixels.left.changed).toBeGreaterThan(20)
-    expect(pixels.right.changed).toBeGreaterThan(20)
-    expect(pixels.left.changed).toBeLessThan(160 * 120 / 2)
-    expect(pixels.right.changed).toBeLessThan(160 * 120 / 2)
+    expect(pixels.left.changed).toBeGreaterThan(10)
+    expect(pixels.right.changed).toBeGreaterThan(10)
+    expect(pixels.left.changed).toBeLessThan(200)
+    expect(pixels.right.changed).toBeLessThan(200)
     expect(pixels.left.centroidX).toBeLessThan(.45)
     expect(pixels.right.centroidX).toBeGreaterThan(.55)
     expect(pixels.reset.changed).toBe(0)
-    expect(pixels.wake.changed).toBeGreaterThan(20)
+    expect(pixels.edge.changed).toBeLessThan(200)
+    expect(pixels.edge.centroidX).toBeGreaterThan(.9)
+    expect(pixels.raw.changed).toBeGreaterThan(10)
+    expect(pixels.raw.centroidX).toBeLessThan(.45)
+    expect(pixels.slowMove.originX).toBeGreaterThan(.3)
+    expect(pixels.slowMove.age).toBeLessThan(.25)
+    expect(pixels.slowMove.strength).toBeGreaterThan(.2)
+    expect(pixels.wake.changed).toBeGreaterThan(8)
     expect(pixels.wake.centroidX).toBeLessThan(.5)
     expect(pixels.wakeReset.changed).toBe(0)
-    expect(pixels.wave.changed).toBeGreaterThan(300)
+    expect(pixels.wave.changed).toBeGreaterThan(3)
+    expect(pixels.middleWave.changed).toBeGreaterThan(100)
+    expect(pixels.overlap.changed).toBeGreaterThan(10)
+    expect(pixels.overlap.changed).toBeLessThan(200)
+    expect(pixels.outerWave.changed).toBeGreaterThan(100)
+    expect(pixels.edgeWave.changed).toBeGreaterThan(50)
+    expect(pixels.wave.centroidRadius).toBeLessThan(pixels.middleWave.centroidRadius)
+    expect(pixels.middleWave.centroidRadius).toBeLessThan(pixels.outerWave.centroidRadius)
+    expect(pixels.outerWave.centroidRadius).toBeLessThan(pixels.edgeWave.centroidRadius)
+    expect(pixels.rest.changed).toBe(0)
     expect(pixels.nextBeat.changed).toBeLessThan(5)
     expect(pixels.matricesUnchanged).toBe(true)
+  })
+
+  test('scale bubbles drift on GPU, freeze with scene time, and release their resources', async ({ page }) => {
+    const bubbles = await page.evaluate(() => window.interactionHarness.probeScaleBubbles())
+    expect(bubbles.count).toBe(52)
+    expect(bubbles.movingPixels).toBeGreaterThan(0)
+    expect(bubbles.frozenPixels).toBe(0)
+    expect(bubbles.positionsUnchanged).toBe(true)
   })
 
   test('pointer ribbons and individual white motes leave no pixels in the middle scenes or beyond forest seams', async ({ page }) => {

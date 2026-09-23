@@ -1591,3 +1591,37 @@ html:has(.motion-paused) {
 @media (hover: hover) and (pointer: fine) {
   .hero-stage[data-orbit-enabled='false'] .scroll-hint { display: inline; }
 }
+
+/* Preparation percentages follow completed work, never elapsed animation time. */
+.scene-loading {
+  position: fixed;
+  inset: 0;
+  z-index: 9;
+  display: grid;
+  place-items: center;
+  background: #030707;
+  color: var(--mint);
+  pointer-events: none;
+  transition: opacity 400ms ease, visibility 0s 400ms;
+}
+.scene-loading[data-state='ready'] { opacity: 0; visibility: hidden; }
+.loading-readout { position: relative; width: 220px; padding-top: 160px; text-align: center; font-family: var(--mono); }
+.loading-orbit { position: absolute; top: 0; left: 30px; width: 160px; height: 160px; stroke: currentColor; stroke-width: .7; }
+.loading-orbit circle { opacity: .5; }
+.loading-petal { transform-origin: 80px 80px; animation: loading-bloom 2.4s ease-in-out infinite alternate; }
+.loading-glyphs { position: absolute; top: 55px; left: 0; width: 100%; display: flex; justify-content: center; gap: 5px; }
+.loading-glyphs i { font-size: 10px; font-style: normal; animation: loading-drift 1.8s ease-in-out infinite alternate; }
+.loading-glyphs i:nth-child(2) { animation-delay: -.6s; }
+.loading-glyphs i:nth-child(3) { animation-delay: -1.2s; }
+.loading-number { position: absolute; top: 76px; left: 0; width: 100%; display: block; font-size: 18px; font-variant-numeric: tabular-nums; letter-spacing: -.06em; }
+.loading-number small { font-size: 10px; margin-left: 5px; letter-spacing: 0; }
+.loading-label { display: block; margin-top: 10px; font-size: 10px; color: #98b8b2; }
+.loading-status { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@keyframes loading-bloom { from { transform: scale(.68); opacity: .12; } to { transform: scale(1); opacity: .6; } }
+@keyframes loading-drift { from { transform: translateY(-3px); opacity: .4; } to { transform: translateY(3px); opacity: 1; } }
+.motion-paused .loading-glyphs i, .motion-paused .loading-petal { animation: none; opacity: .5; }
+.motion-paused .scene-loading { transition: none; }
+@media (prefers-reduced-motion: reduce) {
+  .loading-glyphs i, .loading-petal { animation: none; opacity: .5; }
+  .scene-loading { transition: none; }
+}

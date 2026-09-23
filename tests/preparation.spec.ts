@@ -121,3 +121,40 @@ test('@interaction failed first-use priming restores hidden objects and reflecti
   expect(hidden.onBeforeRender === reflect).toBe(true)
   hidden.geometry.dispose(); hidden.material.dispose()
 })
+
+// Completion reports must remain behind the work they describe.
+test('@interaction progress waits for both compiles and never reports a first frame', async () => {
+  const stages: string[] = []
+  const finishes: Array<() => void> = []
+  const renderer = {
+    getRenderTarget: () => null,
+    setRenderTarget: () => {},
+    render: () => {},
+    compileAsync: () => new Promise<void>(resolve => finishes.push(resolve)),
+  } as unknown as THREE.WebGLRenderer
+  const pending = prepareSceneShaders(renderer, new THREE.Scene(), new THREE.PerspectiveCamera(), () => false, stage => stages.push(stage))
+  expect(stages).toEqual(['textures'])
+  finishes[0]()
+  await Promise.resolve()
+  expect(stages).toEqual(['textures', 'linear', 'geometry'])
+  finishes[1]()
+  await pending
+  expect(stages).toEqual(['textures', 'linear', 'geometry', 'shaders'])
+})
+
+test('@interaction cancellation during the display compile cannot report new readiness', async () => {
+  let cancelled = false
+  let finish!: () => void
+  let calls = 0
+  const stages: string[] = []
+  const renderer = {
+    getRenderTarget: () => null, setRenderTarget: () => {}, render: () => {},
+    compileAsync: () => ++calls === 1 ? Promise.resolve() : new Promise<void>(resolve => { finish = resolve }),
+  } as unknown as THREE.WebGLRenderer
+  const pending = prepareSceneShaders(renderer, new THREE.Scene(), new THREE.PerspectiveCamera(), () => cancelled, stage => stages.push(stage))
+  await Promise.resolve()
+  cancelled = true
+  finish()
+  await pending
+  expect(stages).toEqual(['textures', 'linear', 'geometry'])
+})

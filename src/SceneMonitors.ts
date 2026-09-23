@@ -137,7 +137,9 @@ const fragmentShader = /* glsl */ `
     if (passageMask < .001) discard;
     vec2 refractedUv = clamp(screenUv + ripple, vec2(.001), vec2(.999));
     vec3 image = film(panel, t);
-    vec2 videoUv = vUv + ripple * (2.5 + hover * 2.);
+    // The hovered film follows the pointer inside the glass; its silhouette
+    // and raycast surface stay on the same reversible scroll orbit.
+    vec2 videoUv = vUv + ripple * (2.5 + hover * 3.) + (uPointerUv - .5) * uHover * .035;
     videoUv.x = gl_FrontFacing ? videoUv.x : 1. - videoUv.x;
     videoUv = clamp(videoUv, vec2(.002), vec2(.998));
     // Custom ShaderMaterial samplers do not get Three's map-video decode.
@@ -168,6 +170,11 @@ const fragmentShader = /* glsl */ `
     color += micrograin * .006 + vec3(.1, .15, .17) * pow(detail, 5.) * .10;
 
     vec2 titleUv = vec2(gl_FrontFacing ? vUv.x : 1. - vUv.x, vUv.y);
+    titleUv += ripple * uHover * 1.8;
+    vec2 split = vec2(.0025 * uHover, 0.);
+    vec3 titleFringe = vec3(texture2D(uTitle, titleUv + split).a,
+      texture2D(uTitle, titleUv).a, texture2D(uTitle, titleUv - split).a);
+    color += titleFringe * uHover * .20;
     float titleShadow = texture2D(uTitle, titleUv + vec2(.0025, .004)).a;
     color *= 1. - titleShadow * .65;
     float title = texture2D(uTitle, titleUv).a;

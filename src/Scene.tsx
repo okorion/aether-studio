@@ -784,6 +784,9 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
         canvas.dataset.videoState = JSON.stringify(worlds.getVideoStatus())
         interaction.setActive(false)
         clearMonitorHover()
+        document.documentElement.style.setProperty('--project-origin-x', `${event.clientX / innerWidth * 100}%`)
+        document.documentElement.style.setProperty('--project-origin-y', `${event.clientY / innerHeight * 100}%`)
+        document.querySelector<HTMLElement>('.hero-stage')?.focus({ preventScroll: true })
         selectProjectRef.current?.(panel)
       }
       const applyResolution = () => {

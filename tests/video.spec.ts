@@ -45,7 +45,7 @@ async function installVideoProbe(page: Page, blockPlayback = false, vp8Support?:
 
 async function snapshots(page: Page) {
   return page.evaluate(() => window.videoProbe.records
-    .filter(({ video }) => video.dataset.mediaRole !== 'light-projection')
+    .filter(({ video }) => !video.dataset.mediaRole)
     .map(({ video, loads, playTimes, supportQueries }, id) => ({
     id,
     src: video.getAttribute('src'),
@@ -150,7 +150,7 @@ test('@interaction production monitor videos load on entry and retain playback a
   }
   await enterMonitors()
   const extension = await page.evaluate(() => {
-    const record = window.videoProbe.records.find(({ video }) => video.dataset.mediaRole !== 'light-projection')!
+    const record = window.videoProbe.records.find(({ video }) => !video.dataset.mediaRole)!
     return HTMLMediaElement.prototype.canPlayType.call(record.video, 'video/webm; codecs="vp8"') ? 'webm' : 'mp4'
   })
   expect(new Set(mediaRequests.map(url => new URL(url).pathname)))

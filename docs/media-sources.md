@@ -29,6 +29,8 @@ VP8도 `yuv420p`·무음·240프레임이다. 640×400·24fps와 내용은 유�
 
 두 영상은 `public/media/`에서 사이트와 함께 Vercel CDN으로 제공한다. 별도 클라우드 계정·API 키·외부 미디어 요청은 필요하지 않다. 디코더 경로와 실제 첫 진입 비교는 [성능 보고서](monitor-transition-performance.md)에 기록했다.
 
+프로젝트 상세는 열려 있는 동안 별도 HTML video 한 개로 해당 종류의 MP4를 재생한다. 모니터의 두 공유 디코더는 그동안 멈추고 위치를 보존한다. 처음부터 모션 축소 상태이면 JPEG 포스터를 표시하고, 재생 중 정지하면 현재 프레임을 유지한다. 재생 실패 때는 기존 ProjectArt를 표시한다. 종료 때 별도 디코더를 해제한다. 이 동작과 전환 검증은 [6단계 기록](monitor-interactions-2026-09-23.md)에 있다.
+
 ## 재생성
 
 Python 3.9 이상에서 NumPy, Pillow, imageio-ffmpeg를 설치하고 저장소 루트에서 실행한다. imageio-ffmpeg는 FFmpeg 실행 파일을 제공한다.

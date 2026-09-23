@@ -1,12 +1,14 @@
 # Aether Studio
 
-스크롤로 포레스트와 기계 장면을 탐색하는 인터랙티브 3D 웹사이트입니다. 본 컬럼을 감싸는 영상 모니터를 지나 리액터와 금속 스케일 패널로 내려가며, 마우스를 움직이면 입자와 표면이 반응합니다. React, TypeScript, Three.js, Vite로 만들었습니다.
+Aether Studio는 스크롤과 마우스로 낯선 공간을 둘러보는 인터랙티브 3D 사이드 프로젝트입니다. 상단 포레스트의 링에서 시작해 영상 모니터가 떠 있는 본 컬럼, 어두운 리액터 챔버, 금속 스케일 패널을 지나갑니다.
+
+스크롤에 따라 장면이 이어지고, 마우스 움직임이 입자와 표면에 남는 웹 경험을 실험합니다. React, TypeScript, Three.js, Vite로 만들었으며 장면과 인터랙션을 계속 다듬고 있습니다.
 
 [사이트 열기](https://aether-studio-nu.vercel.app/) · [개발 문서](docs/README.md) · [트러블슈팅](docs/troubleshooting/index.md)
 
 ![본 컬럼을 감싸는 영상 모니터와 입자](docs/screenshots/reference-detail/after/scroll-399.jpg)
 
-실제 실행 화면입니다. 본 컬럼·모니터·리액터·스케일 패널을 수정한 [PR #20](https://github.com/okorion/aether-studio/pull/20)의 캡처를 사용했습니다.
+본 컬럼 주변의 모니터와 입자. 이 문서의 이미지는 [장면 수정 기록](docs/scene-reference-detail.md)에 보관된 당시 실행 화면입니다.
 
 ## 둘러보기
 
@@ -41,30 +43,11 @@ npm run preview
 
 빌드 결과는 `dist/`에 생성됩니다. 실행 옵션과 배포 설정은 [개발 안내](docs/development.md)에 있습니다.
 
-## 코드 수정
+## 코드를 살펴보려면
 
-| 바꿀 내용 | 시작할 파일 |
-| --- | --- |
-| 소개·연락처와 화면 구성 | [App.tsx](src/App.tsx), [styles.css](src/styles.css) |
-| 프로젝트 내용 | [projects.ts](src/projects.ts) |
-| 스크롤 경로·카메라 | [Journey.ts](src/Journey.ts), [Scene.tsx](src/Scene.tsx) |
-| 본 컬럼·체인·모니터 | [SceneSpine.ts](src/SceneSpine.ts), [SceneMonitors.ts](src/SceneMonitors.ts) |
-| 입자·포인터 반응 | [Atmosphere.ts](src/Atmosphere.ts), [SceneInteraction.ts](src/SceneInteraction.ts) |
-| 리액터·스케일 패널 | [SceneWorlds.ts](src/SceneWorlds.ts), [SceneScaleSurface.ts](src/SceneScaleSurface.ts) |
+소개와 연락처는 [App.tsx](src/App.tsx), 모니터에 연결된 프로젝트는 [projects.ts](src/projects.ts)에서 바꿀 수 있습니다. 장면별 구현 위치와 입력 흐름은 [구조 문서](docs/architecture.md), 검사 명령과 실행 환경은 [검증 안내](docs/testing.md)에 정리했습니다.
 
-모듈 간 연결과 장면 수명은 [구조 문서](docs/architecture.md)에 정리했습니다. 영상과 아이콘을 바꿀 때는 [자산 문서](docs/README.md#자산과-메타데이터)도 확인하세요.
-
-## 검사
-
-```sh
-npm run lint
-npm run typecheck
-npm run build
-npx playwright install chromium
-npm test
-```
-
-Playwright는 탐색·상세 화면·스크롤 왕복·영상 재생과 실패 처리·WebGL 대체 화면을 검사합니다. 실제 셰이더의 픽셀과 모델 행렬을 읽는 검사도 포함합니다. 실행 환경과 최근 결과는 [검증 안내](docs/testing.md)에 있습니다.
+로딩 연출과 씬별 움직임을 다듬을 계획은 [개선 요구사항과 작업 순서](docs/improvement-plan-2026-09-23.md)에 있습니다. 해당 문서의 예정 기능은 아직 구현된 동작과 구분해 기록합니다.
 
 모바일 화면은 Chromium 에뮬레이션으로 확인했습니다. 실제 Safari/iOS와 저사양 기기의 장시간 실행은 아직 검증하지 않았습니다. WebGL을 사용할 수 없으면 CSS 배경과 본문·탐색을 유지합니다.
 

@@ -1,0 +1,23 @@
+{
+  "info": {
+    "fonts": [
+      "Barlow Condensed",
+      "DM Sans",
+      "DM Sans",
+      "IBM Plex Mono"
+    ],
+    "scrollY": 5266,
+    "focus": "hero-stage",
+    "video": "{\"active\":true,\"disposed\":false,\"ready\":[true,true],\"playing\":[true,true],\"state\":[\"playing\",\"playing\"],\"errors\":[null,null]}"
+  },
+  "errors": [],
+  "fontFailures": [],
+  "frames": [
+    ".qa/mobile-after-0.png",
+    ".qa/mobile-after-1.png",
+    ".qa/mobile-after-2.png",
+    ".qa/mobile-after-3.png",
+    ".qa/mobile-after-4.png",
+    ".qa/mobile-after-5.png"
+  ]
+}

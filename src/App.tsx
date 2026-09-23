@@ -39,13 +39,54 @@ function ProjectDialog({
   project,
   onClose,
   onNext,
+  reducedMotion,
 }: {
   project: Project | null
   onClose: () => void
   onNext: () => void
+  reducedMotion: boolean
 }) {
   const dialog = useRef<HTMLDialogElement>(null)
+  const film = useRef<HTMLVideoElement>(null)
+  const closing = useRef<Animation | null>(null)
+  const [failedFilm, setFailedFilm] = useState('')
   const isOpen = project !== null
+  const filmIndex = project ? projects.indexOf(project) % 2 : 0
+  const filmName = filmIndex === 0 ? 'chrome-current' : 'aurora-bloom'
+  useEffect(() => {
+    const video = film.current
+    if (!video || !isOpen) return
+    if (failedFilm === filmName) { video.pause(); return }
+    let cancelled = false
+    let attempt = 0
+    const reconcile = () => {
+      const current = ++attempt
+      if (reducedMotion || document.hidden) video.pause()
+      else void video.play().catch(() => {
+        if (!cancelled && current === attempt) setFailedFilm(filmName)
+      })
+    }
+    reconcile()
+    document.addEventListener('visibilitychange', reconcile)
+    return () => {
+      cancelled = true
+      attempt++
+      video.pause()
+      document.removeEventListener('visibilitychange', reconcile)
+    }
+  }, [isOpen, filmName, reducedMotion, failedFilm])
+  useEffect(() => {
+    const video = film.current
+    if (!video || !isOpen) return
+    return () => {
+      video.pause()
+      video.removeAttribute('src')
+      video.load()
+    }
+  }, [isOpen, filmName])
+  useEffect(() => {
+    if (reducedMotion) closing.current?.finish()
+  }, [reducedMotion])
   useEffect(() => {
     if (!isOpen) return
     const node = dialog.current!
@@ -54,29 +95,62 @@ function ProjectDialog({
     node.showModal()
     document.body.style.overflow = 'hidden'
     return () => {
+      closing.current?.cancel()
+      closing.current = null
       node.close()
       document.body.style.overflow = previousOverflow
       previouslyFocused?.focus({ preventScroll: true })
     }
   }, [isOpen])
 
+  const close = () => {
+    if (closing.current) return
+    const node = dialog.current
+    if (!node || reducedMotion) { onClose(); return }
+    const animation = node.animate([
+      { opacity: 1, transform: 'scale(1)' },
+      { opacity: 0, transform: 'scale(.94)' },
+    ], { duration: 220, easing: 'ease-in', fill: 'forwards' })
+    closing.current = animation
+    void animation.finished.then(onClose, () => {})
+  }
+
   return (
     <dialog
       ref={dialog}
       className="project-dialog"
       aria-labelledby="project-title"
-      onCancel={onClose}
+      onKeyDown={(event) => {
+        // Keep repeated Escape inside the modal until its exit finishes.
+        // A second native close request can otherwise force-close the dialog
+        // before React has cleared the selected project.
+        if (event.key === 'Escape') { event.preventDefault(); close() }
+      }}
+      onCancel={(event) => { event.preventDefault(); close() }}
+      onClose={(event) => { if (!event.currentTarget.open) onClose() }}
       onClick={(event) => {
-        if (event.target === event.currentTarget) onClose()
+        if (event.target === event.currentTarget) close()
       }}
     >
       {project && (
         <div className="project-detail">
-          <button className="close-button" onClick={onClose} aria-label="Close project">
+          <button className="close-button" onClick={close} aria-label="Close project">
             <span aria-hidden="true">×</span>
           </button>
           <div className="detail-art">
             <ProjectArt theme={project.theme} />
+            <video
+              key={filmName}
+              ref={film}
+              className="detail-film"
+              data-media-role="project-detail"
+              src={`/media/${filmName}.mp4`}
+              poster={`/media/${filmName}.jpg`}
+              muted loop playsInline preload="none"
+              hidden={failedFilm === filmName}
+              aria-hidden="true"
+              onError={() => setFailedFilm(filmName)}
+            />
             <div className="detail-art-title">{project.name}</div>
           </div>
           <div className="detail-copy">
@@ -348,7 +422,7 @@ export default function App() {
           aria-labelledby="hero-title"
           hidden={activeSection !== 'home'}
         >
-          <div className="hero-stage" ref={journey} data-stage="entry">
+          <div className="hero-stage" ref={journey} data-stage="entry" tabIndex={-1} aria-label="3D exploration">
             <button
               className="scroll-invitation"
               onClick={() =>
@@ -471,7 +545,11 @@ export default function App() {
               <button
                 key={item.id}
                 className={`project-card card-${item.theme}`}
-                onClick={() => setProject(item)}
+                onClick={(event) => {
+                  document.documentElement.style.setProperty('--project-origin-x', `${event.detail ? event.clientX / innerWidth * 100 : 50}%`)
+                  document.documentElement.style.setProperty('--project-origin-y', `${event.detail ? event.clientY / innerHeight * 100 : 50}%`)
+                  setProject(item)
+                }}
                 aria-label={`Explore ${item.name}`}
               >
                 <div className="project-visual">
@@ -567,6 +645,7 @@ export default function App() {
       </div>
       <ProjectDialog
         project={project}
+        reducedMotion={reducedMotion}
         onClose={() => setProject(null)}
         onNext={() =>
           setProject(

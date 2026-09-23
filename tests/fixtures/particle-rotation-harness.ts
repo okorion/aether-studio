@@ -1,9 +1,12 @@
 import * as THREE from 'three'
 import { createAtmosphere } from '../../src/Atmosphere'
+import { createSceneWorlds } from '../../src/SceneWorlds'
 
-export function sampleRotation() {
+export function sampleRotation(progress = .4, mobile = false) {
   const scene = new THREE.Scene()
-  const atmosphere = createAtmosphere(scene, true, false)
+  const worlds = createSceneWorlds(scene, true, mobile)
+  const matter = scene.getObjectByName('aether-matter')!
+  const atmosphere = createAtmosphere(scene, true, mobile)
   const grains = scene.getObjectByName('aether-current-particles') as THREE.Points<THREE.BufferGeometry, THREE.ShaderMaterial>
   const renderer = new THREE.WebGLRenderer()
   renderer.setSize(1, 1)
@@ -41,8 +44,16 @@ export function sampleRotation() {
     return Array.from(pixel)
   }
   try {
-    return { start: read(.4), end: read(.43), moving: read(.43, true), matched: read(.43, true, true), reverse: read(.4) }
+    const start = read(progress)
+    worlds.update(10, progress)
+    matter.updateMatrix()
+    const inverseStart = matter.matrix.clone().invert()
+    worlds.update(10, progress + .015)
+    matter.updateMatrix()
+    const expected = new THREE.Vector3(...start.slice(0, 3) as [number, number, number])
+      .applyMatrix4(inverseStart).applyMatrix4(matter.matrix).toArray()
+    return { start, expected, end: read(progress + .015), moving: read(progress + .015, true), matched: read(progress + .015, true, true), reverse: read(progress) }
   } finally {
-    atmosphere.dispose(); geometry.dispose(); material.dispose(); target.dispose(); renderer.dispose()
+    worlds.dispose(); atmosphere.dispose(); geometry.dispose(); material.dispose(); target.dispose(); renderer.dispose()
   }
 }

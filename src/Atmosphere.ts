@@ -30,6 +30,8 @@ const currentField = /* glsl */ `
   ${lightChoreographyGLSL}
   uniform float uTime;
   uniform float uScroll;
+  uniform float uSpineYaw;
+  uniform float uSpineSpread;
   uniform float uScrollStep;
   uniform vec4 uWeights;
   uniform float uEnergy;
@@ -47,9 +49,9 @@ const currentField = /* glsl */ `
   float motionTime() { return uScroll; }
 
   vec3 rotateSpineField(vec3 p) {
-    float angle = uScroll * .20;
+    float angle = uSpineYaw;
     float c = cos(angle), s = sin(angle);
-    return vec3(c * p.x - s * p.z, p.y, s * p.x + c * p.z);
+    return vec3(c * p.x + s * p.z, p.y, -s * p.x + c * p.z);
   }
 
   vec3 current(float t, float lane, float scrollPhase) {
@@ -63,15 +65,21 @@ const currentField = /* glsl */ `
     );
     // Both populations share one rotating envelope. Advection only chooses
     // the position along it; anchors keep that position as the field turns.
-    float arm = floor(lane * 2.0);
-    float armPhase = arm * PI;
-    float angle = t * PI * 2.65 + armPhase + sin(t * 8.0 + armPhase) * .42;
-    float radius = 2.2 + sin(t * 10.0 + armPhase) * .45 + fract(lane * 2.0) * .65;
-    vec3 spine = vec3(
-      cos(angle) * radius + sin(t * 9.0) * 0.16,
-      (t - 0.5) * 12.3,
-      sin(angle) * radius
+    // Three cupped rosettes on each side. Each grain stays round; the
+    // five-lobed envelope and nested radii form the flower silhouette.
+    float tier = min(2., floor(t * 3.));
+    float petalAngle = fract(t * 3.) * PI * 2.;
+    float petal = .64 + .36 * cos(petalAngle * 5.);
+    float radius = (.16 + sqrt(branch) * 1.35) * petal;
+    float facing = side * .28 + (tier - 1.) * .32;
+    vec3 centre = vec3(side * 3.05, (tier - 1.) * 4.0, -.35);
+    vec3 spine = centre + vec3(
+      cos(petalAngle) * radius,
+      sin(petalAngle) * radius,
+      .60 * branch * branch + .12 * sin(petalAngle * 5.)
     );
+    spine.z += sin(facing) * (spine.x - centre.x);
+    spine.xz *= uSpineSpread;
     spine.y += -12.0 * (1.0 - smoothstep(.205, .29, uScroll / 55.0));
     spine = rotateSpineField(spine);
     float orbit = t * PI * 2.0 + scrollPhase * 0.35;
@@ -131,6 +139,7 @@ const dustVertex = /* glsl */ `
     float cluster = 0.32 + 0.68 * pow(sin(t * 35.0 + lane * 8.0) * 0.5 + 0.5, 2.0);
     float width = (0.13 + position.z * (0.72 + uWeights.x * .73)) * cluster;
     width *= 1.0 - uWeights.y * 0.90;
+    width *= 1.0 - uWeights.x * (1.0 - uWeights.y) * .82;
     float spineWeight = uWeights.x * (1.0 - uWeights.y) * (1.0 - uWeights.z) * (1.0 - uWeights.w);
     float turn = phase + t * 37.0 + phaseScroll * 0.6 * (1.0 - spineWeight);
     vec3 scatter = vec3(cos(turn), sin(turn * 0.83) * 0.62, sin(turn)) * width;
@@ -209,6 +218,8 @@ const dustVertex = /* glsl */ `
     vMachine = uWeights.y;
     float shimmer = 0.73 + sin(uTime * 1.7 + phase * 7.0) * 0.2;
     float seam = smoothstep(0.0, 0.045, t) * (1.0 - smoothstep(0.94, 1.0, t));
+    float petalPhase = fract(t * 3.);
+    seam *= mix(1., smoothstep(0., .06, petalPhase) * (1. - smoothstep(.94, 1., petalPhase)), spineWeight);
     float distanceFade = exp(-max(0.0, -mv.z - 13.0) * 0.043);
     vAlpha = shimmer * mix(seam, 1.0, uWeights.y) * distanceFade * mix(0.72, 0.19, bokeh);
     vAlpha *= mix(1.0, .30 * mix(1., .22, bokeh), uWeights.y);
@@ -366,6 +377,8 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
     ...(lightFilm ? { uLightFilm: lightFilm.map, uLightFilmReady: lightFilm.ready } : {}),
     uTime: { value: 0 },
     uScroll: { value: 0 },
+    uSpineYaw: { value: 0 },
+    uSpineSpread: { value: mobile ? .62 : 1 },
     uScrollStep: { value: 0 },
     uWeights: { value: new THREE.Vector4() },
     uEnergy: { value: 0 },
@@ -481,6 +494,7 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
       previousProgress = p
       uniforms.uTime.value = Number.isFinite(time) ? time : 0
       uniforms.uScroll.value = p * 55
+      uniforms.uSpineYaw.value = journey.structureYaw
       uniforms.uScrollStep.value = signedStep
       // One field moves continuously into the device's fixed world-space core.
       const fieldY = THREE.MathUtils.lerp(journey.height, -40.4, morph)

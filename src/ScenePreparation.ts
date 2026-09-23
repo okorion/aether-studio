@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import type { LoadingStage } from './loading'
 
 /** Compile hidden sections before the first interactive frame, in both output paths. */
 export async function prepareSceneShaders(
@@ -6,7 +7,9 @@ export async function prepareSceneShaders(
   scene: THREE.Scene,
   camera: THREE.Camera,
   cancelled: () => boolean,
+  onProgress: (stage: LoadingStage) => void = () => {},
 ) {
+  if (cancelled()) return
   // Bloom/refraction use linear half-float output; the fallback draws directly
   // to sRGB. Warming only the canvas would still compile again on entry.
   const target = new THREE.WebGLRenderTarget(2, 2, { type: THREE.HalfFloatType })
@@ -29,6 +32,8 @@ export async function prepareSceneShaders(
       }
     })
     textures.forEach(texture => renderer.initTexture(texture))
+    if (cancelled()) return
+    onProgress('textures')
     let linear: Promise<unknown>
     try {
       renderer.setRenderTarget(target)
@@ -38,6 +43,7 @@ export async function prepareSceneShaders(
     }
     await linear
     if (cancelled()) return
+    onProgress('linear')
     // Parallel compilation does not run first-use uniform queries or upload
     // geometry. Prime those against a 2px target while the CSS fallback is
     // still visible. No original visibility or reflection callback may leak.
@@ -62,7 +68,10 @@ export async function prepareSceneShaders(
       }
       renderer.setRenderTarget(previous)
     }
+    if (cancelled()) return
+    onProgress('geometry')
     await renderer.compileAsync(scene, camera)
+    if (!cancelled()) onProgress('shaders')
   } finally {
     target.dispose()
   }

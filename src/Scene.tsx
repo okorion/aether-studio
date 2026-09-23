@@ -10,6 +10,7 @@ import { createSceneLayers, sampleLayers, sampleEmblemCurtain } from './SceneLay
 import { bindGroupCurtain, createCurtainBounds } from './SceneCurtains'
 import { createSceneVideo } from './SceneVideo'
 import { prepareSceneShaders } from './ScenePreparation'
+import type { LoadingStage } from './loading'
 import { createSceneLightVideo } from './SceneLightVideo'
 import { createLightFilmUniforms, sampleLightChoreography } from './SceneLighting'
 import { createSceneLightShafts } from './SceneLightShafts'
@@ -17,7 +18,8 @@ import { createSceneLightShafts } from './SceneLightShafts'
 type SceneProps = {
   reducedMotion: boolean
   active: boolean
-  onReady: () => void
+  onLoading: (stage: LoadingStage) => void
+  onUnavailable: () => void
   onSelectProject?: (index: number) => void
 }
 
@@ -80,9 +82,10 @@ function seededRandom(seed: number) {
 }
 
 /** Original procedural geometry with two locally authored monitor films. */
-export default function Scene({ reducedMotion, active, onReady, onSelectProject }: SceneProps) {
+export default function Scene({ reducedMotion, active, onLoading, onUnavailable, onSelectProject }: SceneProps) {
   const hostRef = useRef<HTMLDivElement>(null)
-  const readyRef = useRef(onReady)
+  const loadingRef = useRef(onLoading)
+  const unavailableRef = useRef(onUnavailable)
   const activeRef = useRef(active)
   const wakeRef = useRef<(() => void) | null>(null)
   const selectProjectRef = useRef(onSelectProject)
@@ -93,8 +96,9 @@ export default function Scene({ reducedMotion, active, onReady, onSelectProject 
   const preserved = useRef({ yaw: 0, pitch: 0, elapsed: 0 })
 
   useEffect(() => {
-    readyRef.current = onReady
-  }, [onReady])
+    loadingRef.current = onLoading
+    unavailableRef.current = onUnavailable
+  }, [onLoading, onUnavailable])
 
   useEffect(() => {
     selectProjectRef.current = onSelectProject
@@ -124,6 +128,10 @@ export default function Scene({ reducedMotion, active, onReady, onSelectProject 
     let disposed = false
     let contextLost = false
     let ready = false
+    const report = (stage: LoadingStage) => {
+      if (!disposed && !contextLost) loadingRef.current(stage)
+    }
+    report('module')
     let cleanup: (() => void) | undefined
     const effectDisposers: Array<() => void> = []
     const geometries = new Set<THREE.BufferGeometry>()
@@ -132,7 +140,7 @@ export default function Scene({ reducedMotion, active, onReady, onSelectProject 
     const markReady = () => {
       if (!ready && !disposed) {
         ready = true
-        readyRef.current()
+        report('frame')
       }
     }
     const geometry = <T extends THREE.BufferGeometry>(value: T): T => {
@@ -169,7 +177,7 @@ export default function Scene({ reducedMotion, active, onReady, onSelectProject 
       frame = 0
       if (renderer) renderer.domElement.dataset.renderState = 'lost'
       releaseResources()
-      markReady()
+      if (!disposed) unavailableRef.current()
     }
 
     try {
@@ -971,11 +979,14 @@ export default function Scene({ reducedMotion, active, onReady, onSelectProject 
           // downloaded here and no future section is shown to the user.
           layers.update(readProgress(), camera)
           worlds.prepare(activeRenderer)
+          report('resources')
           // Exercise the film sampling branch with the black placeholder too.
           // No media request is needed to prime an otherwise dormant GPU path.
           lightFilm.ready.value = 1
           try {
-            await prepareSceneShaders(activeRenderer, scene, camera, cancelled)
+            await prepareSceneShaders(activeRenderer, scene, camera, cancelled, stage => {
+              if (!cancelled()) report(stage)
+            })
           } finally {
             lightFilm.ready.value = lightVideo.getReady() ? 1 : 0
           }
@@ -1034,13 +1045,15 @@ export default function Scene({ reducedMotion, active, onReady, onSelectProject 
         frameTimer = undefined
         frame = 0
         canvas.style.opacity = '0'
-        markReady()
+        if (!disposed) unavailableRef.current()
       }
       const restored = () => {
         if (disposed) return
         try {
           refreshEnvironment()
           contextLost = false
+          ready = false
+          report('module')
           preparing = true
           previousTime = 0
           resize()

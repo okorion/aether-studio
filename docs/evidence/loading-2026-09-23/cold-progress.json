@@ -1,0 +1,31 @@
+[
+  {
+    "time": 211.70000004768372,
+    "progress": "0",
+    "status": "loading"
+  },
+  {
+    "time": 1022.2000000476837,
+    "progress": "40",
+    "status": "loading",
+    "frame": null
+  },
+  {
+    "time": 2010.7999999523163,
+    "progress": "80",
+    "status": "loading",
+    "frame": null
+  },
+  {
+    "time": 2020.3999998569489,
+    "progress": "95",
+    "status": "loading",
+    "frame": null
+  },
+  {
+    "time": 4489.799999952316,
+    "progress": "100",
+    "status": "ready",
+    "frame": "1"
+  }
+]

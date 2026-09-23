@@ -607,10 +607,12 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
     for (const sample of result.cases) {
       const label = `outgoing grains at ${sample.progress}`
       expect(sample.visibleAbove, label).toBeGreaterThan(20)
-      expect(sample.hiddenBaseline, label).toBeGreaterThan(20)
       expect(sample.changedAbove, label).toBe(0)
       expect(sample.leakedBelow, label).toBe(0)
     }
+    // With fixed-height flowers, the first two cuts are still below the
+    // entire cloud. The later cut must actually remove visible grains.
+    expect(result.cases[2].hiddenBaseline).toBeGreaterThan(20)
     expect(result.idleChanged).toBe(0)
     expect(result.forwardChanged).toBeGreaterThan(100)
     expect(result.reverseChanged).toBe(0)
@@ -767,8 +769,9 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
       expect(entry.leakedAbove, label).toBe(0)
       expect(entry.changedBelow, label).toBe(0)
     }
-    // Gathered grains stay behind the entering wrapper; descent is revealed later.
-    expect(pixels.chamberEntry[1].visibleBelow).toBe(0)
+    // The irregular hanging tips begin to emerge with the rising wrapper.
+    expect(pixels.chamberEntry[1].visibleBelow).toBeGreaterThan(0)
+    expect(pixels.chamberEntry[1].visibleBelow).toBeLessThan(pixels.chamberEntry[2].visibleBelow)
     expect(pixels.chamberEntry[2].visibleBelow).toBeGreaterThan(20)
     expect(pixels.roomVisibility).toEqual([[true, true, true], [true, true, true], [false, false, false], [true, true, true]])
   })

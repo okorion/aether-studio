@@ -4,6 +4,35 @@ import { createSpineAssembly } from '../src/SceneSpine'
 import { sampleJourney } from '../src/Journey'
 import { sampleChainPath } from '../src/SceneChain'
 
+test('@interaction resizing at rest synchronizes strand count and travel with the camera mode', () => {
+  for (const initialMobile of [false, true]) {
+    const assembly = createSpineAssembly(false, initialMobile)
+    const chain = assembly.group.getObjectByName('aether-spine-chain') as THREE.InstancedMesh
+    const allocation = chain.instanceMatrix.array
+    const matrix = new THREE.Matrix4(), expectedMatrix = new THREE.Matrix4()
+    try {
+      for (const progress of [.31, .46, .61]) {
+        for (const mobileView of [initialMobile, !initialMobile, initialMobile]) {
+          // Same scroll and emergence: a resize must invalidate the pose cache.
+          assembly.update(progress, 1, 1, mobileView)
+          const fresh = createSpineAssembly(false, mobileView)
+          try {
+            fresh.update(progress, 1, 1)
+            const expected = fresh.group.getObjectByName('aether-spine-chain') as THREE.InstancedMesh
+            expect(chain.count).toBe(mobileView ? 30 : 22)
+            expect(chain.instanceMatrix.array).toBe(allocation)
+            for (let i = 0; i < chain.count; i++) {
+              chain.getMatrixAt(i, matrix)
+              expected.getMatrixAt(i, expectedMatrix)
+              expect(matrix.elements).toEqual(expectedMatrix.elements)
+            }
+          } finally { fresh.dispose() }
+        }
+      }
+    } finally { assembly.dispose() }
+  }
+})
+
 test('@interaction chain has a steep pitch and feeds faster for equal scroll input', () => {
   const slope = sampleChainPath(.48).getTangentAt(0)
   const degrees = Math.atan2(Math.abs(slope.y), Math.hypot(slope.x, slope.z)) * 180 / Math.PI

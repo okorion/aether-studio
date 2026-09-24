@@ -33,7 +33,7 @@ export function createChamberLight(space: THREE.Group, scene: THREE.Scene, film?
         float strands=.3+.7*pow(.5+.5*sin(vUv.x*75.398+sin(vUv.y*7.-uTime*.19)*1.4),4.);
         vec3 projected=aetherLightCloud(vWorld,vec3(0.,1.,0.),uTime,0.);
         #ifdef AETHER_LIGHT_FILM
-          if(uLightFilmReady>.5) projected=aetherApertureFilm(vWorld)*3.;
+          if(uLightFilmReady>.5) projected=aetherApertureFilm(vWorld)*4.5;
         #endif
         float luminance=dot(projected,vec3(.2126,.7152,.0722));
         gl_FragColor=vec4(projected,ends*strands*uOpacity*(.25+luminance)*pow(abs(dot(normalize(vNormal),normalize(cameraPosition-vWorld))),1.6));
@@ -56,9 +56,9 @@ export function createChamberLight(space: THREE.Group, scene: THREE.Scene, film?
   return {
     update(weight: number, time = 0) {
       if (disposed) return
-      material.uniforms.uOpacity.value = weight * .018
+      material.uniforms.uOpacity.value = weight * .075
       material.uniforms.uTime.value = time
-      light.intensity = weight * 60 * (.72 + .28 * Math.sin(time * .37) ** 2)
+      light.intensity = weight * 165 * (.82 + .18 * Math.sin(time * .37) ** 2)
       beam.visible = weight > .001
     },
     dispose() {

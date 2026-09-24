@@ -10,18 +10,22 @@ test('@interaction flower grains fall with absolute scroll and retrace without w
   if (!chunk || chunk.type !== 'chunk') throw new Error('Particle fixture did not compile')
   await page.goto('about:blank')
   await page.addScriptTag({ content: chunk.code })
-  // The three lanes cover a dense flower, an inner belt and the wide outer belt.
+  // One nearby flower lane and two lanes of the distant, shallow helix.
   for (const mobile of [false, true]) for (const progress of [.30, .36, .4, .49, .55, .58]) for (const lane of progress === .4 ? [.3, .12, .28] : [.3]) {
     const samples = await page.evaluate(({ progress, mobile, lane }) => (window as unknown as {
       ParticleRotation: { sampleRotation(progress: number, mobile: boolean, lane: number): Record<string, number[]> }
     }).ParticleRotation.sampleRotation(progress, mobile, lane), { progress, mobile, lane })
     const { start, expected, end, moving, movingStart, movingReverse, reverse, anchors, idle, idleReverse, movingIdle } = samples
+    const belt = lane !== .3
+    const radius = (point: number[]) => belt
+      ? Math.hypot(point[0] / (mobile ? .62 : 1), (point[2] + 8.5) / .55)
+      : Math.hypot(point[0], point[2])
     expect(anchors).toEqual([-29.8, -29.8, -29.8])
     // GPU trigonometry varies slightly across drivers; 0.005 world-unit tolerance
     // still rejects stationary anchors and the old, separately rotating path.
     expect(start[3]).toBe(1)
     expect(Math.abs(end[1] - start[1])).toBeLessThan(.005)
-    expect(Math.abs(Math.hypot(end[0], end[2]) - Math.hypot(start[0], start[2]))).toBeLessThan(.005)
+    expect(Math.abs(radius(end) - radius(start))).toBeLessThan(.005)
     // Compare GPU motion with the actual SceneWorlds matter transform, not
     // a second copy of the shader's rotation convention or a fixed sign.
     expect(Math.hypot(...moving.slice(0, 3).map((v, i) => v - end[i]))).toBeGreaterThan(.1)
@@ -32,9 +36,15 @@ test('@interaction flower grains fall with absolute scroll and retrace without w
     // radius. Falling seeds retain their scroll-only path when time changes.
     expect(Math.hypot(idle[0] - start[0], idle[2] - start[2])).toBeGreaterThan(.15)
     expect(Math.abs(idle[1] - start[1])).toBeLessThan(.005)
-    expect(Math.abs(Math.hypot(idle[0], idle[2]) - Math.hypot(start[0], start[2]))).toBeLessThan(.005)
+    expect(Math.abs(radius(idle) - radius(start))).toBeLessThan(.005)
+    if (belt) {
+      for(const sample of [start,end,idle]) {
+        expect(sample[2]).toBeLessThan(-2)
+        expect(radius(sample)).toBeGreaterThan(8)
+      }
+    }
     for (let axis = 0; axis < 3; axis++) {
-      expect(Math.abs(end[axis] - expected[axis])).toBeLessThan(.005)
+      if (!belt) expect(Math.abs(end[axis] - expected[axis])).toBeLessThan(.005)
       expect(movingReverse[axis]).toBeCloseTo(movingStart[axis], 3)
       expect(reverse[axis]).toBeCloseTo(start[axis], 3)
       expect(idleReverse[axis]).toBeCloseTo(start[axis], 3)

@@ -1,9 +1,51 @@
 import { expect, test } from '@playwright/test'
 import { build } from 'vite'
 import * as THREE from 'three'
+import { sampleJourney } from '../src/Journey'
 import { createLightFilmUniforms } from '../src/SceneLighting'
 import { createSceneLightShafts } from '../src/SceneLightShafts'
 import type {} from './fixtures/light-spill-harness'
+
+test('@interaction forest film keeps its screen direction through orbit and moves only with scroll', () => {
+  const texture = new THREE.DataTexture(new Uint8Array([180, 120, 60, 255]), 1, 1)
+  const scene = new THREE.Scene()
+  const spill = createSceneLightShafts(scene, false, false, createLightFilmUniforms(texture))
+  const film = scene.getObjectByName('aether-curved-light-film') as THREE.InstancedMesh
+  const camera = new THREE.PerspectiveCamera(42, 1.6, .1, 100)
+  const matrix = new THREE.Matrix4()
+  const corners = [new THREE.Vector3(-.5, -.5, 0), new THREE.Vector3(.5, .5, 0)]
+  const projected = (progress: number, yaw: number, pitch: number, zone: number) => {
+    const { height } = sampleJourney(progress)
+    camera.position.set(Math.sin(yaw) * Math.cos(pitch) * 12,
+      height + Math.sin(pitch) * 12, Math.cos(yaw) * Math.cos(pitch) * 12)
+    camera.lookAt(0, height, 0)
+    spill.update(18, progress, camera)
+    scene.updateMatrixWorld(true)
+    film.getMatrixAt(zone, matrix)
+    return corners.map(corner => corner.clone().applyMatrix4(matrix).project(camera))
+  }
+  try {
+    for (const [progress, zone] of [[.04, 0], [.975, 1]]) {
+      const front = projected(progress, 0, 0, zone)
+      for (const [yaw, pitch] of [[1.4, .4], [-2.7, -.3], [Math.PI * 4, .6]]) {
+        const orbit = projected(progress, yaw, pitch, zone)
+        orbit.forEach((point, i) => {
+          expect(point.x).toBeCloseTo(front[i].x, 5)
+          expect(point.y).toBeCloseTo(front[i].y, 5)
+          expect(point.z).toBeCloseTo(front[i].z, 5)
+        })
+      }
+      const down = projected(progress + .01, 1.4, .4, zone)
+      down.forEach((point, i) => {
+        expect(point.x).toBeCloseTo(front[i].x, 5)
+        expect(point.y).toBeGreaterThan(front[i].y)
+        expect(point.z).toBeCloseTo(front[i].z, 5)
+      })
+      const restored = projected(progress, -2.7, -.3, zone)
+      restored.forEach((point, i) => expect(point.distanceTo(front[i])).toBeLessThan(.00001))
+    }
+  } finally { spill.dispose(); texture.dispose() }
+})
 
 test('@interaction light spill owns only its geometry and stays hidden in software rendering', () => {
   const texture = new THREE.DataTexture(new Uint8Array([180, 120, 60, 255]), 1, 1)

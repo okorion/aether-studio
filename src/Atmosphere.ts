@@ -57,7 +57,7 @@ const currentField = /* glsl */ `
     return vec3(c * p.x + s * p.z, p.y, -s * p.x + c * p.z);
   }
 
-  float flowerRibbon(float lane) { return step(.66, fract(lane * 7.13)); }
+  float flowerRibbon(float lane) { return step(.22, fract(lane * 7.13)); }
 
   vec3 rotateFlowerField(vec3 p) {
     float angle = uTime * .075;
@@ -94,24 +94,22 @@ const currentField = /* glsl */ `
       .85 * branch * branch + .52 * sin(petalAngle * 5. + branch * 8.)
     );
     spine.z += sin(facing) * (spine.x - centre.x);
-    // A third of the same buffer forms two offset descending strands. A few
-    // seeds take a wider, sparse orbit; real scene depth hides them behind the
-    // panels and column. No extra point cloud or screen-aligned ring is used.
-    float ribbonLane = clamp((fract(lane * 7.13) - .66) / .34, 0., 1.);
+    // Most stationary grains belong to a broad, shallow helix behind the
+    // column. Its centre stays behind the column even while phase rotates.
+    spine = rotateFlowerField(spine);
+    float ribbonLane = clamp((fract(lane * 7.13) - .22) / .78, 0., 1.);
     float strand = step(.5, ribbonLane);
     float ribbonWidth = fract(ribbonLane * 2.);
-    float outerOrbit = step(.88, ribbonLane);
-    float ribbonAngle = t * PI * 2. * mix(2.15, .92, outerOrbit) + strand * PI;
-    float ribbonRadius = mix(4.5 + ribbonWidth * .85 + sin(t * 9.) * .32,
-      7.1 + ribbonWidth * 1.4, outerOrbit);
+    float ribbonAngle = t * PI * 2. * 1.38 + strand * .24
+      + uSpineYaw * .32 + uTime * .025;
+    float ribbonRadius = 9.2 + ribbonWidth * 1.7 + sin(t * 11.) * .35;
     vec3 ribbon = vec3(cos(ribbonAngle) * ribbonRadius,
-      mix(14.5 - t * 29., 10.5 - t * 21., outerOrbit)
-        + strand * 1.3 + (ribbonWidth - .5) * .38,
-      sin(ribbonAngle) * ribbonRadius);
+      18. - t * 36. + strand * .85 + (ribbonWidth - .5) * .28,
+      sin(ribbonAngle) * ribbonRadius * .55 - 8.5);
     spine = mix(spine, ribbon, flowerRibbon(lane));
-    spine.xz *= uSpineSpread;
+    spine.x *= uSpineSpread;
+    spine.z *= mix(uSpineSpread, 1., flowerRibbon(lane));
     spine.y += -12.0 * (1.0 - smoothstep(.205, .29, uScroll / 55.0));
-    spine = rotateFlowerField(spine);
     float progress = uScroll / 55.;
     float formed = smoothstep(.668, .725, progress);
     float fluidTime = uTime * .18;
@@ -217,6 +215,12 @@ const dustVertex = /* glsl */ `
     scatter.z += aDust.z * (0.18 + (1.0 - uWeights.y) * 0.38);
     scatter *= mix(1., mix(.65, 1., smoothstep(.668, .725, uScroll / 55.)), uWeights.y);
     vec3 columnScatter = mix(rotateFlowerField(scatter), rotateSpineField(scatter), aAdvected);
+    float beltPhase = uSpineYaw*.32 + uTime*.025;
+    vec3 beltScatter = vec3(
+      (cos(beltPhase)*scatter.x-sin(beltPhase)*scatter.z)*uSpineSpread,
+      scatter.y,
+      (sin(beltPhase)*scatter.x+cos(beltPhase)*scatter.z)*.55);
+    columnScatter = mix(columnScatter,beltScatter,flowerRibbon(lane)*(1.-aAdvected));
     p += mix(scatter, columnScatter, spineWeight);
     // Most device grains spread across a fine radial cloud, with a few smaller
     // strays. This is still the same field, without a second opaque ring.
@@ -277,7 +281,7 @@ const dustVertex = /* glsl */ `
     // Pearlescent grains fill both flower volumes and the thicker reactor rim;
     // sparse strays retain a finer silhouette around the dense core.
     float grainScale = 1.0 + spineWeight * (.55 + .30 * cluster);
-    grainScale *= mix(1., .78, ribbonWeight);
+    grainScale *= mix(1., .66, ribbonWeight);
     grainScale *= mix(1., .72, aAdvected * spineWeight);
     grainScale *= mix(1.18, 1.18 * mix(1., .7, stray), uWeights.y);
     gl_PointSize = clamp(aDust.y * grainScale * perspective * uPixelRatio, 0.65, 12.0 * uPixelRatio);
@@ -331,7 +335,7 @@ const dustVertex = /* glsl */ `
     vAlpha *= mix(1.0, .62 * mix(1., .22, bokeh), uWeights.y);
     vAlpha *= (1.0 - uDarkness * 0.23) * (1.0 + uWeights.x * 0.16);
     vAlpha *= 1. + spineWeight * (1. - aAdvected) * .30;
-    vAlpha *= mix(1., .56, ribbonWeight);
+    vAlpha *= mix(1., .66, ribbonWeight);
     vAlpha *= uFieldOpacity;
   }
 `

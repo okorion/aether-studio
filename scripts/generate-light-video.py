@@ -138,6 +138,8 @@ def main():
     if args.frames_dir:
         from PIL import Image
         source = json.loads((args.frames_dir / "source.json").read_text(encoding="utf-8"))
+        if source.get("schemaVersion") != 2 or not source.get("bundleSha256"):
+            raise RuntimeError("Column frames need complete rendering inputs; render them again")
         for name, digest in source["sources"].items():
             if sha256(ROOT / name) != digest:
                 raise RuntimeError(f"Column source changed: {name}")
@@ -179,6 +181,8 @@ def main():
         after = {name: sha256(MEDIA / name) for name in protected_names}
         if before != after:
             raise RuntimeError("A protected monitor asset changed during generation")
+        if source and any(sha256(ROOT / name) != digest for name, digest in source["sources"].items()):
+            raise RuntimeError("Column rendering inputs changed during encoding")
         manifest = {
             "file": FILM_NAME, "bytes": len(data), "codec": "H.264 Main", "pixel_format": "yuv420p",
             "width": WIDTH, "height": HEIGHT, "fps": FPS, "seconds": SECONDS, "frames": FRAMES,

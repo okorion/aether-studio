@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { smooth, windowWeight } from './Journey'
+import { createSurfaceFlowUniforms, surfaceFlowGLSL, type SurfaceFlowInput } from './SceneSurfaceFlow'
 
 /** All boundaries use viewport UVs, independent of render-target resolution. */
 export function sampleLayers(progress: number) {
@@ -31,15 +32,19 @@ export function createSceneLayers(scene: THREE.Scene) {
   const geometry = new THREE.PlaneGeometry(2, 2)
   const canvases = [document.createElement('canvas'), document.createElement('canvas')]
   const textures = canvases.map(canvas => new THREE.CanvasTexture(canvas))
+  const flow = createSurfaceFlowUniforms()
   textures.forEach(texture => { texture.colorSpace = THREE.SRGBColorSpace; texture.generateMipmaps = false })
   const materials = textures.map(texture => new THREE.ShaderMaterial({
     uniforms: {
       uMap: { value: texture }, uOpacity: { value: 0 },
+      ...flow.uniforms, uFluidWeight: { value: texture === textures[0] ? .26 : 0 },
       uTop: { value: 1.5 }, uBottom: { value: -.5 },
     },
     vertexShader: `varying vec2 vUv; varying vec4 vClip;
       void main(){vUv=uv; vClip=projectionMatrix*modelViewMatrix*vec4(position,1.); gl_Position=vClip;}`,
     fragmentShader: `uniform sampler2D uMap; uniform float uOpacity; uniform float uTop; uniform float uBottom;
+      uniform float uFluidWeight;
+      ${surfaceFlowGLSL}
       varying vec2 vUv; varying vec4 vClip;
       void main(){
         vec2 screen=vClip.xy/vClip.w*.5+.5;
@@ -47,7 +52,8 @@ export function createSceneLayers(scene: THREE.Scene) {
         float noise=fract(sin(dot(floor(screen*vec2(1800.,1100.)),vec2(12.9898,78.233)))*43758.5453);
         float y=screen.y-edge+(noise-.5)*.006;
         float mask=(1.-smoothstep(uTop-.005,uTop+.005,y))*smoothstep(uBottom-.005,uBottom+.005,y);
-        vec4 ink=texture2D(uMap,vUv);
+        vec2 inkUv=vUv-surfaceDisplacement(screen)*uFluidWeight;
+        vec4 ink=texture2D(uMap,clamp(inkUv,vec2(0.),vec2(1.)));
         if(mask*ink.a*uOpacity<.003)discard;
         gl_FragColor=vec4(ink.rgb,ink.a*uOpacity*mask);
         #include <tonemapping_fragment>
@@ -119,8 +125,9 @@ export function createSceneLayers(scene: THREE.Scene) {
   }
   void document.fonts.ready.then(() => { if (!disposed && aspect) draw(aspect) })
   return {
-    update(progress: number, camera: THREE.PerspectiveCamera) {
+    update(progress: number, camera: THREE.PerspectiveCamera, pointer?: SurfaceFlowInput) {
       if (disposed) return
+      flow.update(pointer)
       if (Math.abs(aspect - camera.aspect) > .001) draw(camera.aspect)
       const state = sampleLayers(progress)
       camera.getWorldDirection(forward)
@@ -149,6 +156,7 @@ export function createSceneLayers(scene: THREE.Scene) {
       geometry.dispose()
       materials.forEach(m => m.dispose())
       textures.forEach(t => t.dispose())
+      flow.dispose()
     },
   }
 }

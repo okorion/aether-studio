@@ -93,6 +93,26 @@ test('@interaction real film spill pixels change with the shared frame, not elap
       expect(result.defaultTarget, label).toBe(true)
       expect(result.errors, label).toEqual([0, 0, 0, 0, 0, 0])
     }
+    // Use fully separated journey windows: transition overlap is intentional.
+    const isolated = await page.evaluate(() => [.10, .72, .80, .97].map(progress => ({
+      progress,
+      forest: window.lightSpillHarness.probe(progress, 'forest'),
+      chamber: window.lightSpillHarness.probe(progress, 'chamber'),
+    })))
+    for (const result of isolated) {
+      const label = `independent films at progress ${result.progress}`
+      const forestWindow = result.progress < .2 || result.progress > .95
+      const visible = forestWindow ? result.forest : result.chamber
+      const hidden = forestWindow ? result.chamber : result.forest
+      expect(visible.white.total, label).toBeGreaterThan(visible.pixelCount)
+      expect(visible.warm.red, label).toBeGreaterThan(visible.warm.blue * 3)
+      expect(visible.cool.blue, label).toBeGreaterThan(visible.cool.red * 3)
+      expect(hidden.white.nonBlackPixels, label).toBe(0)
+      expect(hidden.warm.nonBlackPixels, label).toBe(0)
+      expect(hidden.cool.nonBlackPixels, label).toBe(0)
+      expect(visible.errors, label).toEqual([0, 0, 0, 0, 0, 0])
+      expect(hidden.errors, label).toEqual([0, 0, 0, 0, 0, 0])
+    }
     const cleanup = await page.evaluate(() => window.lightSpillHarness.releaseHelper())
     expect(cleanup.sceneChildren).toBe(0)
     expect(Object.values(cleanup.externalDisposals)).toEqual([0, 0, 0, 0])

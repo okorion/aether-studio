@@ -25,12 +25,14 @@ const boundaryGLSL = /* glsl */ `
 /** One curved film draw and one instanced fan draw; no capture or media owner. */
 export function createSceneLightShafts(
   scene: THREE.Scene, software: boolean, mobile: boolean, film: LightFilmUniforms,
+  forestFilm: LightFilmUniforms = film,
 ) {
   const group = new THREE.Group()
   group.name = 'aether-film-backscatter'
   scene.add(group)
   const shared = {
     uLightFilm: film.map, uLightFilmReady: film.ready,
+    uForestFilm: forestFilm.map, uForestFilmReady: forestFilm.ready,
     uTime: { value: 0 }, uWeights: { value: new THREE.Vector4() },
     uBoundaryMist: { value: new THREE.Vector2() },
     uForestExit: { value: -.35 }, uForestEntry: { value: -.35 },
@@ -38,11 +40,12 @@ export function createSceneLightShafts(
     uCameraRight: { value: new THREE.Vector3(1, 0, 0) },
   }
 
-  // A world-fixed curved surface sits behind each grove. A soft vertical
-  // window and sparse bright film areas leave the forest's black gaps intact.
+  // A world-fixed curved surface places the film in a soft horizontal band
+  // behind each grove. The canopy and ground retain their dark intervals.
   const backdropGeometry = new THREE.CylinderGeometry(1, 1, 1, mobile ? 32 : 48, 4, true)
   const backdropMaterial = new THREE.ShaderMaterial({
-    uniforms: shared, defines: { AETHER_LIGHT_FILM: 1 },
+    uniforms: { ...shared, uLightFilm: forestFilm.map, uLightFilmReady: forestFilm.ready },
+    defines: { AETHER_LIGHT_FILM: 1 },
     side: THREE.BackSide, transparent: true, blending: THREE.AdditiveBlending,
     depthWrite: false, depthTest: true,
     vertexShader: /* glsl */ `
@@ -67,27 +70,32 @@ export function createSceneLightShafts(
       void main() {
         float weight = sceneWeight();
         if (weight < .001) discard;
-        vec2 uv = vec2(fract(vUv.x * 2. + .17), clamp(vUv.y * 1.06 - .025, 0., 1.));
-        // Three fixed taps soften the authored footage, not the whole frame.
-        vec3 color = aetherFilmColor(uv) * .5
-          + aetherFilmColor(uv + vec2(.014, .009)) * .25
-          + aetherFilmColor(uv - vec2(.014, .009)) * .25;
-        // The column film is bright enough for the chamber. Forest haze uses
-        // a much lower radiance so it never becomes a visible video wall.
-        color = color / (vec3(1.) + color * 10.) * .42;
+        vec2 uv = vec2(fract(vUv.x * 2. + .17), clamp((vUv.y - .29) / .42, 0., 1.));
+        // Keep a readable center sample; the four shoulders soften the source
+        // shapes without blurring the foreground foliage or transition mask.
+        vec3 color = aetherFilmColor(uv) * .40
+          + aetherFilmColor(uv + vec2(.035, .024)) * .15
+          + aetherFilmColor(uv - vec2(.035, .024)) * .15
+          + aetherFilmColor(uv + vec2(.035, -.024)) * .15
+          + aetherFilmColor(uv + vec2(-.035, .024)) * .15;
         float luminance = dot(color, vec3(.2126, .7152, .0722));
-        float window = smoothstep(.03, .30, vUv.y) * (1. - smoothstep(.70, .98, vUv.y));
+        // Compress highlights without flattening the live-action silhouette.
+        // Black film pixels remain black instead of becoming a uniform veil.
+        color = color / (vec3(1.) + color * 1.9) * .72;
+        float darkHold = smoothstep(.014, .13, luminance);
+        float window = smoothstep(.29, .43, vUv.y) * (1. - smoothstep(.57, .71, vUv.y));
         // The wrap joins in a dark interval instead of making a panorama seam.
         window *= smoothstep(.015, .10, uv.x) * (1. - smoothstep(.90, .985, uv.x));
         float cloud = .60 + .40 * sin(vWorld.x * .21 + sin(vWorld.z * .17) + vUv.y * 5.);
-        float presence = smoothstep(.008, .38, luminance);
+        float presence = smoothstep(.035, .32, luminance);
+        float highlight = smoothstep(.22, .65, luminance);
         float edgeMist = vZone < .5 ? uBoundaryMist.x : uBoundaryMist.y;
-        float alpha = weight * window * (.06 + presence * .22 + edgeMist * .16) * cloud;
+        float alpha = weight * window * presence * (.10 + highlight * .12 + edgeMist * .06) * cloud * darkHold;
         if (uLightFilmReady < .5) {
           color = aetherLightCloud(vWorld, vec3(0., 1., 0.), uTime, vZone) * .22;
-          alpha *= .24;
+          alpha = weight * window * (.06 + edgeMist * .16) * cloud * .24;
         }
-        gl_FragColor = vec4(color * 1.45, alpha);
+        gl_FragColor = vec4(color * 1.05, alpha);
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
       }
@@ -171,33 +179,63 @@ export function createSceneLightShafts(
       varying vec2 vUv;
       varying vec3 vWorld;
       varying float vSeed;
+      uniform sampler2D uForestFilm;
+      uniform float uForestFilmReady;
+      vec3 forestFilmRadiance(vec3 worldPosition) {
+        if (uForestFilmReady < .5) return vec3(0.);
+        vec2 uv = .5 + .5 * sin(worldPosition.xz * vec2(.115, .13)
+          + vec2(.8, 2.3) + worldPosition.y * .018);
+        vec3 encoded = texture2D(uForestFilm, clamp(uv, vec2(.002), vec2(.998))).rgb;
+        return mix(encoded / 12.92,
+          pow((encoded + .055) / 1.055, vec3(2.4)), step(vec3(.04045), encoded));
+      }
       void main() {
         float weight = sceneWeight();
         if (weight < .001) discard;
+        bool forest = vZone < 1.5;
         float down = 1. - vUv.y;
         float spread = .30 + pow(down, .64) * .70;
         float side = (vUv.x - .5) / spread;
-        float envelope = exp(-side * side * 4.2)
-          * smoothstep(0., .19, down) * (1. - smoothstep(.32, 1., down));
+        float envelope = exp(-side * side * (forest ? 3.2 : 4.2))
+          * smoothstep(0., .19, down) * (1. - smoothstep(forest ? .40 : .32, 1., down));
+        if (forest) {
+          // Keep scatter close to the same horizon as the film, rather than
+          // lighting a continuous grey shaft from the top of the canopy.
+          float horizonDistance = vWorld.y - (vZone < .5 ? 1. : -60.5);
+          float horizon = horizonDistance / 4.8;
+          envelope *= exp(-horizon * horizon);
+        }
         float warp = sin(vWorld.y * .37 + vSeed) * .6 + sin(vWorld.z * .43 - vWorld.x * .21) * .5;
         float pockets = .5 + .5 * sin(side * 5. + warp * 1.5 + vSeed);
         pockets *= .5 + .5 * sin(side * 3.3 - down * 3.7 + vSeed * 1.9);
-        float density = .35 + smoothstep(.12, .78, pockets) * .65;
-        vec3 filmColor = aetherFilmRadiance(vWorld) * .5
-          + aetherFilmRadiance(vWorld + vec3(.8, 0., .6)) * .25
-          + aetherFilmRadiance(vWorld - vec3(.8, 0., .6)) * .25;
-        filmColor *= vZone < 1.5 ? .10 : .6;
+        float density = forest ? .05 + smoothstep(.25, .83, pockets) * .95
+          : .35 + smoothstep(.12, .78, pockets) * .65;
+        vec3 filmColor;
+        if (forest) {
+          filmColor = forestFilmRadiance(vWorld) * .5
+            + forestFilmRadiance(vWorld + vec3(.8, 0., .6)) * .25
+            + forestFilmRadiance(vWorld - vec3(.8, 0., .6)) * .25;
+          filmColor *= .58;
+        } else {
+          filmColor = aetherFilmRadiance(vWorld) * .5
+            + aetherFilmRadiance(vWorld + vec3(.8, 0., .6)) * .25
+            + aetherFilmRadiance(vWorld - vec3(.8, 0., .6)) * .25;
+          filmColor *= .6;
+        }
         float luminance = dot(filmColor, vec3(.2126, .7152, .0722));
-        float bright = smoothstep(.012, .42, luminance);
+        float bright = smoothstep(forest ? .06 : .012, forest ? .34 : .42, luminance);
         vec3 color = filmColor * (.8 + bright * .9);
-        float illumination = .025 + bright;
-        if (uLightFilmReady < .5) {
-          color = aetherLightCloud(vWorld, vec3(0., 1., 0.), uTime, step(.5, vZone)) * .32;
-          illumination = .20;
+        float illumination = (forest ? 0. : .025) + bright;
+        float ready = forest ? uForestFilmReady : uLightFilmReady;
+        if (ready < .5) {
+          // An unavailable forest decoder must not borrow the chamber film.
+          color = forest ? vec3(.028, .085, .072) * (.7 + .3 * sin(vWorld.y * .19 + vSeed))
+            : aetherLightCloud(vWorld, vec3(0., 1., 0.), uTime, step(.5, vZone)) * .32;
+          illumination = forest ? .07 : .20;
         }
         float edgeMist = vZone < .5 ? uBoundaryMist.x : vZone < 1.5 ? uBoundaryMist.y : 0.;
         float alpha = envelope * density * illumination * weight
-          * (vZone > 1.5 ? .065 : .08 + edgeMist * .07);
+          * (forest ? .09 + edgeMist * .022 : .065);
         if (alpha < .0007) discard;
         gl_FragColor = vec4(color, alpha);
         #include <tonemapping_fragment>

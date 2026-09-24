@@ -1,5 +1,7 @@
 # 공유 조명 영상
 
+이 문서의 영상은 기존 본 컬럼 재질을 촬영한 보존본으로, `forest-memory.mp4` 추가 후에도 파일을 변경하지 않았으며 현재 `SceneSpine.ts`의 변경된 재질로 재생성하면 같은 영상이 나오지 않습니다([현재 광학 표현과 영상 분리](optical-scenes.md)).
+
 [`light-projection.mp4`](../public/media/light-projection.mp4)는 Aether 본 컬럼의 실제 형상과 재질을 렌더한 14초 영상입니다. 컬럼이 회전하면서 은색·보라 반사광과 어두운 구간이 천천히 바뀝니다. 외부 영상이나 AT 자산을 사용하지 않습니다.
 
 | 항목 | 값 |

@@ -25,14 +25,30 @@ test('scale wave clock follows wall seconds and pauses for hidden or reduced mot
   const hidden = Number(await canvas.getAttribute('data-scale-time'))
   await page.waitForTimeout(500)
   expect(Number(await canvas.getAttribute('data-scale-time'))).toBe(hidden)
-  await page.evaluate(() => {
+  // Capture the first advancing frame inside the browser: another protocol
+  // round trip can otherwise include normal animation time after resuming.
+  const resumed = await canvas.evaluate((element, hiddenTime) => new Promise<{
+    time: number; wallSeconds: number
+  }>((resolve, reject) => {
+    const resumeStart = performance.now()
+    const observer = new MutationObserver(() => {
+      const time = Number(element.getAttribute('data-scale-time'))
+      if (time <= hiddenTime) return
+      observer.disconnect()
+      clearTimeout(timeout)
+      resolve({ time, wallSeconds: (performance.now() - resumeStart) / 1000 })
+    })
+    const timeout = setTimeout(() => {
+      observer.disconnect()
+      reject(new Error('Scale clock did not resume within 10 seconds'))
+    }, 10000)
+    observer.observe(element, { attributes: true, attributeFilter: ['data-scale-time'] })
     Object.defineProperty(document, 'hidden', { configurable: true, get: () => false })
     document.dispatchEvent(new Event('visibilitychange'))
-  })
-  await expect.poll(async () => Number(await canvas.getAttribute('data-scale-time')))
-    .toBeGreaterThan(hidden)
-  const resumed = Number(await canvas.getAttribute('data-scale-time'))
-  expect(resumed - hidden).toBeLessThan(.3)
+  }), hidden)
+  expect(resumed.time).toBeGreaterThan(hidden)
+  expect(resumed.time - hidden, `First resumed frame observed after ${resumed.wallSeconds}s`)
+    .toBeLessThan(.3)
 
   await page.getByRole('button', { name: 'Pause motion' }).click()
   const paused = Number(await canvas.getAttribute('data-scale-time'))

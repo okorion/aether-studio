@@ -4,18 +4,17 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js'
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js'
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js'
-import { smooth, windowWeight } from './Journey'
+import { windowWeight } from './Journey'
 import { createSurfaceFlowUniforms, surfaceFlowGLSL, type SurfaceFlowInput } from './SceneSurfaceFlow'
 
-/** The project panels keep their screen pixels aligned with their raycast. */
+/** Screen pixels never refract: only the statement plate owns fluid distortion. */
 export function sampleSurfaceFlow(progress: number) {
   return {
-    refraction: 1 - smooth(.205, .23, progress) + smooth(.90, .955, progress),
     mist: windowWeight(progress, .245, .31, .60, .675),
   }
 }
 
-/** Mobile keeps the thin fluid film without allocating the bloom pyramid. */
+/** Mobile keeps the gallery mist without allocating the bloom pyramid. */
 export function createSceneGlow(renderer: THREE.WebGLRenderer, scene: THREE.Scene, camera: THREE.Camera, enableBloom = true) {
   const composer = new EffectComposer(renderer)
   const render = new RenderPass(scene, camera)
@@ -23,7 +22,7 @@ export function createSceneGlow(renderer: THREE.WebGLRenderer, scene: THREE.Scen
   const uniforms = {
     ...field.uniforms,
     tDiffuse: { value: null as THREE.Texture | null },
-    uTime: { value: 0 }, uRefraction: { value: 0 }, uMist: { value: 0 },
+    uTime: { value: 0 }, uMist: { value: 0 },
     uResolution: { value: new THREE.Vector2(1, 1) },
   }
   const surface = new ShaderPass(new THREE.ShaderMaterial({
@@ -33,7 +32,7 @@ export function createSceneGlow(renderer: THREE.WebGLRenderer, scene: THREE.Scen
     fragmentShader: /* glsl */ `
       varying vec2 vUv;
       uniform sampler2D tDiffuse;
-      uniform float uTime; uniform float uRefraction; uniform float uMist;
+      uniform float uTime; uniform float uMist;
       uniform vec2 uResolution;
       ${surfaceFlowGLSL}
       float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
@@ -42,7 +41,7 @@ export function createSceneGlow(renderer: THREE.WebGLRenderer, scene: THREE.Scen
       void main(){
         vec2 flow=surfaceDisplacement(vUv);
         vec2 margin=.5/uResolution;
-        vec2 uv=clamp(vUv-flow*uRefraction,margin,vec2(1.)-margin);
+        vec2 uv=clamp(vUv,margin,vec2(1.)-margin);
         vec4 color=texture2D(tDiffuse,uv);
         // Work mist advects independently; panel pixels and DOM hit areas stay aligned.
         vec2 p=(vUv-flow*3.2)*vec2(uFlowAspect,1.);
@@ -77,7 +76,6 @@ export function createSceneGlow(renderer: THREE.WebGLRenderer, scene: THREE.Scen
       field.update(input)
       const weights = sampleSurfaceFlow(progress)
       uniforms.uTime.value = time
-      uniforms.uRefraction.value = weights.refraction
       uniforms.uMist.value = weights.mist
     },
     // Scene preparation cannot see fullscreen quads. Prime against private 2px

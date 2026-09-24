@@ -37,7 +37,7 @@ export function createSceneLayers(scene: THREE.Scene) {
   const materials = textures.map(texture => new THREE.ShaderMaterial({
     uniforms: {
       uMap: { value: texture }, uOpacity: { value: 0 },
-      ...flow.uniforms, uFluidWeight: { value: texture === textures[0] ? .26 : 0 },
+      ...flow.uniforms, uFluidWeight: { value: texture === textures[0] ? 1 : 0 },
       uTop: { value: 1.5 }, uBottom: { value: -.5 },
     },
     vertexShader: `varying vec2 vUv; varying vec4 vClip;
@@ -52,9 +52,13 @@ export function createSceneLayers(scene: THREE.Scene) {
         float noise=fract(sin(dot(floor(screen*vec2(1800.,1100.)),vec2(12.9898,78.233)))*43758.5453);
         float y=screen.y-edge+(noise-.5)*.006;
         float mask=(1.-smoothstep(uTop-.005,uTop+.005,y))*smoothstep(uBottom-.005,uBottom+.005,y);
-        vec2 inkUv=vUv-surfaceDisplacement(screen)*uFluidWeight;
+        vec2 displacement=surfaceDisplacement(screen)*uFluidWeight;
+        vec2 inkUv=vUv-displacement;
         vec4 ink=texture2D(uMap,clamp(inkUv,vec2(0.),vec2(1.)));
         if(mask*ink.a*uOpacity<.003)discard;
+        // A faint sheen belongs to this black plate, below the solid glass emblem.
+        // The forest and emblem never sample this displacement for their silhouette.
+        ink.rgb+=vec3(.028,.043,.047)*min(1.,length(displacement)*22.);
         gl_FragColor=vec4(ink.rgb,ink.a*uOpacity*mask);
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
@@ -86,6 +90,14 @@ export function createSceneLayers(scene: THREE.Scene) {
       if (!c) continue
       const w = canvas.width, h = canvas.height
       c.clearRect(0, 0, w, h)
+      if (!i) {
+        const shade=c.createLinearGradient(0,0,w,h)
+        shade.addColorStop(0,'#05090d')
+        shade.addColorStop(.6,'#050a0e')
+        shade.addColorStop(1,'#09121c')
+        c.fillStyle=shade
+        c.fillRect(0,0,w,h)
+      }
       c.fillStyle = '#eef3ed'
       c.textBaseline = 'top'
       if (!i) {

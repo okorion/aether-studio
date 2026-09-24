@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { createSceneGlow } from '../../src/SceneGlow'
 import { createPointerFlow } from '../../src/PointerFlow'
+import { createSceneLayers } from '../../src/SceneLayers'
 
 type PixelDifference = {
   maxError: number
@@ -131,6 +132,8 @@ export function probeSurfaceFlow(mobile: boolean) {
     const programsBeforeStroke = renderer.info.programs?.length ?? 0
     stroke()
     const refracted = composed(0)
+    const lowerForest = composed(.975)
+    const statementBackground = composed(.175)
     const programsAfterStroke = renderer.info.programs?.length ?? 0
     flow.release()
     const released = composed(0)
@@ -182,6 +185,8 @@ export function probeSurfaceFlow(mobile: boolean) {
       mobile, width, height, errors, preparation,
       neutral: difference(reference, neutral.pixels),
       refraction: difference(neutral.pixels, refracted.pixels),
+      lowerForest: difference(neutral.pixels, lowerForest.pixels),
+      statementBackground: difference(neutral.pixels, statementBackground.pixels),
       textRegion: difference(neutral.pixels, refracted.pixels, (x, y) => x > .08 && x < .92 && y > .35 && y < .65),
       release: difference(refracted.pixels, released.pixels),
       clear: difference(neutral.pixels, cleared.pixels),
@@ -199,5 +204,66 @@ export function probeSurfaceFlow(mobile: boolean) {
   } finally {
     glow.dispose(); flow.dispose(); texture.dispose(); geometry.dispose(); material.dispose()
     renderer.dispose(); renderer.forceContextLoss()
+  }
+}
+
+/** Production plate plus a depth-writing foreground silhouette, with a real flow stroke. */
+export async function probeStatementPlate(mobile: boolean) {
+  await document.fonts.ready
+  const width = mobile ? 256 : 384, height = mobile ? 384 : 240
+  const aspect = width / height
+  const renderer = new THREE.WebGLRenderer({ antialias: false, preserveDrawingBuffer: true })
+  renderer.setPixelRatio(1); renderer.setSize(width, height)
+  renderer.outputColorSpace = THREE.SRGBColorSpace
+  const scene = new THREE.Scene()
+  scene.background = new THREE.Color('#112529')
+  const camera = new THREE.PerspectiveCamera(42, aspect, .1, 90)
+  camera.position.z = 5; camera.updateMatrixWorld()
+  const layers = createSceneLayers(scene)
+  const geometry = new THREE.TorusGeometry(.9, .075, 12, 96)
+  const material = new THREE.MeshBasicMaterial({ color: 0xff0000 })
+  const ring = new THREE.Mesh(geometry, material)
+  scene.add(ring)
+  const flow = createPointerFlow()
+  const input = { flowTexture: flow.texture, aspect }
+  const glow = createSceneGlow(renderer, scene, camera, false)
+  glow.resize(width, height, 1)
+  const gl = renderer.getContext()
+  const draw = (progress: number) => {
+    layers.update(progress, camera, input)
+    glow.update(0, progress, input); glow.render(0, false)
+    const bytes = new Uint8Array(width * height * 4)
+    gl.readPixels(0,0,width,height,gl.RGBA,gl.UNSIGNED_BYTE,bytes)
+    return bytes
+  }
+  try {
+    const before = draw(.175)
+    const programs = renderer.info.programs?.length
+    for(let i=0;i<40;i++){
+      flow.move(-.82+i*.035,.31+Math.sin(i*.22)*.16,aspect)
+      flow.update(1/60)
+    }
+    const after = draw(.175)
+    let ringPixels=0, ringChanged=0, plateChanged=0
+    for(let i=0;i<before.length;i+=4){
+      const changed=Math.max(...[0,1,2].map(c=>Math.abs(before[i+c]-after[i+c])))>2
+      if(before[i]>240&&before[i+1]<5&&before[i+2]<5){ringPixels++;if(changed)ringChanged++}
+      else if(changed)plateChanged++
+    }
+    const programsAfter = renderer.info.programs?.length
+    flow.clear()
+    const cleared=draw(.175)
+    const clearChanged=before.filter((v,i)=>Math.abs(v-cleared[i])>2).length
+    const forests=[]
+    for(const p of [0,.975]){
+      flow.clear();const still=draw(p)
+      for(let i=0;i<25;i++){flow.move(-.8+i*.06,.2,aspect);flow.update(1/60)}
+      const moved=draw(p)
+      forests.push(still.filter((v,i)=>v!==moved[i]).length)
+    }
+    return {ringPixels,ringChanged,plateChanged,clearChanged,forests,programs,programsAfter}
+  } finally {
+    glow.dispose();layers.dispose();flow.dispose();geometry.dispose();material.dispose()
+    renderer.dispose();renderer.forceContextLoss()
   }
 }

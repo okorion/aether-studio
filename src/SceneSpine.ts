@@ -221,8 +221,8 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
       shader.fragmentShader = shader.fragmentShader.replace('#include <alphamap_fragment>', `
         #include <alphamap_fragment>
         vec2 spineScreen = vSpineClip.xy / vSpineClip.w * .5 + .5;
-        float spineNoise = fract(sin(dot(floor(spineScreen * vec2(1800., 1100.)), vec2(12.9898, 78.233))) * 43758.5453);
-        float spineBoundary = spineScreen.y - (spineScreen.x - .5) * .20 + (spineNoise - .5) * .009;
+        float spineBoundaryNoise = fract(sin(dot(floor(spineScreen * vec2(1800., 1100.)), vec2(12.9898, 78.233))) * 43758.5453);
+        float spineBoundary = spineScreen.y - (spineScreen.x - .5) * .20 + (spineBoundaryNoise - .5) * .009;
         float spineEntry = (1. - smoothstep(uSpineEntry - .006, uSpineEntry + .006, spineBoundary))
           * smoothstep(uSpineExit - .006, uSpineExit + .006, spineBoundary);
         if (spineEntry < .003) discard;

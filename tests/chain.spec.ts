@@ -3,20 +3,24 @@ import * as THREE from 'three'
 import { createSpineAssembly } from '../src/SceneSpine'
 import { sampleJourney } from '../src/Journey'
 
-test('@interaction chain keeps its column-local shape and orientation throughout both turns', () => {
+test('@interaction links feed through preceding positions on a fixed column-local helix', () => {
   const assembly = createSpineAssembly(false, false)
   const chain = assembly.group.getObjectByName('aether-spine-chain') as THREE.InstancedMesh
   const bones = assembly.group.getObjectByName('aether-spine-vertebrae') as THREE.InstancedMesh
   const matrix = new THREE.Matrix4()
   try {
     expect(chain.parent).toBe(bones.parent)
-    assembly.update(.30, 1, 1)
-    const initial = Array.from({ length: chain.count }, (_, i) => {
-      chain.getMatrixAt(i, matrix)
-      return matrix.clone()
-    })
-    let previousY = initial[0].elements[13]
-    let maxLocalError = 0, maxWorldError = 0
+    const sample = (p: number) => {
+      assembly.update(p, 1, 1)
+      return Array.from({ length: chain.count }, (_, i) => {
+        chain.getMatrixAt(i, matrix)
+        return matrix.clone()
+      })
+    }
+    const initial = sample(.30)
+    let previousY = initial[0].elements[13], angularTravel = 0
+    let previousAngle = Math.atan2(initial[0].elements[14], initial[0].elements[12])
+    let maxWorldError = 0
     for (let step = 1; step <= 350; step++) {
       const progress = .30 + step / 1000
       assembly.update(progress, 1, 1)
@@ -25,27 +29,42 @@ test('@interaction chain keeps its column-local shape and orientation throughout
       assembly.group.rotation.y = journey.structureYaw
       assembly.group.updateMatrixWorld(true)
       chain.getMatrixAt(0, matrix)
-      const travel = matrix.elements[13] - initial[0].elements[13]
       expect(matrix.elements[13]).toBeLessThan(previousY)
       previousY = matrix.elements[13]
+      const angle = Math.atan2(matrix.elements[14], matrix.elements[12])
+      angularTravel += Math.atan2(Math.sin(angle - previousAngle), Math.cos(angle - previousAngle))
+      previousAngle = angle
       for (let i = 0; i < chain.count; i++) {
         chain.getMatrixAt(i, matrix)
-        // All 42 local frames stay fixed apart from one shared Y translation.
-        // This rejects a camera-facing endpoint or inverse-yaw link orientation.
-        for (let e = 0; e < 16; e++) {
-          maxLocalError = Math.max(maxLocalError,
-            Math.abs(matrix.elements[e] - initial[i].elements[e] - (e === 13 ? travel : 0)))
-        }
         const actual = chain.localToWorld(new THREE.Vector3().setFromMatrixPosition(matrix))
-        const expected = new THREE.Vector3().setFromMatrixPosition(initial[i])
-        expected.y += travel
+        const expected = new THREE.Vector3().setFromMatrixPosition(matrix)
         expected.applyAxisAngle(new THREE.Vector3(0, 1, 0), journey.structureYaw)
         expected.y += journey.height
         maxWorldError = Math.max(maxWorldError, actual.distanceTo(expected))
       }
     }
-    expect(maxLocalError).toBeLessThan(.00001)
     expect(maxWorldError).toBeLessThan(.00001)
+    expect(initial[0].elements[13] - previousY).toBeGreaterThan(1.5)
+    expect(angularTravel).toBeGreaterThan(1)
+
+    // Find when link 6 reaches the old height of link 0. All following links
+    // must pass through their predecessor's full local frame. A translated or
+    // camera-facing spiral fails this even if its tip moves down on screen.
+    let low = .30, high = .65
+    for (let step = 0; step < 32; step++) {
+      const mid = (low + high) / 2
+      if (sample(mid)[6].elements[13] > initial[0].elements[13]) low = mid
+      else high = mid
+    }
+    const advanced = sample((low + high) / 2)
+    let maxTrackError = 0
+    for (let i = 0; i < chain.count - 6; i++) {
+      for (let e = 0; e < 16; e++) {
+        maxTrackError = Math.max(maxTrackError, Math.abs(advanced[i + 6].elements[e] - initial[i].elements[e]))
+      }
+    }
+    expect(maxTrackError).toBeLessThan(.00001)
+    expect(sample(.30)).toEqual(initial)
   } finally { assembly.dispose() }
 })
 

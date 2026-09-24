@@ -7,6 +7,7 @@ declare global {
   interface Window {
     cameraTestFrames: number
     cameraTestFrozen: boolean
+    cameraTestMediaPending: number
     cameraTestCapture?: () => void
   }
 }
@@ -139,6 +140,17 @@ test('@interaction production scene accepts background drag and excludes navigat
     const request = window.requestAnimationFrame.bind(window)
     window.cameraTestFrames = 0
     window.cameraTestFrozen = true
+    window.cameraTestMediaPending = 0
+    // GPU renderers also project real video. Hold its first decoded frame so
+    // the exact-pixel camera assertion does not compare different film frames.
+    const play = HTMLMediaElement.prototype.play
+    HTMLMediaElement.prototype.play = function () {
+      if (!window.cameraTestFrozen) return play.call(this)
+      window.cameraTestMediaPending++
+      return play.call(this).then(() => { this.pause() }).finally(() => {
+        window.cameraTestMediaPending--
+      })
+    }
     window.requestAnimationFrame = (callback) =>
       request((timestamp) => {
         window.cameraTestFrames++
@@ -149,6 +161,10 @@ test('@interaction production scene accepts background drag and excludes navigat
       })
   })
   await readyScene(page)
+  await expect(page.locator('.scene-loading')).toHaveAttribute('data-state', 'ready')
+  await expect.poll(() => page.evaluate(() => window.cameraTestMediaPending)).toBe(0)
+  const readyFrames = await page.evaluate(() => window.cameraTestFrames)
+  await expect.poll(() => page.evaluate(() => window.cameraTestFrames)).toBeGreaterThan(readyFrames + 6)
   await page.addStyleTag({
     content: '*,*::before,*::after{animation:none!important;transition:none!important}',
   })
@@ -203,7 +219,7 @@ test('@interaction production scene accepts background drag and excludes navigat
     return Buffer.from(png, 'base64')
   }
   const before = await captureCamera()
-  expect(await captureCamera()).toEqual(before)
+  expect((await captureCamera()).equals(before), 'the frozen camera baseline must be pixel-identical').toBe(true)
   // Establish the still baseline before hover starts the damped lighting field.
   await page.mouse.move(1100, 350)
   const framesBefore = await page.evaluate(() => window.cameraTestFrames)

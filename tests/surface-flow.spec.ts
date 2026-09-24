@@ -1,8 +1,8 @@
 import { expect, test } from '@playwright/test'
 import { build } from 'vite'
-import type { probeSurfaceFlow } from './fixtures/surface-flow-harness'
+import type { probeSurfaceFlow, probeStatementPlate } from './fixtures/surface-flow-harness'
 
-test('@interaction screen flow preserves neutral color, refracts text, and keeps gallery pixels aligned', async ({ page }) => {
+test('@interaction screen flow leaves both forests and foreground pixels intact while the statement plate refracts', async ({ page }) => {
   const output = await build({ configFile: false, logLevel: 'silent', build: { write: false, minify: false,
     lib: { entry: 'tests/fixtures/surface-flow-harness.ts', formats: ['iife'], name: 'SurfaceFlowFixture' } } })
   const chunk = (Array.isArray(output) ? output : [output])
@@ -30,8 +30,10 @@ test('@interaction screen flow preserves neutral color, refracts text, and keeps
     expect(result.neutral.maxError, label).toBeLessThanOrEqual(2)
     expect(result.neutral.meanError, label).toBeLessThan(.5)
     expect(Math.abs(result.neutral.meanLumaShift), label).toBeLessThan(.5)
-    expect(result.refraction.changedPixels, label).toBeGreaterThan(30)
-    expect(result.textRegion.changedPixels, label).toBeGreaterThan(20)
+    expect(result.refraction.changedPixels, label).toBe(0)
+    expect(result.lowerForest.changedPixels, label).toBe(0)
+    expect(result.statementBackground.changedPixels, label).toBe(0)
+    expect(result.textRegion.changedPixels, label).toBe(0)
     expect(result.programsBeforeStroke, label).toBeGreaterThan(0)
     expect(result.programsAfterStroke, label).toBe(result.programsBeforeStroke)
     expect(result.release.differentComponents, label).toBe(0)
@@ -47,6 +49,16 @@ test('@interaction screen flow preserves neutral color, refracts text, and keeps
     expect(result.mist.outsideMistPixels, label).toBe(0)
     expect(result.mist.protectedRegion.maxError, label).toBeLessThanOrEqual(1)
     expect(result.mist.response.differentComponents, label).toBeGreaterThan(3)
+    const plate = await page.evaluate(mobile => (window as unknown as {
+      SurfaceFlowFixture: { probeStatementPlate: typeof probeStatementPlate }
+    }).SurfaceFlowFixture.probeStatementPlate(mobile), mobile)
+    expect(plate.ringPixels, label).toBeGreaterThan(100)
+    expect(plate.ringChanged, label).toBe(0)
+    expect(plate.plateChanged, label).toBeGreaterThan(80)
+    expect(plate.clearChanged, label).toBe(0)
+    expect(plate.forests, label).toEqual([0,0])
+    expect(plate.programsAfter, label).toBe(plate.programs)
+    results.push({mobile,plate})
   }
   expect(pageErrors).toEqual([])
   expect(consoleErrors).toEqual([])

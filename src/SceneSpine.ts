@@ -39,37 +39,39 @@ function processGeometry(points: THREE.Vector3[], segments: number, radial: numb
 }
 
 function vertebraGeometry(software: boolean) {
-  const radial = software ? 14 : 24
+  const radial = software ? 20 : 64
   const body = new THREE.LatheGeometry([
-    new THREE.Vector2(0, -.43), new THREE.Vector2(.32, -.40),
-    new THREE.Vector2(.52, -.34), new THREE.Vector2(.61, -.22),
-    new THREE.Vector2(.57, -.06), new THREE.Vector2(.56, .12),
-    new THREE.Vector2(.64, .25), new THREE.Vector2(.57, .35),
-    new THREE.Vector2(.35, .41), new THREE.Vector2(0, .44),
+    new THREE.Vector2(0, -.43), new THREE.Vector2(.57, -.43),
+    new THREE.Vector2(.78, -.41), new THREE.Vector2(.85, -.36),
+    new THREE.Vector2(.86, -.30), new THREE.Vector2(.79, -.22),
+    new THREE.Vector2(.77, -.10), new THREE.Vector2(.77, .12),
+    new THREE.Vector2(.81, .24), new THREE.Vector2(.87, .31),
+    new THREE.Vector2(.85, .38), new THREE.Vector2(.75, .43),
+    new THREE.Vector2(.52, .44), new THREE.Vector2(0, .44),
   ], radial)
   const positions = body.getAttribute('position')
   for (let i = 0; i < positions.count; i++) {
     const x = positions.getX(i), y = positions.getY(i), z = positions.getZ(i)
     const angle = Math.atan2(x, z)
-    const bulge = 1 + Math.sin(angle * 3 + y * 4.1) * .14
-      + Math.cos(angle + .7) * .11 + Math.sin(angle * 5 - y * 10.7) * .09
-    const rimWarp = (Math.sin(angle + .3) * .068 + Math.sin(angle * 3 - y * 7) * .035)
+    const bulge = 1 + Math.sin(angle * 3 + y * 4.1) * .045
+      + Math.cos(angle + .7) * .055 + Math.sin(angle * 5 - y * 10.7) * .025
+    const rimWarp = (Math.sin(angle + .3) * .030 + Math.sin(angle * 3 - y * 7) * .016)
       * Math.min(1, Math.hypot(x, z) / .4)
     // A kidney-shaped body leaves space behind it for the neural arch.
     const back = Math.max(0, -Math.cos(angle))
     positions.setXYZ(i, x * bulge * 1.02 + Math.sin(y * 5) * .038,
       y + rimWarp,
-      z * bulge * .94 + .22 + back * back * .09)
+      z * bulge * .78 + .22 + back * back * .09)
   }
   body.computeVertexNormals()
-  const segments = software ? 8 : 14
-  const sides = software ? 5 : 8
+  const segments = software ? 10 : 24
+  const sides = software ? 6 : 14
   const arch = processGeometry([
     new THREE.Vector3(-.50, .05, -.12), new THREE.Vector3(-.70, .10, -.57),
     new THREE.Vector3(-.40, .16, -.99), new THREE.Vector3(0, .18, -1.13),
     new THREE.Vector3(.43, .13, -1.01), new THREE.Vector3(.71, .05, -.59),
     new THREE.Vector3(.49, .02, -.09),
-  ], segments + 4, sides, .25, .92)
+  ], segments + 4, sides, .20, .92)
   const parts: THREE.BufferGeometry[] = [body, arch]
   for (const side of [-1, 1]) {
     parts.push(processGeometry([
@@ -77,7 +79,7 @@ function vertebraGeometry(software: boolean) {
       new THREE.Vector3(side * .80, .11, -.26),
       new THREE.Vector3(side * 1.10, .04, -.39),
       new THREE.Vector3(side * (side > 0 ? 1.31 : 1.22), -.16, -.26),
-    ], segments, sides, .30, .76))
+    ], segments, sides, .23, .68))
     const facet = new THREE.SphereGeometry(1, software ? 8 : 12, software ? 5 : 8)
     facet.scale(.27, .17, .28)
     facet.rotateX(side * .22)
@@ -87,10 +89,10 @@ function vertebraGeometry(software: boolean) {
   parts.push(processGeometry([
     new THREE.Vector3(0, .12, -.92), new THREE.Vector3(.03, .08, -1.23),
     new THREE.Vector3(.01, -.17, -1.39), new THREE.Vector3(-.07, -.34, -1.53),
-  ], segments, sides, .28, .86))
+  ], segments, sides, .23, .72))
 
   const tint = new THREE.Color()
-  const silver = new THREE.Color(.48, .47, .53)
+  const silver = new THREE.Color(.76, .77, .82)
   const teal = new THREE.Color(.21, .31, .34)
   const violet = new THREE.Color(.31, .23, .36)
   for (const part of parts) {
@@ -100,7 +102,7 @@ function vertebraGeometry(software: boolean) {
     for (let i = 0; i < p.count; i++) {
       // Broad, non-periodic-looking dents break a lathed rim's straight highlight.
       const relief = Math.sin(p.getX(i) * 5.7 + p.getZ(i) * 3.1)
-        * Math.cos(p.getY(i) * 11.3 - p.getZ(i) * 4.2) * .048
+        * Math.cos(p.getY(i) * 11.3 - p.getZ(i) * 4.2) * .018
       p.setXYZ(i, p.getX(i) + normals.getX(i) * relief,
         p.getY(i) + normals.getY(i) * relief, p.getZ(i) + normals.getZ(i) * relief)
       const angle = Math.atan2(p.getX(i), p.getZ(i) - .13)
@@ -141,10 +143,10 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
   const linkGeometry = createChainGeometry(software, mobile)
   const exposure = { value: sampleSpineExposure(0) }
   const boneMaterial = new THREE.MeshPhysicalMaterial({
-    color: 0xb4b9c8, vertexColors: true, metalness: software ? .48 : .94,
-    roughness: software ? .51 : .34, envMapIntensity: .94,
-    iridescence: software ? 0 : .18, iridescenceIOR: 1.36,
-    iridescenceThicknessRange: [260, 340], clearcoat: software ? 0 : .08,
+    color: 0xe2e4ec, vertexColors: true, metalness: software ? .48 : .96,
+    roughness: software ? .51 : .34, envMapIntensity: 1.18,
+    iridescence: software ? 0 : .48, iridescenceIOR: 1.36,
+    iridescenceThicknessRange: [180, 460], clearcoat: software ? 0 : .12,
     clearcoatRoughness: .38, transparent: true,
   })
   if (!software) {
@@ -165,6 +167,13 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
             mix(mix(spineHash(i+vec3(0,0,1)),spineHash(i+vec3(1,0,1)),f.x),
             mix(spineHash(i+vec3(0,1,1)),spineHash(i+vec3(1,1,1)),f.x),f.y),f.z);
         }
+        float spineFolds(vec3 p) {
+          float warp = spineNoise(p * 2.1);
+          p += vec3(warp, spineNoise(p.zxy * 3.3), spineNoise(p.yzx * 2.7)) * .8;
+          return spineNoise(p * vec3(7., 29., 7.)) * .55
+            + spineNoise(p * vec3(17., 65., 17.)) * .30
+            + spineNoise(p * vec3(41., 135., 41.)) * .15;
+        }
       ` + shader.fragmentShader
       shader.fragmentShader = shader.fragmentShader.replace('#include <normal_fragment_maps>', `
         #include <normal_fragment_maps>
@@ -173,39 +182,50 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
         vec3 spineRx = cross(spineDy, normal);
         vec3 spineRy = cross(normal, spineDx);
         float spineDet = dot(spineDx, spineRx);
-        float spineFootprint = max(length(dFdx(vSpineSurface)), length(dFdy(vSpineSurface))) * 190.0;
-        float spineGrain = spineNoise(vSpineSurface * 190.) * 2. - 1.;
+        float spineFootprint = max(length(dFdx(vSpineSurface)), length(dFdy(vSpineSurface))) * 160.0;
+        float spineGrain = spineNoise(vSpineSurface * 160.) * 2. - 1.;
         float spineGrainWeight = 1.0 - smoothstep(1.5, 6.0, spineFootprint);
+        float spineFold = spineFolds(vSpineSurface);
         float spineRelief = spineGrain * .00065 * spineGrainWeight
-          + spineNoise(vSpineSurface * 3.7) * .002;
+          + spineFold * .009 + spineNoise(vSpineSurface * 4.7) * .003;
         vec3 spineGradient = dFdx(spineRelief) * spineRx + dFdy(spineRelief) * spineRy;
         normal = normalize(max(abs(spineDet), 0.0000001) * normal
           - sign(spineDet) * spineGradient);
         roughnessFactor = clamp(roughnessFactor
-          + (spineNoise(vSpineSurface * 2.3) - .5) * .055
-          + spineGrain * spineGrainWeight * .065, .25, .46);
+          + (spineFold - .5) * .14
+          + spineGrain * spineGrainWeight * .09, .17, .43);
       `)
       // Broad reflected colour follows the view and surface orientation. Fine
       // grain only roughens those reflections; it never drives rainbow bands.
       shader.fragmentShader = shader.fragmentShader.replace('#include <opaque_fragment>', `
         vec3 spineReflection = inverseTransformDirection(
           reflect(-normalize(vViewPosition), normal), viewMatrix);
-        float spinePink = pow(max(0., dot(spineReflection, normalize(vec3(-.62,.38,.69)))), 4.2);
-        float spineCyan = pow(max(0., dot(spineReflection, normalize(vec3(.73,-.13,.67)))), 5.0);
-        float spineViolet = pow(max(0., dot(spineReflection, normalize(vec3(.12,.80,-.56)))), 4.0);
+        float spinePink = pow(max(0., dot(spineReflection, normalize(vec3(-.62,.38,.69)))), 3.2);
+        float spineCyan = pow(max(0., dot(spineReflection, normalize(vec3(.73,-.13,.67)))), 4.0);
+        float spineViolet = pow(max(0., dot(spineReflection, normalize(vec3(.12,.80,-.56)))), 3.0);
         float spineWindow = max(spinePink, max(spineCyan, spineViolet * .65));
-        float spineDarkFace = .07 + .93 * smoothstep(.035, .58, spineWindow);
-        vec3 spineReflectionColor = vec3(.92,.15,.56) * spinePink * 1.5
-          + vec3(.08,.78,.96) * spineCyan * 1.25
-          + vec3(.31,.13,.66) * spineViolet * .65;
+        float spineDarkFace = .10 + .90 * smoothstep(.025, .52, spineWindow);
+        // Folded silver carries thin-film color within its highlights. It is not
+        // divided into uniformly painted magenta and cyan lobes.
+        float spineCoating = spineNoise(vSpineSurface * 2.8) * 4.
+          + spineFold * 5. + dot(spineReflection, vec3(1.3, .7, -.9));
+        vec3 spineOxide = .5 + .5 * cos(vec3(.1, 2.2, 4.3) + spineCoating * 2.);
+        vec3 spineReflectionColor = vec3(.80,.46,.69) * spinePink
+          + vec3(.37,.73,.86) * spineCyan
+          + vec3(.44,.36,.67) * spineViolet * .6;
+        spineReflectionColor = mix(spineReflectionColor, spineOxide * spineWindow, .38);
+        float spineScrape = smoothstep(.45, .64, spineFold);
         float spineFresnel = pow(1. - max(dot(normal, normalize(vViewPosition)), 0.), 2.);
-        outgoingLight = outgoingLight * spineDarkFace * .54
-          + spineReflectionColor * (.36 + spineFresnel * .64)
-            * (.92 + spineGrain * spineGrainWeight * .15);
+        vec3 spineHighlight = outgoingLight / (vec3(1.) + outgoingLight * .48);
+        vec3 spineHighlightTint = mix(vec3(.60,.71,.82), spineOxide, .58);
+        outgoingLight = spineHighlight * spineHighlightTint * spineDarkFace * (.60 + spineScrape * .50)
+          + spineReflectionColor * (.22 + spineFresnel * .55)
+            * (.35 + spineScrape * 1.30 + spineGrain * spineGrainWeight * .26)
+          + vec3(.55,.63,.70) * pow(spineScrape, 5.) * spineWindow * .26;
         #include <opaque_fragment>
       `)
     }
-    boneMaterial.customProgramCacheKey = () => 'aether-spine-broad-reflection-v1'
+    boneMaterial.customProgramCacheKey = () => 'aether-spine-folded-silver-v2'
   }
   const discMaterial = new THREE.MeshPhysicalMaterial({
     color: 0x26364a, metalness: software ? .45 : .86, roughness: .44,

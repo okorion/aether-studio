@@ -20,13 +20,14 @@ export function createScaleBubbles(software: boolean, mobile: boolean) {
   geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
   geometry.setAttribute('aBubbleSeed', new THREE.BufferAttribute(seeds, 1))
   const material = new THREE.ShaderMaterial({
-    uniforms: { uTime: { value: 0 }, uOpacity: { value: 0 }, uViewportHeight: { value: 900 } },
+    uniforms: { uTime: { value: 0 }, uOpacity: { value: 0 }, uViewportHeight: { value: 900 }, uPointPixelRatio: { value: 1 } },
     transparent: true, depthWrite: false, depthTest: true,
     vertexShader: /* glsl */ `
       attribute float aBubbleSeed;
       uniform float uTime;
       uniform float uOpacity;
       uniform float uViewportHeight;
+      uniform float uPointPixelRatio;
       varying float vBubbleOpacity;
       varying float vBubbleSeed;
       void main() {
@@ -37,7 +38,7 @@ export function createScaleBubbles(software: boolean, mobile: boolean) {
         vec4 view = modelViewMatrix * vec4(position + drift, 1.);
         gl_Position = projectionMatrix * view;
         gl_PointSize = clamp((.035 + pow(aBubbleSeed, 4.) * .32) * uViewportHeight
-          * projectionMatrix[1][1] * .5 / max(3., -view.z), 2., 42.);
+          * projectionMatrix[1][1] * .5 / max(3., -view.z), 2. * uPointPixelRatio, 42. * uPointPixelRatio);
         vBubbleOpacity = uOpacity * (.28 + aBubbleSeed * .24);
         vBubbleSeed = aBubbleSeed;
       }
@@ -65,9 +66,13 @@ export function createScaleBubbles(software: boolean, mobile: boolean) {
   points.name = 'aether-scale-bubbles'
   points.frustumCulled = false
   const viewport = new THREE.Vector4()
+  const logicalSize = new THREE.Vector2()
   points.onBeforeRender = renderer => {
     renderer.getCurrentViewport(viewport)
+    renderer.getSize(logicalSize)
     material.uniforms.uViewportHeight.value = viewport.w
+    // Include both display DPR and reduced-resolution glow/reflection passes.
+    material.uniforms.uPointPixelRatio.value = viewport.w / Math.max(1, logicalSize.y)
   }
   return { points, geometry, material }
 }

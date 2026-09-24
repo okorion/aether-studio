@@ -94,6 +94,7 @@ test('@interaction one finite chain stays connected, descends continuously and r
       const initial = sample(.30)
       let previous = initial
       let maxStep = 0, minSpacing = Infinity, maxSpacing = 0, maxRise = -Infinity
+      let minTangentAlignment = 1
       for (let step = 1; step <= 350; step++) {
         const progress = .30 + step / 1000
         const points = sample(progress)
@@ -105,6 +106,11 @@ test('@interaction one finite chain stays connected, descends continuously and r
             const spacing = points[i].distanceTo(points[i - 1])
             minSpacing = Math.min(minSpacing, spacing)
             maxSpacing = Math.max(maxSpacing, spacing)
+            chain.getMatrixAt(i - 1, matrix)
+            const alongLink = new THREE.Vector3(0, 1, 0).transformDirection(matrix)
+              .transformDirection(chain.matrixWorld)
+            const alongChain = points[i].clone().sub(points[i - 1]).normalize()
+            minTangentAlignment = Math.min(minTangentAlignment, alongLink.dot(alongChain))
           }
         }
         previous = points
@@ -113,6 +119,7 @@ test('@interaction one finite chain stays connected, descends continuously and r
       expect(maxStep).toBeLessThan(.15)
       expect(minSpacing).toBeGreaterThan(.40)
       expect(maxSpacing).toBeLessThan(.45)
+      expect(minTangentAlignment).toBeGreaterThan(.99)
       expect(minScale).toBeCloseTo(1, 5)
       expect(maxScale).toBeCloseTo(1, 5)
       expect(sample(.30)).toEqual(initial)

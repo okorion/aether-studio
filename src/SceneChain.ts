@@ -2,7 +2,7 @@ import * as THREE from 'three'
 import { smooth } from './Journey'
 
 const TAU = Math.PI * 2
-export const getChainLinkCount = (mobile: boolean) => mobile ? 30 : 22
+export const getChainLinkCount = (mobile: boolean) => mobile ? 31 : 23
 export const CHAIN_LINK_PITCH = .43
 
 /** Rounded, straight-sided forged links; Y is the direction of the chain. */
@@ -30,8 +30,12 @@ export function createChainGeometry(software: boolean, mobile: boolean) {
 }
 
 const CHAIN_RADIUS = 1.85
-// About 63 degrees above horizontal: a steep wrap, not a shallow coil.
-const CHAIN_TURN_PER_HEIGHT = .28
+// About 52 degrees above horizontal. Each unit of descent also travels .777
+// around the column, so the strand visibly feeds along its diagonal links.
+const CHAIN_TURN_PER_HEIGHT = .42
+// Keep the entry anchor while opening out the diagonal below it.
+const CHAIN_TOP_ANGLE = -1.932
+const chainAngleAtHeight = (y: number) => CHAIN_TOP_ANGLE - (y - 4.4) * CHAIN_TURN_PER_HEIGHT
 const CHAIN_TRACK_HEIGHT = 20
 const CHAIN_ARC_PER_HEIGHT = Math.hypot(1, CHAIN_RADIUS * CHAIN_TURN_PER_HEIGHT)
 
@@ -47,14 +51,14 @@ class ColumnChainCurve extends THREE.Curve<THREE.Vector3> {
     const y = this.topY - t * CHAIN_TRACK_HEIGHT
     // Absolute local height anchors the winding to the column. Advancing the
     // strand moves each link along this track, not sideways off the track.
-    const angle = -.7 - y * CHAIN_TURN_PER_HEIGHT
+    const angle = chainAngleAtHeight(y)
     return target.set(Math.cos(angle) * CHAIN_RADIUS, y, Math.sin(angle) * CHAIN_RADIUS)
   }
 
   getPointAt(t: number, target = new THREE.Vector3()) { return this.getPoint(t, target) }
 
   getTangentAt(t: number, target = new THREE.Vector3()) {
-    const angle = -.7 - (this.topY - t * CHAIN_TRACK_HEIGHT) * CHAIN_TURN_PER_HEIGHT
+    const angle = chainAngleAtHeight(this.topY - t * CHAIN_TRACK_HEIGHT)
     return target.set(-Math.sin(angle) * CHAIN_RADIUS * CHAIN_TURN_PER_HEIGHT,
       -1, Math.cos(angle) * CHAIN_RADIUS * CHAIN_TURN_PER_HEIGHT).normalize()
   }
@@ -69,7 +73,7 @@ export function sampleChainPath(progress: number, mobile = false) {
   // third. Overlapping ramps keep it moving through the middle of the scene.
   // The wider mobile camera needs a longer strand and a taller local travel.
   const top = 4.4 - 3.6 * smooth(.27, .43, progress) - 2.65 * smooth(.35, .65, progress)
-  return new ColumnChainCurve(top * (mobile ? 1.4 : 1))
+  return new ColumnChainCurve(top * (mobile ? 1.38 : 1))
 }
 
 export function createChainMaterial(software: boolean) {

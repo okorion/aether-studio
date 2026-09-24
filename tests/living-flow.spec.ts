@@ -89,7 +89,7 @@ test('@interaction spine links wrap in front and behind the bones and reverse wi
     // The shorter strand wraps across the front and back without making a
     // complete coil; its upper terminal now leads the visible stage length.
     expect(Math.abs(turn)).toBeGreaterThan(2)
-    expect(Math.abs(turn)).toBeLessThan(Math.PI)
+    expect(Math.abs(turn)).toBeLessThan(Math.PI * 2)
     assembly.update(.4, 0, 1)
     expect(assembly.group.visible).toBe(false)
   } finally {

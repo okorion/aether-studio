@@ -19,7 +19,7 @@ test('@interaction resizing at rest synchronizes strand count and travel with th
           try {
             fresh.update(progress, 1, 1)
             const expected = fresh.group.getObjectByName('aether-spine-chain') as THREE.InstancedMesh
-            expect(chain.count).toBe(mobileView ? 30 : 22)
+            expect(chain.count).toBe(mobileView ? 31 : 23)
             expect(chain.instanceMatrix.array).toBe(allocation)
             for (let i = 0; i < chain.count; i++) {
               chain.getMatrixAt(i, matrix)
@@ -33,11 +33,11 @@ test('@interaction resizing at rest synchronizes strand count and travel with th
   }
 })
 
-test('@interaction chain has a steep pitch and feeds faster for equal scroll input', () => {
+test('@interaction chain feeds diagonally while retaining its descent timing', () => {
   const slope = sampleChainPath(.48).getTangentAt(0)
   const degrees = Math.atan2(Math.abs(slope.y), Math.hypot(slope.x, slope.z)) * 180 / Math.PI
-  expect(degrees).toBeGreaterThan(60)
-  expect(degrees).toBeLessThan(66)
+  expect(degrees).toBeGreaterThan(50)
+  expect(degrees).toBeLessThan(54)
   // Two 120px wheel steps on the desktop's 15300px scroll range.
   // Feed the upper terminal quickly through the first half of the column.
   const delta = 240 / 15300
@@ -49,6 +49,24 @@ test('@interaction chain has a steep pitch and feeds faster for equal scroll inp
   const top = sampleChainPath(.27).getPointAt(0)
   const bottom = sampleChainPath(.65).getPointAt(0)
   expect(top.y - bottom.y).toBeCloseTo(6.25)
+})
+
+test('@interaction scroll advances links along the diagonal, including sideways travel', () => {
+  for (const mobile of [false, true]) {
+    for (let p = .30; p < .65; p += .001) {
+      const path = sampleChainPath(p, mobile)
+      const next = sampleChainPath(p + .0001, mobile)
+      for (const t of [0, .15, .3]) {
+        const movement = next.getPointAt(t).sub(path.getPointAt(t))
+        // Measure the feed separately from the shared parent rotation. A
+        // vertical translation or the previous near-vertical pitch fails.
+        const lateralPerDrop = Math.hypot(movement.x, movement.z) / -movement.y
+        expect(lateralPerDrop).toBeGreaterThan(.75)
+        expect(lateralPerDrop).toBeLessThan(.80)
+        expect(movement.normalize().dot(path.getTangentAt(t))).toBeGreaterThan(.99999)
+      }
+    }
+  }
 })
 
 test('@interaction links feed through preceding positions on a fixed column-local helix', () => {
@@ -138,7 +156,7 @@ test('@interaction one finite chain stays connected, descends continuously and r
       })
     }
     try {
-      expect(chain.count).toBe(mobile ? 30 : 22)
+      expect(chain.count).toBe(mobile ? 31 : 23)
       const initial = sample(.30)
       let previous = initial
       let maxStep = 0, minSpacing = Infinity, maxSpacing = 0, maxRise = -Infinity

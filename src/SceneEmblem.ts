@@ -20,6 +20,19 @@ export type SceneEmblemOptions = {
 
 type CaptureState = 'disabled' | 'pending' | 'ready' | 'failed'
 
+/** A solid annulus with broad curved faces and rounded, polished bevels. */
+function glassBandGeometry(software: boolean) {
+  const profile = [
+    [.854, -.043], [.850, -.015], [.853, .025], [.862, .050],
+    [.881, .063], [.910, .070], [.940, .062], [.960, .047],
+    [.970, .024], [.971, -.020], [.962, -.047], [.944, -.062],
+    [.911, -.070], [.880, -.063], [.862, -.053], [.854, -.043],
+  ].map(([radius, depth]) => new THREE.Vector2(radius, depth))
+  const geometry = new THREE.LatheGeometry(profile, software ? 80 : 192)
+  geometry.rotateX(Math.PI / 2)
+  return geometry
+}
+
 /** Owns the emblem only: its travelling world parent and ambient particles stay outside. */
 export function createSceneEmblem(options: SceneEmblemOptions) {
   const { software, mobile, film } = options
@@ -99,8 +112,8 @@ export function createSceneEmblem(options: SceneEmblemOptions) {
       surface.color.set(0xe0f2f0)
       surface.metalness = 0
       surface.roughness = software ? .23 : .065
-      surface.envMapIntensity = software ? 1 : 1.1
-      surface.clearcoat = software ? 0 : .45
+      surface.envMapIntensity = software ? 1 : 1.8
+      surface.clearcoat = software ? 0 : .7
       surface.clearcoatRoughness = .08
       surface.iridescence = software ? 0 : .82
       surface.iridescenceIOR = 1.38
@@ -109,11 +122,11 @@ export function createSceneEmblem(options: SceneEmblemOptions) {
       surface.ior = 1.46
       surface.emissive.set(0)
       surface.emissiveIntensity = 0
-      surface.depthWrite = false
+      surface.depthWrite = true
       surface.defines = { ...surface.defines, AETHER_LIGHT_FILM: 1 }
       const previous = surface.onBeforeCompile
       const previousKey = surface.customProgramCacheKey()
-      const thickness = { value: index === 2 ? .012 : index >= 3 ? .004 : .008 }
+      const thickness = { value: index === 2 ? .042 : index >= 3 ? .012 : .050 }
       surface.onBeforeCompile = (shader, renderer) => {
         previous.call(surface, shader, renderer)
         Object.assign(shader.uniforms, {
@@ -121,9 +134,10 @@ export function createSceneEmblem(options: SceneEmblemOptions) {
           uEmblemTexel: backgroundTexel, uEmblemAspect: captureAspect,
           uEmblemThickness: thickness, uLightFilm: film.map, uLightFilmReady: film.ready,
         })
-        shader.vertexShader = `varying vec4 vEmblemClip; varying vec3 vEmblemWorld;\n${shader.vertexShader}`
+        shader.vertexShader = `varying vec4 vEmblemClip; varying vec3 vEmblemWorld; varying vec3 vEmblemLocal;\n${shader.vertexShader}`
           .replace('#include <project_vertex>', `#include <project_vertex>
             vEmblemClip = gl_Position;
+            vEmblemLocal = transformed;
             vEmblemWorld = (modelMatrix * vec4(transformed, 1.)).xyz;`)
         shader.fragmentShader = /* glsl */ `
           uniform sampler2D uEmblemBackground;
@@ -133,12 +147,21 @@ export function createSceneEmblem(options: SceneEmblemOptions) {
           uniform float uEmblemThickness;
           varying vec4 vEmblemClip;
           varying vec3 vEmblemWorld;
+          varying vec3 vEmblemLocal;
           ${lightChoreographyGLSL}
         ` + shader.fragmentShader
+        shader.fragmentShader = shader.fragmentShader.replace('#include <normal_fragment_maps>', `
+          #include <normal_fragment_maps>
+          // Static shallow tooling ripples bend the background, never the outline.
+          vec2 opticalRipple = vec2(
+            sin(vEmblemLocal.y * 13. + sin(vEmblemLocal.x * 7.) * 2.),
+            cos(vEmblemLocal.x * 11. + sin(vEmblemLocal.y * 9.) * 1.7));
+          normal = normalize(normal + vec3(opticalRipple * .13, 0.));
+        `)
         shader.fragmentShader = shader.fragmentShader.replace('#include <opaque_fragment>', /* glsl */ `
           vec2 emblemUv = vEmblemClip.xy / max(.0001, vEmblemClip.w) * .5 + .5;
           float emblemFacing = clamp(abs(dot(normal, normalize(vViewPosition))), 0., 1.);
-          float emblemFresnel = .035 + .965 * pow(1. - emblemFacing, 5.);
+          float emblemFresnel = .045 + .955 * pow(1. - emblemFacing, 1.8);
           vec2 emblemBend = normal.xy * vec2(1. / max(.25, uEmblemAspect), 1.)
             * uEmblemThickness * (.45 + .55 * (1. - emblemFacing));
           vec2 emblemInset = min(uEmblemTexel * .5, vec2(.49));
@@ -163,27 +186,36 @@ export function createSceneEmblem(options: SceneEmblemOptions) {
           float emblemFilmLuma = dot(emblemFilm, vec3(.2126,.7152,.0722));
           // A dark film interval also dims the reflected highlight. Its colour
           // reaches the edge instead of leaving an always-silver light source.
-          float emblemProjection = mix(.55, .10 + 1.25 * smoothstep(.015,.55,emblemFilmLuma), uLightFilmReady);
-          vec3 emblemTint = mix(vec3(1.), normalize(emblemFilm + vec3(.025)) * 1.45, uLightFilmReady * .55);
-          outgoingLight = emblemThrough * (1. - emblemFresnel * .92)
-            + emblemReflection * emblemTint * emblemProjection * (.18 + emblemFresnel * 1.15)
-            + emblemFilm * (.025 + emblemFresnel * emblemFresnel * 3.2);
+          float emblemProjection = mix(.8, .45 + .8 * smoothstep(.015,.55,emblemFilmLuma), uLightFilmReady);
+          vec3 emblemTint = mix(vec3(1.), normalize(emblemFilm + vec3(.06)) * 1.45, uLightFilmReady * .28);
+          vec3 prism = .5 + .5 * cos(vec3(.4, 2.5, 4.6)
+            + emblemFresnel * 8.5 + vEmblemLocal.y * .9 + normal.x * 1.5);
+          vec3 glassBody = mix(vec3(.010,.017,.040), vec3(.035,.022,.060), .5+.5*normal.y);
+          outgoingLight = emblemThrough * (1. - emblemFresnel * .52) * .89
+            + glassBody * (.18 + emblemFresnel * .5)
+            + emblemReflection * emblemTint * emblemProjection * (.12 + emblemFresnel * 1.4)
+            + prism * pow(emblemFresnel, 1.5) * .36
+            + emblemFilm * (.018 + emblemFresnel * emblemFresnel * .75);
           #include <opaque_fragment>
         `)
       }
-      surface.customProgramCacheKey = () => `${previousKey}-film-glass-${index}-v1`
+      surface.customProgramCacheKey = () => `${previousKey}-solid-prism-${index}-v2`
     }
   }
 
   const ringSegments = software ? 64 : 144
-  const ring = new THREE.Mesh(ownGeometry(new THREE.TorusGeometry(.89, .052, software ? 6 : 12, ringSegments)), ringSurface)
+  const ring = new THREE.Mesh(ownGeometry(variant === 'silver'
+    ? new THREE.TorusGeometry(.89, .052, software ? 6 : 12, ringSegments)
+    : glassBandGeometry(software)), ringSurface)
   ring.name = 'aether-emblem-ring'
   const inner = new THREE.Mesh(ownGeometry(new THREE.TorusGeometry(.84, .009, software ? 4 : 8, ringSegments)), innerSurface)
   inner.name = 'aether-emblem-inner-ring'
   inner.position.z = -.035
+  inner.visible = variant === 'silver'
   const glow = new THREE.Mesh(ownGeometry(new THREE.TorusGeometry(.89, .006, software ? 4 : 6, ringSegments)), glowSurface)
   glow.name = 'aether-emblem-edge'
   glow.position.z = .026
+  glow.visible = variant === 'silver'
   group.add(ring, inner, glow)
 
   const letter = new THREE.Shape()
@@ -202,8 +234,11 @@ export function createSceneEmblem(options: SceneEmblemOptions) {
   counter.closePath()
   letter.holes.push(counter)
   const glyph = new THREE.Mesh(ownGeometry(new THREE.ExtrudeGeometry(letter, {
-    depth: .055, bevelEnabled: true, bevelSegments: 3, steps: 1,
-    bevelSize: .014, bevelThickness: .013, curveSegments: software ? 16 : 32,
+    depth: variant === 'silver' ? .055 : .070, bevelEnabled: true,
+    bevelSegments: variant === 'silver' ? 3 : 10, steps: 1,
+    bevelSize: variant === 'silver' ? .014 : .070,
+    bevelThickness: variant === 'silver' ? .013 : .085,
+    curveSegments: software ? 16 : variant === 'silver' ? 32 : 48,
   })), glyphSurface)
   glyph.name = 'aether-emblem-glyph'
   glyph.position.z = .03

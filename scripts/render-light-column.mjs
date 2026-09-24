@@ -10,13 +10,17 @@ const directory = process.argv[2] || '.qa/light-column-frames'
 await mkdir(directory, { recursive: true })
 // An interrupted replacement capture must never retain a valid old manifest.
 await rm(`${directory}/source.json`, { force: true })
-const output = await build({ configFile: false, logLevel: 'silent', build: {
-  write: false, minify: false,
-  lib: { entry: 'scripts/render-light-column.ts', formats: ['iife'], name: 'ColumnFilm' },
-} })
-const chunk = (Array.isArray(output) ? output : [output])
-  .flatMap(item => item.output ?? []).find(item => item.type === 'chunk')
-if (!chunk) throw new Error('Column film fixture did not compile')
+const compile = async () => {
+  const output = await build({ configFile: false, logLevel: 'silent', build: {
+    write: false, minify: false,
+    lib: { entry: 'scripts/render-light-column.ts', formats: ['iife'], name: 'ColumnFilm' },
+  } })
+  const chunk = (Array.isArray(output) ? output : [output])
+    .flatMap(item => item.output ?? []).find(item => item.type === 'chunk')
+  if (!chunk) throw new Error('Column film fixture did not compile')
+  return chunk
+}
+const chunk = await compile()
 // Record every physical module bundled by Vite, including Three.js and the
 // timeline helpers. The capture driver and dependency lock are inputs too.
 const inputs = [...new Set([...Object.keys(chunk.modules).filter(id => !id.startsWith('\0')),
@@ -31,6 +35,13 @@ const hashInputs = async () => {
   return hashes
 }
 const sources = await hashInputs()
+// The first build discovers transitive inputs. Rebuild after taking their
+// snapshot so a save during discovery cannot bless a stale compiled module.
+const verified = await compile()
+if (verified.code !== chunk.code ||
+    JSON.stringify(Object.keys(verified.modules).sort()) !== JSON.stringify(Object.keys(chunk.modules).sort()) ||
+    JSON.stringify(sources) !== JSON.stringify(await hashInputs()))
+  throw new Error('Rendering inputs changed during build; capture was not started')
 const bundleSha256 = createHash('sha256').update(chunk.code).digest('hex')
 const browser = await chromium.launch({ args: process.env.CI
   ? ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] : ['--use-angle=d3d11'] })

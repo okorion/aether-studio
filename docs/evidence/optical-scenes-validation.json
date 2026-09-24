@@ -1,0 +1,631 @@
+{
+  "date": "2026-09-24",
+  "baseline_commit": "17f3abb1f61bf8ce468cd08bef76d68b1ecbeb19",
+  "integrated_base_commit": "e013e22099810a42435a8f91b6bfedc812ca2751",
+  "implementation_commit": "db1dec5f8a8ab51eb9b8fc509d65ca5b39d0f388",
+  "captures": {
+    "scene_time": 10,
+    "film_time": 2,
+    "quality": 1,
+    "count": 14,
+    "errors": []
+  },
+  "pointer": {
+    "programs_before": "109",
+    "programs_after": "109",
+    "errors": []
+  },
+  "checks": {
+    "lint": "pass",
+    "typecheck": "pass",
+    "build": "pass",
+    "initial_suite": {
+      "passed": 122,
+      "skipped": 1,
+      "failed": 2
+    },
+    "corrections": [
+      "숨김 복귀의 첫 advancing 프레임을 브라우저 내부에서 원자적으로 읽어 통신 왕복 경합 제거",
+      "자동 회전은 시간 차분으로 검사하고 스크롤 왕복은 같은 시각으로 고정"
+    ],
+    "focused_gpu_after_corrections": {
+      "passed": 20,
+      "failed": 0
+    },
+    "final_forest_lighting_gpu": {
+      "passed": 7,
+      "failed": 0
+    }
+  },
+  "runtime": [
+    {
+      "version": "before",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 2060 SUPER (0x00001F06) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "errors": [],
+      "samples": [
+        {
+          "progress": 0,
+          "duration_ms": 2413.7000000476837,
+          "frame_ms_ema_median": 16.7,
+          "frame_ms_ema_p95": 16.7,
+          "quality": "1.00",
+          "profile": "gpu",
+          "media_before": [
+            {
+              "role": "light-projection",
+              "time": 1.853773,
+              "paused": false
+            }
+          ],
+          "media_after": [
+            {
+              "role": "light-projection",
+              "time": 4.267683,
+              "paused": false
+            }
+          ]
+        },
+        {
+          "progress": 0.175,
+          "duration_ms": 2415.5,
+          "frame_ms_ema_median": 16.7,
+          "frame_ms_ema_p95": 16.7,
+          "quality": "1.00",
+          "profile": "gpu",
+          "media_before": [
+            {
+              "role": "light-projection",
+              "time": 6.488779,
+              "paused": false
+            }
+          ],
+          "media_after": [
+            {
+              "role": "light-projection",
+              "time": 8.9044,
+              "paused": false
+            }
+          ]
+        },
+        {
+          "progress": 0.4,
+          "duration_ms": 2400.2000000476837,
+          "frame_ms_ema_median": 16.7,
+          "frame_ms_ema_p95": 16.7,
+          "quality": "1.00",
+          "profile": "gpu",
+          "media_before": [
+            {
+              "role": "light-projection",
+              "time": 9.153557,
+              "paused": true
+            }
+          ],
+          "media_after": [
+            {
+              "role": "light-projection",
+              "time": 9.153557,
+              "paused": true
+            }
+          ]
+        },
+        {
+          "progress": 0.65,
+          "duration_ms": 2400.5,
+          "frame_ms_ema_median": 16.7,
+          "frame_ms_ema_p95": 16.7,
+          "quality": "1.00",
+          "profile": "gpu",
+          "media_before": [
+            {
+              "role": "light-projection",
+              "time": 11.024411,
+              "paused": false
+            }
+          ],
+          "media_after": [
+            {
+              "role": "light-projection",
+              "time": 13.425014,
+              "paused": false
+            }
+          ]
+        },
+        {
+          "progress": 0.975,
+          "duration_ms": 2415.2999999523163,
+          "frame_ms_ema_median": 16.7,
+          "frame_ms_ema_p95": 16.7,
+          "quality": "1.00",
+          "profile": "gpu",
+          "media_before": [
+            {
+              "role": "light-projection",
+              "time": 2.025142,
+              "paused": false
+            }
+          ],
+          "media_after": [
+            {
+              "role": "light-projection",
+              "time": 4.440543,
+              "paused": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "version": "before",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 2060 SUPER (0x00001F06) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "errors": [],
+      "samples": [
+        {
+          "progress": 0,
+          "duration_ms": 2403.7000000476837,
+          "frame_ms_ema_median": 16.7,
+          "frame_ms_ema_p95": 16.7,
+          "quality": "1.00",
+          "profile": "gpu",
+          "media_before": [
+            {
+              "role": "light-projection",
+              "time": 2.85292,
+              "paused": false
+            }
+          ],
+          "media_after": [
+            {
+              "role": "light-projection",
+              "time": 5.256809,
+              "paused": false
+            }
+          ]
+        },
+        {
+          "progress": 0.175,
+          "duration_ms": 2415.2999999523163,
+          "frame_ms_ema_median": 16.7,
+          "frame_ms_ema_p95": 16.7,
+          "quality": "1.00",
+          "profile": "gpu",
+          "media_before": [
+            {
+              "role": "light-projection",
+              "time": 7.511511,
+              "paused": false
+            }
+          ],
+          "media_after": [
+            {
+              "role": "light-projection",
+              "time": 9.926828,
+              "paused": false
+            }
+          ]
+        },
+        {
+          "progress": 0.4,
+          "duration_ms": 2400.5999999046326,
+          "frame_ms_ema_median": 16.7,
+          "frame_ms_ema_p95": 16.7,
+          "quality": "1.00",
+          "profile": "gpu",
+          "media_before": [
+            {
+              "role": "light-projection",
+              "time": 10.159992,
+              "paused": true
+            }
+          ],
+          "media_after": [
+            {
+              "role": "light-projection",
+              "time": 10.159992,
+              "paused": true
+            }
+          ]
+        },
+        {
+          "progress": 0.65,
+          "duration_ms": 2400.4000000953674,
+          "frame_ms_ema_median": 16.7,
+          "frame_ms_ema_p95": 16.7,
+          "quality": "1.00",
+          "profile": "gpu",
+          "media_before": [
+            {
+              "role": "light-projection",
+              "time": 12.06405,
+              "paused": false
+            }
+          ],
+          "media_after": [
+            {
+              "role": "light-projection",
+              "time": 0.461988,
+              "paused": false
+            }
+          ]
+        },
+        {
+          "progress": 0.975,
+          "duration_ms": 2416.7000000476837,
+          "frame_ms_ema_median": 16.7,
+          "frame_ms_ema_p95": 16.7,
+          "quality": "1.00",
+          "profile": "gpu",
+          "media_before": [
+            {
+              "role": "light-projection",
+              "time": 3.065489,
+              "paused": false
+            }
+          ],
+          "media_after": [
+            {
+              "role": "light-projection",
+              "time": 5.482222,
+              "paused": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "version": "after",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 2060 SUPER (0x00001F06) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "errors": [],
+      "samples": [
+        {
+          "progress": 0,
+          "duration_ms": 2412,
+          "frame_ms_ema_median": 16.7,
+          "frame_ms_ema_p95": 16.7,
+          "quality": "1.00",
+          "profile": "gpu",
+          "media_before": [
+            {
+              "role": "light-projection",
+              "time": 0,
+              "paused": true
+            },
+            {
+              "role": "forest-memory",
+              "time": 2.891959,
+              "paused": false
+            }
+          ],
+          "media_after": [
+            {
+              "role": "light-projection",
+              "time": 0,
+              "paused": true
+            },
+            {
+              "role": "forest-memory",
+              "time": 5.304135,
+              "paused": false
+            }
+          ]
+        },
+        {
+          "progress": 0.175,
+          "duration_ms": 2415.600000143051,
+          "frame_ms_ema_median": 16.7,
+          "frame_ms_ema_p95": 16.7,
+          "quality": "1.00",
+          "profile": "gpu",
+          "media_before": [
+            {
+              "role": "light-projection",
+              "time": 0,
+              "paused": true
+            },
+            {
+              "role": "forest-memory",
+              "time": 7.508135,
+              "paused": false
+            }
+          ],
+          "media_after": [
+            {
+              "role": "light-projection",
+              "time": 0,
+              "paused": true
+            },
+            {
+              "role": "forest-memory",
+              "time": 9.923753,
+              "paused": false
+            }
+          ]
+        },
+        {
+          "progress": 0.4,
+          "duration_ms": 2416,
+          "frame_ms_ema_median": 16.7,
+          "frame_ms_ema_p95": 16.7,
+          "quality": "1.00",
+          "profile": "gpu",
+          "media_before": [
+            {
+              "role": "light-projection",
+              "time": 0,
+              "paused": true
+            },
+            {
+              "role": "forest-memory",
+              "time": 10.289877,
+              "paused": true
+            }
+          ],
+          "media_after": [
+            {
+              "role": "light-projection",
+              "time": 0,
+              "paused": true
+            },
+            {
+              "role": "forest-memory",
+              "time": 10.289877,
+              "paused": true
+            }
+          ]
+        },
+        {
+          "progress": 0.65,
+          "duration_ms": 2415.5999999046326,
+          "frame_ms_ema_median": 16.7,
+          "frame_ms_ema_p95": 16.7,
+          "quality": "1.00",
+          "profile": "gpu",
+          "media_before": [
+            {
+              "role": "light-projection",
+              "time": 1.843764,
+              "paused": false
+            },
+            {
+              "role": "forest-memory",
+              "time": 10.289877,
+              "paused": true
+            }
+          ],
+          "media_after": [
+            {
+              "role": "light-projection",
+              "time": 4.259465,
+              "paused": false
+            },
+            {
+              "role": "forest-memory",
+              "time": 10.289877,
+              "paused": true
+            }
+          ]
+        },
+        {
+          "progress": 0.975,
+          "duration_ms": 2400.0999999046326,
+          "frame_ms_ema_median": 16.7,
+          "frame_ms_ema_p95": 16.7,
+          "quality": "1.00",
+          "profile": "gpu",
+          "media_before": [
+            {
+              "role": "light-projection",
+              "time": 4.774741,
+              "paused": true
+            },
+            {
+              "role": "forest-memory",
+              "time": 12.462057,
+              "paused": false
+            }
+          ],
+          "media_after": [
+            {
+              "role": "light-projection",
+              "time": 4.774741,
+              "paused": true
+            },
+            {
+              "role": "forest-memory",
+              "time": 14.862239,
+              "paused": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "version": "after",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 2060 SUPER (0x00001F06) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "errors": [],
+      "samples": [
+        {
+          "progress": 0,
+          "duration_ms": 2403.5999999046326,
+          "frame_ms_ema_median": 16.7,
+          "frame_ms_ema_p95": 16.7,
+          "quality": "1.00",
+          "profile": "gpu",
+          "media_before": [
+            {
+              "role": "light-projection",
+              "time": 0,
+              "paused": true
+            },
+            {
+              "role": "forest-memory",
+              "time": 2.915392,
+              "paused": false
+            }
+          ],
+          "media_after": [
+            {
+              "role": "light-projection",
+              "time": 0,
+              "paused": true
+            },
+            {
+              "role": "forest-memory",
+              "time": 5.319039,
+              "paused": false
+            }
+          ]
+        },
+        {
+          "progress": 0.175,
+          "duration_ms": 2401.2000000476837,
+          "frame_ms_ema_median": 16.7,
+          "frame_ms_ema_p95": 16.7,
+          "quality": "1.00",
+          "profile": "gpu",
+          "media_before": [
+            {
+              "role": "light-projection",
+              "time": 0,
+              "paused": true
+            },
+            {
+              "role": "forest-memory",
+              "time": 7.504661,
+              "paused": false
+            }
+          ],
+          "media_after": [
+            {
+              "role": "light-projection",
+              "time": 0,
+              "paused": true
+            },
+            {
+              "role": "forest-memory",
+              "time": 9.905885,
+              "paused": false
+            }
+          ]
+        },
+        {
+          "progress": 0.4,
+          "duration_ms": 2416.5,
+          "frame_ms_ema_median": 16.7,
+          "frame_ms_ema_p95": 16.7,
+          "quality": "1.00",
+          "profile": "gpu",
+          "media_before": [
+            {
+              "role": "light-projection",
+              "time": 0,
+              "paused": true
+            },
+            {
+              "role": "forest-memory",
+              "time": 10.255383,
+              "paused": true
+            }
+          ],
+          "media_after": [
+            {
+              "role": "light-projection",
+              "time": 0,
+              "paused": true
+            },
+            {
+              "role": "forest-memory",
+              "time": 10.255383,
+              "paused": true
+            }
+          ]
+        },
+        {
+          "progress": 0.65,
+          "duration_ms": 2400.800000190735,
+          "frame_ms_ema_median": 16.7,
+          "frame_ms_ema_p95": 16.7,
+          "quality": "1.00",
+          "profile": "gpu",
+          "media_before": [
+            {
+              "role": "light-projection",
+              "time": 1.857038,
+              "paused": false
+            },
+            {
+              "role": "forest-memory",
+              "time": 10.255383,
+              "paused": true
+            }
+          ],
+          "media_after": [
+            {
+              "role": "light-projection",
+              "time": 4.257891,
+              "paused": false
+            },
+            {
+              "role": "forest-memory",
+              "time": 10.255383,
+              "paused": true
+            }
+          ]
+        },
+        {
+          "progress": 0.975,
+          "duration_ms": 2416.2000000476837,
+          "frame_ms_ema_median": 16.7,
+          "frame_ms_ema_p95": 16.7,
+          "quality": "1.00",
+          "profile": "gpu",
+          "media_before": [
+            {
+              "role": "light-projection",
+              "time": 4.757275,
+              "paused": true
+            },
+            {
+              "role": "forest-memory",
+              "time": 12.443363,
+              "paused": false
+            }
+          ],
+          "media_after": [
+            {
+              "role": "light-projection",
+              "time": 4.757275,
+              "paused": true
+            },
+            {
+              "role": "forest-memory",
+              "time": 14.859738,
+              "paused": false
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "RTX 2060 SUPER의 짧은 관측이며 실제 모바일 기기 측정은 아니다.",
+    "frame_ms_ema는 앱의 평활화 지표이며 원시 프레임 시간이나 GPU 시간 분포가 아니다.",
+    "기준 캡처 이후 PR42 천장 변경을 통합했으며 해당 높이 차이는 이 작업의 광학 효과에 포함하지 않는다."
+  ]
+}

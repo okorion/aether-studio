@@ -60,6 +60,7 @@ export function createSceneWorlds(
   const scaleWall = new THREE.Group()
   const space = new THREE.Group()
   const lowerSpace = new THREE.Group()
+  chamber.scale.y = space.scale.y = lowerSpace.scale.y = REACTOR.heightScale
   matter.name = 'aether-matter'
   chamber.name = 'aether-machine-assembly'
   scaleWall.name = 'aether-scale-wall'
@@ -133,7 +134,11 @@ export function createSceneWorlds(
       shader.fragmentShader = shader.fragmentShader.replace('#include <emissivemap_fragment>', `
         #include <emissivemap_fragment>
         vec3 projectedLight = aetherLightCloud(vMachinePoint, vec3(0., .6, .8), uMachineTime, uMachineDepth);
-        totalEmissiveRadiance += projectedLight * .055;
+        float belowAperture = ${REACTOR.worldY + REACTOR.apertureY * REACTOR.heightScale} - vMachinePoint.y;
+        float coneRadius = ${REACTOR.apertureRadius} + max(0., belowAperture) * .20;
+        float aperturePool = (1. - smoothstep(coneRadius * .6, coneRadius, length(vMachinePoint.xz)))
+          * step(0., belowAperture);
+        totalEmissiveRadiance += projectedLight * aperturePool * .11;
       `)
       shader.fragmentShader = shader.fragmentShader.replace('#include <color_fragment>', `
         #include <color_fragment>
@@ -273,7 +278,7 @@ export function createSceneWorlds(
   const floorReflection = !software && !mobile ? new Reflector(geo(new THREE.PlaneGeometry(platformWidth, platformDepth)), {
     textureWidth: 512, textureHeight: 512, multisample: 0, clipBias: .004, color: 0x52676d,
   }) : null
-  const water = createWaterSurface(floorReflection, platformWidth, platformDepth)
+  const water = createWaterSurface(floorReflection, platformWidth, platformDepth, lightFilm)
   water.surface.position.set(0, -3.635, platformZ)
   water.surface.rotation.x = -Math.PI / 2
   space.add(water.surface)
@@ -299,7 +304,7 @@ export function createSceneWorlds(
     mat(new THREE.MeshStandardMaterial({ color: 0x101217, metalness: .55, roughness: .56, envMapIntensity: .55, side: THREE.BackSide })), 0, ceilingY, 0)
   roof.name = 'aether-chamber-aperture-roof'
   roof.rotation.x = -Math.PI / 2
-  const chamberLight = createChamberLight(space, scene)
+  const chamberLight = createChamberLight(space, scene, lightFilm)
   // The scale room owns its ceiling and light, on the incoming side of
   // the same screen edge that clips every upper-room object.
   const undersideMaterial = mat(new THREE.MeshStandardMaterial({
@@ -541,9 +546,8 @@ export function createSceneWorlds(
 
   const chamberWorld = new THREE.Vector3()
   const cameraWorld = new THREE.Vector3()
-  const projectedCore = new THREE.Vector3()
   const chamberHeight = REACTOR.worldY
-  const floorHeight = chamberHeight - 3.7
+  const floorHeight = chamberHeight - 3.7 * REACTOR.heightScale
   monitorAssembly.setOccluders([matter, chamber])
   const scaleHeight = -48.0
   // Whole assemblies share a viewport edge. The surfaces remain real 3D,
@@ -562,14 +566,54 @@ export function createSceneWorlds(
     }
   })
   for (const material of chamberMaterials) {
+    material.emissiveIntensity = 0
     const previous = material.onBeforeCompile
     const previousKey = material.customProgramCacheKey()
     material.onBeforeCompile = (shader, renderer) => {
       previous.call(material, shader, renderer)
+      // The shared film modulates light passing through the aperture. This is
+      // projected radiance, not a glowing texture painted on every surface.
+      if (lightFilm) {
+        shader.uniforms.uChamberFilm = lightFilm.map
+        shader.uniforms.uChamberFilmReady = lightFilm.ready
+      }
+      shader.vertexShader = 'varying vec3 vChamberWorld;\n' + shader.vertexShader
+      shader.vertexShader = shader.vertexShader.replace('#include <project_vertex>', `
+        vec4 chamberPoint=vec4(transformed,1.);
+        #ifdef USE_INSTANCING
+          chamberPoint=instanceMatrix*chamberPoint;
+        #endif
+        vChamberWorld=(modelMatrix*chamberPoint).xyz;
+        #include <project_vertex>
+      `)
+      shader.fragmentShader = `
+        varying vec3 vChamberWorld;
+        ${lightFilm ? 'uniform sampler2D uChamberFilm; uniform float uChamberFilmReady;' : ''}
+        vec3 apertureRadiance() {
+          float drop=max(.1,${REACTOR.worldY + REACTOR.apertureY * REACTOR.heightScale}-vChamberWorld.y);
+          vec2 uv=clamp(.5+vChamberWorld.xz/(2.2+drop*.4),.002,.998);
+          vec3 radiance=vec3(.48,.60,.72);
+          ${lightFilm ? `if(uChamberFilmReady>.5) {
+            vec3 encoded=texture2D(uChamberFilm,uv).rgb;
+            radiance=mix(encoded/12.92,pow((encoded+.055)/1.055,vec3(2.4)),step(vec3(.04045),encoded));
+          }` : ''}
+          return vec3(.15)+radiance*8.;
+        }
+      ` + shader.fragmentShader
+      let direct = THREE.ShaderChunk.lights_fragment_begin
+      for (const light of ['Point', 'Directional']) {
+        const call = `get${light}LightInfo( ${light.toLowerCase()}Light, geometryPosition, directLight );`
+        // Directional lights do not receive geometryPosition in Three's chunk.
+        const actual = light === 'Directional' ? 'getDirectionalLightInfo( directionalLight, directLight );' : call
+        direct = direct.replace(actual, `${actual} directLight.color = vec3(0.);`)
+      }
+      direct = direct.replace('getSpotLightInfo( spotLight, geometryPosition, directLight );',
+        'getSpotLightInfo( spotLight, geometryPosition, directLight ); directLight.color *= apertureRadiance();')
+      shader.fragmentShader = shader.fragmentShader.replace('#include <lights_fragment_begin>', direct)
       shader.fragmentShader = shader.fragmentShader.replace('#include <opaque_fragment>',
-        'outgoingLight *= .52;\n#include <opaque_fragment>')
+        'outgoingLight = reflectedLight.directDiffuse + reflectedLight.directSpecular + totalEmissiveRadiance;\n#include <opaque_fragment>')
     }
-    material.customProgramCacheKey = () => `${previousKey}-chamber-shade-v1`
+    material.customProgramCacheKey = () => `${previousKey}-aperture-${lightFilm ? 'film' : 'static'}-v2`
   }
   bindGroupCurtain(chamber, deviceCurtain)
   bindGroupCurtain(space, deviceCurtain)
@@ -643,7 +687,7 @@ export function createSceneWorlds(
       matter.visible = spineWeight > .001 && curtainHasCoverage(layers.monitorEntry, layers.monitorExit)
       spineAssembly.update(progress, journey.core * spineWeight, emergence)
       const deviceWeight = smooth(.59, .615, progress) * (1 - smooth(.79, .88, progress))
-      const scaleWeight = smooth(.725, .75, progress) * (1 - smooth(.93, .95, progress))
+      const scaleWeight = smooth(.705, .735, progress) * (1 - smooth(.93, .95, progress))
       chamber.visible = deviceWeight > .001
       scaleWall.visible = scaleWeight > .001
       metal.opacity = scaleWeight
@@ -688,18 +732,9 @@ export function createSceneWorlds(
       causticMaterial.uniforms.uLightDepth.value = sampleLightChoreography(time, progress).depth
       caustics.visible = scaleWeight > .001
       let aboveFloor = journey.height > floorHeight
-      let coreProximity = 0
       if (camera) {
         camera.updateMatrixWorld()
         aboveFloor = camera.getWorldPosition(cameraWorld).y > floorHeight + .03
-        if (pointerStrength.value > 0) {
-          projectedCore.set(0, chamberHeight, 0).project(camera)
-          if (projectedCore.z > -1 && projectedCore.z < 1) {
-            const dx = (projectedCore.x - pointerNdc.value.x) * pointerAspect.value
-            const dy = projectedCore.y - pointerNdc.value.y
-            coreProximity = Math.exp(-(dx * dx + dy * dy) * 16) * pointerStrength.value
-          }
-        }
       }
       // A camera passing through the solid .34m slab otherwise sees its near
       // side as a screen-filling bar. Only its thickness dissolves near the eye;
@@ -713,7 +748,7 @@ export function createSceneWorlds(
       ruins.update(deviceCoverage ? architectureWeight : 0)
       architectureBars.visible = deviceCoverage
       underside.visible = scaleWeight > .001 && eyeHeight < floorHeight
-      const slabDistance = Math.abs(eyeHeight - (floorHeight - .17))
+      const slabDistance = Math.abs(eyeHeight - (floorHeight - .17 * REACTOR.heightScale))
       slabMaterial.opacity = floorMaterial.opacity * smooth(.55, 1.10, slabDistance)
       slab.visible = aboveFloor && floor.visible && slabMaterial.opacity > .015
       // The extended bed now reaches behind the camera. Its grazing near-plane
@@ -726,11 +761,11 @@ export function createSceneWorlds(
       dark.opacity = deviceWeight
       machineMetal.opacity = deviceWeight
       cableMaterial.opacity = deviceWeight
-      glow.opacity = deviceWeight * (.12 + coreProximity * .045)
-      chamberLight.update(deviceCoverage ? deviceWeight : 0)
+      glow.opacity = 0
+      chamberLight.update(deviceCoverage ? deviceWeight : 0, time)
       const light = sampleLightChoreography(time, progress)
       reactorLight.color.setHSL(light.rimHue, .34, .73)
-      reactorLight.intensity = software ? 0 : deviceWeight * (4.3 * light.rimIntensity + coreProximity * 1.7)
+      reactorLight.intensity = 0
       monitorAssembly.update(time, progress, pointer, camera)
     },
     dispose() {

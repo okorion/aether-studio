@@ -500,6 +500,7 @@ function probeWorldSurfaceDepth() {
       probeScene.add(surface)
       const blocked = read()
       let markerPixels = 0, checkedOccluded = 0, exposedMarker = 0, outsideCurtain = 0, leakedPixels = 0
+      const leakedDepthGaps: number[] = []
       const layers = sampleLayers(entry.progress)
       for (let offset = 0; offset < baseline.length; offset += 4) if (red(baseline, offset)) {
         markerPixels++
@@ -520,16 +521,18 @@ function probeWorldSurfaceDepth() {
         raycaster.setFromCamera(new THREE.Vector2(uvX * 2 - 1, uvY * 2 - 1), probeCamera)
         const surfaceHit = raycaster.intersectObject(surface, false)[0]
         const markerHit = raycaster.intersectObject(marker, false)[0]
-        if (!surfaceHit || !markerHit || surfaceHit.distance >= markerHit.distance - .001) {
+        // Exclude nearly coplanar samples: CPU triangle intersection and the
+        // 24-bit raster depth differ by ~1.6mm at this grazing floor angle.
+        if (!surfaceHit || !markerHit || surfaceHit.distance >= markerHit.distance - .005) {
           exposedMarker++
           continue
         }
         checkedOccluded++
-        if (red(blocked, offset)) leakedPixels++
+        if (red(blocked, offset)) { leakedPixels++; leakedDepthGaps.push(markerHit.distance - surfaceHit.distance) }
       }
       probeScene.remove(surface)
       return { name: entry.name, progress: entry.progress, effectivelyVisible, depthWrite: source.material.depthWrite,
-        markerPixels, checkedOccluded, exposedMarker, outsideCurtain, leakedPixels }
+        markerPixels, checkedOccluded, exposedMarker, outsideCurtain, leakedPixels, leakedDepthGaps }
     })
     return { contact, visibility, cases }
   } finally {
@@ -562,9 +565,9 @@ function probeProductionBoundaryPixels() {
     color: renderer.getClearColor(new THREE.Color()), alpha: renderer.getClearAlpha() }
   const cases = [
     { name: 'aether-spine-vertebrae', region: 'bone', progress: [.635, .65, .665] },
-    { name: 'aether-machine-aperture', region: 'device', progress: [.755, .765, .78, .82] },
-    { name: 'aether-scale-tiles', region: 'scales', progress: [.755, .765, .775, .90] },
-    { name: 'aether-floor-underside', region: 'scales', progress: [.765, .775] },
+    { name: 'aether-machine-aperture', region: 'device', progress: [.745, .755, .765, .82] },
+    { name: 'aether-scale-tiles', region: 'scales', progress: [.74, .75, .76, .90] },
+    { name: 'aether-floor-underside', region: 'scales', progress: [.75, .76] },
   ] as const
   const results = []
   try {
@@ -770,18 +773,20 @@ function probeScalePointer() {
     return image
   }
   const difference = (a: Uint8Array, b: Uint8Array) => {
-    let changed = 0, weight = 0, horizontal = 0, radius = 0
+    let changed = 0, weight = 0, horizontal = 0, radius = 0, leftChanged = 0, rightChanged = 0
     for (let i = 0; i < a.length; i += 4) {
       const delta = Math.abs(a[i] - b[i]) + Math.abs(a[i + 1] - b[i + 1]) + Math.abs(a[i + 2] - b[i + 2])
       if (delta > 12) {
         changed++
+        if ((i / 4) % 160 < 56) leftChanged++
+        if ((i / 4) % 160 > 104) rightChanged++
         weight += delta
         horizontal += ((i / 4) % 160) / 160 * delta
         radius += Math.hypot(((i / 4) % 160) / 160 - .5,
           Math.floor(i / 4 / 160) / 120 - .5) * delta
       }
     }
-    return { changed, centroidX: weight ? horizontal / weight : -1,
+    return { changed, leftChanged, rightChanged, centroidX: weight ? horizontal / weight : -1,
       centroidRadius: weight ? radius / weight : -1 }
   }
   try {
@@ -799,13 +804,13 @@ function probeScalePointer() {
     const wake = draw(-.3, 0, flow.texture, 8.0)
     for (let i = 0; i < 150; i++) flow.update(1 / 60)
     const wakeReset = draw(-.3, 0, flow.texture, 8.0)
-    const wave = draw(.9, 0, undefined, 7.15)
+    const wave = draw(.9, 0, undefined, 7.35)
     const middleWave = draw(.9, 0, undefined, 8.55)
     const overlap = draw(-.4, 1, undefined, 8.55)
     const outerWave = draw(.9, 0, undefined, 9.65)
     const edgeWave = draw(.9, 0, undefined, 10.15)
-    const rest = draw(.9, 0, undefined, 11.2)
-    const nextBeat = draw(.9, 0, undefined, 14.15)
+    const rest = draw(.9, 0, undefined, 13.0)
+    const nextBeat = draw(.9, 0, undefined, 14.35)
     const edgeBaseline = draw(0, 0, undefined, 15.0)
     const edge = draw(.98, 1, undefined, 15.0)
     const rawBaseline = draw(0, 0, undefined, 16.2)

@@ -511,7 +511,7 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
     expect(result.first[0].visible).toBe(true)
     for (const state of result.fixed) {
       expect(state.fixed.machineY).toBeCloseTo(-40.4, 8)
-      expect(state.fixed.floorY).toBeCloseTo(-44.1, 8)
+      expect(state.fixed.floorY).toBeCloseTo(-43.212, 8)
       expect(state.fixed.scaleY).toBeCloseTo(-48, 8)
       expect(state.scaleTiles).toEqual(result.fixed[0].scaleTiles)
     }
@@ -530,11 +530,11 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
     expect(contact.floorMax - contact.floorMin).toBeGreaterThan(.02)
     expect(contact.capBottom).toBeLessThan(contact.socketTop)
     expect(contact.capTop).toBeGreaterThan(contact.socketTop)
-    expect(contact.capTop).toBeCloseTo(-37.12, 5)
+    expect(contact.capTop).toBeCloseTo(-37.9072, 5)
     // StandardMaterial.clone resets custom defines unless explicitly restored.
     expect(contact.capFilmDefine).toBe(1)
     expect(contact.ceilingY).toBeCloseTo(contact.capTop, 5)
-    expect(contact.ceilingTop - contact.ceilingY).toBeCloseTo(.18, 5)
+    expect(contact.ceilingTop - contact.ceilingY).toBeCloseTo(.18 * .76, 5)
     expect(contact.ceilingVisible).toBe(false)
     expect(contact.scaleCorePresent).toBe(false)
     expect(contact.ceilingWidth).toBeCloseTo(64, 5)
@@ -554,7 +554,7 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
       expect(surface.markerPixels, surface.name).toBeGreaterThan(40)
       expect(surface.checkedOccluded, surface.name).toBeGreaterThanOrEqual(40)
       expect(surface.checkedOccluded + surface.exposedMarker + surface.outsideCurtain, surface.name).toBe(surface.markerPixels)
-      expect(surface.leakedPixels, surface.name).toBe(0)
+      expect(surface.leakedPixels, `${surface.name}: depth gaps ${surface.leakedDepthGaps}`).toBe(0)
     }
   })
 
@@ -718,8 +718,9 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
     expect(pixels.outerWave.changed).toBeGreaterThan(100)
     expect(pixels.edgeWave.changed).toBeGreaterThan(50)
     expect(pixels.wave.centroidRadius).toBeLessThan(pixels.middleWave.centroidRadius)
-    expect(pixels.middleWave.centroidRadius).toBeLessThan(pixels.outerWave.centroidRadius)
-    expect(pixels.outerWave.centroidRadius).toBeLessThan(pixels.edgeWave.centroidRadius)
+    // The side fronts overlap the centre wave instead of expanding from one origin.
+    expect(pixels.middleWave.leftChanged).toBeGreaterThan(10)
+    expect(pixels.outerWave.rightChanged).toBeGreaterThan(10)
     expect(pixels.rest.changed).toBe(0)
     expect(pixels.nextBeat.changed).toBeLessThan(5)
     expect(pixels.matricesUnchanged).toBe(true)

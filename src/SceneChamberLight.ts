@@ -1,14 +1,17 @@
 import * as THREE from 'three'
 import { REACTOR } from './Reactor'
+import { lightChoreographyGLSL, type LightFilmUniforms } from './SceneLighting'
 
 /** Authored aperture haze; no texture, shadow map or extra scene capture. */
-export function createChamberLight(space: THREE.Group, scene: THREE.Scene) {
+export function createChamberLight(space: THREE.Group, scene: THREE.Scene, film?: LightFilmUniforms) {
   const exit = REACTOR.apertureY - REACTOR.capThickness * .5
   const bottom = -3.62
   const length = exit - bottom
   const geometry = new THREE.CylinderGeometry(REACTOR.apertureRadius * .86, 2.45, length, 48, 1, true)
   const material = new THREE.ShaderMaterial({
-    uniforms: { uOpacity: { value: 0 } },
+    uniforms: { uOpacity: { value: 0 }, uTime: { value: 0 },
+      ...(film ? { uLightFilm: film.map, uLightFilmReady: film.ready } : {}) },
+    defines: film ? { AETHER_LIGHT_FILM: 1 } : {},
     transparent: true, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending,
     vertexShader: `
       varying vec2 vUv; varying vec3 vNormal; varying vec3 vWorld;
@@ -19,14 +22,18 @@ export function createChamberLight(space: THREE.Group, scene: THREE.Scene) {
       }`,
     fragmentShader: `
       uniform float uOpacity;
+      uniform float uTime;
       varying vec2 vUv; varying vec3 vNormal; varying vec3 vWorld;
+      ${lightChoreographyGLSL}
       #include <common>
       #include <logdepthbuf_pars_fragment>
       void main(){
         #include <logdepthbuf_fragment>
         float ends=smoothstep(0.,.18,vUv.y)*(1.-smoothstep(.92,1.,vUv.y));
-        float strands=.65+.35*pow(.5+.5*sin(vUv.x*75.398),4.);
-        gl_FragColor=vec4(vec3(.36,.53,.49),ends*strands*uOpacity*pow(abs(dot(normalize(vNormal),normalize(cameraPosition-vWorld))),1.6));
+        float strands=.3+.7*pow(.5+.5*sin(vUv.x*75.398+sin(vUv.y*7.-uTime*.19)*1.4),4.);
+        vec3 projected=aetherLightCloud(vWorld,vec3(0.,1.,0.),uTime,0.);
+        float luminance=dot(projected,vec3(.2126,.7152,.0722));
+        gl_FragColor=vec4(projected,ends*strands*uOpacity*(.25+luminance)*pow(abs(dot(normalize(vNormal),normalize(cameraPosition-vWorld))),1.6));
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
       }`,
@@ -37,17 +44,18 @@ export function createChamberLight(space: THREE.Group, scene: THREE.Scene) {
   space.add(beam)
   // The light stays in the scene even at zero intensity: shader light counts
   // must not change when crossing a curtain or preparing a hidden chamber.
-  const light = new THREE.SpotLight(0xc6e4d5, 0, Math.hypot(length, 2.45) * 1.5, Math.atan(2.45 / length), .8, 1.4)
+  const light = new THREE.SpotLight(0xc6d5e4, 0, Math.hypot(length * REACTOR.heightScale, 2.45) * 1.5, Math.atan(2.45 / (length * REACTOR.heightScale)), .8, 1.4)
   light.name = 'aether-aperture-light'
-  light.position.set(0, REACTOR.worldY + exit, 0)
-  light.target.position.set(0, REACTOR.worldY + bottom, 0)
+  light.position.set(0, REACTOR.worldY + exit * REACTOR.heightScale, 0)
+  light.target.position.set(0, REACTOR.worldY + bottom * REACTOR.heightScale, 0)
   scene.add(light, light.target)
   let disposed = false
   return {
-    update(weight: number) {
+    update(weight: number, time = 0) {
       if (disposed) return
-      material.uniforms.uOpacity.value = weight * .055
-      light.intensity = weight * 24
+      material.uniforms.uOpacity.value = weight * .10
+      material.uniforms.uTime.value = time
+      light.intensity = weight * 34 * (.72 + .28 * Math.sin(time * .37) ** 2)
       beam.visible = weight > .001
     },
     dispose() {

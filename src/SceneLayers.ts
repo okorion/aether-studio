@@ -9,7 +9,7 @@ export function sampleLayers(progress: number) {
     forestEntry: -0.35 + 1.7 * smooth(.855, .925, p),
     monitorEntry: -0.25 + 1.5 * smooth(.23, .31, p),
     monitorExit: -0.25 + 1.5 * smooth(.61, .69, p),
-    deviceExit: -0.25 + 1.5 * smooth(.725, .805, p),
+    deviceExit: -0.25 + 1.5 * smooth(.715, .785, p),
     statement: windowWeight(p, .095, .12, .265, .305),
     statementY: -1.15 * (1 - smooth(.10, .175, p)) + 1.5 * smooth(.22, .305, p),
     scaleCopy: windowWeight(p, .765, .805, .89, .93),
@@ -93,6 +93,20 @@ export function createSceneLayers(scene: THREE.Scene) {
         const bx = w * (narrow ? .12 : .65), by = h * (narrow ? .66 : .49)
         ;['INDEPENDENT BY NATURE', '', 'ART, CODE AND HUMAN CURIOSITY.', 'WE BUILD WORLDS THAT MOVE US.', '', 'IMAGINATION, MADE TANGIBLE.'].forEach((line, j) => c.fillText(line, bx, by + body * 1.75 * j))
       } else {
+        // An original O medallion sits in the centre of the scale wrapper.
+        // It remains legible while the metal tiles fold behind it.
+        const icon = w * (narrow ? .055 : .029)
+        c.save()
+        c.strokeStyle = '#c4d1c5'
+        c.lineWidth = Math.max(1, w * .0013)
+        c.beginPath()
+        c.arc(w * .5, h * .50, icon * 1.45, 0, Math.PI * 2)
+        c.stroke()
+        c.font = `600 ${icon * 2.4}px "IBM Plex Mono", monospace`
+        c.textAlign = 'center'
+        c.textBaseline = 'middle'
+        c.fillText('O', w * .5, h * .50)
+        c.restore()
         c.font = `400 ${w * (narrow ? .049 : .027)}px "IBM Plex Mono", monospace`
         c.fillText('MATTER', w * (narrow ? .1 : .25), h * .45)
         c.fillText('IN MOTION ↗', w * (narrow ? .1 : .25), h * .45 + w * .037)

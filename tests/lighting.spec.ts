@@ -118,7 +118,7 @@ test('@interaction forest shares film updates without owning the external textur
   expect(ownDisposals).toBe(1)
 })
 
-test('@interaction short forest plants stay at both transition shelves and fade outside them', () => {
+test('@interaction forest soil and rooted plants persist independently of the wrapper and invert below', () => {
   const scene = new THREE.Scene()
   const forest = createSceneForest(scene, false, false)
   const camera = new THREE.PerspectiveCamera(42, 1.6, .1, 90)
@@ -134,15 +134,19 @@ test('@interaction short forest plants stay at both transition shelves and fade 
   try {
     expect(edge(lower).geometry).toBe(plants.geometry)
     expect(plants.position.y).toBe(-8.7)
-    expect(edge(lower).position.y).toBe(6.8)
+    expect(edge(lower).position.y).toBe(-8.7)
+    scene.updateMatrixWorld(true)
+    expect(edge(lower).getWorldPosition(new THREE.Vector3()).y).toBeCloseTo(-52.8, 6)
+    const down = new THREE.Vector3(0,1,0).transformDirection(lower.matrixWorld)
+    expect(down.y).toBeCloseTo(-1, 6)
     expect(kinds.count).toBeGreaterThan(5000)
     expect(Array.from({ length: kinds.count }, (_, i) => kinds.getX(i)).filter(kind => kind === 1).length)
       .toBeGreaterThan(3000)
     expect(Array.from({ length: positions.count }, (_, i) => positions.getY(i))
       .every(value => value > -2 && value < 3)).toBe(true)
     const strength = () => plants.material.uniforms.uBoundaryStrength.value as number
-    for (const [p,minimum,maximum] of [[0,0,0],[.15,.99,1],[.2,0,1],
-      [.91,.99,1],[1,0,0]] as const) {
+    for (const [p,minimum,maximum] of [[0,1,1],[.15,1,1],[.2,1,1],
+      [.91,1,1],[1,1,1]] as const) {
       forest.update(2,p,camera,undefined,1)
       expect(strength()).toBeGreaterThanOrEqual(minimum)
       expect(strength()).toBeLessThanOrEqual(maximum)

@@ -45,9 +45,9 @@ function inputEnvironment() {
       Object.defineProperty(event, 'target', { value: canvas })
       windowEvents.dispatchEvent(event)
     },
-    step(seconds = 1 / 60) {
+    step(seconds = 1 / 60, progress = 0) {
       elapsed += seconds
-      return { elapsed, ...input.update(seconds, elapsed, 1) }
+      return { elapsed, ...input.update(seconds, elapsed, 1, progress) }
     },
     dispose() {
       input.dispose()
@@ -59,7 +59,7 @@ function inputEnvironment() {
   }
 }
 
-test('@interaction vertical orbit exposes the top on downward drag and the underside on upward drag', () => {
+test('@interaction lower forest limits looking down without restricting upward orbit', () => {
   for (const progress of [0, .98]) {
     for (const down of [true, false]) {
       const env = inputEnvironment()
@@ -68,16 +68,21 @@ test('@interaction vertical orbit exposes the top on downward drag and the under
         env.input.setOrbitEnabled(journey.orbitEnabled)
         env.send('pointerdown')
         env.send('pointermove', 320, down ? 380 : 100)
-        let view = env.step()
-        for (let i = 0; i < 90; i++) view = env.step()
-        expect(down ? view.pitch : -view.pitch).toBeGreaterThan(.4)
+        let view = env.step(1 / 60, progress)
+        for (let i = 0; i < 90; i++) view = env.step(1 / 60, progress)
+        if (down && progress > .9) expect(view.pitch).toBeCloseTo(.04, 4)
+        else expect(down ? view.pitch : -view.pitch).toBeGreaterThan(.4)
         expect(view.yaw).toBe(0)
         const baseCameraY = journey.height + Math.sin(journey.elevation) * journey.radius
         const chosenCameraY = journey.height
           + Math.sin(THREE.MathUtils.clamp(journey.elevation + view.pitch * journey.orbitWeight, -.72, .72)) * journey.radius
-        expect(down ? chosenCameraY - baseCameraY : baseCameraY - chosenCameraY).toBeGreaterThan(1)
+        if (down && progress > .9) {
+          expect(chosenCameraY - baseCameraY).toBeLessThan(.5)
+          env.send('pointermove', 320, 480)
+          expect(env.step(1, progress).pitch).toBeCloseTo(.04, 4)
+        } else expect(down ? chosenCameraY - baseCameraY : baseCameraY - chosenCameraY).toBeGreaterThan(1)
         env.send('pointerup')
-        const settled = env.step(4)
+        const settled = env.step(4, progress)
         expect(settled.pitch).toBeCloseTo(view.pitch, 3)
       } finally { env.dispose() }
     }

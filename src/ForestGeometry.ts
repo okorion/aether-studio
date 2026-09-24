@@ -1,5 +1,7 @@
 import * as THREE from 'three'
 
+export const FOREST_FLOOR_Y = -8.7
+
 /** Seeded branching trees and pinnate ferns, never spherical crowns. */
 export function createForestGeometry(leafCount: number, software: boolean, mobile: boolean) {
   let state = 721659
@@ -48,7 +50,7 @@ export function createForestGeometry(leafCount: number, software: boolean, mobil
     // Wood stays outside the inner clearing; near-camera fragments also fade
     // in the material so a full orbit never enters an opaque trunk wall.
     const radial = 7.5 + random() * 5.5
-    const base = new THREE.Vector3(Math.cos(angle) * radial, -14 + random() * 7, Math.sin(angle) * radial)
+    const base = new THREE.Vector3(Math.cos(angle) * radial, FOREST_FLOOR_Y + random() * .35, Math.sin(angle) * radial)
     const height = 13 + random() * 13
     const lean = new THREE.Vector3(Math.cos(angle + .8) * 1.4, 0, Math.sin(angle + .8) * 1.4)
     const trunkPoints = Array.from({ length: 6 }, (_, j) => {

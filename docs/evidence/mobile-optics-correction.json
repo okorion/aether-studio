@@ -1,0 +1,829 @@
+{
+  "date": "2026-09-24",
+  "baseline": "abd29ba10c7136498df8172c33659874b4481f3b",
+  "source": "5488011",
+  "scope": "검은 문구 판의 물막, 변형하지 않는 유리 링, 본 컬럼 형상과 표면",
+  "localChecks": {
+    "lint": true,
+    "typecheck": true,
+    "build": true,
+    "coreD3D11": 18,
+    "coreWebKit": 4,
+    "desktop": {
+      "passed": 16,
+      "skipped": 1
+    },
+    "mobile": {
+      "passed": 17
+    },
+    "interactionAndFallback": {
+      "passed": 90,
+      "failed": 1
+    }
+  },
+  "existingScaleFailure": {
+    "baselineAndCurrentEqual": true,
+    "expectedLeftChanged": ">10",
+    "baseline": {
+      "left": {
+        "changed": 9,
+        "leftChanged": 9,
+        "rightChanged": 0,
+        "centroidX": 0.29511363636363636,
+        "centroidRadius": 0.20649333825677824
+      },
+      "right": {
+        "changed": 9,
+        "leftChanged": 0,
+        "rightChanged": 9,
+        "centroidX": 0.6981012658227849,
+        "centroidRadius": 0.19982974665551384
+      },
+      "reset": {
+        "changed": 0,
+        "leftChanged": 0,
+        "rightChanged": 0,
+        "centroidX": -1,
+        "centroidRadius": -1
+      },
+      "edge": {
+        "changed": 15,
+        "leftChanged": 0,
+        "rightChanged": 15,
+        "centroidX": 0.9463315217391305,
+        "centroidRadius": 0.4485797192906972
+      },
+      "raw": {
+        "changed": 9,
+        "leftChanged": 9,
+        "rightChanged": 0,
+        "centroidX": 0.29511363636363636,
+        "centroidRadius": 0.20649333825677824
+      },
+      "wake": {
+        "changed": 7,
+        "leftChanged": 4,
+        "rightChanged": 0,
+        "centroidX": 0.33923938679245286,
+        "centroidRadius": 0.16708468241582733
+      },
+      "wakeReset": {
+        "changed": 0,
+        "leftChanged": 0,
+        "rightChanged": 0,
+        "centroidX": -1,
+        "centroidRadius": -1
+      },
+      "wave": {
+        "changed": 96,
+        "leftChanged": 0,
+        "rightChanged": 0,
+        "centroidX": 0.4964937170652613,
+        "centroidRadius": 0.03898039784709032
+      },
+      "middleWave": {
+        "changed": 2350,
+        "leftChanged": 917,
+        "rightChanged": 600,
+        "centroidX": 0.4442091283463723,
+        "centroidRadius": 0.29741879039958247
+      },
+      "overlap": {
+        "changed": 28,
+        "leftChanged": 28,
+        "rightChanged": 0,
+        "centroidX": 0.29820302648171504,
+        "centroidRadius": 0.20709861504233237
+      },
+      "outerWave": {
+        "changed": 2076,
+        "leftChanged": 563,
+        "rightChanged": 733,
+        "centroidX": 0.5288761024827984,
+        "centroidRadius": 0.3470865492912656
+      },
+      "edgeWave": {
+        "changed": 1766,
+        "leftChanged": 341,
+        "rightChanged": 738,
+        "centroidX": 0.5264251850656917,
+        "centroidRadius": 0.33917879053254696
+      },
+      "rest": {
+        "changed": 0,
+        "leftChanged": 0,
+        "rightChanged": 0,
+        "centroidX": -1,
+        "centroidRadius": -1
+      },
+      "nextBeat": {
+        "changed": 0,
+        "leftChanged": 0,
+        "rightChanged": 0,
+        "centroidX": -1,
+        "centroidRadius": -1
+      },
+      "wakeHistory": {
+        "active": [
+          [
+            -0.12,
+            0,
+            1.5599999999999987,
+            0.34
+          ],
+          [
+            -0.040000000000000036,
+            0,
+            1.3200000000000003,
+            0.34
+          ],
+          [
+            0.03999999999999998,
+            0,
+            1.0799999999999983,
+            0.34
+          ],
+          [
+            0.12,
+            0,
+            0.8399999999999999,
+            0.34
+          ],
+          [
+            0.19999999999999996,
+            0,
+            0.5999999999999979,
+            0.34
+          ],
+          [
+            0.28,
+            0,
+            0.35999999999999943,
+            0.34
+          ],
+          [
+            0.36,
+            0,
+            0.11999999999999744,
+            0.34
+          ],
+          [
+            -0.2,
+            0,
+            1.7999999999999972,
+            0
+          ]
+        ],
+        "afterLeave": [
+          [
+            -0.12,
+            0,
+            1.7100000000000009,
+            0
+          ],
+          [
+            -0.040000000000000036,
+            0,
+            1.4700000000000024,
+            0.34
+          ],
+          [
+            0.03999999999999998,
+            0,
+            1.2300000000000004,
+            0.34
+          ],
+          [
+            0.12,
+            0,
+            0.990000000000002,
+            0.34
+          ],
+          [
+            0.19999999999999996,
+            0,
+            0.75,
+            0.34
+          ],
+          [
+            0.28,
+            0,
+            0.5100000000000016,
+            0.34
+          ],
+          [
+            0.36,
+            0,
+            0.2699999999999996,
+            0.34
+          ],
+          [
+            -0.2,
+            0,
+            1.9499999999999993,
+            0
+          ]
+        ],
+        "afterDecay": [
+          [
+            -0.12,
+            0,
+            3.2600000000000016,
+            0
+          ],
+          [
+            -0.040000000000000036,
+            0,
+            3.020000000000003,
+            0
+          ],
+          [
+            0.03999999999999998,
+            0,
+            2.780000000000001,
+            0
+          ],
+          [
+            0.12,
+            0,
+            2.5400000000000027,
+            0
+          ],
+          [
+            0.19999999999999996,
+            0,
+            2.3000000000000007,
+            0
+          ],
+          [
+            0.28,
+            0,
+            2.0600000000000023,
+            0
+          ],
+          [
+            0.36,
+            0,
+            1.8200000000000003,
+            0
+          ],
+          [
+            -0.2,
+            0,
+            3.5,
+            0
+          ]
+        ]
+      },
+      "slowMove": {
+        "originX": 0.36,
+        "age": 0.11999999999999744,
+        "strength": 0.34
+      },
+      "matricesUnchanged": true
+    },
+    "current": {
+      "left": {
+        "changed": 9,
+        "leftChanged": 9,
+        "rightChanged": 0,
+        "centroidX": 0.29511363636363636,
+        "centroidRadius": 0.20649333825677824
+      },
+      "right": {
+        "changed": 9,
+        "leftChanged": 0,
+        "rightChanged": 9,
+        "centroidX": 0.6981012658227849,
+        "centroidRadius": 0.19982974665551384
+      },
+      "reset": {
+        "changed": 0,
+        "leftChanged": 0,
+        "rightChanged": 0,
+        "centroidX": -1,
+        "centroidRadius": -1
+      },
+      "edge": {
+        "changed": 15,
+        "leftChanged": 0,
+        "rightChanged": 15,
+        "centroidX": 0.9463315217391305,
+        "centroidRadius": 0.4485797192906972
+      },
+      "raw": {
+        "changed": 9,
+        "leftChanged": 9,
+        "rightChanged": 0,
+        "centroidX": 0.29511363636363636,
+        "centroidRadius": 0.20649333825677824
+      },
+      "wake": {
+        "changed": 7,
+        "leftChanged": 4,
+        "rightChanged": 0,
+        "centroidX": 0.33923938679245286,
+        "centroidRadius": 0.16708468241582733
+      },
+      "wakeReset": {
+        "changed": 0,
+        "leftChanged": 0,
+        "rightChanged": 0,
+        "centroidX": -1,
+        "centroidRadius": -1
+      },
+      "wave": {
+        "changed": 96,
+        "leftChanged": 0,
+        "rightChanged": 0,
+        "centroidX": 0.4964937170652613,
+        "centroidRadius": 0.03898039784709032
+      },
+      "middleWave": {
+        "changed": 2350,
+        "leftChanged": 917,
+        "rightChanged": 600,
+        "centroidX": 0.4442091283463723,
+        "centroidRadius": 0.29741879039958247
+      },
+      "overlap": {
+        "changed": 28,
+        "leftChanged": 28,
+        "rightChanged": 0,
+        "centroidX": 0.29820302648171504,
+        "centroidRadius": 0.20709861504233237
+      },
+      "outerWave": {
+        "changed": 2076,
+        "leftChanged": 563,
+        "rightChanged": 733,
+        "centroidX": 0.5288761024827984,
+        "centroidRadius": 0.3470865492912656
+      },
+      "edgeWave": {
+        "changed": 1766,
+        "leftChanged": 341,
+        "rightChanged": 738,
+        "centroidX": 0.5264251850656917,
+        "centroidRadius": 0.33917879053254696
+      },
+      "rest": {
+        "changed": 0,
+        "leftChanged": 0,
+        "rightChanged": 0,
+        "centroidX": -1,
+        "centroidRadius": -1
+      },
+      "nextBeat": {
+        "changed": 0,
+        "leftChanged": 0,
+        "rightChanged": 0,
+        "centroidX": -1,
+        "centroidRadius": -1
+      },
+      "wakeHistory": {
+        "active": [
+          [
+            -0.12,
+            0,
+            1.5599999999999987,
+            0.34
+          ],
+          [
+            -0.040000000000000036,
+            0,
+            1.3200000000000003,
+            0.34
+          ],
+          [
+            0.03999999999999998,
+            0,
+            1.0799999999999983,
+            0.34
+          ],
+          [
+            0.12,
+            0,
+            0.8399999999999999,
+            0.34
+          ],
+          [
+            0.19999999999999996,
+            0,
+            0.5999999999999979,
+            0.34
+          ],
+          [
+            0.28,
+            0,
+            0.35999999999999943,
+            0.34
+          ],
+          [
+            0.36,
+            0,
+            0.11999999999999744,
+            0.34
+          ],
+          [
+            -0.2,
+            0,
+            1.7999999999999972,
+            0
+          ]
+        ],
+        "afterLeave": [
+          [
+            -0.12,
+            0,
+            1.7100000000000009,
+            0
+          ],
+          [
+            -0.040000000000000036,
+            0,
+            1.4700000000000024,
+            0.34
+          ],
+          [
+            0.03999999999999998,
+            0,
+            1.2300000000000004,
+            0.34
+          ],
+          [
+            0.12,
+            0,
+            0.990000000000002,
+            0.34
+          ],
+          [
+            0.19999999999999996,
+            0,
+            0.75,
+            0.34
+          ],
+          [
+            0.28,
+            0,
+            0.5100000000000016,
+            0.34
+          ],
+          [
+            0.36,
+            0,
+            0.2699999999999996,
+            0.34
+          ],
+          [
+            -0.2,
+            0,
+            1.9499999999999993,
+            0
+          ]
+        ],
+        "afterDecay": [
+          [
+            -0.12,
+            0,
+            3.2600000000000016,
+            0
+          ],
+          [
+            -0.040000000000000036,
+            0,
+            3.020000000000003,
+            0
+          ],
+          [
+            0.03999999999999998,
+            0,
+            2.780000000000001,
+            0
+          ],
+          [
+            0.12,
+            0,
+            2.5400000000000027,
+            0
+          ],
+          [
+            0.19999999999999996,
+            0,
+            2.3000000000000007,
+            0
+          ],
+          [
+            0.28,
+            0,
+            2.0600000000000023,
+            0
+          ],
+          [
+            0.36,
+            0,
+            1.8200000000000003,
+            0
+          ],
+          [
+            -0.2,
+            0,
+            3.5,
+            0
+          ]
+        ]
+      },
+      "slowMove": {
+        "originX": 0.36,
+        "age": 0.11999999999999744,
+        "strength": 0.34
+      },
+      "matricesUnchanged": true
+    }
+  },
+  "captures": [
+    {
+      "label": "before-final",
+      "frames": 14,
+      "errors": [],
+      "sceneTime": 10,
+      "videoTime": 2,
+      "quality": 1
+    },
+    {
+      "label": "after-final",
+      "frames": 14,
+      "errors": [],
+      "sceneTime": 10,
+      "videoTime": 2,
+      "quality": 1
+    },
+    {
+      "label": "before-device",
+      "frames": 5,
+      "errors": [],
+      "sceneTime": 10,
+      "videoTime": 2,
+      "quality": 1
+    },
+    {
+      "label": "after-device",
+      "frames": 5,
+      "errors": [],
+      "sceneTime": 10,
+      "videoTime": 2,
+      "quality": 1
+    }
+  ],
+  "files": [
+    {
+      "name": "after-desktop-175.jpg",
+      "bytes": 185433,
+      "sha256": "9a84aa8619e9a497c7aaa0651c1a207dbfa0b4be327db7107aa9b6c197ee4162"
+    },
+    {
+      "name": "after-mobile-175.jpg",
+      "bytes": 289578,
+      "sha256": "53166677e347ee7dbf80843021e0c767127676517dc4ab60b0317c6d660e76a9"
+    },
+    {
+      "name": "after-mobile-400.jpg",
+      "bytes": 629867,
+      "sha256": "3a4217018848d425d9f536e1fde24d0eeab4da4ba6551efccb0bc79bcc213e55"
+    },
+    {
+      "name": "after-mobile-625.jpg",
+      "bytes": 550070,
+      "sha256": "fb717a8add9605b692f6f87a70f996bc9c87480f435babec588f840772aace09"
+    },
+    {
+      "name": "before-desktop-175.jpg",
+      "bytes": 182454,
+      "sha256": "317590b595b295a392c4217aeebf458817b705d3381601c65f2988b6451b4537"
+    },
+    {
+      "name": "before-mobile-175.jpg",
+      "bytes": 276465,
+      "sha256": "d601efc269a8eb80b8d804e0ecee02331617a541fdc5ca2baf6617475c6690ff"
+    },
+    {
+      "name": "before-mobile-400.jpg",
+      "bytes": 594067,
+      "sha256": "e70f2c1ef0db42ed09a97e905e260426a2f3db30cf4448c163ad62f4cbd5d6b8"
+    },
+    {
+      "name": "before-mobile-625.jpg",
+      "bytes": 522834,
+      "sha256": "c8e14f33a50e22508373ff14d605e2fc787985f5b04dcf2903a9759023b1ac49"
+    },
+    {
+      "name": "plate-pointer.png",
+      "bytes": 1133366,
+      "sha256": "ac3d630579797fc45cbedbf8c803d7337a5c91e81df73507ea5663e49653116b"
+    },
+    {
+      "name": "plate-still.png",
+      "bytes": 1100646,
+      "sha256": "dd0a6319e0083ea9ce0de0842f94b6b2f6fe369d3dface410a9418c8fa5532ab"
+    }
+  ],
+  "runtime": [
+    {
+      "version": "before",
+      "mobileViewport": false,
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 2060 SUPER (0x00001F06) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "errors": [],
+      "sections": [
+        {
+          "progress": 0,
+          "durationMs": 2414.0999999046326,
+          "frames": 150,
+          "smoothedFrameMsMedian": 16.7,
+          "smoothedFrameMsP95": 16.7,
+          "quality": "1.00"
+        },
+        {
+          "progress": 0.175,
+          "durationMs": 2416.0999999046326,
+          "frames": 135,
+          "smoothedFrameMsMedian": 16.7,
+          "smoothedFrameMsP95": 16.7,
+          "quality": "1.00"
+        },
+        {
+          "progress": 0.4,
+          "durationMs": 2400.2999999523163,
+          "frames": 135,
+          "smoothedFrameMsMedian": 16.7,
+          "smoothedFrameMsP95": 16.7,
+          "quality": "1.00"
+        },
+        {
+          "progress": 0.65,
+          "durationMs": 2415.100000143051,
+          "frames": 135,
+          "smoothedFrameMsMedian": 16.7,
+          "smoothedFrameMsP95": 16.7,
+          "quality": "1.00"
+        },
+        {
+          "progress": 0.975,
+          "durationMs": 2416.4000000953674,
+          "frames": 135,
+          "smoothedFrameMsMedian": 16.7,
+          "smoothedFrameMsP95": 16.7,
+          "quality": "1.00"
+        }
+      ]
+    },
+    {
+      "version": "before",
+      "mobileViewport": true,
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 2060 SUPER (0x00001F06) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "errors": [],
+      "sections": [
+        {
+          "progress": 0,
+          "durationMs": 2404.899999856949,
+          "frames": 135,
+          "smoothedFrameMsMedian": 16.7,
+          "smoothedFrameMsP95": 16.7,
+          "quality": "1.00"
+        },
+        {
+          "progress": 0.175,
+          "durationMs": 2416.5,
+          "frames": 135,
+          "smoothedFrameMsMedian": 16.7,
+          "smoothedFrameMsP95": 16.7,
+          "quality": "1.00"
+        },
+        {
+          "progress": 0.4,
+          "durationMs": 2415.7000000476837,
+          "frames": 135,
+          "smoothedFrameMsMedian": 16.7,
+          "smoothedFrameMsP95": 16.7,
+          "quality": "1.00"
+        },
+        {
+          "progress": 0.65,
+          "durationMs": 2416.2000000476837,
+          "frames": 135,
+          "smoothedFrameMsMedian": 16.7,
+          "smoothedFrameMsP95": 16.7,
+          "quality": "1.00"
+        },
+        {
+          "progress": 0.975,
+          "durationMs": 2416.699999809265,
+          "frames": 135,
+          "smoothedFrameMsMedian": 16.7,
+          "smoothedFrameMsP95": 16.7,
+          "quality": "1.00"
+        }
+      ]
+    },
+    {
+      "version": "after",
+      "mobileViewport": false,
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 2060 SUPER (0x00001F06) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "errors": [],
+      "sections": [
+        {
+          "progress": 0,
+          "durationMs": 2406.899999856949,
+          "frames": 150,
+          "smoothedFrameMsMedian": 16.7,
+          "smoothedFrameMsP95": 16.7,
+          "quality": "1.00"
+        },
+        {
+          "progress": 0.175,
+          "durationMs": 2400.2999999523163,
+          "frames": 135,
+          "smoothedFrameMsMedian": 16.7,
+          "smoothedFrameMsP95": 16.7,
+          "quality": "1.00"
+        },
+        {
+          "progress": 0.4,
+          "durationMs": 2416.300000190735,
+          "frames": 135,
+          "smoothedFrameMsMedian": 16.7,
+          "smoothedFrameMsP95": 16.7,
+          "quality": "1.00"
+        },
+        {
+          "progress": 0.65,
+          "durationMs": 2401,
+          "frames": 135,
+          "smoothedFrameMsMedian": 16.7,
+          "smoothedFrameMsP95": 16.7,
+          "quality": "1.00"
+        },
+        {
+          "progress": 0.975,
+          "durationMs": 2400.2000000476837,
+          "frames": 135,
+          "smoothedFrameMsMedian": 16.7,
+          "smoothedFrameMsP95": 16.7,
+          "quality": "1.00"
+        }
+      ]
+    },
+    {
+      "version": "after",
+      "mobileViewport": true,
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 2060 SUPER (0x00001F06) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "errors": [],
+      "sections": [
+        {
+          "progress": 0,
+          "durationMs": 2406,
+          "frames": 150,
+          "smoothedFrameMsMedian": 16.7,
+          "smoothedFrameMsP95": 16.7,
+          "quality": "1.00"
+        },
+        {
+          "progress": 0.175,
+          "durationMs": 2400.2999999523163,
+          "frames": 135,
+          "smoothedFrameMsMedian": 16.7,
+          "smoothedFrameMsP95": 16.7,
+          "quality": "1.00"
+        },
+        {
+          "progress": 0.4,
+          "durationMs": 2400.2000000476837,
+          "frames": 135,
+          "smoothedFrameMsMedian": 16.7,
+          "smoothedFrameMsP95": 16.7,
+          "quality": "1.00"
+        },
+        {
+          "progress": 0.65,
+          "durationMs": 2400.399999856949,
+          "frames": 135,
+          "smoothedFrameMsMedian": 16.7,
+          "smoothedFrameMsP95": 16.7,
+          "quality": "1.00"
+        },
+        {
+          "progress": 0.975,
+          "durationMs": 2401,
+          "frames": 135,
+          "smoothedFrameMsMedian": 16.7,
+          "smoothedFrameMsP95": 16.7,
+          "quality": "1.00"
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "모바일은 Chromium 에뮬레이션, WebKit은 Windows Playwright 실행이다. 실제 iPhone을 검증하지 않았다.",
+    "성능 수치는 앱 EMA frameMs의 표본이며 raw RAF 또는 GPU p95가 아니다.",
+    "AT의 고유 로고·모델·텍스처를 복사하지 않아 픽셀 단위 동일성을 주장하지 않는다."
+  ]
+}

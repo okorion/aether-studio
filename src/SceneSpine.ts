@@ -7,6 +7,12 @@ const HEIGHT = 10.8
 const clamp = (value: number) => Number.isFinite(value) ? THREE.MathUtils.clamp(value, 0, 1) : 0
 const ease = (value: number) => { const t = clamp(value); return t * t * (3 - 2 * t) }
 
+/** Only the column surface changes exposure; the chain keeps its own lighting. */
+export function sampleSpineExposure(progress: number) {
+  const p = clamp(progress)
+  return .22 + .78 * ease((p - .275) / .11) * ease((.665 - p) / .11)
+}
+
 /** Tapered, flattened processes share one surface with the vertebral body. */
 function processGeometry(points: THREE.Vector3[], segments: number, radial: number,
   radius: number, flatten = 1) {
@@ -84,9 +90,9 @@ function vertebraGeometry(software: boolean) {
   ], segments, sides, .28, .86))
 
   const tint = new THREE.Color()
-  const silver = new THREE.Color(.62, .58, .64)
-  const teal = new THREE.Color(.09, .33, .35)
-  const violet = new THREE.Color(.29, .12, .40)
+  const silver = new THREE.Color(.48, .47, .53)
+  const teal = new THREE.Color(.21, .31, .34)
+  const violet = new THREE.Color(.31, .23, .36)
   for (const part of parts) {
     const p = part.getAttribute('position')
     const normals = part.getAttribute('normal')
@@ -103,9 +109,9 @@ function vertebraGeometry(software: boolean) {
       // Restrained patina leaves a silver base for reflected light instead of
       // baking the old yellow/green stripes into every segment.
       tint.copy(silver)
-        .lerp(teal, ease((shift - .46) / .54) * .52)
-        .lerp(violet, ease((.52 - shift) / .52) * .54)
-        .multiplyScalar(.88 + weathering * .12)
+        .lerp(teal, ease((shift - .46) / .54) * .22)
+        .lerp(violet, ease((.52 - shift) / .52) * .24)
+        .multiplyScalar(.94 + weathering * .06)
       tint.toArray(colors, i * 3)
     }
     part.setAttribute('color', new THREE.BufferAttribute(colors, 3))
@@ -133,12 +139,13 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
   discGeometry.scale(1, 1, .79)
   discGeometry.translate(0, 0, .23)
   const linkGeometry = createChainGeometry(software, mobile)
+  const exposure = { value: sampleSpineExposure(0) }
   const boneMaterial = new THREE.MeshPhysicalMaterial({
-    color: 0xc6cbd4, vertexColors: true, metalness: software ? .48 : .93,
-    roughness: software ? .51 : .29, envMapIntensity: 1.45,
-    iridescence: software ? 0 : 1, iridescenceIOR: 1.48,
-    iridescenceThicknessRange: [110, 680], clearcoat: software ? 0 : .23,
-    clearcoatRoughness: .24, transparent: true,
+    color: 0xb4b9c8, vertexColors: true, metalness: software ? .48 : .94,
+    roughness: software ? .51 : .34, envMapIntensity: .94,
+    iridescence: software ? 0 : .18, iridescenceIOR: 1.36,
+    iridescenceThicknessRange: [260, 340], clearcoat: software ? 0 : .08,
+    clearcoatRoughness: .38, transparent: true,
   })
   if (!software) {
     // Texture-free micrograin stays attached to the bone through instancing.
@@ -166,42 +173,57 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
         vec3 spineRx = cross(spineDy, normal);
         vec3 spineRy = cross(normal, spineDx);
         float spineDet = dot(spineDx, spineRx);
-        float spineFootprint = max(length(dFdx(vSpineSurface)), length(dFdy(vSpineSurface))) * 150.0;
-        float spineGrain = spineNoise(vSpineSurface * 120.) * 2. - 1.;
+        float spineFootprint = max(length(dFdx(vSpineSurface)), length(dFdy(vSpineSurface))) * 190.0;
+        float spineGrain = spineNoise(vSpineSurface * 190.) * 2. - 1.;
         float spineGrainWeight = 1.0 - smoothstep(1.5, 6.0, spineFootprint);
-        float spineRelief = spineGrain * .0014 * spineGrainWeight
-          + spineNoise(vSpineSurface * 17.) * .008;
+        float spineRelief = spineGrain * .00065 * spineGrainWeight
+          + spineNoise(vSpineSurface * 3.7) * .002;
         vec3 spineGradient = dFdx(spineRelief) * spineRx + dFdy(spineRelief) * spineRy;
         normal = normalize(max(abs(spineDet), 0.0000001) * normal
           - sign(spineDet) * spineGradient);
-        float spineWear = sin(dot(vSpineSurface, vec3(9.1, 13.7, 7.3)))
-          * cos(dot(vSpineSurface, vec3(17.3, 5.7, 11.1)));
-        float spinePatina = clamp(spineNoise(vSpineSurface*5.8)*1.4-.2
-          + (spineNoise(vSpineSurface*19.)-.5)*.22,0.,1.);
-        float spinePolish = smoothstep(.50, .88, spinePatina);
-        roughnessFactor = clamp(roughnessFactor + spineWear * .075
-          + (1. - spinePolish) * .11 - spinePolish * .075
-          + spineGrain * spineGrainWeight * .055, .16, .58);
+        roughnessFactor = clamp(roughnessFactor
+          + (spineNoise(vSpineSurface * 2.3) - .5) * .055
+          + spineGrain * spineGrainWeight * .065, .25, .46);
       `)
-      // PhysicalMaterial otherwise uses only the maximum film thickness when
-      // no map is supplied. Vary it over the existing surface without a texture
-      // upload or a second material/draw, so violet and teal move with the view.
-      shader.fragmentShader = shader.fragmentShader.replace('#include <lights_physical_fragment>', `
-        #include <lights_physical_fragment>
-        #ifdef USE_IRIDESCENCE
-          material.iridescenceThickness = mix(iridescenceThicknessMinimum,
-            iridescenceThicknessMaximum, spinePatina);
-          material.iridescence *= .65 + spinePatina * .35;
-        #endif
+      // Broad reflected colour follows the view and surface orientation. Fine
+      // grain only roughens those reflections; it never drives rainbow bands.
+      shader.fragmentShader = shader.fragmentShader.replace('#include <opaque_fragment>', `
+        vec3 spineReflection = inverseTransformDirection(
+          reflect(-normalize(vViewPosition), normal), viewMatrix);
+        float spinePink = pow(max(0., dot(spineReflection, normalize(vec3(-.62,.38,.69)))), 4.2);
+        float spineCyan = pow(max(0., dot(spineReflection, normalize(vec3(.73,-.13,.67)))), 5.0);
+        float spineViolet = pow(max(0., dot(spineReflection, normalize(vec3(.12,.80,-.56)))), 4.0);
+        float spineWindow = max(spinePink, max(spineCyan, spineViolet * .65));
+        float spineDarkFace = .07 + .93 * smoothstep(.035, .58, spineWindow);
+        vec3 spineReflectionColor = vec3(.92,.15,.56) * spinePink * 1.5
+          + vec3(.08,.78,.96) * spineCyan * 1.25
+          + vec3(.31,.13,.66) * spineViolet * .65;
+        float spineFresnel = pow(1. - max(dot(normal, normalize(vViewPosition)), 0.), 2.);
+        outgoingLight = outgoingLight * spineDarkFace * .54
+          + spineReflectionColor * (.36 + spineFresnel * .64)
+            * (.92 + spineGrain * spineGrainWeight * .15);
+        #include <opaque_fragment>
       `)
     }
-    boneMaterial.customProgramCacheKey = () => 'aether-open-spine-patina-v3'
+    boneMaterial.customProgramCacheKey = () => 'aether-spine-broad-reflection-v1'
   }
   const discMaterial = new THREE.MeshPhysicalMaterial({
     color: 0x26364a, metalness: software ? .45 : .86, roughness: .44,
-    envMapIntensity: .86, iridescence: software ? 0 : .50,
+    envMapIntensity: .58, iridescence: software ? 0 : .14,
     iridescenceThicknessRange: [160, 380], transparent: true,
   })
+  for (const material of [boneMaterial, discMaterial]) {
+    const previousCompile = material.onBeforeCompile
+    const previousCacheKey = material.customProgramCacheKey()
+    material.onBeforeCompile = (shader, renderer) => {
+      previousCompile.call(material, shader, renderer)
+      shader.uniforms.uSpineExposure = exposure
+      shader.fragmentShader = 'uniform float uSpineExposure;\n' + shader.fragmentShader
+      shader.fragmentShader = shader.fragmentShader.replace('#include <opaque_fragment>',
+        'outgoingLight *= uSpineExposure;\n#include <opaque_fragment>')
+    }
+    material.customProgramCacheKey = () => previousCacheKey + '-stage-exposure-v1'
+  }
   const linkMaterial = createChainMaterial(software)
   const entryEdge = { value: -0.25 }
   const exitEdge = { value: -0.25 }
@@ -264,6 +286,8 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
       const alpha = clamp(opacity)
       const form = ease(emergence)
       const progress = clamp(value)
+      exposure.value = sampleSpineExposure(progress)
+      group.userData.surfaceExposure = exposure.value
       entryEdge.value = sampleLayers(progress).monitorEntry
       exitEdge.value = sampleLayers(progress).monitorExit
       group.userData.entryEdge = entryEdge.value

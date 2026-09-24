@@ -3,17 +3,18 @@ import * as THREE from 'three'
 import { createAtmosphere } from './Atmosphere'
 import { createSceneInteraction } from './SceneInteraction'
 import { createSceneWorlds } from './SceneWorlds'
-import { sampleJourney, smooth } from './Journey'
+import { sampleJourney } from './Journey'
 import { createSceneGlow } from './SceneGlow'
 import { createSceneForest } from './SceneForest'
-import { createSceneLayers, sampleLayers, sampleEmblemCurtain } from './SceneLayers'
+import { createSceneLayers, sampleLayers } from './SceneLayers'
 import { bindCurtain, bindGroupCurtain, createCurtainBounds } from './SceneCurtains'
 import { createSceneVideo } from './SceneVideo'
 import { prepareSceneShaders } from './ScenePreparation'
 import type { LoadingStage } from './loading'
 import { createSceneLightVideo } from './SceneLightVideo'
-import { createLightFilmUniforms, sampleLightChoreography } from './SceneLighting'
+import { createLightFilmUniforms, lightChoreographyGLSL, sampleLightChoreography } from './SceneLighting'
 import { createSceneLightShafts } from './SceneLightShafts'
+import { createSceneEmblem } from './SceneEmblem'
 
 type SceneProps = {
   reducedMotion: boolean
@@ -33,6 +34,7 @@ const particleVertex = /* glsl */ `
   varying vec3 vColor;
   varying float vDepth;
   varying float vPhase;
+  ${lightChoreographyGLSL}
   void main() {
     vec3 p = position;
     float t = uTime * 0.12;
@@ -43,6 +45,10 @@ const particleVertex = /* glsl */ `
     gl_Position = projectionMatrix * mv;
     gl_PointSize = clamp(aSize * uPixelRatio * (13.0 / -mv.z), 0.9, 26.0 * uPixelRatio);
     vColor = aColor;
+    if (uLightFilmReady > .5) {
+      vec3 film = aetherFilmRadiance((modelMatrix * vec4(p, 1.)).xyz);
+      vColor = aColor * .20 + film * .62;
+    }
     vDepth = -mv.z;
     vPhase = aPhase;
   }
@@ -91,6 +97,7 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
   const selectProjectRef = useRef(onSelectProject)
   const videoRef = useRef<ReturnType<typeof createSceneVideo> | null>(null)
   const lightVideoRef = useRef<ReturnType<typeof createSceneLightVideo> | null>(null)
+  const forestVideoRef = useRef<ReturnType<typeof createSceneLightVideo> | null>(null)
   // Motion preference changes rebuild the render budget, preserving the view
   // and time so pausing cannot snap a user's chosen angle back to the front.
   const preserved = useRef({ yaw: 0, pitch: 0, elapsed: 0, scaleElapsed: 0 })
@@ -111,6 +118,8 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
     videoRef.current = null
     lightVideoRef.current?.dispose()
     lightVideoRef.current = null
+    forestVideoRef.current?.dispose()
+    forestVideoRef.current = null
   }, [])
 
   useEffect(() => {
@@ -154,6 +163,7 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
     const releaseResources = () => {
       videoRef.current?.update(false, true)
       lightVideoRef.current?.setActive(false, true)
+      forestVideoRef.current?.setActive(false, true)
       document.documentElement.classList.remove('scene-monitor-hover')
       cleanup?.()
       cleanup = undefined
@@ -313,171 +323,23 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
           surface.emissive.copy(surface.color).multiplyScalar(0.16)
         }
       }
-      const luminous = material(
-        new THREE.MeshBasicMaterial({
-          color: 0x9bfff0,
-          transparent: true,
-          opacity: 0.26,
-          blending: THREE.AdditiveBlending,
-          depthWrite: false,
-        }),
-      )
-      const glyphChrome = material(chrome.clone())
-      glyphChrome.color.set(0xb9e4d3)
-      glyphChrome.roughness = 0.25
-      glyphChrome.metalness = softwareRenderer ? 0.25 : 0.87
-      glyphChrome.emissive.set(0x163b35)
-      glyphChrome.emissiveIntensity = 0.18
-      glyphChrome.envMapIntensity = 2.4
-      glyphChrome.transparent = true
-      // Very shallow sculpted normals make the otherwise planar letter catch
-      // different parts of the environment like a pressed-metal insignia.
-      glyphChrome.onBeforeCompile = (shader) => {
-        shader.vertexShader = `varying vec3 vInsigniaPosition;\n${shader.vertexShader}`.replace(
-          '#include <begin_vertex>',
-          '#include <begin_vertex>\nvInsigniaPosition = position;',
-        )
-        shader.fragmentShader = `varying vec3 vInsigniaPosition;\n${shader.fragmentShader}`
-          .replace(
-            '#include <normal_fragment_maps>',
-            `#include <normal_fragment_maps>
-            float ridge = sin(vInsigniaPosition.y * 5.0 + vInsigniaPosition.x * 7.0);
-            normal = normalize(normal + vec3(ridge * 0.055, cos(vInsigniaPosition.y * 7.0) * 0.025, 0.0));
-          `,
-          )
-          .replace(
-            '#include <opaque_fragment>',
-            `#include <opaque_fragment>
-            float sheen = smoothstep(-0.8, 0.9, sin(vInsigniaPosition.y * 7.0 + vInsigniaPosition.x * 3.0));
-            gl_FragColor.rgb *= mix(vec3(0.43, 0.65, 0.67), vec3(1.02, 1.12, 0.95), sheen);
-          `,
-          )
-      }
-      glyphChrome.customProgramCacheKey = () => 'aether-sculpted-o-v2'
-
+      const lightVideo = lightVideoRef.current ??= createSceneLightVideo()
+      const lightFilm = createLightFilmUniforms(lightVideo.texture)
+      const forestVideo = forestVideoRef.current ??= createSceneLightVideo({
+        source: '/media/forest-memory.mp4', role: 'forest-memory',
+      })
+      const forestFilm = createLightFilmUniforms(forestVideo.texture)
+      const particleFilm = createLightFilmUniforms(forestVideo.texture)
       const world = new THREE.Group()
       scene.add(world)
-      const emblem = new THREE.Group()
-      emblem.position.set(0, 0, 0)
+      const emblemView = createSceneEmblem({
+        software: softwareRenderer, mobile: smallScreen,
+        variant: 'glass', // 'silver' restores the original ring, O and ribbons.
+        silver: { chrome, darkChrome }, film: forestFilm,
+      })
+      const emblem = emblemView.group
       world.add(emblem)
-
-      const ringSegments = softwareRenderer ? 64 : 144
-      const ring = new THREE.Mesh(
-        geometry(new THREE.TorusGeometry(0.89, 0.052, softwareRenderer ? 6 : 12, ringSegments)),
-        chrome,
-      )
-      const ringInner = new THREE.Mesh(
-        geometry(new THREE.TorusGeometry(0.84, 0.009, softwareRenderer ? 4 : 8, ringSegments)),
-        darkChrome,
-      )
-      ringInner.position.z = -0.035
-      const ringGlow = new THREE.Mesh(
-        geometry(new THREE.TorusGeometry(0.89, 0.006, softwareRenderer ? 4 : 6, ringSegments)),
-        luminous,
-      )
-      ringGlow.position.z = 0.026
-      emblem.add(ring, ringInner, ringGlow)
-
-      // A tall, high-contrast capital O: thick vertical strokes and a generous
-      // counter distinguish the letter from the thin circular outer halo.
-      const letter = new THREE.Shape()
-      letter.moveTo(0, .49)
-      letter.bezierCurveTo(.26, .49, .385, .30, .385, 0)
-      letter.bezierCurveTo(.385, -.30, .26, -.49, 0, -.49)
-      letter.bezierCurveTo(-.26, -.49, -.385, -.30, -.385, 0)
-      letter.bezierCurveTo(-.385, .30, -.26, .49, 0, .49)
-      letter.closePath()
-      const counter = new THREE.Path()
-      counter.moveTo(0, .365)
-      counter.bezierCurveTo(-.14, .365, -.195, .21, -.195, 0)
-      counter.bezierCurveTo(-.195, -.21, -.14, -.365, 0, -.365)
-      counter.bezierCurveTo(.14, -.365, .195, -.21, .195, 0)
-      counter.bezierCurveTo(.195, .21, .14, .365, 0, .365)
-      counter.closePath()
-      letter.holes.push(counter)
-      const glyph = new THREE.Mesh(
-        geometry(
-          new THREE.ExtrudeGeometry(letter, {
-            depth: 0.055,
-            bevelEnabled: true,
-            bevelSegments: 3,
-            steps: 1,
-            bevelSize: 0.014,
-            bevelThickness: 0.013,
-            curveSegments: softwareRenderer ? 16 : 32,
-          }),
-        ),
-        glyphChrome,
-      )
-      glyph.position.z = 0.03
-      emblem.add(glyph)
-
-      const ribbons = new THREE.Group()
-      // The ring and both tails are a single organism. Local attachment points
-      // must inherit the emblem's pointer tilt, bobbing and scroll transform.
-      emblem.add(ribbons)
-      const tailTime = { value: 0 }
-      const tailLift = { value: 0 }
-      const tailChrome = material(chrome.clone())
-      const tailDark = material(darkChrome.clone())
-      for (const surface of [tailChrome, tailDark]) {
-        surface.onBeforeCompile = (shader) => {
-          shader.uniforms.uTailTime = tailTime
-          shader.uniforms.uTailLift = tailLift
-          shader.vertexShader = `uniform float uTailTime; uniform float uTailLift;\n${shader.vertexShader}`.replace(
-            '#include <begin_vertex>',
-            `#include <begin_vertex>
-              float distanceFromRoot = max(0., -position.y);
-              float flex = smoothstep(0., 1.2, distanceFromRoot);
-              transformed.x += sin(distanceFromRoot * 1.3 - uTailTime * .5) * .18 * flex;
-              transformed.z += sin(distanceFromRoot * 1.7 - uTailTime * .4) * .23 * flex;
-              transformed.y = mix(position.y, -position.y * 1.35, uTailLift);
-              transformed.z += sin(distanceFromRoot * .38) * uTailLift * .7;`,
-          )
-        }
-        surface.customProgramCacheKey = () => 'aether-descending-tail-v4'
-      }
-      for (let strand = 0; strand < 2; strand += 1) {
-        const points: THREE.Vector3[] = []
-        for (let i = 0; i <= 100; i += 1) {
-          const t = i / 100
-          const theta = t * 5.5 + strand * Math.PI
-          const spread = 0.89 + Math.pow(t, 2) * 0.55
-          points.push(new THREE.Vector3(Math.cos(theta) * spread, -t * 7.3, Math.sin(theta) * 0.5))
-        }
-        const path = new THREE.CatmullRomCurve3(points)
-        ribbons.add(
-          new THREE.Mesh(
-            geometry(
-              new THREE.TubeGeometry(
-                path,
-                softwareRenderer ? 64 : 180,
-                0.015,
-                softwareRenderer ? 4 : 6,
-                false,
-              ),
-            ),
-            tailChrome,
-          ),
-        )
-        const edgePath = new THREE.CatmullRomCurve3(
-          points.map((p) => p.clone().add(new THREE.Vector3(0.025, 0, -0.017))),
-        )
-        ribbons.add(
-          new THREE.Mesh(
-            geometry(
-              new THREE.TubeGeometry(
-                edgePath,
-                softwareRenderer ? 64 : 180,
-                0.007,
-                softwareRenderer ? 3 : 5,
-                false,
-              ),
-            ),
-            tailDark,
-          ),
-        )
-      }
+      effectDisposers.push(() => emblemView.dispose())
 
       const random = seededRandom(27182)
       const count = softwareRenderer ? 140 : smallScreen ? 600 : 1700
@@ -524,6 +386,7 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
       const particlesMaterial = material(
         new THREE.ShaderMaterial({
           uniforms: {
+            uLightFilm: forestFilm.map, uLightFilmReady: forestFilm.ready,
             uTime: { value: 0 },
             uPixelRatio: { value: activeRenderer.getPixelRatio() },
             uMotion: { value: reducedMotion ? 0 : 1 },
@@ -531,6 +394,7 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
           },
           vertexShader: particleVertex,
           fragmentShader: particleFragment,
+          defines: { AETHER_LIGHT_FILM: 1 },
           transparent: true,
           depthWrite: false,
           blending: THREE.AdditiveBlending,
@@ -653,20 +517,18 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
       // prevents this curtain from leaking onto the other chrome objects.
       bindGroupCurtain(creatureRoot, creatureCurtain)
 
-      const lightVideo = lightVideoRef.current ??= createSceneLightVideo()
-      const lightFilm = createLightFilmUniforms(lightVideo.texture)
-      const lightShafts = createSceneLightShafts(scene, softwareRenderer, smallScreen, lightFilm)
+      const lightShafts = createSceneLightShafts(scene, softwareRenderer, smallScreen, lightFilm, forestFilm)
       effectDisposers.push(() => lightShafts.dispose())
-      const atmosphere = createAtmosphere(scene, softwareRenderer, smallScreen, lightFilm)
+      const atmosphere = createAtmosphere(scene, softwareRenderer, smallScreen, particleFilm)
       effectDisposers.push(() => atmosphere.dispose())
       const video = videoRef.current ??= createSceneVideo()
       const worlds = createSceneWorlds(scene, softwareRenderer, smallScreen, video, lightFilm)
       effectDisposers.push(() => worlds.dispose())
-      const forest = createSceneForest(scene, softwareRenderer, smallScreen, lightFilm)
+      const forest = createSceneForest(scene, softwareRenderer, smallScreen, forestFilm)
       effectDisposers.push(() => forest.dispose())
       const layers = createSceneLayers(scene)
       effectDisposers.push(() => layers.dispose())
-      const glow = softwareRenderer || smallScreen ? undefined : createSceneGlow(activeRenderer, scene, camera)
+      const glow = softwareRenderer ? undefined : createSceneGlow(activeRenderer, scene, camera, !smallScreen)
       glow?.resize(innerWidth, innerHeight, activeRenderer.getPixelRatio())
       if (glow) effectDisposers.push(() => glow.dispose())
       const interaction = createSceneInteraction(
@@ -686,17 +548,10 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
           1,
         )
       }
-      // The ring travels down the same shaft as the camera. The architecture
-      // and distant life remain in world space, providing vertical parallax.
-      const ringSurface = material(chrome.clone())
-      const innerSurface = material(darkChrome.clone())
-      for (const surface of [ringSurface, innerSurface, tailChrome, tailDark]) surface.transparent = true
-      ring.material = ringSurface
-      ringInner.material = innerSurface
-      // Both transitions share the visible scene's edge: the emblem belongs
-      // above incoming monitors and below the returning forest canopy.
-      const emblemCurtain = createCurtainBounds()
-      bindGroupCurtain(emblem, emblemCurtain)
+      const emblemCaptureExclusions: THREE.Object3D[] = []
+      scene.traverse(object => {
+        if ((object as THREE.Object3D & { isReflector?: boolean }).isReflector) emblemCaptureExclusions.push(object)
+      })
       const centre = new THREE.Vector3(0, 0, 0)
       const projectedCentre = new THREE.Vector3()
       const modelCentre = new THREE.Vector3()
@@ -740,7 +595,9 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
           (!location.hash || location.hash === '#home') && !document.querySelector('dialog[open]'))
         worlds.setMediaActive(enabled && targetHasMonitors, reducedMotion)
         lightVideo.setActive(enabled && !softwareRenderer && !preparing &&
-          (targetProgress < .235 || targetProgress > .60), reducedMotion)
+          (targetProgress > .60 && targetProgress < .90), reducedMotion)
+        forestVideo.setActive(enabled && !softwareRenderer && !preparing &&
+          (targetProgress < .32 || targetProgress > .855), reducedMotion)
         canvas.dataset.videoState = JSON.stringify(worlds.getVideoStatus())
         if (!enabled || reducedMotion) {
           clearMonitorHover()
@@ -785,6 +642,7 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
         // Pause synchronously; the React dialog/active update follows this event.
         worlds.setMediaActive(false, reducedMotion)
         lightVideo.setActive(false, reducedMotion)
+        forestVideo.setActive(false, reducedMotion)
         canvas.dataset.videoState = JSON.stringify(worlds.getVideoStatus())
         interaction.setActive(false)
         clearMonitorHover()
@@ -821,41 +679,17 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
         const state = sampleJourney(scroll)
         centre.set(0, state.height, 0)
         particlesMaterial.uniforms.uTime.value = elapsed
-        tailTime.value = elapsed
-        // Set the hidden ribbon pose before the lower forest reveals it.
-        tailLift.value = scroll > .5 ? 1 : 0
         interaction.setOrbitEnabled(state.orbitEnabled)
         interaction.setFocus(centre)
-        const input = interaction.update(delta || 0.016, elapsed, activeRenderer.getPixelRatio(), scroll)
+        const input = interaction.update(delta || 0.016, elapsed, activeRenderer.getPixelRatio(), scroll, wallDelta)
         preserved.current.yaw = input.yaw
         preserved.current.pitch = input.pitch
         preserved.current.elapsed = elapsed
         preserved.current.scaleElapsed = scaleElapsed
-        const fold = smooth(.205, .295, scroll) * (1 - state.end)
-        // The original organism unfolds into the spine. Keep its free tails
-        // from crossing the project screens after that transformation settles.
-        const emblemOpacity = (1 - smooth(.305, .32, scroll)) + smooth(.88, .955, scroll)
-        const emblemBounds = sampleEmblemCurtain(scroll)
-        emblemCurtain.upper.value = emblemBounds.upper
-        emblemCurtain.lower.value = emblemBounds.lower
-        emblem.visible = emblemOpacity > .001
-        ringSurface.opacity = innerSurface.opacity = tailChrome.opacity = tailDark.opacity = emblemOpacity
-        luminous.opacity = .26 * emblemOpacity
         world.rotation.set(0, 0, 0)
         world.position.copy(centre)
-        emblem.position.set(0, 0, 0)
-        const statementScale = smooth(.10, .18, scroll) * (1 - smooth(.25, .31, scroll))
         particles.visible = distantParticles.visible = scroll < .20 || scroll > .855
-        emblem.scale.setScalar(1.15 + statementScale * .48)
-        emblem.rotation.set(0, smooth(.21, .30, scroll) * .7 * (1 - state.end), 0)
-        ribbons.rotation.x = 0
-        const tailPresence = scroll < .5 ? 1 - smooth(.10, .18, scroll) : 1
-        ribbons.visible = tailPresence > .001
-        tailChrome.opacity = tailDark.opacity = emblemOpacity * tailPresence
-        glyph.scale.setScalar(1)
-        glyphChrome.opacity = emblemOpacity
-        glyph.visible = glyphChrome.opacity > .005
-        ringSurface.roughness = .12 + fold * .1
+        emblemView.update(elapsed, scroll)
         const mobileView = innerWidth < 768
         const orbitRadius = state.radius + (mobileView ? 4.8 : 0)
         const azimuth = state.azimuth + (input.yaw + input.field.ndc.x * .012 * input.field.strength) * state.orbitWeight
@@ -899,6 +733,12 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
         lightFilm.map.value = lightVideo.texture
         lightFilm.ready.value = lightVideo.getReady() ? 1 : 0
         canvas.dataset.lightVideoState = JSON.stringify(lightVideo.getStatus())
+        forestFilm.map.value = forestVideo.texture
+        forestFilm.ready.value = forestVideo.getReady() ? 1 : 0
+        const activeFilm = scroll < .235 || scroll > .855 ? forestFilm : lightFilm
+        particleFilm.map.value = activeFilm.map.value
+        particleFilm.ready.value = activeFilm.ready.value
+        canvas.dataset.forestVideoState = JSON.stringify(forestVideo.getStatus())
         // Projection-based surface interaction must use this frame's camera.
         worlds.update(elapsed, scroll, input.field, camera, scaleElapsed, mobileView)
         canvas.dataset.scaleTime = scaleElapsed.toFixed(4)
@@ -909,14 +749,17 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
         atmosphere.update(elapsed, scroll, activeRenderer.getPixelRatio(), input.field, camera)
         lightShafts.update(elapsed, scroll, camera)
         forest.update(elapsed, scroll, camera, input.field, activeRenderer.getPixelRatio())
-        layers.update(scroll, camera)
+        layers.update(scroll, camera, input.field)
+        glow?.update(elapsed, scroll, input.field)
 
         try {
           activeRenderer.info.reset()
           // All glass screens share one bounded background capture. Refresh it
           // at half the display cadence; paused/reduced-motion frames stay exact.
+          emblemView.capture(activeRenderer, scene, camera, renderedFrames % 2 === 0 || reducedMotion, emblemCaptureExclusions)
+          canvas.dataset.emblemState = JSON.stringify(emblemView.getStatus())
           worlds.capture(activeRenderer, camera, renderedFrames % 2 === 0 || reducedMotion)
-          if (glow && quality > .65 && innerWidth >= 768) glow.render(state.energy)
+          if (glow) glow.render(state.energy, quality > .65 && innerWidth >= 768)
           else activeRenderer.render(scene, camera)
           renderedFrames++
           if (renderedFrames === 1 || renderedFrames % 15 === 0 || reducedMotion) {
@@ -996,18 +839,22 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
           // downloaded here and no future section is shown to the user.
           layers.update(readProgress(), camera)
           worlds.prepare(activeRenderer)
+          emblemView.prepare(activeRenderer)
           report('resources')
           // Exercise the film sampling branch with the black placeholder too.
           // No media request is needed to prime an otherwise dormant GPU path.
-          lightFilm.ready.value = 1
+          lightFilm.ready.value = forestFilm.ready.value = particleFilm.ready.value = 1
           try {
             await prepareSceneShaders(activeRenderer, scene, camera, cancelled, stage => {
               if (!cancelled()) report(stage)
             })
           } finally {
             lightFilm.ready.value = lightVideo.getReady() ? 1 : 0
+            forestFilm.ready.value = forestVideo.getReady() ? 1 : 0
+            particleFilm.ready.value = forestFilm.ready.value
           }
           if (cancelled()) return
+          glow?.prepare()
           canvas.dataset.preparation = 'ready'
           preparing = false
           previousTime = 0
@@ -1108,6 +955,7 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
       cleanup = () => {
         worlds.setMediaActive(false, true)
         lightVideo.setActive(false, true)
+        forestVideo.setActive(false, true)
         canvas.dataset.videoState = JSON.stringify(worlds.getVideoStatus())
         leaveMonitor()
         wakeRef.current = null

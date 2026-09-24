@@ -1,0 +1,56 @@
+import { expect, test } from '@playwright/test'
+import { build } from 'vite'
+import type { probeSurfaceFlow } from './fixtures/surface-flow-harness'
+
+test('@interaction screen flow preserves neutral color, refracts text, and keeps gallery pixels aligned', async ({ page }) => {
+  const output = await build({ configFile: false, logLevel: 'silent', build: { write: false, minify: false,
+    lib: { entry: 'tests/fixtures/surface-flow-harness.ts', formats: ['iife'], name: 'SurfaceFlowFixture' } } })
+  const chunk = (Array.isArray(output) ? output : [output])
+    .flatMap(result => 'output' in result ? result.output : []).find(result => result.type === 'chunk')
+  if (!chunk || chunk.type !== 'chunk') throw new Error('Surface flow pixel fixture did not compile')
+  const pageErrors: string[] = [], consoleErrors: string[] = []
+  page.on('pageerror', error => pageErrors.push(error.message))
+  page.on('console', message => { if (message.type() === 'error') consoleErrors.push(message.text()) })
+  await page.goto('about:blank')
+  await page.addScriptTag({ content: chunk.code })
+  const results = []
+  for (const mobile of [false, true]) {
+    const result = await page.evaluate(mobile => (window as unknown as {
+      SurfaceFlowFixture: { probeSurfaceFlow: typeof probeSurfaceFlow }
+    }).SurfaceFlowFixture.probeSurfaceFlow(mobile), mobile)
+    results.push(result)
+    const label = mobile ? '96×128 without a bloom allocation' : '128×96 with bloom disabled'
+    expect(result.errors, label).toEqual([])
+    expect(result.preparation.restoredTarget, label).toBe(true)
+    expect(result.preparation.viewportPreserved, label).toBe(true)
+    expect(result.preparation.scissorPreserved, label).toBe(true)
+    expect(result.preparation.canvasDrift.differentComponents, label).toBe(0)
+    // Half-float intermediate rounding may move a channel by one display byte.
+    // These bounds reject a missing/duplicate color transfer or tone mapping.
+    expect(result.neutral.maxError, label).toBeLessThanOrEqual(2)
+    expect(result.neutral.meanError, label).toBeLessThan(.5)
+    expect(Math.abs(result.neutral.meanLumaShift), label).toBeLessThan(.5)
+    expect(result.refraction.changedPixels, label).toBeGreaterThan(30)
+    expect(result.textRegion.changedPixels, label).toBeGreaterThan(20)
+    expect(result.programsBeforeStroke, label).toBeGreaterThan(0)
+    expect(result.programsAfterStroke, label).toBe(result.programsBeforeStroke)
+    expect(result.release.differentComponents, label).toBe(0)
+    expect(result.clear.differentComponents, label).toBe(0)
+    expect(result.gapClear.differentComponents, label).toBe(0)
+    expect(result.gapReentry.differentComponents, label).toBe(0)
+    // One scene draw, one flow draw and one output draw; no bloom pyramid runs.
+    expect(result.neutralDrawCalls, label).toBe(3)
+    expect(result.mist.residualMax, label).toBeLessThanOrEqual(2)
+    expect(result.mist.residualMean, label).toBeLessThan(.5)
+    expect(result.mist.residualBeyondTwo, label).toBe(0)
+    expect(result.mist.leftMistPixels, label).toBeGreaterThan(5)
+    expect(result.mist.outsideMistPixels, label).toBe(0)
+    expect(result.mist.protectedRegion.maxError, label).toBeLessThanOrEqual(1)
+    expect(result.mist.response.differentComponents, label).toBeGreaterThan(3)
+  }
+  expect(pageErrors).toEqual([])
+  expect(consoleErrors).toEqual([])
+  await test.info().attach('surface-flow-pixel-evidence.json', {
+    contentType: 'application/json', body: JSON.stringify(results, null, 2),
+  })
+})

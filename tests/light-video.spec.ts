@@ -42,10 +42,10 @@ class LightVideoMock extends EventTarget {
     this.paused = true
     this.dispatchEvent(new Event('pause'))
   }
-  frame() {
+  frame(width = 256, height = 160) {
     this.readyState = 2
-    this.videoWidth = 256
-    this.videoHeight = 160
+    this.videoWidth = width
+    this.videoHeight = height
     this.dispatchEvent(new Event('loadeddata'))
   }
 }
@@ -191,5 +191,72 @@ test('@interaction light projection handles late play promises and terminal medi
       document.visibility(true); document.visibility(false)
       expect(deniedVideo.attempts).toHaveLength(1)
     } finally { blocked.dispose() }
+  })
+})
+
+test('@interaction configured forest and default chamber owners preserve independent media lifecycles', async () => {
+  await withMediaDocument(async document => {
+    const chamber = createSceneLightVideo()
+    const forest = createSceneLightVideo({ source: '/media/forest-memory.mp4', role: 'forest-memory' })
+    const [chamberVideo, forestVideo] = document.videos
+    const forestFallback = forest.texture
+    let chamberFilmDisposals = 0
+    try {
+      expect(document.videos).toHaveLength(2)
+      expect(chamberVideo.dataset.mediaRole).toBe('light-projection')
+      expect(forestVideo.dataset.mediaRole).toBe('forest-memory')
+      expect(forest.texture === chamber.texture).toBe(false)
+      chamber.setActive(true, true)
+      forest.setActive(true, true)
+      expect(document.videos.map(video => [video.src, video.loads, video.attempts.length]))
+        .toEqual([['', 0, 0], ['', 0, 0]])
+
+      forest.setActive(true)
+      expect(forestVideo.src).toBe('/media/forest-memory.mp4')
+      expect([chamberVideo.src, chamberVideo.loads, chamberVideo.attempts.length]).toEqual(['', 0, 0])
+      forestVideo.frame(512, 288)
+      forestVideo.attempts[0].resolve()
+      await flushPlayback()
+      const forestFilm = forest.texture
+      chamber.setActive(true)
+      expect(chamberVideo.src).toBe('/media/light-projection.mp4')
+      chamberVideo.frame()
+      chamberVideo.attempts[0].resolve()
+      await flushPlayback()
+      const chamberFilm = chamber.texture
+      chamberFilm.addEventListener('dispose', () => chamberFilmDisposals++)
+      expect(forestFilm === chamberFilm).toBe(false)
+
+      forestVideo.currentTime = 7.5
+      chamberVideo.currentTime = 3.25
+      forest.setActive(false)
+      expect(forest.texture === forestFilm).toBe(true)
+      expect(chamber.getStatus()).toMatchObject({ active: true, playing: true, ready: true })
+      expect(chamberVideo.currentTime).toBe(3.25)
+      forest.setActive(true)
+      expect(forestVideo.attempts[1].time).toBe(7.5)
+      forestVideo.attempts[1].resolve()
+      await flushPlayback()
+      expect(forestVideo.loads).toBe(1)
+      expect(forest.texture === forestFilm).toBe(true)
+      expect(chamberVideo.attempts).toHaveLength(1)
+
+      forestVideo.error = { code: 4 }
+      forestVideo.dispatchEvent(new Event('error'))
+      expect(forest.getStatus()).toMatchObject({ state: 'error', ready: false, attached: false })
+      expect(forest.texture === forestFallback).toBe(true)
+      forest.setActive(false)
+      forest.setActive(true)
+      expect(forestVideo.attempts).toHaveLength(2)
+      forest.dispose()
+      expect(chamber.texture === chamberFilm).toBe(true)
+      expect(chamber.getStatus()).toMatchObject({ active: true, playing: true, ready: true })
+      expect(chamberVideo.src).toBe('/media/light-projection.mp4')
+      expect(chamberFilmDisposals).toBe(0)
+    } finally {
+      forest.dispose()
+      chamber.dispose()
+    }
+    expect(chamberFilmDisposals).toBe(1)
   })
 })

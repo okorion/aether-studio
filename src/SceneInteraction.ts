@@ -501,7 +501,7 @@ export function createSceneInteraction(
     setFocus(point: THREE.Vector3) {
       if (!disposed) focus.copy(point)
     },
-    update(delta: number, elapsed: number, ratio: number, progress = 0) {
+    update(delta: number, elapsed: number, ratio: number, progress = 0, frameDelta = delta) {
       time = elapsed
       // Clamp both the target and eased value: no hidden overshoot accumulates
       // while dragging against the lower forest's downward limit.
@@ -533,7 +533,8 @@ export function createSceneInteraction(
       if ((!enabled && !retiringSurface) || reducedMotion || !home() || blocked() || document.hidden) {
         clearField()
       }
-      flow.update(delta)
+      // The simulation uses bounded steps but suspended frames clear old input.
+      flow.update(frameDelta > .25 || !Number.isFinite(frameDelta) || frameDelta < 0 ? frameDelta : delta)
       field.ndc.lerp(pointer, 1 - Math.exp(-10 * delta))
       field.strength = THREE.MathUtils.damp(field.strength, fieldTarget, 9, delta)
       fieldTarget *= Math.exp(-1.35 * delta)

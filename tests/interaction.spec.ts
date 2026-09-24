@@ -600,7 +600,7 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
     }
   })
 
-  test('outgoing bone grains keep their scroll shape above the chamber and restore after reverse', async ({ page }) => {
+  test('outgoing bone grains orbit above the chamber and retrace scroll at fixed time', async ({ page }) => {
     const result = await page.evaluate(() => window.interactionHarness.probeOutgoingBonePixels())
     expect(result.geometryShared).toBe(true)
     expect(result.cases).toHaveLength(3)
@@ -610,10 +610,9 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
       expect(sample.changedAbove, label).toBe(0)
       expect(sample.leakedBelow, label).toBe(0)
     }
-    // With fixed-height flowers, the first two cuts are still below the
-    // entire cloud. The later cut must actually remove visible grains.
+    // The later curtain cut must remove visible parts of the flower/belt field.
     expect(result.cases[2].hiddenBaseline).toBeGreaterThan(20)
-    expect(result.idleChanged).toBe(0)
+    expect(result.idleChanged).toBeGreaterThan(100)
     expect(result.forwardChanged).toBeGreaterThan(100)
     expect(result.reverseChanged).toBe(0)
     expect(result.closed).toEqual([false, false])

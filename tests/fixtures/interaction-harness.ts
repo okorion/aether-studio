@@ -656,7 +656,7 @@ function probeOutgoingBonePixels() {
   const coverageMaterial = originalMaterial.clone()
   coverageMaterial.uniforms = originalMaterial.uniforms
   // Retain the actual position/point size and both circular/curtain discards;
-  // remove shimmer/color so a stationary geometry check cannot fail on light.
+  // remove shimmer/color so the time and scroll checks measure geometry only.
   coverageMaterial.fragmentShader = coverageMaterial.fragmentShader.replace(
     'gl_FragColor = vec4(color, shape * vAlpha * entry);',
     'gl_FragColor = vec4(1., 1., 1., 1.);')
@@ -718,9 +718,11 @@ function probeOutgoingBonePixels() {
     const initial = read()
     at(.645, 12)
     const idle = read()
-    at(.66, 12)
+    // Clock-driven flower rotation is independent of reversible scroll travel.
+    // Hold time fixed for the forward/reverse comparison.
+    at(.66, 10)
     const forward = read()
-    at(.645, 15)
+    at(.645, 10)
     const reverse = read()
     const closed = [.59, .70].map(progress => {
       at(progress, 10)

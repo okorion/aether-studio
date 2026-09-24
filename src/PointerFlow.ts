@@ -2,11 +2,17 @@ import * as THREE from 'three'
 
 /** A small shared screen-space field, independent of the particle count. */
 export function createPointerFlow() {
-  const width = 40, height = 28
+  const width = 64, height = 40
   const cells = width * height
   let velocity = new Float32Array(cells * 2)
   let next = new Float32Array(cells * 2)
   const response = new Float32Array(cells * 2)
+  let density = new Float32Array(cells)
+  let nextDensity = new Float32Array(cells)
+  const curl = new Float32Array(cells)
+  const divergence = new Float32Array(cells)
+  let pressure = new Float32Array(cells)
+  let nextPressure = new Float32Array(cells)
   const data = new Uint8Array(cells * 4)
   for (let i = 0; i < cells; i++) {
     data[i * 4] = data[i * 4 + 1] = 128
@@ -33,10 +39,12 @@ export function createPointerFlow() {
       // Components use screen-height units: +R right, +G up (positive NDC Y).
       const red = 128 + Math.round(clamp(response[i * 2], -1, 1) * 127)
       const green = 128 + Math.round(clamp(response[i * 2 + 1], -1, 1) * 127)
+      const blue = Math.round(clamp(density[i], 0, 1) * 255)
       const offset = i * 4
-      if (data[offset] !== red || data[offset + 1] !== green) {
+      if (data[offset] !== red || data[offset + 1] !== green || data[offset + 2] !== blue) {
         data[offset] = red
         data[offset + 1] = green
+        data[offset + 2] = blue
         changed = true
       }
     }
@@ -51,6 +59,12 @@ export function createPointerFlow() {
     velocity.fill(0)
     next.fill(0)
     response.fill(0)
+    density.fill(0)
+    nextDensity.fill(0)
+    curl.fill(0)
+    divergence.fill(0)
+    pressure.fill(0)
+    nextPressure.fill(0)
     publish()
   }
 
@@ -88,7 +102,7 @@ export function createPointerFlow() {
       const speedLimit = Math.min(1, 4 / Math.max(.001, speed))
       const impulseX = dx * speedLimit * 9
       const impulseY = dy * speedLimit * 9
-      const radius = .28 + Math.min(.08, speed * .02)
+      const radius = .115 + Math.min(.045, speed * .012)
       const gaussian = -.5 / (radius * radius)
       for (let y = 0; y < height; y++) {
         const ry = (y + .5) / height * 2 - 1 - centerY
@@ -98,6 +112,7 @@ export function createPointerFlow() {
           const i = (y * width + x) * 2
           velocity[i] = clamp(velocity[i] + impulseX * weight, -.95, .95)
           velocity[i + 1] = clamp(velocity[i + 1] + impulseY * weight, -.95, .95)
+          density[i / 2] = Math.min(1, density[i / 2] + distance * 10 * weight)
         }
       }
       idleAge = 0
@@ -119,12 +134,35 @@ export function createPointerFlow() {
       }
       const steps = Math.max(1, Math.ceil(delta * 60))
       const dt = delta / steps
-      const damping = Math.exp(-3.8 * dt)
+      const damping = Math.exp(-3.4 * dt)
+      const densityDamping = Math.exp(-2.6 * dt)
       const diffusion = 1 - Math.exp(-2.3 * dt)
-      const follow = 1 - Math.exp(-4.35 * dt)
+      const follow = 1 - Math.exp(-12 * dt)
       const advectX = width * .5 / aspect * dt * .45
       const advectY = height * .5 * dt * .45
+      const hx = 2 * aspect / width, hy = 2 / height
+      const hx2 = hx * hx, hy2 = hy * hy
       for (let step = 0; step < steps; step++) {
+        // Curl confinement rolls the wake without introducing radial splashes.
+        // Both derivatives use screen-height units, including portrait views.
+        for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+          const cell = y * width + x
+          const l = y * width + Math.max(0, x - 1), r = y * width + Math.min(width - 1, x + 1)
+          const b = Math.max(0, y - 1) * width + x, t = Math.min(height - 1, y + 1) * width + x
+          curl[cell] = (velocity[r * 2 + 1] - velocity[l * 2 + 1]) / (2 * hx)
+            - (velocity[t * 2] - velocity[b * 2]) / (2 * hy)
+        }
+        for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+          const cell = y * width + x
+          const l = y * width + Math.max(0, x - 1), r = y * width + Math.min(width - 1, x + 1)
+          const b = Math.max(0, y - 1) * width + x, t = Math.min(height - 1, y + 1) * width + x
+          const gx = (Math.abs(curl[r]) - Math.abs(curl[l])) / (2 * hx)
+          const gy = (Math.abs(curl[t]) - Math.abs(curl[b])) / (2 * hy)
+          const length = Math.max(.0001, Math.hypot(gx, gy))
+          const force = clamp(curl[cell], -12, 12) * .045 * dt
+          velocity[cell * 2] = clamp(velocity[cell * 2] + gy / length * force, -.95, .95)
+          velocity[cell * 2 + 1] = clamp(velocity[cell * 2 + 1] - gx / length * force, -.95, .95)
+        }
         for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
           const i = (y * width + x) * 2
           // Semi-Lagrangian backtrace and bilinear sampling carry older input
@@ -140,6 +178,9 @@ export function createPointerFlow() {
           const right = (y * width + Math.min(width - 1, x + 1)) * 2
           const bottom = (Math.max(0, y - 1) * width + x) * 2
           const top = (Math.min(height - 1, y + 1) * width + x) * 2
+          const lowerDensity = density[a / 2] * (1 - tx) + density[b / 2] * tx
+          const upperDensity = density[c / 2] * (1 - tx) + density[d / 2] * tx
+          nextDensity[i / 2] = (lowerDensity * (1 - ty) + upperDensity * ty) * densityDamping
           for (let channel = 0; channel < 2; channel++) {
             const lower = velocity[a + channel] * (1 - tx) + velocity[b + channel] * tx
             const upper = velocity[c + channel] * (1 - tx) + velocity[d + channel] * tx
@@ -148,12 +189,45 @@ export function createPointerFlow() {
               + velocity[bottom + channel] + velocity[top + channel]) * .25
             const value = (advected * (1 - diffusion) + neighbors * diffusion) * damping
             next[i + channel] = value
-            response[i + channel] += (value - response[i + channel]) * follow
           }
         }
         const swap = velocity
         velocity = next
         next = swap
+        const swapDensity = density
+        density = nextDensity
+        nextDensity = swapDensity
+        // A bounded pressure solve redistributes the brush into a thin sheet.
+        pressure.fill(0)
+        nextPressure.fill(0)
+        for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+          const cell = y * width + x
+          const l = y * width + Math.max(0, x - 1), r = y * width + Math.min(width - 1, x + 1)
+          const b = Math.max(0, y - 1) * width + x, t = Math.min(height - 1, y + 1) * width + x
+          divergence[cell] = (velocity[r * 2] - velocity[l * 2]) / (2 * hx)
+            + (velocity[t * 2 + 1] - velocity[b * 2 + 1]) / (2 * hy)
+        }
+        for (let iteration = 0; iteration < 5; iteration++) {
+          for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+            const cell = y * width + x
+            const l = y * width + Math.max(0, x - 1), r = y * width + Math.min(width - 1, x + 1)
+            const b = Math.max(0, y - 1) * width + x, t = Math.min(height - 1, y + 1) * width + x
+            nextPressure[cell] = ((pressure[l] + pressure[r]) * hy2 + (pressure[b] + pressure[t]) * hx2
+              - divergence[cell] * hx2 * hy2) / (2 * (hx2 + hy2))
+          }
+          const swapPressure = pressure
+          pressure = nextPressure
+          nextPressure = swapPressure
+        }
+        for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+          const cell = y * width + x
+          const l = y * width + Math.max(0, x - 1), r = y * width + Math.min(width - 1, x + 1)
+          const b = Math.max(0, y - 1) * width + x, t = Math.min(height - 1, y + 1) * width + x
+          velocity[cell * 2] = clamp(velocity[cell * 2] - (pressure[r] - pressure[l]) / (2 * hx) * .7, -.95, .95)
+          velocity[cell * 2 + 1] = clamp(velocity[cell * 2 + 1] - (pressure[t] - pressure[b]) / (2 * hy) * .7, -.95, .95)
+          response[cell * 2] += (velocity[cell * 2] - response[cell * 2]) * follow
+          response[cell * 2 + 1] += (velocity[cell * 2 + 1] - response[cell * 2 + 1]) * follow
+        }
       }
       publish()
     },

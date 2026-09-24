@@ -47,14 +47,22 @@ const currentField = /* glsl */ `
   uniform float uFieldOpacity;
   varying vec4 vFieldClip;
   const float PI = 3.14159265359;
-  // Flowers use absolute scroll travel. Only the reactor has a clock-driven
-  // current, so reversing scroll restores the same geometry at a given time.
+  // Scroll travel stays absolute. The flower orbit adds a separate clock phase,
+  // so reversing scroll restores the same geometry at a fixed time.
   float motionTime() { return uScroll; }
 
   vec3 rotateSpineField(vec3 p) {
     float angle = uSpineYaw;
     float c = cos(angle), s = sin(angle);
     return vec3(c * p.x + s * p.z, p.y, -s * p.x + c * p.z);
+  }
+
+  float flowerRibbon(float lane) { return step(.66, fract(lane * 7.13)); }
+
+  vec3 rotateFlowerField(vec3 p) {
+    float angle = uTime * .075;
+    float c = cos(angle), s = sin(angle);
+    return rotateSpineField(vec3(c * p.x + s * p.z, p.y, -s * p.x + c * p.z));
   }
 
   vec3 current(float t, float lane, float scrollPhase) {
@@ -66,10 +74,9 @@ const currentField = /* glsl */ `
       -6.6 + t * 6.9,
       -1.4 + sin(t * 8.0 + branch * 6.0) * 1.15
     );
-    // Both populations share one rotating envelope. Advection only chooses
-    // the position along it; anchors keep that position as the field turns.
-    // Unequal, cupped flower volumes wrap the lower half of the column.
-    // Their world height is fixed; only the shared column yaw turns them.
+    // Dense flower volumes and a thinner descending belt share the same slow
+    // orbit. Their height is fixed; the separate falling population still uses
+    // the exact scroll-only path below.
     float tier = min(3., floor(t * 4.));
     float petalAngle = fract(t * 4.) * PI * 2.;
     float petal = .83 + .22 * cos(petalAngle * 5. + tier)
@@ -87,9 +94,24 @@ const currentField = /* glsl */ `
       .85 * branch * branch + .52 * sin(petalAngle * 5. + branch * 8.)
     );
     spine.z += sin(facing) * (spine.x - centre.x);
+    // A third of the same buffer forms two offset descending strands. A few
+    // seeds take a wider, sparse orbit; real scene depth hides them behind the
+    // panels and column. No extra point cloud or screen-aligned ring is used.
+    float ribbonLane = clamp((fract(lane * 7.13) - .66) / .34, 0., 1.);
+    float strand = step(.5, ribbonLane);
+    float ribbonWidth = fract(ribbonLane * 2.);
+    float outerOrbit = step(.88, ribbonLane);
+    float ribbonAngle = t * PI * 2. * mix(2.15, .92, outerOrbit) + strand * PI;
+    float ribbonRadius = mix(4.5 + ribbonWidth * .85 + sin(t * 9.) * .32,
+      7.1 + ribbonWidth * 1.4, outerOrbit);
+    vec3 ribbon = vec3(cos(ribbonAngle) * ribbonRadius,
+      mix(14.5 - t * 29., 10.5 - t * 21., outerOrbit)
+        + strand * 1.3 + (ribbonWidth - .5) * .38,
+      sin(ribbonAngle) * ribbonRadius);
+    spine = mix(spine, ribbon, flowerRibbon(lane));
     spine.xz *= uSpineSpread;
     spine.y += -12.0 * (1.0 - smoothstep(.205, .29, uScroll / 55.0));
-    spine = rotateSpineField(spine);
+    spine = rotateFlowerField(spine);
     float progress = uScroll / 55.;
     float formed = smoothstep(.668, .725, progress);
     float fluidTime = uTime * .18;
@@ -175,6 +197,7 @@ const dustVertex = /* glsl */ `
     float speed = 0.028 + uWeights.x * 0.004 + uWeights.y * 0.055 + uWeights.z * 0.038;
     float phaseScroll = aAdvected * mix(motionTime(), max(0., uScroll - .715 * 55.), uWeights.y);
     float spineWeight = uWeights.x * (1.0 - uWeights.y) * (1.0 - uWeights.z) * (1.0 - uWeights.w);
+    float ribbonWeight = flowerRibbon(lane) * spineWeight * (1. - aAdvected);
     float t = mix(fract(position.x + phaseScroll * speed * (0.76 + lane * 0.48)), position.x, max(spineWeight, uWeights.y));
     vec3 p = current(t, lane, phaseScroll);
     // Independent column flow spans its visible height. Absolute travel
@@ -193,7 +216,8 @@ const dustVertex = /* glsl */ `
     vec3 scatter = vec3(cos(turn), sin(turn * 0.83) * 0.62, sin(turn)) * width;
     scatter.z += aDust.z * (0.18 + (1.0 - uWeights.y) * 0.38);
     scatter *= mix(1., mix(.65, 1., smoothstep(.668, .725, uScroll / 55.)), uWeights.y);
-    p += mix(scatter, rotateSpineField(scatter), spineWeight);
+    vec3 columnScatter = mix(rotateFlowerField(scatter), rotateSpineField(scatter), aAdvected);
+    p += mix(scatter, columnScatter, spineWeight);
     // Most device grains spread across a fine radial cloud, with a few smaller
     // strays. This is still the same field, without a second opaque ring.
     float stray = step(.94, position.z);
@@ -205,7 +229,7 @@ const dustVertex = /* glsl */ `
     float bokeh = aDust.w;
     if (bokeh > 0.5) {
       vec3 anchored = vec3((lane - 0.5) * 14.0, (position.x - 0.5) * 13.0 + uWeights.w * 3.0, -2.0 + aDust.z * 6.0);
-      anchored = mix(anchored, rotateSpineField(anchored), uWeights.x);
+      anchored = mix(anchored, rotateFlowerField(anchored), uWeights.x);
       p = mix(anchored, p, uWeights.y);
     }
     // Scale the complete ring, including its diffuse rim, about its own centre.
@@ -253,6 +277,7 @@ const dustVertex = /* glsl */ `
     // Pearlescent grains fill both flower volumes and the thicker reactor rim;
     // sparse strays retain a finer silhouette around the dense core.
     float grainScale = 1.0 + spineWeight * (.55 + .30 * cluster);
+    grainScale *= mix(1., .78, ribbonWeight);
     grainScale *= mix(1., .72, aAdvected * spineWeight);
     grainScale *= mix(1.18, 1.18 * mix(1., .7, stray), uWeights.y);
     gl_PointSize = clamp(aDust.y * grainScale * perspective * uPixelRatio, 0.65, 12.0 * uPixelRatio);
@@ -261,15 +286,30 @@ const dustVertex = /* glsl */ `
     deviceColor = mix(deviceColor, vec3(.24, .065, .65), (1. - formed) * (.4 + pearl * .6));
     deviceColor = mix(deviceColor, vec3(.90, .56, .20), pow(pearl, 7.) * .7);
     vColor = mix(currentColor(lane, t), deviceColor, uWeights.y);
+    float ribbonHue = .5 + .5 * sin(t * 11. + lane * 4.);
+    vec3 ribbonColor = mix(vec3(.30,.12,.72), vec3(.91,.23,.56), ribbonHue);
+    ribbonColor = mix(ribbonColor, vec3(.08,.72,.79), smoothstep(.76,.98, ribbonHue));
+    vColor = mix(vColor, ribbonColor, ribbonWeight);
     // Broad folds have shaded recesses and lit crests. Keeping this attached
     // to the flower coordinates gives volume without whitening every grain.
     float flowerFold = .5 + .5 * sin(fract(lane * 2.) * 23. + t * 79. + sin(t * 29.) * 3.);
-    vColor *= mix(1., .16 + .84 * pow(flowerFold, 1.8), spineWeight * (1. - aAdvected));
+    vColor *= mix(1., .16 + .84 * pow(flowerFold, 1.8), spineWeight * (1. - aAdvected) * (1. - ribbonWeight));
     vec3 litWorld = (modelMatrix * vec4(p, 1.)).xyz;
     vColor += aetherLightCloud(litWorld, vec3(0., .5, .866), uTime, uDarkness)
       * (.07 + uWeights.y * .10);
     #ifdef AETHER_LIGHT_FILM
       if (uLightFilmReady > .5) {
+        // Forest grains take their hue and dark intervals from the film. Keep
+        // only a faint mineral tint so the fixed gold cannot cover its color.
+        float forestWeight = (1. - uWeights.x) * (1. - uWeights.y) * (1. - uWeights.z);
+        if (forestWeight > .001) {
+          vec3 forestRadiance = aetherFilmRadiance(litWorld);
+          float forestLight = smoothstep(.015, .58,
+            dot(forestRadiance, vec3(.2126, .7152, .0722)));
+          vec3 forestColor = vColor * (.08 + forestLight * .18)
+            + forestRadiance * (1.1 + forestLight * .6);
+          vColor = mix(vColor, forestColor, forestWeight);
+        }
         vec3 aperture = aetherApertureFilm(litWorld);
         vColor = mix(vColor, vColor * (.18 + dot(aperture, vec3(.2126,.7152,.0722)) * 2.5)
           + aperture * 1.5, uWeights.y);
@@ -285,12 +325,13 @@ const dustVertex = /* glsl */ `
     float shimmer = 0.73 + sin(uTime * 1.7 + phase * 7.0) * 0.2;
     float seam = smoothstep(0.0, 0.045, t) * (1.0 - smoothstep(0.94, 1.0, t));
     float petalPhase = fract(t * 4.);
-    seam *= mix(1., smoothstep(0., .015, petalPhase) * (1. - smoothstep(.985, 1., petalPhase)), spineWeight * (1. - aAdvected));
+    seam *= mix(1., smoothstep(0., .015, petalPhase) * (1. - smoothstep(.985, 1., petalPhase)), spineWeight * (1. - aAdvected) * (1. - ribbonWeight));
     float distanceFade = exp(-max(0.0, -mv.z - 13.0) * 0.043);
     vAlpha = shimmer * mix(seam, 1.0, uWeights.y) * distanceFade * mix(0.72, 0.19, bokeh);
     vAlpha *= mix(1.0, .62 * mix(1., .22, bokeh), uWeights.y);
     vAlpha *= (1.0 - uDarkness * 0.23) * (1.0 + uWeights.x * 0.16);
     vAlpha *= 1. + spineWeight * (1. - aAdvected) * .30;
+    vAlpha *= mix(1., .56, ribbonWeight);
     vAlpha *= uFieldOpacity;
   }
 `
@@ -482,7 +523,7 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
   const particles = new THREE.Points(dustGeometry, dustMaterial)
   particles.name = 'aether-current-particles'
   particles.frustumCulled = false
-  particles.userData.motion = 'fixed flowers; reversible column fall; slow internal reactor current'
+  particles.userData.motion = 'slow flower and belt orbit; reversible column fall; slow internal reactor current'
   particles.userData.fixedCount = count - advectedCount
   particles.userData.advectedCount = advectedCount
 

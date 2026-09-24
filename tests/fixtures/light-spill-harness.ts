@@ -38,8 +38,10 @@ const externalDisposals = { black: 0, white: 0, warm: 0, cool: 0 }
 for (const name of Object.keys(textures) as FilmFrame[])
   textures[name].addEventListener('dispose', () => externalDisposals[name]++)
 const film = createLightFilmUniforms(textures.black)
+const forestFilm = createLightFilmUniforms(textures.black)
 film.ready.value = 1
-const spill = createSceneLightShafts(scene, false, false, film)
+forestFilm.ready.value = 1
+const spill = createSceneLightShafts(scene, false, false, film, forestFilm)
 let disposed = false
 
 function summarize(bytes: Uint8Array) {
@@ -59,7 +61,7 @@ function changedBytes(a: Uint8Array, b: Uint8Array) {
   return count
 }
 
-function probe(progress: number) {
+function probe(progress: number, source: 'shared' | 'forest' | 'chamber' = 'shared') {
   const journey = sampleJourney(progress)
   camera.position.set(
     Math.sin(journey.azimuth) * Math.cos(journey.elevation) * journey.radius,
@@ -70,7 +72,8 @@ function probe(progress: number) {
   camera.updateMatrixWorld()
   const calls: number[] = [], frameDeltas: number[] = [], programs: number[] = [], errors: number[] = []
   const draws = (name: FilmFrame) => {
-    film.map.value = textures[name]
+    film.map.value = source === 'forest' ? textures.black : textures[name]
+    forestFilm.map.value = source === 'chamber' ? textures.black : textures[name]
     // The exact same scene time and camera isolate film contribution.
     spill.update(18, progress, camera)
     const frame = renderer.info.render.frame

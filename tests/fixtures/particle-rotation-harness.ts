@@ -2,7 +2,7 @@ import * as THREE from 'three'
 import { createAtmosphere } from '../../src/Atmosphere'
 import { createSceneWorlds } from '../../src/SceneWorlds'
 
-export function sampleRotation(progress = .4, mobile = false) {
+export function sampleRotation(progress = .4, mobile = false, lane = .3) {
   const scene = new THREE.Scene()
   const worlds = createSceneWorlds(scene, true, mobile)
   const matter = scene.getObjectByName('aether-matter')!
@@ -15,7 +15,7 @@ export function sampleRotation(progress = .4, mobile = false) {
   camera.position.z = 20
   const geometry = new THREE.BufferGeometry()
   geometry.setAttribute('position', new THREE.Float32BufferAttribute([.25, 1.2, .3], 3))
-  geometry.setAttribute('aDust', new THREE.Float32BufferAttribute([.3, 1, .2, 0], 4))
+  geometry.setAttribute('aDust', new THREE.Float32BufferAttribute([lane, 1, .2, 0], 4))
   geometry.setAttribute('aAdvected', new THREE.Float32BufferAttribute([0], 1))
   // Execute the production vertex shader, then read its local position from
   // a float pixel. No duplicated CPU field equations stand in for the shader.
@@ -30,8 +30,8 @@ export function sampleRotation(progress = .4, mobile = false) {
   const point = new THREE.Points(geometry, material)
   point.frustumCulled = false
   probe.add(point)
-  const read = (progress: number, moving = false) => {
-    atmosphere.update(10, progress, 1)
+  const read = (progress: number, moving = false, time = 10) => {
+    atmosphere.update(time, progress, 1)
     geometry.getAttribute('position').setX(0, .25)
     geometry.getAttribute('position').needsUpdate = true
     geometry.getAttribute('aAdvected').setX(0, moving ? 1 : 0)
@@ -58,7 +58,9 @@ export function sampleRotation(progress = .4, mobile = false) {
     const outgoingY = scene.getObjectByName('aether-outgoing-bone-current')!.position.y
     return { start, expected, end, anchors: [anchorStart, anchorEnd, outgoingY],
       movingStart: read(progress, true), moving: read(progress + .015, true),
-      movingReverse: read(progress, true), reverse: read(progress) }
+      movingReverse: read(progress, true), reverse: read(progress),
+      idle: read(progress, false, 18), idleReverse: read(progress, false, 10),
+      movingIdle: read(progress, true, 18) }
   } finally {
     worlds.dispose(); atmosphere.dispose(); geometry.dispose(); material.dispose(); target.dispose(); renderer.dispose()
   }

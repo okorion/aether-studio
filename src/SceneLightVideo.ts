@@ -3,9 +3,9 @@ import * as THREE from 'three'
 type LightVideoState = 'idle' | 'loading' | 'ready' | 'playing' | 'paused' | 'blocked' | 'error' | 'disposed'
 
 /** One lazy decoder shared by lighting surfaces; no media request before activation. */
-export function createSceneLightVideo() {
+export function createSceneLightVideo({ source = '/media/light-projection.mp4', role = 'light-projection' } = {}) {
   const video = document.createElement('video')
-  video.dataset.mediaRole = 'light-projection'
+  video.dataset.mediaRole = role
   video.muted = video.defaultMuted = true
   video.loop = true
   video.playsInline = true
@@ -13,10 +13,10 @@ export function createSceneLightVideo() {
   video.crossOrigin = 'anonymous'
 
   const fallback = new THREE.DataTexture(new Uint8Array([0, 0, 0, 255]), 1, 1)
-  fallback.name = 'aether-light-projection-fallback'
+  fallback.name = `aether-${role}-fallback`
   fallback.needsUpdate = true
   const film = new THREE.VideoTexture(video)
-  film.name = 'aether-light-projection-video'
+  film.name = `aether-${role}-video`
   film.colorSpace = THREE.SRGBColorSpace
   film.generateMipmaps = false
 
@@ -92,7 +92,7 @@ export function createSceneLightVideo() {
     try {
       if (!attached) {
         attached = true
-        video.src = '/media/light-projection.mp4'
+        video.src = source
         video.load()
       }
       if (failed()) return

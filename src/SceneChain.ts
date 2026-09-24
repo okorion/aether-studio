@@ -30,7 +30,8 @@ export function createChainGeometry(software: boolean, mobile: boolean) {
 }
 
 const CHAIN_RADIUS = 1.85
-const CHAIN_TURN_PER_HEIGHT = .85
+// About 63 degrees above horizontal: a steep wrap, not a shallow coil.
+const CHAIN_TURN_PER_HEIGHT = .28
 const CHAIN_TRACK_HEIGHT = 20
 const CHAIN_ARC_PER_HEIGHT = Math.hypot(1, CHAIN_RADIUS * CHAIN_TURN_PER_HEIGHT)
 
@@ -64,7 +65,8 @@ class ColumnChainCurve extends THREE.Curve<THREE.Vector3> {
 export function sampleChainPath(progress: number) {
   // The complete strand feeds down the helix; neither endpoint wraps or scales.
   // Its common parent still supplies the column's world rotation and descent.
-  return new ColumnChainCurve(-.9 - smooth(.27, .65, progress) * 1.65)
+  // Start higher so the faster feed still leaves the complete free end in view.
+  return new ColumnChainCurve(1.65 - smooth(.27, .65, progress) * 4.4)
 }
 
 export function createChainMaterial(software: boolean) {

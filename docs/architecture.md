@@ -19,7 +19,7 @@
 | 대상 | 현재 동작 | 구현 |
 | --- | --- | --- |
 | 상단·하단 포레스트 | 고정된 월드 위치의 가지·잎·입자가 카메라 시차를 만든다. 마우스의 이동 방향이 잎과 입자에 잠시 남는다. | [ForestGeometry](../src/ForestGeometry.ts), [SceneForest](../src/SceneForest.ts) |
-| 본 컬럼·체인 | 마디 방향이 높이에 따라 조금씩 달라진다. 체인 경로도 중심의 굽힘을 따른다. | [SceneSpine](../src/SceneSpine.ts) |
+| 본 컬럼·체인 | 마디 방향이 높이에 따라 달라진다. 한 줄 체인이 컬럼을 감고 끝 링크가 스크롤을 따라 내려온다. | [SceneSpine](../src/SceneSpine.ts), [SceneChain](../src/SceneChain.ts) |
 | 본 컬럼 입자 | 약 80%는 경로 위의 위치를 유지하고 나머지는 같은 경로를 따라 이동한다. 두 무리 모두 본 컬럼 주변의 회전을 공유하며, 고정 입자도 구름과 함께 회전한다. | [Atmosphere](../src/Atmosphere.ts) |
 | 모니터 | 본 컬럼 앞뒤의 사선 나선을 따라 위치·높이·방향이 함께 바뀐다. 호버는 나선 바깥쪽으로 조금 이동시키며 클릭은 프로젝트 상세를 연다. | [SceneMonitors](../src/SceneMonitors.ts) |
 | 리액터 | 고정된 높이의 금속 장치 안으로 O 입자가 모인다. 포인터 주변의 입자는 변형됐다가 돌아온다. | [SceneWorlds](../src/SceneWorlds.ts), [Atmosphere](../src/Atmosphere.ts) |

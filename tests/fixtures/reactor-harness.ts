@@ -55,9 +55,10 @@ export function probeReactor(mobile: boolean, software: boolean) {
     camera.lookAt(0, j.height, 0); camera.updateMatrixWorld(true)
     const projection = start.map(p => new THREE.Vector3(...p as [number, number, number]).project(camera).toArray())
     const mid = read(.690), end = read(.735), stopped = read(.690, 200)
+    const frozen = read(.690, 200)
     read(.78); read(.61); read(.74)
     const reverse = read(.640)
-    return { start, mid, end, stopped, reverse, centre: centre.toArray(), bore, centreHits, rimHits,
+    return { start, mid, end, stopped, frozen, reverse, centre: centre.toArray(), bore, centreHits, rimHits,
       projection, centreProjection: centre.clone().project(camera).toArray() }
   } finally { worlds.dispose(); atmosphere.dispose(); geometry.dispose(); material.dispose(); target.dispose(); renderer.dispose() }
 }

@@ -46,8 +46,8 @@ const currentField = /* glsl */ `
   uniform float uFieldOpacity;
   varying vec4 vFieldClip;
   const float PI = 3.14159265359;
-  // The base field follows scroll alone. Only the device's local pointer bend
-  // is reversible at rest; time itself still changes luminance, not the flow.
+  // Flowers use absolute scroll travel. Only the reactor has a clock-driven
+  // current, so reversing scroll restores the same geometry at a given time.
   float motionTime() { return uScroll; }
 
   vec3 rotateSpineField(vec3 p) {
@@ -71,16 +71,17 @@ const currentField = /* glsl */ `
     // Their world height is fixed; only the shared column yaw turns them.
     float tier = min(3., floor(t * 4.));
     float petalAngle = fract(t * 4.) * PI * 2.;
-    float petal = .77 + .18 * cos(petalAngle * 5. + tier)
-      + .07 * sin(petalAngle * 9. + branch * 3.);
-    float radius = (.18 + sqrt(branch) * (1.5 + .3 * sin(tier * 4. + side))) * petal;
+    float petal = .73 + .16 * cos(petalAngle * 5. + tier)
+      + .13 * sin(petalAngle * 9. + branch * 7.)
+      + .06 * sin(petalAngle * 23. + tier * 4.);
+    float radius = (.12 + sqrt(branch) * (1.7 + .45 * sin(tier * 4. + side))) * petal;
     float facing = side * .45 + (tier - 1.5) * .53;
     vec3 centre = vec3(side * (2.2 + .55 * sin(tier * 2.4)),
       (tier - 1.5) * 3.25 + side * .6, sin(tier * 2.1 + side) * 1.5);
     vec3 spine = centre + vec3(
       cos(petalAngle) * radius,
       sin(petalAngle) * radius,
-      .80 * branch * branch + .23 * sin(petalAngle * 5.)
+      .90 * branch * branch + .38 * sin(petalAngle * 5. + branch * 8.)
     );
     spine.z += sin(facing) * (spine.x - centre.x);
     spine.xz *= uSpineSpread;
@@ -88,10 +89,14 @@ const currentField = /* glsl */ `
     spine = rotateSpineField(spine);
     float progress = uScroll / 55.;
     float formed = smoothstep(.668, .725, progress);
-    float orbit = t * PI * 2.0 + scrollPhase * 0.35 * formed;
-    float cross = branch * PI * 2.0;
+    float fluidTime = uTime * .24;
+    float orbit = t * PI * 2.0 + (scrollPhase * .35 + fluidTime
+      + .16 * sin(t * 12. + fluidTime * .7)) * formed;
+    float cross = branch * PI * 2.0 + formed * (fluidTime * 1.3
+      + .35 * sin(orbit * 3. - fluidTime));
     float lobe = .83 + .17 * sin(orbit * 3. + .8) + .10 * sin(orbit * 7.);
-    float tube = (.22 + .32 * sqrt(branch)) * lobe;
+    float tube = (.24 + .36 * sqrt(branch)) * lobe
+      * (1. + .12 * sin(orbit * 4. - fluidTime * 1.2));
     vec3 reactor = vec3(cos(orbit) * (1.47 + cos(cross) * tube),
       sin(orbit) * (1.68 + cos(cross) * tube), sin(cross) * tube * .95);
     // A ragged hanging volume, with several unequal tributaries. Each seed
@@ -128,10 +133,11 @@ const currentField = /* glsl */ `
   vec3 currentColor(float lane, float t) {
     float variation = sin(lane * 39.0 + t * 5.0) * 0.5 + 0.5;
     vec3 gold = mix(vec3(0.28, 0.36, 0.08), vec3(0.95, 0.51, 0.10), variation);
-    float hue = .5 + .5 * sin(floor(t * 4.) * 2.7 + lane * 13. + t * 11.);
-    vec3 violet = mix(vec3(.12, .045, .62), vec3(.80, .09, .37), smoothstep(.1, .65, hue));
-    violet = mix(violet, vec3(.04, .64, .77), smoothstep(.69, .9, hue));
-    violet = mix(violet, vec3(.98, .49, .14), pow(variation, 9.) * .75);
+    // Color follows coherent flower lobes, not an independent rainbow per seed.
+    float hue = .5 + .5 * sin(t * 29. + sin(t * 73.) * .4 + floor(lane * 2.) * 1.8 + fract(lane * 2.) * .5);
+    vec3 violet = mix(vec3(.15, .035, .40), vec3(.62, .10, .37), smoothstep(.18, .82, hue));
+    violet = mix(violet, vec3(.12, .39, .44), smoothstep(.88, .99, hue) * .75);
+    violet = mix(violet, vec3(.65, .27, .16), pow(variation, 12.) * .22);
     vec3 cyan = mix(vec3(0.08, 0.87, 0.58), vec3(0.65, 0.24, 0.94), variation);
     vec3 iridescence = mix(vec3(0.08, 0.51, 0.55), vec3(0.77, 0.49, 0.18), variation);
     vec3 color = mix(gold, violet, uWeights.x);
@@ -150,19 +156,23 @@ const dustVertex = /* glsl */ `
   varying float vAlpha;
   varying float vBokeh;
   varying float vMachine;
+  varying float vGrainSeed;
   void main() {
     float lane = aDust.x;
     float phase = position.y;
-    // Phase advection travels the full current. Faded ends hide loop wrapping.
+    vGrainSeed = fract(phase * 1.618 + lane * 7.3);
+    // Advect only the reactor around its closed current. Flower seeds never
+    // wrap: their moving subset falls through the world with absolute scroll.
     float speed = 0.028 + uWeights.x * 0.004 + uWeights.y * 0.055 + uWeights.z * 0.038;
     float phaseScroll = aAdvected * mix(motionTime(), max(0., uScroll - .715 * 55.), uWeights.y);
-    float t = fract(position.x + phaseScroll * speed * (0.76 + lane * 0.48));
+    float spineWeight = uWeights.x * (1.0 - uWeights.y) * (1.0 - uWeights.z) * (1.0 - uWeights.w);
+    float t = mix(fract(position.x + phaseScroll * speed * (0.76 + lane * 0.48)), position.x, spineWeight);
     vec3 p = current(t, lane, phaseScroll);
+    p.y -= aAdvected * spineWeight * max(0., uScroll / 55. - .25) * 45.;
     float cluster = 0.32 + 0.68 * pow(sin(t * 35.0 + lane * 8.0) * 0.5 + 0.5, 2.0);
     float width = (0.13 + position.z * (0.72 + uWeights.x * .73)) * cluster;
     width *= 1.0 - uWeights.y * 0.65;
     width *= 1.0 - uWeights.x * (1.0 - uWeights.y) * .58;
-    float spineWeight = uWeights.x * (1.0 - uWeights.y) * (1.0 - uWeights.z) * (1.0 - uWeights.w);
     float turn = phase + t * 37.0 + phaseScroll * 0.6 * (1.0 - spineWeight);
     vec3 scatter = vec3(cos(turn), sin(turn * 0.83) * 0.62, sin(turn)) * width;
     scatter.z += aDust.z * (0.18 + (1.0 - uWeights.y) * 0.38);
@@ -226,7 +236,7 @@ const dustVertex = /* glsl */ `
     float perspective = 12.0 / max(2.0, -mv.z);
     // Pearlescent grains fill both flower volumes and the thicker reactor rim;
     // sparse strays retain a finer silhouette around the dense core.
-    float grainScale = 1.0 + uWeights.x * (0.30 + 0.28 * cluster);
+    float grainScale = 1.0 + uWeights.x * (.08 + .18 * cluster);
     grainScale *= mix(1.18, 1.18 * mix(1., .7, stray), uWeights.y);
     gl_PointSize = clamp(aDust.y * grainScale * perspective * uPixelRatio, 0.65, 12.0 * uPixelRatio);
     float pearl = .5 + .5 * sin(phase * 2.3 + lane * 11.);
@@ -263,26 +273,26 @@ const dustFragment = /* glsl */ `
   varying float vAlpha;
   varying float vBokeh;
   varying float vMachine;
+  varying float vGrainSeed;
   void main() {
     float entry = fieldEntry();
     if (entry < .003) discard;
     vec2 uv = gl_PointCoord * 2.0 - 1.0;
     float rr = dot(uv, uv);
     if (rr > 1.0) discard;
-    float z = sqrt(max(0.0, 1.0 - rr));
-    vec3 normal = vec3(uv, z);
-    float diffuse = max(0.0, dot(normal, vec3(-0.39, 0.46, 0.79)));
-    float highlight = diffuse * diffuse;
-    highlight *= highlight;
-    highlight *= highlight;
-    #ifndef SOFTWARE_RENDERER
-    highlight *= highlight;
-    #endif
-    float rim = (1.0 - z) * (1.0 - z);
-    // Bound the reflection: dense overlapping micro-grains keep their color.
-    vec3 color = vColor * (0.24 + diffuse * 0.87 + rim * 0.30);
-    color += mix(vColor * .6, vec3(.45,.65,.58), .16) * highlight * mix(.32, .18, vMachine);
-    float shape = 1.0 - smoothstep(0.68, 1.0, rr);
+    // Thin irregular mineral flakes: a translucent centre, broken facets and
+    // a narrow rim replace the smooth diffuse ball that read as ice cream.
+    float angle = atan(uv.y, uv.x) + vGrainSeed * 6.2831853;
+    float perimeter = .85 + .07 * sin(angle * 5. + vGrainSeed * 9.)
+      + .04 * sin(angle * 9.);
+    float edge = sqrt(rr) / perimeter;
+    float shape = 1. - smoothstep(.82, 1., edge);
+    float rim = smoothstep(.62, .87, edge) * shape;
+    float facet = .5 + .5 * sin(floor(angle * 2.4) * 2.7 + vGrainSeed * 19.);
+    float glint = pow(facet, 8.) * rim;
+    vec3 color = vColor * (.65 + facet * .45 + rim * .32);
+    color += mix(vColor, vec3(.70,.64,.85), .3) * glint * .34;
+    shape *= .40 + rim * .45 + facet * .12;
     if (vBokeh > 0.5) {
       shape = exp(-rr * 6.0) * 0.36 + (1.0 - smoothstep(0.06, 0.22, abs(rr - 0.52))) * 0.18;
       color = vColor;
@@ -416,7 +426,7 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
     uPointerStrength: { value: 0 },
     uDevicePointerStrength: { value: 0 },
     uReactorScale: { value: REACTOR.ringScale },
-    uAperture: { value: new THREE.Vector2(REACTOR.apertureY, REACTOR.apertureRadius) },
+    uAperture: { value: new THREE.Vector2(REACTOR.apertureY * REACTOR.heightScale, REACTOR.apertureRadius) },
     uAspect: { value: 1 },
     uFieldOpacity: { value: 1 },
     uEntryEdge: { value: -0.25 },

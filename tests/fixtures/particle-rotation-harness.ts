@@ -30,10 +30,9 @@ export function sampleRotation(progress = .4, mobile = false) {
   const point = new THREE.Points(geometry, material)
   point.frustumCulled = false
   probe.add(point)
-  const read = (progress: number, moving = false, matchedPath = false) => {
+  const read = (progress: number, moving = false) => {
     atmosphere.update(10, progress, 1)
-    const seed = matchedPath ? THREE.MathUtils.euclideanModulo(.25 - progress * 55 * .032 * (.76 + .3 * .48), 1) : .25
-    geometry.getAttribute('position').setX(0, seed)
+    geometry.getAttribute('position').setX(0, .25)
     geometry.getAttribute('position').needsUpdate = true
     geometry.getAttribute('aAdvected').setX(0, moving ? 1 : 0)
     geometry.getAttribute('aAdvected').needsUpdate = true
@@ -58,7 +57,8 @@ export function sampleRotation(progress = .4, mobile = false) {
     atmosphere.update(10, .64, 1)
     const outgoingY = scene.getObjectByName('aether-outgoing-bone-current')!.position.y
     return { start, expected, end, anchors: [anchorStart, anchorEnd, outgoingY],
-      moving: read(progress + .015, true), matched: read(progress + .015, true, true), reverse: read(progress) }
+      movingStart: read(progress, true), moving: read(progress + .015, true),
+      movingReverse: read(progress, true), reverse: read(progress) }
   } finally {
     worlds.dispose(); atmosphere.dispose(); geometry.dispose(); material.dispose(); target.dispose(); renderer.dispose()
   }

@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { createPointerFlow } from './PointerFlow'
+import { forestPitchLimit } from './Journey'
 import { pointerStreakCanSpawn, pointerStreakScopeGLSL, samplePointerStreakScope } from './SceneInteractionScope'
 
 /** Bounded world-space ribbons and pointer-controlled camera input. */
@@ -502,6 +503,10 @@ export function createSceneInteraction(
     },
     update(delta: number, elapsed: number, ratio: number, progress = 0) {
       time = elapsed
+      // Clamp both the target and eased value: no hidden overshoot accumulates
+      // while dragging against the lower forest's downward limit.
+      targetPitch = Math.min(targetPitch, forestPitchLimit(progress))
+      pitch = Math.min(pitch, forestPitchLimit(progress))
       streakScope = samplePointerStreakScope(progress)
       ribbonMaterial.uniforms.uStreakForestExit.value = streakScope.exit
       ribbonMaterial.uniforms.uStreakForestEntry.value = streakScope.entry

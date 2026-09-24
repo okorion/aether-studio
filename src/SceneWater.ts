@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import type { Reflector } from 'three/addons/objects/Reflector.js'
-import { lightChoreographyGLSL, sampleLightChoreography } from './SceneLighting'
+import { lightChoreographyGLSL, sampleLightChoreography, type LightFilmUniforms } from './SceneLighting'
+import { REACTOR } from './Reactor'
 import { createCurtainVisibility, curtainHasCoverage } from './SceneVisibility'
 
 /** A shallow water skin. Desktop reuses the existing planar reflection pass. */
@@ -8,6 +9,7 @@ export function createWaterSurface(
   reflector: Reflector | null,
   width: number,
   depth: number,
+  film?: LightFilmUniforms,
 ) {
   const geometry = reflector ? null : new THREE.PlaneGeometry(width, depth)
   const material = reflector
@@ -24,7 +26,9 @@ export function createWaterSurface(
     uLightDepth: lightDepth,
     uOpacity: opacity,
     uHasReflection: { value: reflector ? 1 : 0 },
+    ...(film ? { uLightFilm: film.map, uLightFilmReady: film.ready } : {}),
   })
+  if (film) material.defines = { ...material.defines, AETHER_LIGHT_FILM: 1 }
   if (!reflector) {
     material.uniforms.tDiffuse = { value: null }
     material.uniforms.textureMatrix = { value: new THREE.Matrix4() }
@@ -95,21 +99,22 @@ export function createWaterSurface(
       float fresnel = .035 + .965 * pow(1. - facing, 5.);
       float shore = smoothstep(.10, .55, waterNoise(p*.24));
       float edge = 1. - smoothstep(.465, .5, max(abs(vWaterUv.x - .5), abs(vWaterUv.y - .5)));
-      vec3 water = vec3(.008, .019, .018);
+      vec3 water = vec3(.0008, .0015, .002);
       // Advected broken highlights make the flow readable without reflection
       // targets on mobile/software. The aperture's pool stays world anchored.
       vec2 flow = p - vec2(.19, -.11) * uTime;
       float crests = pow(max(0.,1.-abs(slope.x+slope.y)*3.),14.);
-      float pool = exp(-dot(p, p) * .045);
+      float pool = exp(-dot(p, p) * .16);
       float breakup = smoothstep(.3,.75,waterNoise(flow*4.));
-      water += vec3(.15,.32,.25)*crests*breakup*(.14+pool*.55);
+      water += vec3(.15,.32,.25)*crests*breakup*pool*.45;
       vec3 cloud = aetherLightCloud(vWaterWorld, normal, uTime, uLightDepth);
       // Transmission is alpha over the visible stone bed; there is no second
       // scene capture or screen-space refraction buffer on any profile.
-      water += cloud * (.055 + shore * .035);
-      vec3 halfVector = normalize(eye + normalize(vec3(-.35, .8, -.25)));
+      water += cloud * pool * (.06 + crests * .18);
+      vec3 aperture = vec3(0., ${REACTOR.worldY + REACTOR.apertureY * REACTOR.heightScale}, 0.);
+      vec3 halfVector = normalize(eye + normalize(aperture - vWaterWorld));
       float glint = pow(max(0., dot(normal, halfVector)), 95.);
-      water += vec3(.48,.65,.61)*glint*.75;
+      water += (vec3(.22,.28,.31)+cloud)*glint*pool*1.2;
       if (uHasReflection > .5) {
         vec2 reflectionUv = vReflection.xy / max(vReflection.w, .0001);
         vec2 warped = clamp(reflectionUv + slope * (.025 + fresnel * .035), .002, .998);
@@ -117,11 +122,11 @@ export function createWaterSurface(
         reflected = mix(reflected, texture2D(tDiffuse,
           clamp(warped + slope * .009, .002, .998)).rgb, .12);
         reflected *= vec3(.72,.91,.83);
-        water = mix(water, reflected, .58 + fresnel * .39);
+        water = mix(water, reflected, .48 + fresnel * .49);
       } else {
         // Mobile/software use the same moving normals and world-space light,
         // without allocating a reflection target or pretending to mirror objects.
-        water += cloud * fresnel * .12;
+        water += cloud * pool * fresnel * .18;
       }
       float alpha = (.62 + fresnel * .35) * mix(.66, 1., shore) * edge * uOpacity;
       gl_FragColor = vec4(water, alpha);

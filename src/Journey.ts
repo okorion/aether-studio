@@ -17,6 +17,9 @@ export const smooth = (a: number, b: number, value: number) => {
 export const windowWeight = (p: number, a: number, b: number, c: number, d: number) =>
   smooth(a, b, p) * (1 - smooth(c, d, p))
 
+/** Positive pitch looks down. Keep the lower clearing near eye level. */
+export const forestPitchLimit = (progress: number) => progress >= .855 ? .04 : .6
+
 // [radius, unwrapped azimuth, elevation, exposure, world height]. The camera
 // follows one descending focus through a fixed environment, never a room swap.
 const cameraScore = [
@@ -24,8 +27,8 @@ const cameraScore = [
   [6.6, 4.3, .01, 1.4, -7.7], [5.2, 6.1, 0, 1.5, -11], [6.5, 6.28, .03, 1.4, -14],
   [9.8, 6.28, .03, 1.38, -16.5], [11.5, 6.28, .03, 1.4, -18.5], [12, 6.28, .02, 1.48, -21],
   [11.6, 6.28, .02, 1.5, -23.5], [11, 6.28, 0, 1.48, -26], [10.6, 6.28, .02, 1.4, -28.5],
-  [11.6, 6.28, .04, 1.2, -31], [12.5, 6.28, .07, 1.15, -33.5], [11.8, 6.35, .12, 1.25, -36],
-  [11, 6.55, .15, 1.42, -38.5], [10.7, 6.78, .11, 1.52, -40.5], [10, 7.0, .03, 1.58, -42.5],
+  [11.6, 6.28, .04, 1.2, -31], [12.5, 6.28, .07, 1.15, -33.5], [11.8, Math.PI * 2, .04, 1.15, -36],
+  [11.1, Math.PI * 2, 0, 1.24, -38.5], [10.2, Math.PI * 2, 0, 1.28, -40.5], [10, Math.PI * 2, 0, 1.3, -42.5],
   [10.8, 6.65, -.03, 1.45, -45], [11.6, 6.3, -.02, 1.2, -47.5], [12, 6.65, .04, .94, -50.5],
   [12, 7.7, .09, .8, -54], [11.6, 10.0, .11, .86, -57.5], [11.4, 12.25, .1, .94, -61.5],
 ]

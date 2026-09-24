@@ -136,11 +136,23 @@ export function createScaleSurface(
       vSurfaceHeat = clamp(max(pointerWave, localTouch), 0., .8) * step(.001, tileClip.w);
       // The automatic front crosses the entire tile sheet in three seconds.
       float tileRadius = length(tileCentre.xy);
-      float waveAge = mod(uSurfaceTime, ${SCALE_WAVE_INTERVAL_SECONDS.toFixed(1)})
+      float cycle = mod(uSurfaceTime, ${SCALE_WAVE_INTERVAL_SECONDS.toFixed(1)});
+      float waveAge = cycle
         - tileRadius / max(uSurfaceExtent, .001) * ${SCALE_WAVE_TRAVEL_SECONDS.toFixed(1)};
-      float heartbeat = smoothstep(.0, .09, waveAge) * (1. - smoothstep(.19, .39, waveAge));
-      float tileAngle = min(1.35, heartbeat * 1.12 + vSurfaceHeat * .90);
-      vec2 radial = tileCentre.xy / max(tileRadius, .001);
+      float heartbeat = smoothstep(.0, .18, waveAge) * (1. - smoothstep(.36, .78, waveAge));
+      vec2 radialField = tileCentre.xy / max(tileRadius, .001) * heartbeat;
+      // Offset wave sources fold the sheet into several intersecting basins.
+      // Every tile stays rigid; the front travels across its local hinge.
+      for (int source=0; source<2; source++) {
+        vec2 origin = source==0 ? vec2(-3.4, 1.1) : vec2(3.6, -.7);
+        vec2 delta = tileCentre.xy-origin;
+        float age = cycle - .55 - float(source)*.55 - length(delta)/max(uSurfaceExtent,.001)*2.2;
+        float pulse = smoothstep(0.,.18,age)*(1.-smoothstep(.36,.78,age));
+        radialField += normalize(delta+vec2(.0001))*pulse*.78;
+        heartbeat = max(heartbeat,pulse*.78);
+      }
+      float tileAngle = min(1.48, heartbeat * 1.32 + vSurfaceHeat * 1.05);
+      vec2 radial = normalize(radialField + tileCentre.xy*.0001+vec2(.00001));
       vec3 tileAxis = tileRadius > .001 ? vec3(radial.y, -radial.x, 0.) : vec3(0., 1., 0.);
       float tileCos = cos(tileAngle);
       float tileSin = sin(tileAngle);
@@ -156,11 +168,13 @@ export function createScaleSurface(
       );
     `)
     shader.vertexShader = shader.vertexShader.replace('#include <begin_vertex>', /* glsl */ `
-      vec3 transformed = aArmour * tileCos + cross(tileAxis, aArmour) * tileSin
-        + tileAxis * dot(tileAxis, aArmour) * (1.0 - tileCos);
+      vec3 hinge = vec3(-radial*.39,0.);
+      vec3 hingedPoint = aArmour-hinge;
+      vec3 transformed = hinge + hingedPoint * tileCos + cross(tileAxis, hingedPoint) * tileSin
+        + tileAxis * dot(tileAxis, hingedPoint) * (1.0 - tileCos);
       vTilePoint = aArmour;
       vSheetPoint = tileCentre.xy + aArmour.xy * tileUnit;
-      transformed.z += (heartbeat * .27 + vSurfaceHeat * .20) / tileUnit;
+      transformed.z -= (heartbeat * .38 - vSurfaceHeat * .12) / tileUnit;
       ${filmEnabled ? /* glsl */ `
         vec4 scalePoint = vec4(transformed, 1.);
         #ifdef USE_INSTANCING

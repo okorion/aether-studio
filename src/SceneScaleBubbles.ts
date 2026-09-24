@@ -20,13 +20,16 @@ export function createScaleBubbles(software: boolean, mobile: boolean) {
   geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
   geometry.setAttribute('aBubbleSeed', new THREE.BufferAttribute(seeds, 1))
   const material = new THREE.ShaderMaterial({
-    uniforms: { uTime: { value: 0 }, uOpacity: { value: 0 } },
+    uniforms: { uTime: { value: 0 }, uOpacity: { value: 0 }, uViewportHeight: { value: 900 }, uPointPixelRatio: { value: 1 } },
     transparent: true, depthWrite: false, depthTest: true,
     vertexShader: /* glsl */ `
       attribute float aBubbleSeed;
       uniform float uTime;
       uniform float uOpacity;
+      uniform float uViewportHeight;
+      uniform float uPointPixelRatio;
       varying float vBubbleOpacity;
+      varying float vBubbleSeed;
       void main() {
         float phase = aBubbleSeed * 6.2831853;
         vec3 drift = vec3(sin(uTime * .31 + phase) * .13,
@@ -34,25 +37,42 @@ export function createScaleBubbles(software: boolean, mobile: boolean) {
           cos(uTime * .27 + phase) * .10);
         vec4 view = modelViewMatrix * vec4(position + drift, 1.);
         gl_Position = projectionMatrix * view;
-        gl_PointSize = clamp((2.0 + aBubbleSeed * 2.7) * 14. / max(3., -view.z), 1.2, 5.2);
-        vBubbleOpacity = uOpacity * (.22 + aBubbleSeed * .23);
+        gl_PointSize = clamp((.035 + pow(aBubbleSeed, 4.) * .32) * uViewportHeight
+          * projectionMatrix[1][1] * .5 / max(3., -view.z), 2. * uPointPixelRatio, 42. * uPointPixelRatio);
+        vBubbleOpacity = uOpacity * (.28 + aBubbleSeed * .24);
+        vBubbleSeed = aBubbleSeed;
       }
     `,
     fragmentShader: /* glsl */ `
       varying float vBubbleOpacity;
+      varying float vBubbleSeed;
       void main() {
         vec2 point = gl_PointCoord * 2. - 1.;
         float radius = length(point);
         if (radius > 1.) discard;
-        float rim = smoothstep(.48, .91, radius) * (1. - smoothstep(.91, 1., radius));
-        float glint = exp(-dot(point - vec2(-.35, .34), point - vec2(-.35, .34)) * 22.);
-        float alpha = (rim * .72 + glint * .22 + .08) * vBubbleOpacity;
-        gl_FragColor = vec4(vec3(.66, .80, .91), alpha);
+        float rim = smoothstep(.80, .94, radius) * (1. - smoothstep(.96, 1., radius));
+        float glint = exp(-dot(point - vec2(-.42, -.62), point - vec2(-.42, -.62)) * 170.);
+        float sheen = pow(max(0.,-point.y),4.)*rim;
+        vec3 film = .55 + .25*cos(vec3(0.,2.1,4.2)+radius*18.+atan(point.y,point.x)*1.4+vBubbleSeed*4.);
+        vec3 color = mix(vec3(.44,.61,.64),film,.48)+vec3(glint*.8+sheen*.35);
+        float alpha = (rim * .32 + glint * .7 + sheen*.3 + .003) * vBubbleOpacity;
+        gl_FragColor = vec4(color, alpha);
+        #include <tonemapping_fragment>
+        #include <colorspace_fragment>
       }
     `,
   })
   const points = new THREE.Points(geometry, material)
   points.name = 'aether-scale-bubbles'
   points.frustumCulled = false
+  const viewport = new THREE.Vector4()
+  const logicalSize = new THREE.Vector2()
+  points.onBeforeRender = renderer => {
+    renderer.getCurrentViewport(viewport)
+    renderer.getSize(logicalSize)
+    material.uniforms.uViewportHeight.value = viewport.w
+    // Include both display DPR and reduced-resolution glow/reflection passes.
+    material.uniforms.uPointPixelRatio.value = viewport.w / Math.max(1, logicalSize.y)
+  }
   return { points, geometry, material }
 }

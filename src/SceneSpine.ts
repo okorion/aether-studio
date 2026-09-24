@@ -46,7 +46,7 @@ function vertebraGeometry(software: boolean) {
     const x = positions.getX(i), y = positions.getY(i), z = positions.getZ(i)
     const angle = Math.atan2(x, z)
     const bulge = 1 + Math.sin(angle * 3 + y * 4.1) * .14
-      + Math.cos(angle + .7) * .085 + Math.sin(angle * 5 - y * 10.7) * .05
+      + Math.cos(angle + .7) * .11 + Math.sin(angle * 5 - y * 10.7) * .09
     const rimWarp = (Math.sin(angle + .3) * .068 + Math.sin(angle * 3 - y * 7) * .035)
       * Math.min(1, Math.hypot(x, z) / .4)
     // A kidney-shaped body leaves space behind it for the neural arch.
@@ -84,9 +84,9 @@ function vertebraGeometry(software: boolean) {
   ], segments, sides, .28, .86))
 
   const tint = new THREE.Color()
-  const silver = new THREE.Color(.72, .78, .82)
-  const teal = new THREE.Color(.28, .57, .61)
-  const violet = new THREE.Color(.48, .34, .65)
+  const silver = new THREE.Color(.62, .58, .64)
+  const teal = new THREE.Color(.09, .33, .35)
+  const violet = new THREE.Color(.29, .12, .40)
   for (const part of parts) {
     const p = part.getAttribute('position')
     const normals = part.getAttribute('normal')
@@ -94,7 +94,7 @@ function vertebraGeometry(software: boolean) {
     for (let i = 0; i < p.count; i++) {
       // Broad, non-periodic-looking dents break a lathed rim's straight highlight.
       const relief = Math.sin(p.getX(i) * 5.7 + p.getZ(i) * 3.1)
-        * Math.cos(p.getY(i) * 11.3 - p.getZ(i) * 4.2) * .024
+        * Math.cos(p.getY(i) * 11.3 - p.getZ(i) * 4.2) * .048
       p.setXYZ(i, p.getX(i) + normals.getX(i) * relief,
         p.getY(i) + normals.getY(i) * relief, p.getZ(i) + normals.getZ(i) * relief)
       const angle = Math.atan2(p.getX(i), p.getZ(i) - .13)
@@ -134,11 +134,11 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
   discGeometry.translate(0, 0, .23)
   const linkGeometry = createChainGeometry(software, mobile)
   const boneMaterial = new THREE.MeshPhysicalMaterial({
-    color: 0xdce2e6, vertexColors: true, metalness: software ? .48 : .93,
-    roughness: software ? .51 : .34, envMapIntensity: 1.28,
-    iridescence: software ? 0 : .66, iridescenceIOR: 1.34,
-    iridescenceThicknessRange: [170, 460], clearcoat: software ? 0 : .09,
-    clearcoatRoughness: .36, transparent: true,
+    color: 0xc6cbd4, vertexColors: true, metalness: software ? .48 : .93,
+    roughness: software ? .51 : .29, envMapIntensity: 1.45,
+    iridescence: software ? 0 : 1, iridescenceIOR: 1.48,
+    iridescenceThicknessRange: [110, 680], clearcoat: software ? 0 : .23,
+    clearcoatRoughness: .24, transparent: true,
   })
   if (!software) {
     // Texture-free micrograin stays attached to the bone through instancing.
@@ -148,7 +148,17 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
       shader.vertexShader = 'varying vec3 vSpineSurface;\n' + shader.vertexShader
       shader.vertexShader = shader.vertexShader.replace('#include <begin_vertex>',
         '#include <begin_vertex>\nvSpineSurface = position;')
-      shader.fragmentShader = 'varying vec3 vSpineSurface;\n' + shader.fragmentShader
+      shader.fragmentShader = /* glsl */ `
+        varying vec3 vSpineSurface;
+        float spineHash(vec3 p) { return fract(sin(dot(p,vec3(127.1,311.7,74.7)))*43758.5453); }
+        float spineNoise(vec3 p) {
+          vec3 i=floor(p),f=fract(p); f=f*f*(3.-2.*f);
+          return mix(mix(mix(spineHash(i),spineHash(i+vec3(1,0,0)),f.x),
+            mix(spineHash(i+vec3(0,1,0)),spineHash(i+vec3(1,1,0)),f.x),f.y),
+            mix(mix(spineHash(i+vec3(0,0,1)),spineHash(i+vec3(1,0,1)),f.x),
+            mix(spineHash(i+vec3(0,1,1)),spineHash(i+vec3(1,1,1)),f.x),f.y),f.z);
+        }
+      ` + shader.fragmentShader
       shader.fragmentShader = shader.fragmentShader.replace('#include <normal_fragment_maps>', `
         #include <normal_fragment_maps>
         vec3 spineDx = dFdx(-vViewPosition);
@@ -157,20 +167,21 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
         vec3 spineRy = cross(normal, spineDx);
         float spineDet = dot(spineDx, spineRx);
         float spineFootprint = max(length(dFdx(vSpineSurface)), length(dFdy(vSpineSurface))) * 150.0;
-        float spineGrain = sin(dot(vSpineSurface, vec3(113.0, 79.0, 137.0)))
-          * sin(dot(vSpineSurface, vec3(61.0, 151.0, 97.0)));
+        float spineGrain = spineNoise(vSpineSurface * 120.) * 2. - 1.;
         float spineGrainWeight = 1.0 - smoothstep(1.5, 6.0, spineFootprint);
-        vec3 spineGradient = dFdx(spineGrain) * spineRx + dFdy(spineGrain) * spineRy;
+        float spineRelief = spineGrain * .0014 * spineGrainWeight
+          + spineNoise(vSpineSurface * 17.) * .008;
+        vec3 spineGradient = dFdx(spineRelief) * spineRx + dFdy(spineRelief) * spineRy;
         normal = normalize(max(abs(spineDet), 0.0000001) * normal
-          - sign(spineDet) * spineGradient * 0.00045 * spineGrainWeight);
+          - sign(spineDet) * spineGradient);
         float spineWear = sin(dot(vSpineSurface, vec3(9.1, 13.7, 7.3)))
           * cos(dot(vSpineSurface, vec3(17.3, 5.7, 11.1)));
-        float spinePatina = .5 + .5 * sin(vSpineSurface.x * 2.3
-          + vSpineSurface.z * 2.8 + sin(vSpineSurface.y * 3.7) * .8);
+        float spinePatina = clamp(spineNoise(vSpineSurface*5.8)*1.4-.2
+          + (spineNoise(vSpineSurface*19.)-.5)*.22,0.,1.);
         float spinePolish = smoothstep(.50, .88, spinePatina);
         roughnessFactor = clamp(roughnessFactor + spineWear * .075
           + (1. - spinePolish) * .11 - spinePolish * .075
-          + spineGrain * spineGrainWeight * .025, .23, .56);
+          + spineGrain * spineGrainWeight * .055, .16, .58);
       `)
       // PhysicalMaterial otherwise uses only the maximum film thickness when
       // no map is supplied. Vary it over the existing surface without a texture
@@ -210,8 +221,8 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
       shader.fragmentShader = shader.fragmentShader.replace('#include <alphamap_fragment>', `
         #include <alphamap_fragment>
         vec2 spineScreen = vSpineClip.xy / vSpineClip.w * .5 + .5;
-        float spineNoise = fract(sin(dot(floor(spineScreen * vec2(1800., 1100.)), vec2(12.9898, 78.233))) * 43758.5453);
-        float spineBoundary = spineScreen.y - (spineScreen.x - .5) * .20 + (spineNoise - .5) * .009;
+        float spineBoundaryNoise = fract(sin(dot(floor(spineScreen * vec2(1800., 1100.)), vec2(12.9898, 78.233))) * 43758.5453);
+        float spineBoundary = spineScreen.y - (spineScreen.x - .5) * .20 + (spineBoundaryNoise - .5) * .009;
         float spineEntry = (1. - smoothstep(uSpineEntry - .006, uSpineEntry + .006, spineBoundary))
           * smoothstep(uSpineExit - .006, uSpineExit + .006, spineBoundary);
         if (spineEntry < .003) discard;

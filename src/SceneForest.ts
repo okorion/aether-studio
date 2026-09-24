@@ -1,7 +1,7 @@
 import * as THREE from 'three'
-import { sampleJourney, windowWeight } from './Journey'
+import { sampleJourney } from './Journey'
 import { sampleLayers } from './SceneLayers'
-import { createForestGeometry } from './ForestGeometry'
+import { createForestGeometry, FOREST_FLOOR_Y } from './ForestGeometry'
 import { createLightFilmUniforms, lightChoreographyGLSL, sampleLightChoreography } from './SceneLighting'
 import type { LightFilmUniforms } from './SceneLighting'
 
@@ -212,7 +212,6 @@ const boundaryVertex = /* glsl */ `
   uniform float uViewportHeight;
   uniform float uPixelRatio;
   uniform float uBoundaryStrength;
-  uniform float uBoundarySide;
   varying float vKind;
   void main() {
     vSeed=aSeed;
@@ -228,15 +227,9 @@ const boundaryVertex = /* glsl */ `
     vWorld=world.xyz;
     vDepth=-view.z;
     vClip=projectionMatrix*view;
-    // Grow a shallow volume directly out of the shared editorial edge. Keep
-    // world X/depth/parallax and lighting, but seat every root on that edge.
-    // The lower forest hangs down from its ceiling rather than growing up.
-    float edge=mix(uEntry,uExit,step(0.,uBoundarySide));
-    float bank=.008+.065*(.5+.5*sin(position.x*.8+position.z*.65));
-    float growth=abs(position.y)*projectionMatrix[1][1]/max(4.,vDepth);
-    vClip.y=(edge*2.-1.+vClip.x/vClip.w*.20
-      +uBoundarySide*(bank+growth))*vClip.w;
-    vNormal=vec3(0.,1.,0.);
+    // Roots and soil occupy the forest's actual floor. The editorial wipe only
+    // clips fragments; it must never reposition the landscape in screen space.
+    vNormal=normalize(mat3(modelMatrix)*vec3(0.,1.,0.));
     vUv=vec2(.5);
     gl_Position=vClip;
     float size=aSize*uViewportHeight*projectionMatrix[1][1]*.5/max(.1,vDepth);
@@ -387,7 +380,7 @@ export function createSceneForest(scene: THREE.Scene, software: boolean, mobile:
   })
   materials.push(microMaterial)
   const boundary=createBoundaryGeometry(software,mobile)
-  const boundaryUniforms={...shared,uBoundaryStrength:{value:0},uBoundarySide:{value:1}}
+  const boundaryUniforms={...shared,uBoundaryStrength:{value:1}}
   const boundaryMaterial=new THREE.ShaderMaterial({
     uniforms:boundaryUniforms,vertexShader:boundaryVertex,fragmentShader:boundaryFragment,
     depthWrite:false,depthTest:true,defines:{AETHER_LIGHT_FILM:1},
@@ -401,6 +394,7 @@ export function createSceneForest(scene: THREE.Scene, software: boolean, mobile:
     // orientation or follow its orbit; scrolling travels through these trees.
     grove.position.y=sampleJourney(index?1:0).height
     grove.rotation.y=index?.83:0
+    grove.rotation.z=index?Math.PI:0
     const micro=new THREE.Points(microGeometry,microMaterial)
     micro.name='aether-forest-microfoliage'
     micro.onBeforeRender=renderer=>{
@@ -412,13 +406,9 @@ export function createSceneForest(scene: THREE.Scene, software: boolean, mobile:
     }
     const edge=new THREE.Points(boundary.geometry,boundaryMaterial)
     edge.name='aether-forest-boundary-plants-motes-mist'
-    edge.position.y=index?6.8:-8.7
-    if(!index) edge.scale.set(.82,1,.82)
+    edge.position.y=FOREST_FLOOR_Y
     edge.frustumCulled=false
-    edge.onBeforeRender=(...args)=>{
-      micro.onBeforeRender(...args)
-      boundaryUniforms.uBoundarySide.value=index?-1:1
-    }
+    edge.onBeforeRender=micro.onBeforeRender
     grove.add(makeMesh(false),makeMesh(true),micro,edge)
     group.add(grove)
     return grove
@@ -445,9 +435,7 @@ export function createSceneForest(scene: THREE.Scene, software: boolean, mobile:
       shared.uTime.value=lighting.time
       shared.uLightDepth.value=lighting.depth
       shared.uLightStrength.value=lighting.cloudStrength
-      boundaryUniforms.uBoundaryStrength.value=p<.5
-        ?windowWeight(p,.055,.12,.175,.205)
-        :windowWeight(p,.845,.895,.955,.985)
+      boundaryUniforms.uBoundaryStrength.value=1
       shared.uDarkness.value=sampleJourney(p).darkness
       const projection=camera.projectionMatrix.elements
       const aspect=Math.abs(projection[5]/projection[0])

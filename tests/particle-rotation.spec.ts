@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 import { build } from 'vite'
 
-test('@interaction anchored and moving grains share one rotating spine path', async ({ page }) => {
+test('@interaction flower grains fall with absolute scroll and retrace without wrapping', async ({ page }) => {
   const output = await build({ configFile: false, logLevel: 'silent', build: {
     write: false, minify: false,
     lib: { entry: 'tests/fixtures/particle-rotation-harness.ts', formats: ['iife'], name: 'ParticleRotation' },
@@ -14,7 +14,7 @@ test('@interaction anchored and moving grains share one rotating spine path', as
     const samples = await page.evaluate(({ progress, mobile }) => (window as unknown as {
       ParticleRotation: { sampleRotation(progress: number, mobile: boolean): Record<string, number[]> }
     }).ParticleRotation.sampleRotation(progress, mobile), { progress, mobile })
-    const { start, expected, end, moving, matched, reverse, anchors } = samples
+    const { start, expected, end, moving, movingStart, movingReverse, reverse, anchors } = samples
     expect(anchors).toEqual([-29.8, -29.8, -29.8])
     // GPU trigonometry varies slightly across drivers; 0.005 world-unit tolerance
     // still rejects stationary anchors and the old, separately rotating path.
@@ -24,9 +24,12 @@ test('@interaction anchored and moving grains share one rotating spine path', as
     // Compare GPU motion with the actual SceneWorlds matter transform, not
     // a second copy of the shader's rotation convention or a fixed sign.
     expect(Math.abs(moving[1] - end[1])).toBeGreaterThan(.1)
+    expect(moving[1] - movingStart[1]).toBeCloseTo(-.015 * 45, 3)
+    expect(moving[0]).toBeCloseTo(end[0], 3)
+    expect(moving[2]).toBeCloseTo(end[2], 3)
     for (let axis = 0; axis < 3; axis++) {
       expect(Math.abs(end[axis] - expected[axis])).toBeLessThan(.005)
-      expect(Math.abs(matched[axis] - end[axis])).toBeLessThan(.005)
+      expect(movingReverse[axis]).toBeCloseTo(movingStart[axis], 3)
       expect(reverse[axis]).toBeCloseTo(start[axis], 3)
     }
   }

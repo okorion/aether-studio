@@ -1,0 +1,435 @@
+{
+  "date": "2026-09-24",
+  "base": "b267a2be27b5753cadada63ffd5a5376991bdded",
+  "source": "44cbd84",
+  "captureConditions": {
+    "videoSeconds": 2,
+    "initialClockMs": 1000,
+    "framesPerPosition": 240,
+    "downDrag": [
+      1100,
+      320,
+      1100,
+      800
+    ],
+    "desktop": [
+      1440,
+      900
+    ],
+    "mobile": [
+      390,
+      844
+    ],
+    "dpr": 1
+  },
+  "checks": {
+    "lint": "pass",
+    "typecheck": "pass",
+    "build": "pass",
+    "fullSuiteBeforeShaderFix": {
+      "passed": 105,
+      "skipped": 1
+    },
+    "addedPhysicalMaterialTest": {
+      "passed": 1
+    },
+    "note": "Final-head full suite is also required in GitHub CI."
+  },
+  "captures": [
+    {
+      "label": "before",
+      "viewport": [
+        1440,
+        900
+      ],
+      "dpr": 1,
+      "errors": [],
+      "frames": [
+        {
+          "progress": 0.15,
+          "path": "docs/screenshots/world-rebuild/before/scroll-150.jpg",
+          "clockMs": 5000.000000000003,
+          "sha256": "fc5b7b7fad4cc3c37aa2c96ea766a1eaa09a438eb23466643ff59749d22e72aa",
+          "profile": "gpu",
+          "cameraY": "-9.1743",
+          "targetY": "-9.1956"
+        },
+        {
+          "progress": 0.18,
+          "path": "docs/screenshots/world-rebuild/before/scroll-180.jpg",
+          "clockMs": 9000.000000000031,
+          "sha256": "3b77e849b2fd4f15a65f01a0c1b046e264076b8f35f00d1b3f424ae0f052f6fe",
+          "profile": "gpu",
+          "cameraY": "-11.4310",
+          "targetY": "-11.4394"
+        },
+        {
+          "progress": 0.4,
+          "path": "docs/screenshots/world-rebuild/before/scroll-400.jpg",
+          "clockMs": 12999.999999999885,
+          "sha256": "832f4b99260ff7638f7d8880fbad4b5de86bf2ff5c020685924908be899d0a65",
+          "profile": "gpu",
+          "cameraY": "-23.7941",
+          "targetY": "-24.0000"
+        },
+        {
+          "progress": 0.55,
+          "path": "docs/screenshots/world-rebuild/before/scroll-550.jpg",
+          "clockMs": 16999.999999999807,
+          "sha256": "ac69edfc65d9d5559db1c7045990c73aacb3446bc78200f1004ca43146dd5fde",
+          "profile": "gpu",
+          "cameraY": "-31.9118",
+          "targetY": "-32.6250"
+        },
+        {
+          "progress": 0.68,
+          "path": "docs/screenshots/world-rebuild/before/scroll-680.jpg",
+          "clockMs": 21000.0000000001,
+          "sha256": "bbf89df41a700196fbefa378bc1faed88ef43434850dbf73c55b5e397431acd7",
+          "profile": "gpu",
+          "cameraY": "-38.3999",
+          "targetY": "-39.7984"
+        },
+        {
+          "progress": 0.72,
+          "path": "docs/screenshots/world-rebuild/before/scroll-720.jpg",
+          "clockMs": 25000.00000000039,
+          "sha256": "76d171522f5bca830023dce56657d68f0c8fe9f9a87fdf61b00ae49db676959f",
+          "profile": "gpu",
+          "cameraY": "-40.9086",
+          "targetY": "-41.5893"
+        },
+        {
+          "progress": 0.76,
+          "path": "docs/screenshots/world-rebuild/before/scroll-760.jpg",
+          "clockMs": 29000.00000000068,
+          "sha256": "77f4043239679cb43c424c0b22372caa1f94385fbb524970d315cd1bdd06d235",
+          "profile": "gpu",
+          "cameraY": "-43.7369",
+          "targetY": "-43.6639"
+        },
+        {
+          "progress": 0.82,
+          "path": "docs/screenshots/world-rebuild/before/scroll-820.jpg",
+          "clockMs": 33000.000000000924,
+          "sha256": "15ea52628b906ed2a455c0f010617054c724073fe7db08fd11e767368773ddfe",
+          "profile": "gpu",
+          "cameraY": "-47.3833",
+          "targetY": "-47.1265"
+        },
+        {
+          "progress": 0.88,
+          "path": "docs/screenshots/world-rebuild/before/scroll-880.jpg",
+          "clockMs": 37000.00000000034,
+          "sha256": "19a46611aff33732492bb71e0a4166853c29af1c1429b8a7c4ed8b6349285c4d",
+          "profile": "gpu",
+          "cameraY": "-50.6602",
+          "targetY": "-51.3027"
+        },
+        {
+          "progress": 1,
+          "path": "docs/screenshots/world-rebuild/before/scroll-1000.jpg",
+          "clockMs": 40999.99999999976,
+          "sha256": "14a0cd5841eecb0f86de77cc7cba0b6cab8ec7f5a570746fe4ab20e63b007af1",
+          "profile": "gpu",
+          "cameraY": "-60.3619",
+          "targetY": "-61.5000"
+        },
+        {
+          "progress": 1,
+          "path": "docs/screenshots/world-rebuild/before/lower-down-limit.jpg",
+          "clockMs": 43999.99999999932,
+          "sha256": "bfa7e3f91eca7fdb43c150f683b9008659d33cf3170ecffab5c0925b9b187256",
+          "profile": "gpu",
+          "cameraY": "-54.1562",
+          "targetY": "-61.5000"
+        }
+      ]
+    },
+    {
+      "label": "after",
+      "viewport": [
+        1440,
+        900
+      ],
+      "dpr": 1,
+      "errors": [],
+      "frames": [
+        {
+          "progress": 0.15,
+          "path": "docs/screenshots/world-rebuild/after/scroll-150.jpg",
+          "clockMs": 5000.000000000003,
+          "sha256": "5343046f4f2b805c51edbbc1c031bd28b83345bd950dc12a097adf6dc4943bcf",
+          "profile": "gpu",
+          "cameraY": "-9.1743",
+          "targetY": "-9.1956"
+        },
+        {
+          "progress": 0.18,
+          "path": "docs/screenshots/world-rebuild/after/scroll-180.jpg",
+          "clockMs": 9000.000000000031,
+          "sha256": "48b42ebcd6124ee944698a297cd199a8b1e4d228c85bfdf93ed05bed1c4d0fcb",
+          "profile": "gpu",
+          "cameraY": "-11.4310",
+          "targetY": "-11.4394"
+        },
+        {
+          "progress": 0.4,
+          "path": "docs/screenshots/world-rebuild/after/scroll-400.jpg",
+          "clockMs": 12999.999999999885,
+          "sha256": "aac98de9ff9ac57e52199a164038728423af407bbced2273d6aabf22f95a4a26",
+          "profile": "gpu",
+          "cameraY": "-23.7941",
+          "targetY": "-24.0000"
+        },
+        {
+          "progress": 0.55,
+          "path": "docs/screenshots/world-rebuild/after/scroll-550.jpg",
+          "clockMs": 16999.999999999807,
+          "sha256": "b4bae00f3ce7158c522aa757f8ca5958fb905a2195b3d62c2180f3c0438371cf",
+          "profile": "gpu",
+          "cameraY": "-31.8436",
+          "targetY": "-32.6250"
+        },
+        {
+          "progress": 0.68,
+          "path": "docs/screenshots/world-rebuild/after/scroll-680.jpg",
+          "clockMs": 21000.0000000001,
+          "sha256": "b59b8c1c4244aea22234fa4fdc064e3172b599c50f2d61d2293daed45cbbc5ca",
+          "profile": "gpu",
+          "cameraY": "-39.7984",
+          "targetY": "-39.7984"
+        },
+        {
+          "progress": 0.72,
+          "path": "docs/screenshots/world-rebuild/after/scroll-720.jpg",
+          "clockMs": 25000.00000000039,
+          "sha256": "057ee8e8791538b75a0102266d2421c036eebeb9bbecf9f61560343bfad28405",
+          "profile": "gpu",
+          "cameraY": "-41.5893",
+          "targetY": "-41.5893"
+        },
+        {
+          "progress": 0.76,
+          "path": "docs/screenshots/world-rebuild/after/scroll-760.jpg",
+          "clockMs": 29000.00000000068,
+          "sha256": "a3ae0b35a7ea6c47acc821751d52a25eec609dcfcc24a3199c189ceaaaffdcb8",
+          "profile": "gpu",
+          "cameraY": "-43.8089",
+          "targetY": "-43.6639"
+        },
+        {
+          "progress": 0.82,
+          "path": "docs/screenshots/world-rebuild/after/scroll-820.jpg",
+          "clockMs": 33000.000000000924,
+          "sha256": "665b365657b4001d32f720e67841fd8249c09e4b176abd07b077e9e03c62d7a2",
+          "profile": "gpu",
+          "cameraY": "-47.3833",
+          "targetY": "-47.1265"
+        },
+        {
+          "progress": 0.88,
+          "path": "docs/screenshots/world-rebuild/after/scroll-880.jpg",
+          "clockMs": 37000.00000000034,
+          "sha256": "3b8ca08a9966771220c6d2379cfc89a08dc6629bbb81ab2b920cc871fc9fd782",
+          "profile": "gpu",
+          "cameraY": "-50.6602",
+          "targetY": "-51.3027"
+        },
+        {
+          "progress": 1,
+          "path": "docs/screenshots/world-rebuild/after/scroll-1000.jpg",
+          "clockMs": 40999.99999999976,
+          "sha256": "80e835f77ed7bad641a8cf85ab8a9e32f6e6cfc795e422a8c484d99fdbd2f988",
+          "profile": "gpu",
+          "cameraY": "-60.3619",
+          "targetY": "-61.5000"
+        },
+        {
+          "progress": 1,
+          "path": "docs/screenshots/world-rebuild/after/lower-down-limit.jpg",
+          "clockMs": 43999.99999999932,
+          "sha256": "d61dc649ca847e92bcd2d00423c18562a86caff47bd1d424a66085d65738a9f4",
+          "profile": "gpu",
+          "cameraY": "-59.9092",
+          "targetY": "-61.5000"
+        }
+      ]
+    },
+    {
+      "label": "before-mobile",
+      "viewport": [
+        390,
+        844
+      ],
+      "dpr": 1,
+      "errors": [],
+      "frames": [
+        {
+          "progress": 0.15,
+          "path": "docs/screenshots/world-rebuild/before-mobile/scroll-150.jpg",
+          "clockMs": 5000.000000000003,
+          "sha256": "dafacabbbc17c380143e5bcf6059b1ac65e5a0226cc7f905b9b0c8b8480ee337",
+          "profile": "gpu",
+          "cameraY": "-9.1554",
+          "targetY": "-9.1945"
+        },
+        {
+          "progress": 0.4,
+          "path": "docs/screenshots/world-rebuild/before-mobile/scroll-400.jpg",
+          "clockMs": 9000.000000000031,
+          "sha256": "1afbea1b86c7b5b6369e47fc30b27124f924dc94ed0da6ef10c654b4fe19a1ac",
+          "profile": "gpu",
+          "cameraY": "-23.7072",
+          "targetY": "-23.9992"
+        },
+        {
+          "progress": 0.72,
+          "path": "docs/screenshots/world-rebuild/before-mobile/scroll-720.jpg",
+          "clockMs": 12999.999999999885,
+          "sha256": "b5d1bab7276eeb7c4b81e2a934592aa427d68bab7f0253080a54ec37e353b7ae",
+          "profile": "gpu",
+          "cameraY": "-40.5920",
+          "targetY": "-41.5907"
+        },
+        {
+          "progress": 0.82,
+          "path": "docs/screenshots/world-rebuild/before-mobile/scroll-820.jpg",
+          "clockMs": 16999.999999999807,
+          "sha256": "2c42c6d1e9a7fa3fe3fef4543e536cd9b77a9f227dbaac0c55c5c352346a63fa",
+          "profile": "gpu",
+          "cameraY": "-47.4890",
+          "targetY": "-47.1250"
+        },
+        {
+          "progress": 1,
+          "path": "docs/screenshots/world-rebuild/before-mobile/scroll-1000.jpg",
+          "clockMs": 21000.0000000001,
+          "sha256": "bc06378213af397cc9295cbe1de21290b61cb27546cbb9fbfa96a444e2709ac0",
+          "profile": "gpu",
+          "cameraY": "-59.8827",
+          "targetY": "-61.5000"
+        }
+      ]
+    },
+    {
+      "label": "after-mobile",
+      "viewport": [
+        390,
+        844
+      ],
+      "dpr": 1,
+      "errors": [],
+      "frames": [
+        {
+          "progress": 0.15,
+          "path": "docs/screenshots/world-rebuild/after-mobile/scroll-150.jpg",
+          "clockMs": 5000.000000000003,
+          "sha256": "d1734226220c0b7150506b1910d7a492d4cae693fb554a88f500c147f5a636cb",
+          "profile": "gpu",
+          "cameraY": "-9.1554",
+          "targetY": "-9.1945"
+        },
+        {
+          "progress": 0.4,
+          "path": "docs/screenshots/world-rebuild/after-mobile/scroll-400.jpg",
+          "clockMs": 9000.000000000031,
+          "sha256": "84b951d99c2ef9111150ff8267b84f65fb75a880ea06064d7bcb56c63abaaecf",
+          "profile": "gpu",
+          "cameraY": "-23.7072",
+          "targetY": "-23.9992"
+        },
+        {
+          "progress": 0.72,
+          "path": "docs/screenshots/world-rebuild/after-mobile/scroll-720.jpg",
+          "clockMs": 12999.999999999885,
+          "sha256": "10131b77e6bcd6c893d0e67f0e3c93b23cd4deb877c72393568d91ba26069eb4",
+          "profile": "gpu",
+          "cameraY": "-41.5907",
+          "targetY": "-41.5907"
+        },
+        {
+          "progress": 0.82,
+          "path": "docs/screenshots/world-rebuild/after-mobile/scroll-820.jpg",
+          "clockMs": 16999.999999999807,
+          "sha256": "5b09d51af531f472d10a36f7927b1e8236e5f9f963b0308c8c21e3a66f157fe4",
+          "profile": "gpu",
+          "cameraY": "-47.4890",
+          "targetY": "-47.1250"
+        },
+        {
+          "progress": 1,
+          "path": "docs/screenshots/world-rebuild/after-mobile/scroll-1000.jpg",
+          "clockMs": 21000.0000000001,
+          "sha256": "1478c7b67e930b8a646495469f94a4e5b6f1713f9d3292a65cb7bcd0ced2b5a3",
+          "profile": "gpu",
+          "cameraY": "-59.8827",
+          "targetY": "-61.5000"
+        }
+      ]
+    }
+  ],
+  "performance": [
+    {
+      "label": "world-before",
+      "direction": "down",
+      "frameMedianMs": 16.69999999999891,
+      "frameP95Ms": 16.700000000000728,
+      "frameMaxMs": 16.80000000000291,
+      "gpuSamples": 3419,
+      "gpuP95Ms": 4.486688,
+      "gpuMaxMs": 9.637312,
+      "cpuMaxMs": 3.700000047683716,
+      "framesOver33_5Ms": 0,
+      "disjoint": false,
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 2060 SUPER (0x00001F06) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "errors": []
+    },
+    {
+      "label": "world-before",
+      "direction": "up",
+      "frameMedianMs": 16.69999999999709,
+      "frameP95Ms": 16.700000000004366,
+      "frameMaxMs": 16.80000000000291,
+      "gpuSamples": 3421,
+      "gpuP95Ms": 4.120064,
+      "gpuMaxMs": 10.029312,
+      "cpuMaxMs": 4.5,
+      "framesOver33_5Ms": 0,
+      "disjoint": false,
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 2060 SUPER (0x00001F06) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "errors": []
+    },
+    {
+      "label": "world-after",
+      "direction": "down",
+      "frameMedianMs": 16.69999999999891,
+      "frameP95Ms": 16.799999999999272,
+      "frameMaxMs": 66.69999999999982,
+      "gpuSamples": 0,
+      "gpuP95Ms": null,
+      "gpuMaxMs": null,
+      "cpuMaxMs": 4.199999809265137,
+      "framesOver33_5Ms": 1,
+      "disjoint": false,
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 2060 SUPER (0x00001F06) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "errors": []
+    },
+    {
+      "label": "world-after",
+      "direction": "up",
+      "frameMedianMs": 16.69999999999709,
+      "frameP95Ms": 16.700000000004366,
+      "frameMaxMs": 16.80000000000291,
+      "gpuSamples": 0,
+      "gpuP95Ms": null,
+      "gpuMaxMs": null,
+      "cpuMaxMs": 3.8999998569488525,
+      "framesOver33_5Ms": 0,
+      "disjoint": false,
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 2060 SUPER (0x00001F06) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "errors": []
+    }
+  ],
+  "performanceLimit": "One uncached desktop down/up run per revision; baseline preview and changed dev server. Not a statistical performance improvement claim."
+}

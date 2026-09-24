@@ -856,7 +856,8 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
         glyphChrome.opacity = emblemOpacity
         glyph.visible = glyphChrome.opacity > .005
         ringSurface.roughness = .12 + fold * .1
-        const orbitRadius = state.radius + (innerWidth < 768 ? 4.8 : 0)
+        const mobileView = innerWidth < 768
+        const orbitRadius = state.radius + (mobileView ? 4.8 : 0)
         const azimuth = state.azimuth + (input.yaw + input.field.ndc.x * .012 * input.field.strength) * state.orbitWeight
         const elevation = THREE.MathUtils.clamp(state.elevation + input.pitch * state.orbitWeight, -.72, .72)
         camera.position.set(
@@ -899,7 +900,7 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
         lightFilm.ready.value = lightVideo.getReady() ? 1 : 0
         canvas.dataset.lightVideoState = JSON.stringify(lightVideo.getStatus())
         // Projection-based surface interaction must use this frame's camera.
-        worlds.update(elapsed, scroll, input.field, camera, scaleElapsed)
+        worlds.update(elapsed, scroll, input.field, camera, scaleElapsed, mobileView)
         canvas.dataset.scaleTime = scaleElapsed.toFixed(4)
         const monitorHover = sceneAvailable() && input.field.active ? worlds.getHoveredPanel() : -1
         canvas.dataset.monitorHover = String(monitorHover)

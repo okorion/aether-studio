@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
 import { sampleLayers } from './SceneLayers'
-import { CHAIN_LINK_COUNT, CHAIN_LINK_PITCH, createChainGeometry, createChainMaterial, sampleChainPath } from './SceneChain'
+import { getChainLinkCount, CHAIN_LINK_PITCH, createChainGeometry, createChainMaterial, sampleChainPath } from './SceneChain'
 
 const HEIGHT = 10.8
 const clamp = (value: number) => Number.isFinite(value) ? THREE.MathUtils.clamp(value, 0, 1) : 0
@@ -234,7 +234,9 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
   const bones = new THREE.InstancedMesh(boneGeometry, boneMaterial, rows)
   bones.name = 'aether-spine-vertebrae'
   const discs = new THREE.InstancedMesh(discGeometry, discMaterial, rows)
-  const chains = new THREE.InstancedMesh(linkGeometry, linkMaterial, CHAIN_LINK_COUNT)
+  // Reserve the longer layout once; resizing only changes the active range.
+  const chains = new THREE.InstancedMesh(linkGeometry, linkMaterial, getChainLinkCount(true))
+  chains.count = getChainLinkCount(mobile)
   chains.name = 'aether-spine-chain'
   group.userData.chainStrands = 1
   group.userData.motion = 'absolute-scroll-phase'
@@ -248,14 +250,16 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
   const up = new THREE.Vector3(0, 1, 0)
   const tangent = new THREE.Vector3()
   const alternating = new THREE.Quaternion().setFromAxisAngle(up, Math.PI / 2)
+  const chainRoll = new THREE.Quaternion().setFromAxisAngle(up, -Math.PI / 4)
   let previousProgress = Number.NaN
   let previousEmergence = Number.NaN
+  let previousMobile = mobile
   let disposed = false
   group.visible = false
 
   return {
     group,
-    update(value: number, opacity: number, emergence: number) {
+    update(value: number, opacity: number, emergence: number, mobileView = mobile) {
       if (disposed) return
       const alpha = clamp(opacity)
       const form = ease(emergence)
@@ -268,9 +272,11 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
       discMaterial.opacity = alpha * .9
       linkMaterial.opacity = alpha
       if (!group.visible) return
-      if (progress === previousProgress && form === previousEmergence) return
+      if (progress === previousProgress && form === previousEmergence && mobileView === previousMobile) return
       previousProgress = progress
       previousEmergence = form
+      previousMobile = mobileView
+      chains.count = getChainLinkCount(mobileView)
       const travel = progress * 1.4
       for (let i = 0; i < rows; i++) {
         const y = (THREE.MathUtils.euclideanModulo(i / rows + travel, 1) - .5) * HEIGHT
@@ -295,13 +301,16 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
       }
       bones.instanceMatrix.needsUpdate = true
       discs.instanceMatrix.needsUpdate = true
-      const chainPath = sampleChainPath(progress)
+      const chainPath = sampleChainPath(progress, mobileView)
       const chainLength = chainPath.getLength()
-      for (let i = 0; i < CHAIN_LINK_COUNT; i++) {
+      for (let i = 0; i < chains.count; i++) {
         const t = i * CHAIN_LINK_PITCH / chainLength
         chainPath.getPointAt(t, dummy.position).multiplyScalar(form)
         chainPath.getTangentAt(t, tangent)
         dummy.quaternion.setFromUnitVectors(up, tangent)
+        // A fixed roll opens the upper terminal toward the authored stage
+        // views. It stays in the column frame rather than facing the camera.
+        dummy.quaternion.multiply(chainRoll)
         if (i % 2) dummy.quaternion.multiply(alternating)
         // The free end is a full-size closed link, never faded or recycled.
         dummy.scale.setScalar(form)

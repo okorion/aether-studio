@@ -664,7 +664,7 @@ export function createSceneWorlds(
     },
     update(time: number, progress: number,
       pointer?: { ndc: THREE.Vector2; rawNdc?: THREE.Vector2; strength: number; aspect: number; active?: boolean; flowTexture?: THREE.Texture }, camera?: THREE.Camera,
-      scaleTime = time) {
+      scaleTime = time, mobileView = mobile) {
       const journey = sampleJourney(progress)
       const layers = sampleLayers(progress)
       deviceCurtain.upper.value = layers.monitorExit
@@ -691,7 +691,7 @@ export function createSceneWorlds(
       const spineOffset = -12 * (1 - emergence)
       spineAssembly.group.position.y = spineOffset
       matter.visible = spineWeight > .001 && curtainHasCoverage(layers.monitorEntry, layers.monitorExit)
-      spineAssembly.update(progress, journey.core * spineWeight, emergence)
+      spineAssembly.update(progress, journey.core * spineWeight, emergence, mobileView)
       const deviceWeight = smooth(.59, .615, progress) * (1 - smooth(.79, .88, progress))
       const scaleWeight = smooth(.705, .735, progress) * (1 - smooth(.93, .95, progress))
       chamber.visible = deviceWeight > .001

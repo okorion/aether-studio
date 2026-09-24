@@ -79,16 +79,17 @@ test('@interaction spine links wrap in front and behind the bones and reverse wi
     }
     expect(Math.max(...centres.map(p => p.z))).toBeGreaterThan(boneAxis.max.z + .5)
     expect(Math.min(...centres.map(p => p.z))).toBeLessThan(boneAxis.min.z - .5)
-    expect(new Set(centres.map(p => `${Math.sign(p.x)},${Math.sign(p.z)}`)).size).toBe(4)
+    expect(new Set(centres.map(p => `${Math.sign(p.x)},${Math.sign(p.z)}`)).size).toBeGreaterThanOrEqual(2)
     let turn = 0
     for (let i = 1; i < centres.length; i++) {
-      expect(centres[i].y).toBeGreaterThan(centres[i - 1].y)
+      expect(centres[i].y).toBeLessThan(centres[i - 1].y)
       const delta = Math.atan2(centres[i].z, centres[i].x) - Math.atan2(centres[i - 1].z, centres[i - 1].x)
       turn += Math.atan2(Math.sin(delta), Math.cos(delta))
     }
-    // A steep finite helix still crosses all four sides of the column, but
-    // covers less azimuth than the former shallow coil of the same length.
-    expect(Math.abs(turn)).toBeGreaterThan(Math.PI)
+    // The shorter strand wraps across the front and back without making a
+    // complete coil; its upper terminal now leads the visible stage length.
+    expect(Math.abs(turn)).toBeGreaterThan(2)
+    expect(Math.abs(turn)).toBeLessThan(Math.PI)
     assembly.update(.4, 0, 1)
     expect(assembly.group.visible).toBe(false)
   } finally {

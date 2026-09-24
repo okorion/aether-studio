@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { sampleJourney, smooth } from './Journey'
+import { smooth } from './Journey'
 
 const TAU = Math.PI * 2
 export const CHAIN_LINK_COUNT = 42
@@ -32,12 +32,10 @@ export function createChainGeometry(software: boolean, mobile: boolean) {
 /** A finite strand, measured from its free lower end. No link ever wraps. */
 export function sampleChainPath(progress: number) {
   const descent = smooth(.27, .65, progress)
-  const yaw = sampleJourney(progress).structureYaw
-  const endY = -2.5 - descent * .45
-  // With x = cos(a), z = sin(a), a Y rotation subtracts its yaw.
-  // Let the free end hang below the foreground screens, then drift to the
-  // open left side as the last screen descends. It remains in front of the bone.
-  const endAngle = 1.5 + smooth(.50, .60, progress) * .6 + yaw
+  const endY = -2.5 - descent * .2
+  // Author the strand in the column's local frame. Only vertical travel is
+  // scroll-driven here; the shared parent owns ALL rotation, including the end.
+  const endAngle = 1.5
   const points: THREE.Vector3[] = []
   for (let i = 0; i <= 80; i++) {
     const height = i * .25

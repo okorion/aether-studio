@@ -1,7 +1,6 @@
 import * as THREE from 'three'
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
 import { sampleLayers } from './SceneLayers'
-import { sampleJourney } from './Journey'
 import { CHAIN_LINK_COUNT, CHAIN_LINK_PITCH, createChainGeometry, createChainMaterial, sampleChainPath } from './SceneChain'
 
 const HEIGHT = 10.8
@@ -238,7 +237,6 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
   const up = new THREE.Vector3(0, 1, 0)
   const tangent = new THREE.Vector3()
   const alternating = new THREE.Quaternion().setFromAxisAngle(up, Math.PI / 2)
-  const chainTwist = new THREE.Quaternion()
   let previousProgress = Number.NaN
   let previousEmergence = Number.NaN
   let disposed = false
@@ -288,13 +286,11 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
       discs.instanceMatrix.needsUpdate = true
       const chainPath = sampleChainPath(progress)
       const chainLength = chainPath.getLength()
-      chainTwist.setFromAxisAngle(up, -sampleJourney(progress).structureYaw)
       for (let i = 0; i < CHAIN_LINK_COUNT; i++) {
         const t = i * CHAIN_LINK_PITCH / chainLength
         chainPath.getPointAt(t, dummy.position).multiplyScalar(form)
         chainPath.getTangentAt(t, tangent)
         dummy.quaternion.setFromUnitVectors(up, tangent)
-        dummy.quaternion.multiply(chainTwist)
         if (i % 2) dummy.quaternion.multiply(alternating)
         // The free end is a full-size closed link, never faded or recycled.
         dummy.scale.setScalar(form)

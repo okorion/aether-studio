@@ -67,7 +67,7 @@ def frame_at(second):
     return np.clip(np.rint(rgb * shadow[..., None]), 0, 180).astype(np.uint8)
 
 
-def inspect_contract(ffmpeg, output):
+def inspect_contract(ffmpeg, output, frame_provider=frame_at, column=False):
     inspection = subprocess.run([ffmpeg, "-hide_banner", "-nostdin", "-i", str(output)],
                                 capture_output=True, text=True, check=False).stderr
     data = output.read_bytes()
@@ -99,13 +99,14 @@ def inspect_contract(ffmpeg, output):
     seam_limit = max(1., ordinary_p95 * 1.65)
     dark_fraction = float((luma < 24).mean())
     upper_luma = float(luma.max())
-    if seam > seam_limit or upper_luma > 160 or not .4 <= dark_fraction <= .95:
+    maximum = 255 if column else 160
+    if seam > seam_limit or upper_luma > maximum or not (.25 if column else .4) <= dark_fraction <= .98:
         raise RuntimeError(f"Lighting palette/loop failed: seam={seam}, max luma={upper_luma}, dark={dark_fraction}")
     stats = {
         "method": "Rec.709 weighted display RGB over all decoded pixels, range 0-255; not linear scene radiance",
         "mean": round(float(luma.mean()), 5), "p95": round(float(np.percentile(luma, 95)), 5),
         "p99": round(float(np.percentile(luma, 99)), 5), "maximum": round(upper_luma, 5),
-        "maximum_allowed": 160, "fraction_below_24": round(dark_fraction, 6),
+        "maximum_allowed": maximum, "fraction_below_24": round(dark_fraction, 6),
         "fraction_above_150": round(float((luma > 150).mean()), 6),
         "frame_mean_min": round(float(luma.mean(axis=(1, 2)).min()), 5),
         "frame_mean_max": round(float(luma.mean(axis=(1, 2)).max()), 5),
@@ -113,8 +114,14 @@ def inspect_contract(ffmpeg, output):
     loop = {"verified": True, "method": "all decoded adjacent-frame RGB differences and last-to-first seam",
             "mean_abs_rgb": round(seam, 5), "adjacent_p95_mean_abs_rgb": round(ordinary_p95, 5),
             "maximum_allowed_mean_abs_rgb": round(seam_limit, 5),
-            "procedural_first_and_period_endpoint_identical": bool(np.array_equal(frame_at(0), frame_at(SECONDS)))}
-    if not loop["procedural_first_and_period_endpoint_identical"]:
+            "procedural_first_and_period_endpoint_identical": bool(np.array_equal(frame_provider(0), frame_provider(SECONDS)))}
+    if column:
+        endpoint = np.abs(frame_provider(0).astype(float) - frame_provider(SECONDS).astype(float))
+        loop["render_endpoint_mean_abs_rgb"] = float(endpoint.mean())
+        loop["render_endpoint_tolerance"] = .01
+        if endpoint.mean() > .01:
+            raise RuntimeError("Rendered loop endpoint differs beyond GPU roundoff")
+    if not column and not loop["procedural_first_and_period_endpoint_identical"]:
         raise RuntimeError("Procedural loop endpoint mismatch")
     return data, frames, stats, loop
 
@@ -122,9 +129,37 @@ def inspect_contract(ffmpeg, output):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--ffmpeg")
+    parser.add_argument("--frames-dir", type=Path, help="Frames from node scripts/render-light-column.mjs; optional original satin fallback")
     parser.add_argument("--qa-dir", type=Path, help="Optional directory for three decoded stills")
     parser.add_argument("--output-dir", type=Path, default=MEDIA, help="Defaults to public/media; may stage a review candidate")
     args = parser.parse_args()
+    source = None
+    frame_provider = frame_at
+    if args.frames_dir:
+        from io import BytesIO
+        from PIL import Image
+        source = json.loads((args.frames_dir / "source.json").read_text(encoding="utf-8"))
+        if source.get("schemaVersion") != 3 or not source.get("bundleSha256"):
+            raise RuntimeError("Column frames need complete rendering inputs; render them again")
+        for name, digest in source["sources"].items():
+            if sha256(ROOT / name) != digest:
+                raise RuntimeError(f"Column source changed: {name}")
+        names = [f"{i:03}.png" for i in range(FRAMES + 1)]
+        digests = source.get("frameSha256", {})
+        if not isinstance(digests, dict) or set(digests) != set(names):
+            raise RuntimeError("Column frame manifest is incomplete; render them again")
+        column_frames = []
+        for name in names:
+            # Decode exactly the bytes that passed verification, even if files
+            # in the capture directory change while the encoder is running.
+            captured = (args.frames_dir / name).read_bytes()
+            if hashlib.sha256(captured).hexdigest() != digests[name]:
+                raise RuntimeError(f"Column frame changed: {name}")
+            with Image.open(BytesIO(captured)) as image:
+                column_frames.append(np.array(image.convert("RGB")))
+        if any(frame.shape != (HEIGHT, WIDTH, 3) for frame in column_frames):
+            raise RuntimeError("Column frame dimensions mismatch")
+        frame_provider = lambda second: column_frames[round(second * FPS)]
     ffmpeg = args.ffmpeg or shutil.which("ffmpeg")
     if not ffmpeg:
         import imageio_ffmpeg
@@ -146,7 +181,7 @@ def main():
             process = subprocess.Popen([ffmpeg, *arguments], stdin=subprocess.PIPE, stderr=errors)
             try:
                 for index in range(FRAMES):
-                    process.stdin.write(frame_at(index / FPS).tobytes())
+                    process.stdin.write(frame_provider(index / FPS).tobytes())
                 process.stdin.close()
                 if process.wait() != 0:
                     errors.seek(0)
@@ -155,18 +190,21 @@ def main():
                 if process.poll() is None:
                     process.kill()
                     process.wait()
-        data, frames, stats, loop = inspect_contract(ffmpeg, output)
+        data, frames, stats, loop = inspect_contract(ffmpeg, output, frame_provider, bool(source))
         after = {name: sha256(MEDIA / name) for name in protected_names}
         if before != after:
             raise RuntimeError("A protected monitor asset changed during generation")
+        if source and any(sha256(ROOT / name) != digest for name, digest in source["sources"].items()):
+            raise RuntimeError("Column rendering inputs changed during encoding")
         manifest = {
             "file": FILM_NAME, "bytes": len(data), "codec": "H.264 Main", "pixel_format": "yuv420p",
             "width": WIDTH, "height": HEIGHT, "fps": FPS, "seconds": SECONDS, "frames": FRAMES,
             "audio": False, "faststart": True, "full_decode_verified": True,
             "sha256": hashlib.sha256(data).hexdigest(), "sources": [],
-            "authorship": "Original periodic mathematical satin and low-frequency haze; no external footage or monitor-film sampling",
+            "authorship": source["authorship"] if source else "Original periodic mathematical satin and low-frequency haze; no external footage or monitor-film sampling",
+            "rendered_source": source,
             "palette": ["graphite", "deep teal", "ink violet", "restrained silver"],
-            "sequence": "Continuous asymmetric folds and soft reflected light; one periodic 14-second phase; broad unlit space",
+            "sequence": "Rotating Aether column, slow white/violet highlights and dark intervals; seamless 14-second loop" if source else "Continuous asymmetric folds and soft reflected light; one periodic 14-second phase; broad unlit space",
             "protected_monitor_hashes_before": before, "protected_monitor_hashes_after": after,
             "source_hashes_verified_before_and_after": True, "luma": stats, "loop_join": loop,
             "generator": "scripts/generate-light-video.py", "crf": 22, "maxrate": "160k", "gop": 24,

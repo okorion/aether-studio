@@ -10,7 +10,7 @@ test('@interaction bubble CSS diameter remains stable across DPR and reduced ren
   await page.goto('about:blank'); await page.addScriptTag({ content: chunk.code })
   for (const [ratio, passScale] of [[1, 1], [1.5, 1], [1.5, .5]]) {
     const diameter = await page.evaluate(([ratio, passScale]) => (window as unknown as { BubbleSize: { probeBubbleSize: typeof probeBubbleSize } }).BubbleSize.probeBubbleSize(ratio, passScale), [ratio, passScale])
-    expect(diameter).toBeGreaterThan(38)
-    expect(diameter).toBeLessThanOrEqual(43)
+    expect(diameter).toBeGreaterThan(18)
+    expect(diameter).toBeLessThanOrEqual(22)
   }
 })

@@ -48,9 +48,7 @@ export type ScaleSurfaceUniforms = {
   pointerFlow: { value: THREE.Texture }
   surfaceTime: { value: number }
   surfaceExtent: { value: number }
-  pointerWaveOrigin: { value: THREE.Vector2 }
-  pointerWaveAge: { value: number }
-  pointerWaveStrength: { value: number }
+  pointerWaves: { value: THREE.Vector4[] }
   lightDepth: { value: number }
 }
 
@@ -84,9 +82,7 @@ export function createScaleSurface(
     shader.uniforms.uSurfaceFlow = uniforms.pointerFlow
     shader.uniforms.uSurfaceTime = uniforms.surfaceTime
     shader.uniforms.uSurfaceExtent = uniforms.surfaceExtent
-    shader.uniforms.uPointerWaveOrigin = uniforms.pointerWaveOrigin
-    shader.uniforms.uPointerWaveAge = uniforms.pointerWaveAge
-    shader.uniforms.uPointerWaveStrength = uniforms.pointerWaveStrength
+    shader.uniforms.uPointerWaves = uniforms.pointerWaves
     shader.uniforms.uScaleFinish = { value: finish }
     if (lightFilm && filmEnabled) {
       shader.uniforms.uLightFilm = lightFilm.map
@@ -101,9 +97,7 @@ export function createScaleSurface(
       uniform float uSurfaceAspect;
       uniform float uSurfaceTime;
       uniform float uSurfaceExtent;
-      uniform vec2 uPointerWaveOrigin;
-      uniform float uPointerWaveAge;
-      uniform float uPointerWaveStrength;
+      uniform vec4 uPointerWaves[8];
       uniform sampler2D uSurfaceFlow;
       varying float vSurfaceHeat;
       varying vec3 vTilePoint;
@@ -126,11 +120,16 @@ export function createScaleSurface(
       vec2 tileFlow = (texture2D(uSurfaceFlow, clamp(tileScreen, 0., 1.)).rg
         - vec2(128. / 255.)) * (255. / 127.);
       float trail = clamp(length(tileFlow) * 2.0, 0., 1.);
-      vec2 waveDelta = (tileClip.xy / max(tileClip.w, .001) - uPointerWaveOrigin)
-        * vec2(uSurfaceAspect, 1.0);
-      float waveRadius = .035 + .245 * clamp(uPointerWaveAge / .72, 0., 1.);
-      float pointerWave = (1. - smoothstep(.018, .07, abs(length(waveDelta) - waveRadius)))
-        * (1. - smoothstep(.55, 1.12, uPointerWaveAge)) * uPointerWaveStrength;
+      float pointerWave = 0.;
+      for (int i=0; i<8; i++) {
+        vec4 wave = uPointerWaves[i];
+        vec2 waveDelta = (tileClip.xy / max(tileClip.w, .001) - wave.xy)
+          * vec2(uSurfaceAspect, 1.0);
+        float waveRadius = .025 + .22 * clamp(wave.z / 1.3, 0., 1.);
+        float ring = 1. - smoothstep(.018, .075, abs(length(waveDelta) - waveRadius));
+        pointerWave += ring * (1. - smoothstep(.18, 1.6, wave.z)) * wave.w;
+      }
+      pointerWave = min(.48, pointerWave);
       float localTouch = exp(-dot(tileDelta, tileDelta) * 95.0)
         * (uSurfaceStrength * .22 + trail * .12);
       vSurfaceHeat = clamp(max(pointerWave, localTouch), 0., .8) * step(.001, tileClip.w);
@@ -255,6 +254,6 @@ export function createScaleSurface(
     `)
   }
   material.customProgramCacheKey = () =>
-    `aether-scale-radial-${software ? 'lite' : 'detailed'}-${filmEnabled ? 'film' : 'static'}-v4`
+    `aether-scale-radial-${software ? 'lite' : 'detailed'}-${filmEnabled ? 'film' : 'static'}-v5`
   return material
 }

@@ -392,7 +392,8 @@ export function createSceneForest(scene: THREE.Scene, software: boolean, mobile:
     grove.name=index?'aether-forest-lower':'aether-forest-upper'
     // Fixed anchors span the two forest clearings. They never copy camera
     // orientation or follow its orbit; scrolling travels through these trees.
-    grove.position.y=sampleJourney(index?1:0).height
+    // Translate soil, branches and foliage together, independently of the wrapper.
+    grove.position.y=sampleJourney(index?1:0).height+(index?1.2:-1.2)
     grove.rotation.y=index?.83:0
     grove.rotation.z=index?Math.PI:0
     const micro=new THREE.Points(microGeometry,microMaterial)

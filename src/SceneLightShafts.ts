@@ -72,6 +72,9 @@ export function createSceneLightShafts(
         vec3 color = aetherFilmColor(uv) * .5
           + aetherFilmColor(uv + vec2(.014, .009)) * .25
           + aetherFilmColor(uv - vec2(.014, .009)) * .25;
+        // The column film is bright enough for the chamber. Forest haze uses
+        // a much lower radiance so it never becomes a visible video wall.
+        color = color / (vec3(1.) + color * 10.) * .42;
         float luminance = dot(color, vec3(.2126, .7152, .0722));
         float window = smoothstep(.03, .30, vUv.y) * (1. - smoothstep(.70, .98, vUv.y));
         // The wrap joins in a dark interval instead of making a panorama seam.
@@ -183,6 +186,7 @@ export function createSceneLightShafts(
         vec3 filmColor = aetherFilmRadiance(vWorld) * .5
           + aetherFilmRadiance(vWorld + vec3(.8, 0., .6)) * .25
           + aetherFilmRadiance(vWorld - vec3(.8, 0., .6)) * .25;
+        filmColor *= vZone < 1.5 ? .10 : .6;
         float luminance = dot(filmColor, vec3(.2126, .7152, .0722));
         float bright = smoothstep(.012, .42, luminance);
         vec3 color = filmColor * (.8 + bright * .9);

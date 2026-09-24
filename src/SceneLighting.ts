@@ -1,4 +1,5 @@
 import { smooth, windowWeight } from './Journey'
+import { REACTOR } from './Reactor'
 import type * as THREE from 'three'
 
 /** The media lifecycle owns the texture; materials only share these references. */
@@ -49,6 +50,11 @@ export const lightChoreographyGLSL = /* glsl */ `
       }
     #endif
     return vec3(0.);
+  }
+  // The same aperture projection reaches particles, haze and water.
+  vec3 aetherApertureFilm(vec3 worldPosition) {
+    float drop = max(.1, ${REACTOR.worldY + REACTOR.apertureY * REACTOR.heightScale} - worldPosition.y);
+    return aetherFilmColor(.5 + worldPosition.xz / (2.2 + drop * .4));
   }
   vec3 aetherFilmRadiance(vec3 worldPosition) {
     vec2 filmUv = .5 + .5 * sin(worldPosition.xz * vec2(.115, .13)

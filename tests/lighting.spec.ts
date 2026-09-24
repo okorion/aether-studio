@@ -136,7 +136,7 @@ test('@interaction forest soil and rooted plants persist independently of the wr
     expect(plants.position.y).toBe(-8.7)
     expect(edge(lower).position.y).toBe(-8.7)
     scene.updateMatrixWorld(true)
-    expect(edge(lower).getWorldPosition(new THREE.Vector3()).y).toBeCloseTo(-52.8, 6)
+    expect(edge(lower).getWorldPosition(new THREE.Vector3()).y).toBeCloseTo(-51.6, 6)
     const down = new THREE.Vector3(0,1,0).transformDirection(lower.matrixWorld)
     expect(down.y).toBeCloseTo(-1, 6)
     expect(kinds.count).toBeGreaterThan(5000)

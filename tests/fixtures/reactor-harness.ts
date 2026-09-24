@@ -63,9 +63,12 @@ export function probeReactor(mobile: boolean, software: boolean) {
     })
     const idle = read(.735, 10), idleLater = read(.735, 10.1)
     const idleSpeed = Math.max(...idle.map((p, i) => Math.hypot(...p.map((v, axis) => idleLater[i][axis] - v))))
+    const descent = [.64, .66, .68, .70, .72, .725].map(progress => read(progress, 10))
+    const rebound = Math.max(...descent.slice(1).flatMap((points, step) =>
+      points.map((p, i) => p[1] - descent[step][i][1])))
     read(.78); read(.61); read(.74)
     const reverse = read(.640)
-    return { start, mid, end, stopped, frozen, reverse, continuity, idleSpeed, centre: centre.toArray(), bore, centreHits, rimHits,
+    return { start, mid, end, stopped, frozen, reverse, continuity, idleSpeed, rebound, centre: centre.toArray(), bore, centreHits, rimHits,
       projection, centreProjection: centre.clone().project(camera).toArray() }
   } finally { worlds.dispose(); atmosphere.dispose(); geometry.dispose(); material.dispose(); target.dispose(); renderer.dispose() }
 }

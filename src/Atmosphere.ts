@@ -112,8 +112,12 @@ const currentField = /* glsl */ `
     vec3 gathered = vec3((cos(t * PI * 2.) * diskRadius + sin(t * 13.) * .09) / uReactorScale,
       (uAperture.x - .12 - drop * (.35 + branch * .9)) / uReactorScale,
       sin(t * PI * 2.) * diskRadius);
+    // Keep each tributary above its destination. Falling the whole seed cloud
+    // past the O and then interpolating back up caused a visible rebound.
+    float targetRoof = sin(t * PI * 2.) * 1.68 + abs(sin(t * PI * 2.)) * .78;
+    gathered.y = max(gathered.y, targetRoof + .20);
     float fall = smoothstep(.642 + branch * .008, .711 + branch * .008, progress);
-    gathered.y -= fall * (1.6 + drop * .7) / uReactorScale;
+    gathered.y -= fall * max(0., gathered.y - reactor.y) * .30;
     gathered.x += sin(t * 23. + fall * 2.) * fall * .23;
     reactor = mix(gathered, reactor, formed);
     float sheetAngle = t * PI * 2.0 + scrollPhase * 0.12;

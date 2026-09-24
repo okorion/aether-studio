@@ -78,6 +78,9 @@ export function createSceneWorlds(
   const pointerWaveOrigin = { value: new THREE.Vector2() }
   const pointerWaveAge = { value: -1 }
   const pointerWaveStrength = { value: 0 }
+  const pointerWaves = { value: Array.from({ length: 8 }, () => new THREE.Vector4()) }
+  const pointerWaveStarts = new Float64Array(8).fill(-Infinity)
+  let pointerWaveSlot = 0
   let scalePointerActive = false
   let pointerWaveStart = -Infinity
   const lightDepth = { value: 0 }
@@ -87,7 +90,7 @@ export function createSceneWorlds(
   const pointerFlow = { value: neutralFlow as THREE.Texture }
   const metal = mat(createScaleSurface(software,
     { pointerNdc, pointerStrength, pointerAspect, pointerFlow, surfaceTime, surfaceExtent,
-      pointerWaveOrigin, pointerWaveAge, pointerWaveStrength, lightDepth }, lightFilm))
+      pointerWaves, lightDepth }, lightFilm))
   const silver = mat(new THREE.MeshStandardMaterial({
     color: 0x929197, metalness: software ? .45 : .96, roughness: .24, envMapIntensity: 1.25, transparent: true,
   }))
@@ -627,7 +630,7 @@ export function createSceneWorlds(
   return {
     getScaleWaveState() {
       return { origin: pointerWaveOrigin.value.clone(), age: pointerWaveAge.value,
-        strength: pointerWaveStrength.value }
+        strength: pointerWaveStrength.value, waves: pointerWaves.value.map(wave => wave.toArray()) }
     },
     getChamberHeight() {
       return space.getWorldPosition(chamberWorld).y
@@ -707,18 +710,27 @@ export function createSceneWorlds(
         ? Math.max(.25, Math.min(5, pointer.aspect)) : 1
       surfaceTime.value = scaleTime
       pointerFlow.value = pointer?.flowTexture ?? neutralFlow
-      const nextPointerActive = Boolean(pointer?.active && pointerStrength.value > .1)
+      const nextPointerActive = Boolean(scaleWall.visible && pointer?.active && pointerStrength.value > .1)
       if (nextPointerActive && scalePointer) {
         const moved = pointerWaveOrigin.value.distanceTo(scalePointer) > .035
-        if ((!scalePointerActive || moved) && scaleTime - pointerWaveStart >= .16) {
+        if ((!scalePointerActive || moved) && scaleTime - pointerWaveStart >= .20) {
           pointerWaveOrigin.value.copy(scalePointer)
           pointerWaveStart = scaleTime
-          pointerWaveStrength.value = Math.min(.7, pointerStrength.value * .7)
+          pointerWaveStrength.value = Math.min(.34, pointerStrength.value * .34)
+          pointerWaves.value[pointerWaveSlot].set(scalePointer.x, scalePointer.y, 0, pointerWaveStrength.value)
+          pointerWaveStarts[pointerWaveSlot] = scaleTime
+          pointerWaveSlot = (pointerWaveSlot + 1) % pointerWaves.value.length
         }
       }
       scalePointerActive = nextPointerActive
       pointerWaveAge.value = Number.isFinite(pointerWaveStart) ? scaleTime - pointerWaveStart : -1
-      if (pointerWaveAge.value > 1.12) pointerWaveStrength.value = 0
+      if (pointerWaveAge.value > 1.6) pointerWaveStrength.value = 0
+      // Keep recent fronts after pointer leave; each expires independently.
+      for (let i = 0; i < pointerWaves.value.length; i++) {
+        const wave = pointerWaves.value[i]
+        wave.z = Number.isFinite(pointerWaveStarts[i]) ? scaleTime - pointerWaveStarts[i] : 2
+        if (!scaleWall.visible || wave.z < 0 || wave.z >= 1.6) wave.w = 0
+      }
       bubbles.material.uniforms.uTime.value = scaleTime
       bubbles.material.uniforms.uOpacity.value = scaleWeight
       bubbles.points.visible = scaleWeight > .001

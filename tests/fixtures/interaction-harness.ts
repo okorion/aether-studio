@@ -792,18 +792,19 @@ function probeScalePointer() {
   try {
     renderer.autoClear = true
     const baseline = draw(0, 0)
-    const laterBaseline = draw(0, 0, undefined, 6.8)
-    const resetBaseline = draw(0, 0, undefined, 8.0)
+    const resetBaseline = draw(0, 0, undefined, 8.5)
     const left = draw(-.4, 1)
+    // Compare new right input with the SAME remaining left wake.
+    const laterBaseline = draw(0, 0, undefined, 6.8)
     const right = draw(.4, 1, undefined, 6.8)
-    const reset = draw(.4, 0, undefined, 8.0)
+    const reset = draw(.4, 0, undefined, 8.5)
     for (let i = 0; i < 8; i++) {
       flow.move(-.55 + i * .05, 0, 4 / 3)
       flow.update(.035)
     }
-    const wake = draw(-.3, 0, flow.texture, 8.0)
+    const wake = draw(-.3, 0, flow.texture, 8.5)
     for (let i = 0; i < 150; i++) flow.update(1 / 60)
-    const wakeReset = draw(-.3, 0, flow.texture, 8.0)
+    const wakeReset = draw(-.3, 0, flow.texture, 8.5)
     const wave = draw(.9, 0, undefined, 7.35)
     const middleWave = draw(.9, 0, undefined, 8.55)
     const overlap = draw(-.4, 1, undefined, 8.55)
@@ -821,6 +822,10 @@ function probeScalePointer() {
         rawNdc: new THREE.Vector2(x, 0), active: true, strength: 1, aspect: 4 / 3 }, probeCamera)
     }
     const slowMove = assembly.getScaleWaveState()
+    assembly.update(20.55, .83)
+    const afterLeave = assembly.getScaleWaveState()
+    assembly.update(22.1, .83)
+    const afterDecay = assembly.getScaleWaveState()
     return {
       left: difference(baseline, left), right: difference(laterBaseline, right),
       reset: difference(resetBaseline, reset),
@@ -834,6 +839,7 @@ function probeScalePointer() {
       edgeWave: difference(baseline, edgeWave),
       rest: difference(baseline, rest),
       nextBeat: difference(wave, nextBeat),
+      wakeHistory: { active: slowMove.waves, afterLeave: afterLeave.waves, afterDecay: afterDecay.waves },
       slowMove: { originX: slowMove.origin.x, age: slowMove.age, strength: slowMove.strength },
       matricesUnchanged: originalMatrices.every((value, index) => value === tiles.instanceMatrix.array[index]),
     }

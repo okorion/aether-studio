@@ -29,23 +29,42 @@ export function createChainGeometry(software: boolean, mobile: boolean) {
     .047, software ? 6 : mobile ? 8 : 10, true)
 }
 
-/** A finite strand, measured from its free lower end. No link ever wraps. */
-export function sampleChainPath(progress: number) {
-  const descent = smooth(.27, .65, progress)
-  const endY = -2.5 - descent * .2
-  // Author the strand in the column's local frame. Only vertical travel is
-  // scroll-driven here; the shared parent owns ALL rotation, including the end.
-  const endAngle = 1.5
-  const points: THREE.Vector3[] = []
-  for (let i = 0; i <= 80; i++) {
-    const height = i * .25
-    const coil = Math.max(0, height - 1.5)
-    const angle = endAngle - coil * .48 * smooth(0, 2.5, coil)
-    const radius = 2.08 - smooth(0, 3, height) * .38
-    points.push(new THREE.Vector3(Math.cos(angle) * radius,
-      endY + height, Math.sin(angle) * radius))
+const CHAIN_RADIUS = 1.85
+const CHAIN_TURN_PER_HEIGHT = .85
+const CHAIN_TRACK_HEIGHT = 20
+const CHAIN_ARC_PER_HEIGHT = Math.hypot(1, CHAIN_RADIUS * CHAIN_TURN_PER_HEIGHT)
+
+/** A finite interval travelling on one fixed column-local helix. */
+class ColumnChainCurve extends THREE.Curve<THREE.Vector3> {
+  private readonly endY: number
+  constructor(endY: number) {
+    super()
+    this.endY = endY
   }
-  return new THREE.CatmullRomCurve3(points)
+
+  getPoint(t: number, target = new THREE.Vector3()) {
+    const y = this.endY + t * CHAIN_TRACK_HEIGHT
+    // Absolute local height anchors the winding to the column. Advancing the
+    // strand moves each link along this track, not sideways off the track.
+    const angle = -.7 - y * CHAIN_TURN_PER_HEIGHT
+    return target.set(Math.cos(angle) * CHAIN_RADIUS, y, Math.sin(angle) * CHAIN_RADIUS)
+  }
+
+  getPointAt(t: number, target = new THREE.Vector3()) { return this.getPoint(t, target) }
+
+  getTangentAt(t: number, target = new THREE.Vector3()) {
+    const angle = -.7 - (this.endY + t * CHAIN_TRACK_HEIGHT) * CHAIN_TURN_PER_HEIGHT
+    return target.set(Math.sin(angle) * CHAIN_RADIUS * CHAIN_TURN_PER_HEIGHT,
+      1, -Math.cos(angle) * CHAIN_RADIUS * CHAIN_TURN_PER_HEIGHT).normalize()
+  }
+
+  getLength() { return CHAIN_TRACK_HEIGHT * CHAIN_ARC_PER_HEIGHT }
+}
+
+export function sampleChainPath(progress: number) {
+  // The complete strand feeds down the helix; neither endpoint wraps or scales.
+  // Its common parent still supplies the column's world rotation and descent.
+  return new ColumnChainCurve(-.9 - smooth(.27, .65, progress) * 1.65)
 }
 
 export function createChainMaterial(software: boolean) {

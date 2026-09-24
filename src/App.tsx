@@ -225,7 +225,7 @@ export default function App() {
       window.clearTimeout(timeout)
       document.removeEventListener('visibilitychange', watch)
     }
-  }, [loading.status, onUnavailable])
+  }, [loading.status, loading.percent, onUnavailable])
   const onSelectProject = useCallback((index: number) => {
     if (Number.isInteger(index) && index >= 0) setProject(projects[index % projects.length])
   }, [])

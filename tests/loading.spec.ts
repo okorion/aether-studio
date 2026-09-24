@@ -80,3 +80,25 @@ test('@fallback unavailable WebGL exits loading without reporting success', asyn
   await expect(page.getByRole('progressbar')).not.toBeVisible()
   await expect(page.locator('.loading-status')).toContainText('3D unavailable')
 })
+
+test('preparation advances restart the stall watchdog even when total startup exceeds a minute', async ({ page }) => {
+  await page.clock.install()
+  // Drive the real App callbacks without GPU timing: each stage makes progress
+  // inside its deadline, while the total preparation lasts more than a minute.
+  await page.route(sceneModule, route => route.fulfill({
+    contentType: 'application/javascript',
+    body: 'export default function Scene(props) { window.reportPreparation = props.onLoading; return null; }',
+  }))
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.waitForFunction(() => typeof Reflect.get(window, 'reportPreparation') === 'function')
+  const app = page.locator('.experience')
+  for (const stage of ['module', 'resources', 'textures']) {
+    await page.evaluate(stage => Reflect.get(window, 'reportPreparation')(stage), stage)
+    await page.clock.fastForward(50_000)
+    await expect(app).toHaveAttribute('data-loading-state', 'loading')
+  }
+  // The last real stage now stalls. Display-counter ticks must not extend it.
+  await page.clock.fastForward(10_001)
+  await expect(app).toHaveAttribute('data-loading-state', 'unavailable')
+  await expect(app).not.toHaveAttribute('data-loading-progress', '100')
+})

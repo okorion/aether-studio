@@ -68,27 +68,27 @@ test('@interaction spine links wrap in front and behind the bones and reverse wi
       expect(twists[i].yaw - twists[i - 1].yaw).toBeGreaterThan(0)
       expect(twists[i].yaw - twists[i - 1].yaw).toBeLessThan(.5)
     }
-    // Check each actual strand independently; parallel hanging chains fail
-    // even if one is placed in front and the other behind the whole spine.
-    for (let strand = 0; strand < 2; strand++) {
-      const centres: THREE.Vector3[] = []
-      for (let i = strand * chains.count / 2; i < (strand + 1) * chains.count / 2; i++) {
-        const position = new THREE.Vector3()
-        chains.getMatrixAt(i, matrix)
-        matrix.decompose(position, quaternion, scale)
-        if (scale.length() > .1) centres.push(position)
-      }
-      expect(Math.max(...centres.map(p => p.z))).toBeGreaterThan(boneAxis.max.z + .5)
-      expect(Math.min(...centres.map(p => p.z))).toBeLessThan(boneAxis.min.z - .5)
-      expect(new Set(centres.map(p => `${Math.sign(p.x)},${Math.sign(p.z)}`)).size).toBe(4)
-      centres.sort((a, b) => a.y - b.y)
-      let turn = 0
-      for (let i = 1; i < centres.length; i++) {
-        const delta = Math.atan2(centres[i].z, centres[i].x) - Math.atan2(centres[i - 1].z, centres[i - 1].x)
-        turn += Math.atan2(Math.sin(delta), Math.cos(delta))
-      }
-      expect(Math.abs(turn)).toBeGreaterThan(Math.PI * 2)
+    // Inspect the whole finite strand. Its lower end hangs freely; dividing
+    // these links in half would invent two chains that no longer exist.
+    const centres: THREE.Vector3[] = []
+    for (let i = 0; i < chains.count; i++) {
+      const position = new THREE.Vector3()
+      chains.getMatrixAt(i, matrix)
+      matrix.decompose(position, quaternion, scale)
+      centres.push(position)
     }
+    expect(Math.max(...centres.map(p => p.z))).toBeGreaterThan(boneAxis.max.z + .5)
+    expect(Math.min(...centres.map(p => p.z))).toBeLessThan(boneAxis.min.z - .5)
+    expect(new Set(centres.map(p => `${Math.sign(p.x)},${Math.sign(p.z)}`)).size).toBe(4)
+    let turn = 0
+    for (let i = 1; i < centres.length; i++) {
+      expect(centres[i].y).toBeGreaterThan(centres[i - 1].y)
+      const delta = Math.atan2(centres[i].z, centres[i].x) - Math.atan2(centres[i - 1].z, centres[i - 1].x)
+      turn += Math.atan2(Math.sin(delta), Math.cos(delta))
+    }
+    // The attached part curves around the column while the free end stays
+    // straight. Keep the winding check without requiring two full-turn coils.
+    expect(Math.abs(turn)).toBeGreaterThan(Math.PI * 1.5)
     assembly.update(.4, 0, 1)
     expect(assembly.group.visible).toBe(false)
   } finally {

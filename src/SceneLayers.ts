@@ -52,13 +52,21 @@ export function createSceneLayers(scene: THREE.Scene) {
         float noise=fract(sin(dot(floor(screen*vec2(1800.,1100.)),vec2(12.9898,78.233)))*43758.5453);
         float y=screen.y-edge+(noise-.5)*.006;
         float mask=(1.-smoothstep(uTop-.005,uTop+.005,y))*smoothstep(uBottom-.005,uBottom+.005,y);
-        vec2 displacement=surfaceDisplacement(screen)*uFluidWeight;
+        vec3 water=surfaceWater(screen)*uFluidWeight;
+        vec2 displacement=water.xy*.014;
+        displacement*=min(1.,.0027/max(length(displacement),.00001));
+        displacement.x/=max(uFlowAspect,.25);
         vec2 inkUv=vUv-displacement;
         vec4 ink=texture2D(uMap,clamp(inkUv,vec2(0.),vec2(1.)));
         if(mask*ink.a*uOpacity<.003)discard;
         // A faint sheen belongs to this black plate, below the solid glass emblem.
         // The forest and emblem never sample this displacement for their silhouette.
-        ink.rgb+=vec3(.028,.043,.047)*min(1.,length(displacement)*22.);
+        float filmEdge=min(1.,length(water.xy)*4.);
+        float reflection=pow(max(0.,dot(normalize(vec3(water.xy*7.,1.)),normalize(vec3(-.5,.6,1.)))),12.);
+        ink.rgb+=vec3(.032,.055,.064)*filmEdge*reflection;
+        // Narrow chromatic refraction belongs to the moving liquid surface.
+        ink.r=mix(ink.r,texture2D(uMap,clamp(inkUv-displacement*.08,0.,1.)).r,filmEdge*.4);
+        ink.b=mix(ink.b,texture2D(uMap,clamp(inkUv+displacement*.08,0.,1.)).b,filmEdge*.4);
         gl_FragColor=vec4(ink.rgb,ink.a*uOpacity*mask);
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
@@ -111,20 +119,7 @@ export function createSceneLayers(scene: THREE.Scene) {
         const bx = w * (narrow ? .12 : .65), by = h * (narrow ? .66 : .49)
         ;['INDEPENDENT BY NATURE', '', 'ART, CODE AND HUMAN CURIOSITY.', 'WE BUILD WORLDS THAT MOVE US.', '', 'IMAGINATION, MADE TANGIBLE.'].forEach((line, j) => c.fillText(line, bx, by + body * 1.75 * j))
       } else {
-        // An original O medallion sits in the centre of the scale wrapper.
-        // It remains legible while the metal tiles fold behind it.
-        const icon = w * (narrow ? .055 : .029)
-        c.save()
-        c.strokeStyle = '#c4d1c5'
-        c.lineWidth = Math.max(1, w * .0013)
-        c.beginPath()
-        c.arc(w * .5, h * .50, icon * 1.45, 0, Math.PI * 2)
-        c.stroke()
-        c.font = `600 ${icon * 2.4}px "IBM Plex Mono", monospace`
-        c.textAlign = 'center'
-        c.textBaseline = 'middle'
-        c.fillText('O', w * .5, h * .50)
-        c.restore()
+        // The centre mark is formed by actual scale facets in the 3D sheet.
         c.font = `400 ${w * (narrow ? .049 : .027)}px "IBM Plex Mono", monospace`
         c.fillText('MATTER', w * (narrow ? .1 : .25), h * .45)
         c.fillText('IN MOTION ↗', w * (narrow ? .1 : .25), h * .45 + w * .037)

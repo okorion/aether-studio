@@ -103,6 +103,7 @@ export function createScaleSurface(
       varying vec3 vTilePoint;
       varying vec3 vTileFinish;
       varying vec2 vSheetPoint;
+      varying vec2 vScaleMark;
       ${filmEnabled ? 'varying vec3 vTileWorld;' : ''}
     ` + shader.vertexShader
     shader.vertexShader = shader.vertexShader.replace('#include <beginnormal_vertex>', /* glsl */ `
@@ -131,10 +132,14 @@ export function createScaleSurface(
       }
       pointerWave = min(.48, pointerWave);
       float localTouch = exp(-dot(tileDelta, tileDelta) * 95.0)
-        * (uSurfaceStrength * .22 + trail * .12);
+        * (uSurfaceStrength * .30 + trail * .16);
       vSurfaceHeat = clamp(max(pointerWave, localTouch), 0., .8) * step(.001, tileClip.w);
       // The automatic front crosses the entire tile sheet in three seconds.
       float tileRadius = length(tileCentre.xy);
+      float markRadius = length(tileCentre.xy / vec2(.82, 1.06));
+      float markStroke = 1. - smoothstep(.13, .32, abs(markRadius - 1.));
+      float markBorder = 1. - smoothstep(.06, .18, abs(tileRadius - 1.48));
+      vScaleMark = vec2(max(markStroke, markBorder*.8), 1.-smoothstep(.61,.82,markRadius));
       float cycle = mod(uSurfaceTime, ${SCALE_WAVE_INTERVAL_SECONDS.toFixed(1)});
       float waveAge = cycle
         - tileRadius / max(uSurfaceExtent, .001) * ${SCALE_WAVE_TRAVEL_SECONDS.toFixed(1)};
@@ -150,7 +155,7 @@ export function createScaleSurface(
         radialField += normalize(delta+vec2(.0001))*pulse*.78;
         heartbeat = max(heartbeat,pulse*.78);
       }
-      float tileAngle = min(1.48, heartbeat * 1.32 + vSurfaceHeat * 1.05);
+      float tileAngle = min(1.48, heartbeat * 1.32 + vSurfaceHeat * 1.05 + vScaleMark.x*.20);
       vec2 radial = normalize(radialField + tileCentre.xy*.0001+vec2(.00001));
       vec3 tileAxis = tileRadius > .001 ? vec3(radial.y, -radial.x, 0.) : vec3(0., 1., 0.);
       float tileCos = cos(tileAngle);
@@ -174,6 +179,7 @@ export function createScaleSurface(
       vTilePoint = aArmour;
       vSheetPoint = tileCentre.xy + aArmour.xy * tileUnit;
       transformed.z -= (heartbeat * .38 - vSurfaceHeat * .12) / tileUnit;
+      transformed.z += (vScaleMark.x*.16-vScaleMark.y*.08) / tileUnit;
       ${filmEnabled ? /* glsl */ `
         vec4 scalePoint = vec4(transformed, 1.);
         #ifdef USE_INSTANCING
@@ -187,6 +193,7 @@ export function createScaleSurface(
       varying vec3 vTilePoint;
       varying vec3 vTileFinish;
       varying vec2 vSheetPoint;
+      varying vec2 vScaleMark;
       uniform sampler2D uScaleFinish;
       ${filmEnabled ? /* glsl */ `
         varying vec3 vTileWorld;
@@ -209,6 +216,8 @@ export function createScaleSurface(
       diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(1.19, .86, .68),
         smoothstep(.55, .82, scaleWear.r) * .45);
       diffuseColor.rgb *= 1. + vSurfaceHeat * .12;
+      diffuseColor.rgb = mix(diffuseColor.rgb, vec3(.66,.73,.71), vScaleMark.x*.92);
+      diffuseColor.rgb *= 1. - vScaleMark.y*.18;
     `)
     shader.fragmentShader = shader.fragmentShader.replace('#include <roughnessmap_fragment>', /* glsl */ `
       #include <roughnessmap_fragment>
@@ -216,6 +225,7 @@ export function createScaleSurface(
       float scaleSatin = smoothstep(.24, .86, vTileFinish.y);
       roughnessFactor = clamp(roughnessFactor + scaleSatin * .12 + (scaleWear.g - .5) * .23
         - (1. - scaleSatin) * .065 - vSurfaceHeat * .055, .17, .52);
+      roughnessFactor = mix(roughnessFactor,.19,vScaleMark.x*.7);
     `)
     if (!software) {
       shader.fragmentShader = shader.fragmentShader.replace('#include <normal_fragment_maps>', /* glsl */ `
@@ -252,8 +262,15 @@ export function createScaleSurface(
         totalEmissiveRadiance += scaleFilm * .10 * (1. - clamp(uScaleDepth, 0., 1.) * .25);
       ` : ''}
     `)
+    shader.fragmentShader = shader.fragmentShader.replace('#include <opaque_fragment>', /* glsl */ `
+      // Adjacent raised silver facets and recessed dark facets form the mark.
+      // It folds with each tile; no flat logo is drawn over the moving sheet.
+      outgoingLight *= 1. - vScaleMark.y * .45;
+      outgoingLight += vec3(.032, .040, .038) * vScaleMark.x;
+      #include <opaque_fragment>
+    `)
   }
   material.customProgramCacheKey = () =>
-    `aether-scale-radial-${software ? 'lite' : 'detailed'}-${filmEnabled ? 'film' : 'static'}-v5`
+    `aether-scale-facet-mark-${software ? 'lite' : 'detailed'}-${filmEnabled ? 'film' : 'static'}-v6`
   return material
 }

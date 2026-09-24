@@ -108,6 +108,9 @@ export function createWaterSurface(
       float breakup = smoothstep(.3,.75,waterNoise(flow*4.));
       water += vec3(.15,.32,.25)*crests*breakup*pool*.45;
       vec3 cloud = aetherLightCloud(vWaterWorld, normal, uTime, uLightDepth);
+      #ifdef AETHER_LIGHT_FILM
+        if(uLightFilmReady>.5) cloud = aetherApertureFilm(vWaterWorld + vec3(slope.x,0.,slope.y)*.7)*4.;
+      #endif
       // Transmission is alpha over the visible stone bed; there is no second
       // scene capture or screen-space refraction buffer on any profile.
       water += cloud * pool * (.06 + crests * .18);

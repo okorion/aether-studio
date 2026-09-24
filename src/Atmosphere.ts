@@ -13,6 +13,7 @@ const entryFragment = /* glsl */ `
   uniform float uEntryWipe;
   uniform float uDeviceEntryEdge;
   uniform float uDeviceEntryWipe;
+  uniform float uForestExit;
   varying vec4 vFieldClip;
   float fieldEntry() {
     vec2 screen = vFieldClip.xy / vFieldClip.w * .5 + .5;
@@ -22,7 +23,7 @@ const entryFragment = /* glsl */ `
     // Convergence belongs to the incoming sealed chamber, not the outgoing
     // monitor wrapper. Hand over the field before its new shape is revealed.
     float chamber = mix(1., 1. - smoothstep(uDeviceEntryEdge - .004, uDeviceEntryEdge + .004, boundary), uDeviceEntryWipe);
-    return monitor * chamber * smoothstep(uExitEdge - .004, uExitEdge + .004, boundary);
+    return monitor * chamber * smoothstep(max(uExitEdge, uForestExit) - .004, max(uExitEdge, uForestExit) + .004, boundary);
   }
 `
 
@@ -71,17 +72,19 @@ const currentField = /* glsl */ `
     // Their world height is fixed; only the shared column yaw turns them.
     float tier = min(3., floor(t * 4.));
     float petalAngle = fract(t * 4.) * PI * 2.;
-    float petal = .73 + .16 * cos(petalAngle * 5. + tier)
+    float petal = .83 + .22 * cos(petalAngle * 5. + tier)
       + .13 * sin(petalAngle * 9. + branch * 7.)
       + .06 * sin(petalAngle * 23. + tier * 4.);
-    float radius = (.12 + sqrt(branch) * (1.7 + .45 * sin(tier * 4. + side))) * petal;
+    // Unequal folded petal ridges leave creases through the dense volume.
+    float folded = branch + sin(branch * PI * 6. + petalAngle * 2.) * .045;
+    float radius = (.18 + sqrt(max(.001, folded)) * (1.58 + .35 * sin(tier * 4. + side))) * petal;
     float facing = side * .45 + (tier - 1.5) * .53;
     vec3 centre = vec3(side * (2.2 + .55 * sin(tier * 2.4)),
       (tier - 1.5) * 3.25 + side * .6, sin(tier * 2.1 + side) * 1.5);
     vec3 spine = centre + vec3(
       cos(petalAngle) * radius,
       sin(petalAngle) * radius,
-      .90 * branch * branch + .38 * sin(petalAngle * 5. + branch * 8.)
+      .85 * branch * branch + .52 * sin(petalAngle * 5. + branch * 8.)
     );
     spine.z += sin(facing) * (spine.x - centre.x);
     spine.xz *= uSpineSpread;
@@ -89,11 +92,13 @@ const currentField = /* glsl */ `
     spine = rotateSpineField(spine);
     float progress = uScroll / 55.;
     float formed = smoothstep(.668, .725, progress);
-    float fluidTime = uTime * .24;
-    float orbit = t * PI * 2.0 + (scrollPhase * .35 + fluidTime
-      + .16 * sin(t * 12. + fluidTime * .7)) * formed;
-    float cross = branch * PI * 2.0 + formed * (fluidTime * 1.3
-      + .35 * sin(orbit * 3. - fluidTime));
+    float fluidTime = uTime * .18;
+    // Bounded warp: accumulated time must never multiply formation progress.
+    // Otherwise a small scroll after a long visit spins grains many revolutions.
+    float orbit = t * PI * 2.0 + formed * (.10 * sin(t * 12. + fluidTime)
+      + (progress - .725) * 1.8);
+    float cross = branch * PI * 2.0 + fluidTime * .65
+      + .20 * sin(orbit * 3. - fluidTime);
     float lobe = .83 + .17 * sin(orbit * 3. + .8) + .10 * sin(orbit * 7.);
     float tube = (.24 + .36 * sqrt(branch)) * lobe
       * (1. + .12 * sin(orbit * 4. - fluidTime * 1.2));
@@ -103,7 +108,7 @@ const currentField = /* glsl */ `
     // descends with scroll; no planar disk appears at the incoming curtain.
     float diskRadius = uAperture.y * (.22 + .54 * sqrt(branch))
       * (.79 + .21 * sin(t * 19. + branch * 8.));
-    float drop = pow(.5 + .5 * sin(t * 17. + cross * 1.7), 1.6);
+    float drop = pow(.5 + .5 * sin(t * 17. + branch * PI * 3.4), 1.6);
     vec3 gathered = vec3((cos(t * PI * 2.) * diskRadius + sin(t * 13.) * .09) / uReactorScale,
       (uAperture.x - .12 - drop * (.35 + branch * .9)) / uReactorScale,
       sin(t * PI * 2.) * diskRadius);
@@ -135,9 +140,9 @@ const currentField = /* glsl */ `
     vec3 gold = mix(vec3(0.28, 0.36, 0.08), vec3(0.95, 0.51, 0.10), variation);
     // Color follows coherent flower lobes, not an independent rainbow per seed.
     float hue = .5 + .5 * sin(t * 29. + sin(t * 73.) * .4 + floor(lane * 2.) * 1.8 + fract(lane * 2.) * .5);
-    vec3 violet = mix(vec3(.15, .035, .40), vec3(.62, .10, .37), smoothstep(.18, .82, hue));
-    violet = mix(violet, vec3(.12, .39, .44), smoothstep(.88, .99, hue) * .75);
-    violet = mix(violet, vec3(.65, .27, .16), pow(variation, 12.) * .22);
+    vec3 violet = mix(vec3(.20, .055, .52), vec3(.85, .16, .49), smoothstep(.18, .82, hue));
+    violet = mix(violet, vec3(.08, .65, .63), smoothstep(.86, .97, hue) * .9);
+    violet = mix(violet, vec3(.95, .42, .21), pow(variation, 8.) * .45);
     vec3 cyan = mix(vec3(0.08, 0.87, 0.58), vec3(0.65, 0.24, 0.94), variation);
     vec3 iridescence = mix(vec3(0.08, 0.51, 0.55), vec3(0.77, 0.49, 0.18), variation);
     vec3 color = mix(gold, violet, uWeights.x);
@@ -166,14 +171,21 @@ const dustVertex = /* glsl */ `
     float speed = 0.028 + uWeights.x * 0.004 + uWeights.y * 0.055 + uWeights.z * 0.038;
     float phaseScroll = aAdvected * mix(motionTime(), max(0., uScroll - .715 * 55.), uWeights.y);
     float spineWeight = uWeights.x * (1.0 - uWeights.y) * (1.0 - uWeights.z) * (1.0 - uWeights.w);
-    float t = mix(fract(position.x + phaseScroll * speed * (0.76 + lane * 0.48)), position.x, spineWeight);
+    float t = mix(fract(position.x + phaseScroll * speed * (0.76 + lane * 0.48)), position.x, max(spineWeight, uWeights.y));
     vec3 p = current(t, lane, phaseScroll);
-    p.y -= aAdvected * spineWeight * max(0., uScroll / 55. - .25) * 45.;
+    // Independent column flow spans its visible height. Absolute travel
+    // reverses exactly with scroll, without wrapping or time integration.
+    float streamY = -7. + position.x * 31. - max(0., uScroll / 55. - .25) * 45.;
+    float streamAngle = lane * PI * 2. + position.x * 5.;
+    float streamRadius = 1.25 + .75 * fract(lane * 9.) + .18 * sin(position.x * 37.);
+    vec3 falling = rotateSpineField(vec3(cos(streamAngle) * streamRadius * uSpineSpread,
+      streamY, sin(streamAngle) * streamRadius * uSpineSpread));
+    p = mix(p, falling, aAdvected * spineWeight);
     float cluster = 0.32 + 0.68 * pow(sin(t * 35.0 + lane * 8.0) * 0.5 + 0.5, 2.0);
     float width = (0.13 + position.z * (0.72 + uWeights.x * .73)) * cluster;
     width *= 1.0 - uWeights.y * 0.65;
-    width *= 1.0 - uWeights.x * (1.0 - uWeights.y) * .58;
-    float turn = phase + t * 37.0 + phaseScroll * 0.6 * (1.0 - spineWeight);
+    width *= 1.0 - uWeights.x * (1.0 - uWeights.y) * .80;
+    float turn = phase + t * 37.0 + phaseScroll * 0.6 * (1.0 - max(spineWeight, uWeights.y));
     vec3 scatter = vec3(cos(turn), sin(turn * 0.83) * 0.62, sin(turn)) * width;
     scatter.z += aDust.z * (0.18 + (1.0 - uWeights.y) * 0.38);
     scatter *= mix(1., mix(.65, 1., smoothstep(.668, .725, uScroll / 55.)), uWeights.y);
@@ -236,7 +248,8 @@ const dustVertex = /* glsl */ `
     float perspective = 12.0 / max(2.0, -mv.z);
     // Pearlescent grains fill both flower volumes and the thicker reactor rim;
     // sparse strays retain a finer silhouette around the dense core.
-    float grainScale = 1.0 + uWeights.x * (.08 + .18 * cluster);
+    float grainScale = 1.0 + spineWeight * (.55 + .30 * cluster);
+    grainScale *= mix(1., .72, aAdvected * spineWeight);
     grainScale *= mix(1.18, 1.18 * mix(1., .7, stray), uWeights.y);
     gl_PointSize = clamp(aDust.y * grainScale * perspective * uPixelRatio, 0.65, 12.0 * uPixelRatio);
     float pearl = .5 + .5 * sin(phase * 2.3 + lane * 11.);
@@ -244,9 +257,20 @@ const dustVertex = /* glsl */ `
     deviceColor = mix(deviceColor, vec3(.24, .065, .65), (1. - formed) * (.4 + pearl * .6));
     deviceColor = mix(deviceColor, vec3(.90, .56, .20), pow(pearl, 7.) * .7);
     vColor = mix(currentColor(lane, t), deviceColor, uWeights.y);
+    // Broad folds have shaded recesses and lit crests. Keeping this attached
+    // to the flower coordinates gives volume without whitening every grain.
+    float flowerFold = .5 + .5 * sin(fract(lane * 2.) * 23. + t * 79. + sin(t * 29.) * 3.);
+    vColor *= mix(1., .16 + .84 * pow(flowerFold, 1.8), spineWeight * (1. - aAdvected));
     vec3 litWorld = (modelMatrix * vec4(p, 1.)).xyz;
     vColor += aetherLightCloud(litWorld, vec3(0., .5, .866), uTime, uDarkness)
       * (.07 + uWeights.y * .10);
+    #ifdef AETHER_LIGHT_FILM
+      if (uLightFilmReady > .5) {
+        vec3 aperture = aetherApertureFilm(litWorld);
+        vColor = mix(vColor, vColor * (.18 + dot(aperture, vec3(.2126,.7152,.0722)) * 2.5)
+          + aperture * 1.5, uWeights.y);
+      }
+    #endif
     float mineral = .20 + .80 * pow(.5 + .5 * sin(phase * 17. + lane * 53.), 2.);
     float arcLight = .24 + .76 * pow(.5 + .5 * sin(t * 8. + .8), 3.);
     vColor *= mix(.62 + mineral * .45, mineral * arcLight, uWeights.y);
@@ -257,11 +281,12 @@ const dustVertex = /* glsl */ `
     float shimmer = 0.73 + sin(uTime * 1.7 + phase * 7.0) * 0.2;
     float seam = smoothstep(0.0, 0.045, t) * (1.0 - smoothstep(0.94, 1.0, t));
     float petalPhase = fract(t * 4.);
-    seam *= mix(1., smoothstep(0., .06, petalPhase) * (1. - smoothstep(.94, 1., petalPhase)), spineWeight);
+    seam *= mix(1., smoothstep(0., .015, petalPhase) * (1. - smoothstep(.985, 1., petalPhase)), spineWeight * (1. - aAdvected));
     float distanceFade = exp(-max(0.0, -mv.z - 13.0) * 0.043);
     vAlpha = shimmer * mix(seam, 1.0, uWeights.y) * distanceFade * mix(0.72, 0.19, bokeh);
     vAlpha *= mix(1.0, .62 * mix(1., .22, bokeh), uWeights.y);
     vAlpha *= (1.0 - uDarkness * 0.23) * (1.0 + uWeights.x * 0.16);
+    vAlpha *= 1. + spineWeight * (1. - aAdvected) * .30;
     vAlpha *= uFieldOpacity;
   }
 `
@@ -292,7 +317,7 @@ const dustFragment = /* glsl */ `
     float glint = pow(facet, 8.) * rim;
     vec3 color = vColor * (.65 + facet * .45 + rim * .32);
     color += mix(vColor, vec3(.70,.64,.85), .3) * glint * .34;
-    shape *= .40 + rim * .45 + facet * .12;
+    shape *= .61 + rim * .25 + facet * .12;
     if (vBokeh > 0.5) {
       shape = exp(-rr * 6.0) * 0.36 + (1.0 - smoothstep(0.06, 0.22, abs(rr - 0.52))) * 0.18;
       color = vColor;
@@ -394,7 +419,7 @@ function seededRandom() {
 /** Three draws plus the outgoing overlap; no per-particle CPU updates or targets. */
 export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: boolean, lightFilm?: LightFilmUniforms) {
   const random = seededRandom()
-  const count = software ? 6000 : mobile ? 24000 : 72000
+  const count = software ? 6000 : mobile ? 40000 : 144000
   const bokehCount = software ? 12 : mobile ? 40 : 100
   const positions = new Float32Array(count * 3)
   const dust = new Float32Array(count * 4)
@@ -434,6 +459,7 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
     uEntryWipe: { value: 0 },
     uDeviceEntryEdge: { value: -.25 },
     uDeviceEntryWipe: { value: 0 },
+    uForestExit: { value: -.5 },
   }
 
   const dustGeometry = new THREE.BufferGeometry()
@@ -452,7 +478,7 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
   const particles = new THREE.Points(dustGeometry, dustMaterial)
   particles.name = 'aether-current-particles'
   particles.frustumCulled = false
-  particles.userData.motion = 'scroll-only base; local device pointer bend recovers with input decay'
+  particles.userData.motion = 'fixed flowers; reversible column fall; slow internal reactor current'
   particles.userData.fixedCount = count - advectedCount
   particles.userData.advectedCount = advectedCount
 
@@ -547,6 +573,7 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
       uniforms.uFieldOpacity.value = .06 * (1 - smooth(.10, .18, p))
         + smooth(.245, .31, p) * (1 - smooth(.75, .81, p))
       uniforms.uEntryEdge.value = layers.monitorEntry
+      uniforms.uForestExit.value = p < .20 ? layers.forestExit : -.5
       uniforms.uExitEdge.value = layers.deviceExit
       outgoingUniforms.uExitEdge.value = layers.monitorExit
       outgoing.position.y = columnY

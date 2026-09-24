@@ -23,10 +23,10 @@ test('@interaction flower grains fall with absolute scroll and retrace without w
     expect(Math.abs(Math.hypot(end[0], end[2]) - Math.hypot(start[0], start[2]))).toBeLessThan(.005)
     // Compare GPU motion with the actual SceneWorlds matter transform, not
     // a second copy of the shader's rotation convention or a fixed sign.
-    expect(Math.abs(moving[1] - end[1])).toBeGreaterThan(.1)
+    expect(Math.hypot(...moving.slice(0, 3).map((v, i) => v - end[i]))).toBeGreaterThan(.1)
     expect(moving[1] - movingStart[1]).toBeCloseTo(-.015 * 45, 3)
-    expect(moving[0]).toBeCloseTo(end[0], 3)
-    expect(moving[2]).toBeCloseTo(end[2], 3)
+    // The falling population hugs the column independently of the flowers.
+    expect(Math.hypot(moving[0], moving[2])).toBeLessThan(mobile ? 1.6 : 2.6)
     for (let axis = 0; axis < 3; axis++) {
       expect(Math.abs(end[axis] - expected[axis])).toBeLessThan(.005)
       expect(movingReverse[axis]).toBeCloseTo(movingStart[axis], 3)

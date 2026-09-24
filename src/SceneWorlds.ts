@@ -597,7 +597,7 @@ export function createSceneWorlds(
             vec3 encoded=texture2D(uChamberFilm,uv).rgb;
             radiance=mix(encoded/12.92,pow((encoded+.055)/1.055,vec3(2.4)),step(vec3(.04045),encoded));
           }` : ''}
-          return vec3(.15)+radiance*8.;
+          return vec3(.04)+radiance*24.;
         }
       ` + shader.fragmentShader
       let direct = THREE.ShaderChunk.lights_fragment_begin
@@ -611,9 +611,12 @@ export function createSceneWorlds(
         'getSpotLightInfo( spotLight, geometryPosition, directLight ); directLight.color *= apertureRadiance();')
       shader.fragmentShader = shader.fragmentShader.replace('#include <lights_fragment_begin>', direct)
       shader.fragmentShader = shader.fragmentShader.replace('#include <opaque_fragment>',
-        'outgoingLight = reflectedLight.directDiffuse + reflectedLight.directSpecular + totalEmissiveRadiance;\n#include <opaque_fragment>')
+        `outgoingLight = reflectedLight.directDiffuse + reflectedLight.directSpecular
+          + reflectedLight.indirectSpecular * min(vec3(.85), apertureRadiance() * .045)
+          + totalEmissiveRadiance;
+        #include <opaque_fragment>`)
     }
-    material.customProgramCacheKey = () => `${previousKey}-aperture-${lightFilm ? 'film' : 'static'}-v2`
+    material.customProgramCacheKey = () => `${previousKey}-aperture-${lightFilm ? 'film' : 'static'}-v3`
   }
   bindGroupCurtain(chamber, deviceCurtain)
   bindGroupCurtain(space, deviceCurtain)

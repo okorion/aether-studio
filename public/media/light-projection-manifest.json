@@ -1,6 +1,6 @@
 {
   "file": "light-projection.mp4",
-  "bytes": 40498,
+  "bytes": 274410,
   "codec": "H.264 Main",
   "pixel_format": "yuv420p",
   "width": 256,
@@ -11,16 +11,30 @@
   "audio": false,
   "faststart": true,
   "full_decode_verified": true,
-  "sha256": "0b8e42c3a247292b7e6513a6a922cb1260dfa7237f3ff2e0614f7272a0d6779d",
+  "sha256": "ed28eaf89b16e3d14c3f0e347b19db4cb8b40e4b251bedb8364776a92b48fb46",
   "sources": [],
-  "authorship": "Original periodic mathematical satin and low-frequency haze; no external footage or monitor-film sampling",
+  "authorship": "Aether bone column geometry and physical materials, rendered locally; no reference footage",
+  "rendered_source": {
+    "authorship": "Aether bone column geometry and physical materials, rendered locally; no reference footage",
+    "sources": {
+      "scripts/render-light-column.ts": "ac102312d06f3334fe328914a7cab2dd3b3623a0d25f04e27bdc8cb88f1a3700",
+      "src/SceneSpine.ts": "ee4165f39762aac7cd9ae7902cd19f99db6880c546e8e71aa3d5685d0c7dc938"
+    },
+    "frames": 168,
+    "fps": 12,
+    "width": 256,
+    "height": 160,
+    "seconds": 14,
+    "endpointFrame": 168,
+    "errors": []
+  },
   "palette": [
     "graphite",
     "deep teal",
     "ink violet",
     "restrained silver"
   ],
-  "sequence": "Continuous asymmetric folds and soft reflected light; one periodic 14-second phase; broad unlit space",
+  "sequence": "Rotating Aether column, slow white/violet highlights and dark intervals; seamless 14-second loop",
   "protected_monitor_hashes_before": {
     "chrome-current.mp4": "546f31b436c2c094a119ecd7b76be7f93661b4c2b9cf62f56decc61e211ed123",
     "aurora-bloom.mp4": "8e1f7e6839d5a91932e7a287865171d769c0f59015bc6dda2ed9b237e308f903",
@@ -40,23 +54,25 @@
   "source_hashes_verified_before_and_after": true,
   "luma": {
     "method": "Rec.709 weighted display RGB over all decoded pixels, range 0-255; not linear scene radiance",
-    "mean": 19.03191,
-    "p95": 49.5242,
-    "p99": 65.7078,
-    "maximum": 89.5622,
-    "maximum_allowed": 160,
-    "fraction_below_24": 0.700672,
-    "fraction_above_150": 0.0,
-    "frame_mean_min": 18.04792,
-    "frame_mean_max": 20.28342
+    "mean": 25.38693,
+    "p95": 184.8284,
+    "p99": 233.74921,
+    "maximum": 255.0,
+    "maximum_allowed": 255,
+    "fraction_below_24": 0.816646,
+    "fraction_above_150": 0.077204,
+    "frame_mean_min": 3.01267,
+    "frame_mean_max": 64.25475
   },
   "loop_join": {
     "verified": true,
     "method": "all decoded adjacent-frame RGB differences and last-to-first seam",
-    "mean_abs_rgb": 1.01357,
-    "adjacent_p95_mean_abs_rgb": 0.82772,
-    "maximum_allowed_mean_abs_rgb": 1.36574,
-    "procedural_first_and_period_endpoint_identical": true
+    "mean_abs_rgb": 9.79405,
+    "adjacent_p95_mean_abs_rgb": 10.88392,
+    "maximum_allowed_mean_abs_rgb": 17.95847,
+    "procedural_first_and_period_endpoint_identical": false,
+    "render_endpoint_mean_abs_rgb": 0.0030680338541666666,
+    "render_endpoint_tolerance": 0.01
   },
   "generator": "scripts/generate-light-video.py",
   "crf": 22,

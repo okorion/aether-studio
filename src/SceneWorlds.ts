@@ -141,7 +141,7 @@ export function createSceneWorlds(
         float coneRadius = ${REACTOR.apertureRadius} + max(0., belowAperture) * .20;
         float aperturePool = (1. - smoothstep(coneRadius * .6, coneRadius, length(vMachinePoint.xz)))
           * step(0., belowAperture);
-        totalEmissiveRadiance += projectedLight * aperturePool * .11;
+        totalEmissiveRadiance += projectedLight * aperturePool * .28;
       `)
       shader.fragmentShader = shader.fragmentShader.replace('#include <color_fragment>', `
         #include <color_fragment>

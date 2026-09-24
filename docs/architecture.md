@@ -21,10 +21,10 @@
 | 링·O·리본 트레일 | `glass`는 두께가 있는 유리 띠와 둥근 O에 배경 굴절·영상 반사를 합성한다. 포인터는 형상을 변형하지 않는다. `silver`는 기존 형상·재질을 선택하며 유리용 배경 캡처를 만들지 않는다. | [SceneEmblem](../src/SceneEmblem.ts) |
 | 상단·하단 포레스트 | 고정된 월드 위치의 가지·잎·입자가 카메라 시차를 만든다. 마우스의 이동 방향이 잎과 입자에 잠시 남는다. | [ForestGeometry](../src/ForestGeometry.ts), [SceneForest](../src/SceneForest.ts) |
 | 본 컬럼·체인 | 마디 방향이 높이에 따라 달라진다. 한 줄 체인이 컬럼을 감고 끝 링크가 스크롤을 따라 내려온다. | [SceneSpine](../src/SceneSpine.ts), [SceneChain](../src/SceneChain.ts) |
-| 본 컬럼 입자 | 꽃 군집과 두 갈래 띠에는 시간에 따른 자동 회전을 더한다. 이와 별도로 공통 회전 위상과 하강 입자의 높이는 스크롤로 정한다. | [Atmosphere](../src/Atmosphere.ts) |
+| 본 컬럼 입자 | 가까운 꽃 군집과 뒤쪽의 넓고 얕은 나선 띠가 각각 자동 회전한다. 나선은 스크롤 회전량의 일부를 함께 받으며 하강 입자는 스크롤 높이만 따른다. | [Atmosphere](../src/Atmosphere.ts) |
 | 모니터 | 본 컬럼 앞뒤의 사선 나선을 따라 위치·높이·방향이 함께 바뀐다. 호버는 나선 바깥쪽으로 조금 이동시키며 클릭은 프로젝트 상세를 연다. | [SceneMonitors](../src/SceneMonitors.ts) |
 | 리액터 | 고정된 높이의 금속 장치 안으로 O 입자가 모인다. 포인터 주변의 입자는 변형됐다가 돌아온다. | [SceneWorlds](../src/SceneWorlds.ts), [Atmosphere](../src/Atmosphere.ts) |
-| 스케일 패널 | 1초마다 큰 박동과 작은 후속 박동이 바깥으로 퍼지고 잠시 쉰다. 마우스가 브라우저 밖으로 나가도 남은 변형은 자연스럽게 감쇠한다. 마모·거칠기·미세 요철은 생성 텍스처로 표현한다. | [SceneScaleSurface](../src/SceneScaleSurface.ts) |
+| 스케일 패널 | 7초 주기로 파동이 발생해 3초 동안 바깥으로 퍼진다. 중앙 타일의 높이·기울기·반사 차이가 O 로고를 만들며 파동에 함께 접힌다. 마우스가 브라우저 밖으로 나가도 남은 변형은 자연스럽게 감쇠한다. | [SceneScaleSurface](../src/SceneScaleSurface.ts) |
 | 벨 크리처 | 몸통·테두리·촉수가 상단·하단 포레스트의 경계를 공유한다. 중간 장면에는 배치하지 않는다. | [Scene](../src/Scene.tsx) |
 | 표면 흐름·안개막 | 포인터의 속도·밀도 필드로 큰 2D 문구가 놓인 검은 판만 굴절시킨다. 전체 화면 굴절은 사용하지 않으며 본 컬럼 좌하단에는 안개 색만 합성한다. | [PointerFlow](../src/PointerFlow.ts), [SceneSurfaceFlow](../src/SceneSurfaceFlow.ts), [SceneLayers](../src/SceneLayers.ts), [SceneGlow](../src/SceneGlow.ts) |
 
@@ -34,7 +34,7 @@
 
 포인터 스트릭과 점 잔광은 포레스트에서만 생성·표시한다. 포레스트를 벗어나면 이전 입자의 수명을 비워 빠르게 돌아와도 오래된 궤적이 다시 나타나지 않는다. 표면 변형에 사용하는 흐름은 별도이므로 리액터·스케일 패널의 입력을 끄지 않는다.
 
-물막 변위는 `SceneLayers`의 문구 판 재질에서 처리한다. 앞에 놓인 유리 링의 윤곽, 상단·하단 포레스트와 모니터 픽셀은 화면 합성 단계에서 변위시키지 않는다. 영상 출처는 [광학 표현](optical-scenes.md), 최근 형상·재질 교정은 [모바일 광학 비교](mobile-optics-correction.md)에 정리했다.
+물막 변위는 `SceneLayers`의 문구 판 재질에서 밀도 기울기를 샘플링해 처리한다. 앞에 놓인 유리 링의 윤곽, 상단·하단 포레스트와 모니터 픽셀은 화면 합성 단계에서 변위시키지 않는다. `SceneLightShafts`의 포레스트 영상 평면은 카메라 회전과 분리하고 스크롤 높이만 따른다. 영상 출처는 [광학 표현](optical-scenes.md), 최근 배치·재질 교정은 [영상 방향·입자 나선·물막 비교](atmosphere-detail-correction.md)에 정리했다.
 
 [SceneVideo.ts](../src/SceneVideo.ts)는 모니터가 공유하는 영상을 지연 로드한다. VP8 지원 여부에 따라 WebM 또는 MP4를 고르고, 선택한 영상이 실패하면 절차적 셰이더를 표시한다.
 

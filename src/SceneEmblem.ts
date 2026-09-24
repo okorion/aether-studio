@@ -133,6 +133,7 @@ export function createSceneEmblem(options: SceneEmblemOptions) {
           uEmblemBackground: background, uEmblemBackgroundReady: backgroundReady,
           uEmblemTexel: backgroundTexel, uEmblemAspect: captureAspect,
           uEmblemThickness: thickness, uLightFilm: film.map, uLightFilmReady: film.ready,
+          uEmblemTime: tailTime,
         })
         shader.vertexShader = `varying vec4 vEmblemClip; varying vec3 vEmblemWorld; varying vec3 vEmblemLocal;\n${shader.vertexShader}`
           .replace('#include <project_vertex>', `#include <project_vertex>
@@ -145,6 +146,7 @@ export function createSceneEmblem(options: SceneEmblemOptions) {
           uniform vec2 uEmblemTexel;
           uniform float uEmblemAspect;
           uniform float uEmblemThickness;
+          uniform float uEmblemTime;
           varying vec4 vEmblemClip;
           varying vec3 vEmblemWorld;
           varying vec3 vEmblemLocal;
@@ -181,25 +183,31 @@ export function createSceneEmblem(options: SceneEmblemOptions) {
           #ifdef USE_CLEARCOAT
             emblemReflection += (clearcoatSpecularDirect + clearcoatSpecularIndirect) * material.clearcoat;
           #endif
-          vec3 emblemFilm = mix(aetherFilmRadiance(vEmblemWorld),
-            aetherFilmColor(.5 + normal.xy * .34), .48);
+          // Spread the live film over the whole curved face, rather than
+          // reflecting a narrow, nearly constant patch around its centre.
+          vec2 filmUv = .5 + vEmblemLocal.xy * vec2(.32,.38) + normal.xy*.19;
+          vec2 filmBend = normal.xy * .045;
+          vec3 emblemFilm = vec3(aetherFilmColor(filmUv+filmBend).r,
+            aetherFilmColor(filmUv).g, aetherFilmColor(filmUv-filmBend).b);
+          emblemFilm = max(vec3(0.),mix(vec3(dot(emblemFilm,vec3(.2126,.7152,.0722))),emblemFilm,1.3));
+          emblemFilm = pow(emblemFilm,vec3(.95));
           float emblemFilmLuma = dot(emblemFilm, vec3(.2126,.7152,.0722));
           // A dark film interval also dims the reflected highlight. Its colour
           // reaches the edge instead of leaving an always-silver light source.
           float emblemProjection = mix(.8, .45 + .8 * smoothstep(.015,.55,emblemFilmLuma), uLightFilmReady);
           vec3 emblemTint = mix(vec3(1.), normalize(emblemFilm + vec3(.06)) * 1.45, uLightFilmReady * .28);
           vec3 prism = .5 + .5 * cos(vec3(.4, 2.5, 4.6)
-            + emblemFresnel * 8.5 + vEmblemLocal.y * .9 + normal.x * 1.5);
+            + emblemFresnel * 8.5 + vEmblemLocal.y * .9 + normal.x * 1.5 + uEmblemTime*.22);
           vec3 glassBody = mix(vec3(.010,.017,.040), vec3(.035,.022,.060), .5+.5*normal.y);
           outgoingLight = emblemThrough * (1. - emblemFresnel * .52) * .89
             + glassBody * (.18 + emblemFresnel * .5)
             + emblemReflection * emblemTint * emblemProjection * (.12 + emblemFresnel * 1.4)
-            + prism * pow(emblemFresnel, 1.5) * .36
-            + emblemFilm * (.018 + emblemFresnel * emblemFresnel * .75);
+            + prism * pow(emblemFresnel, 1.5) * (.05 + emblemFilmLuma*.18)
+            + emblemFilm * (.11 + smoothstep(.08,.65,emblemFilmLuma)*.48 + emblemFresnel*.85);
           #include <opaque_fragment>
         `)
       }
-      surface.customProgramCacheKey = () => `${previousKey}-solid-prism-${index}-v2`
+      surface.customProgramCacheKey = () => `${previousKey}-film-prism-${index}-v3`
     }
   }
 

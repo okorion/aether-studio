@@ -1,0 +1,1095 @@
+{
+  "date": "2026-09-24",
+  "baseline": "870e8ade991fee05cc2b819bce1e154ccca472a5",
+  "capture": {
+    "desktop": [
+      1440,
+      900
+    ],
+    "mobile": [
+      390,
+      844
+    ],
+    "mobileDpr": 2,
+    "mobileAgent": "iPhone 13 / Chromium emulation",
+    "sceneSeconds": 10,
+    "filmSeconds": 6,
+    "scaleRestSeconds": 5,
+    "forestDirectionFilmSeconds": 12,
+    "quality": 1,
+    "comparison": "동일 진행도·시계·영상 준비 가중치·포인터 경로"
+  },
+  "checks": {
+    "d3d11Affected": {
+      "passed": 27,
+      "initialScaleFailure": "left.changed=10, expected >10. 국소 입력과 중앙 타일 암부 수정 후 기존 임계값 통과."
+    },
+    "windowsWebkit": {
+      "passed": 6,
+      "physicalIphone": false
+    },
+    "lint": true,
+    "typecheck": true,
+    "build": true
+  },
+  "captures": [
+    {
+      "version": "before",
+      "frames": [
+        {
+          "name": "desktop-0",
+          "progress": "0.000000",
+          "profile": "gpu",
+          "emblem": {
+            "variant": "glass",
+            "capture": "ready",
+            "width": 720,
+            "height": 450
+          },
+          "drawCalls": 135,
+          "programs": 109,
+          "geometries": 138,
+          "textures": 38,
+          "errors": []
+        },
+        {
+          "name": "desktop-65",
+          "progress": "0.065033",
+          "profile": "gpu",
+          "emblem": {
+            "variant": "glass",
+            "capture": "ready",
+            "width": 720,
+            "height": 450
+          },
+          "drawCalls": 53,
+          "programs": 109,
+          "geometries": 138,
+          "textures": 38,
+          "errors": []
+        },
+        {
+          "name": "desktop-175",
+          "progress": "0.175033",
+          "profile": "gpu",
+          "emblem": {
+            "variant": "glass",
+            "capture": "ready",
+            "width": 720,
+            "height": 450
+          },
+          "drawCalls": 43,
+          "programs": 109,
+          "geometries": 138,
+          "textures": 38,
+          "errors": []
+        },
+        {
+          "name": "desktop-350",
+          "progress": "0.349983",
+          "profile": "gpu",
+          "emblem": {
+            "variant": "glass",
+            "capture": "ready",
+            "width": 720,
+            "height": 450
+          },
+          "drawCalls": 31,
+          "programs": 109,
+          "geometries": 138,
+          "textures": 40,
+          "errors": []
+        },
+        {
+          "name": "desktop-400",
+          "progress": "0.400000",
+          "profile": "gpu",
+          "emblem": {
+            "variant": "glass",
+            "capture": "ready",
+            "width": 720,
+            "height": 450
+          },
+          "drawCalls": 33,
+          "programs": 109,
+          "geometries": 138,
+          "textures": 40,
+          "errors": []
+        },
+        {
+          "name": "desktop-550",
+          "progress": "0.549984",
+          "profile": "gpu",
+          "emblem": {
+            "variant": "glass",
+            "capture": "ready",
+            "width": 720,
+            "height": 450
+          },
+          "drawCalls": 37,
+          "programs": 109,
+          "geometries": 138,
+          "textures": 40,
+          "errors": []
+        },
+        {
+          "name": "desktop-710",
+          "progress": "0.709981",
+          "profile": "gpu",
+          "emblem": {
+            "variant": "glass",
+            "capture": "ready",
+            "width": 720,
+            "height": 450
+          },
+          "drawCalls": 76,
+          "programs": 109,
+          "geometries": 138,
+          "textures": 41,
+          "errors": []
+        },
+        {
+          "name": "desktop-740",
+          "progress": "0.739978",
+          "profile": "gpu",
+          "emblem": {
+            "variant": "glass",
+            "capture": "ready",
+            "width": 720,
+            "height": 450
+          },
+          "drawCalls": 80,
+          "programs": 109,
+          "geometries": 138,
+          "textures": 41,
+          "errors": []
+        },
+        {
+          "name": "desktop-830",
+          "progress": "0.829974",
+          "profile": "gpu",
+          "emblem": {
+            "variant": "glass",
+            "capture": "ready",
+            "width": 720,
+            "height": 450
+          },
+          "drawCalls": 22,
+          "programs": 109,
+          "geometries": 138,
+          "textures": 41,
+          "errors": []
+        },
+        {
+          "name": "desktop-900",
+          "progress": "0.899984",
+          "profile": "gpu",
+          "emblem": {
+            "variant": "glass",
+            "capture": "ready",
+            "width": 720,
+            "height": 450
+          },
+          "drawCalls": 73,
+          "programs": 109,
+          "geometries": 138,
+          "textures": 41,
+          "errors": []
+        },
+        {
+          "name": "desktop-975",
+          "progress": "0.975010",
+          "profile": "gpu",
+          "emblem": {
+            "variant": "glass",
+            "capture": "ready",
+            "width": 720,
+            "height": 450
+          },
+          "drawCalls": 85,
+          "programs": 109,
+          "geometries": 138,
+          "textures": 41,
+          "errors": []
+        },
+        {
+          "name": "mobile-0",
+          "progress": "0.000000",
+          "profile": "gpu",
+          "emblem": {
+            "variant": "glass",
+            "capture": "ready",
+            "width": 384,
+            "height": 831
+          },
+          "drawCalls": 38,
+          "programs": 101,
+          "geometries": 98,
+          "textures": 25,
+          "errors": []
+        },
+        {
+          "name": "mobile-65",
+          "progress": "0.064997",
+          "profile": "gpu",
+          "emblem": {
+            "variant": "glass",
+            "capture": "ready",
+            "width": 384,
+            "height": 831
+          },
+          "drawCalls": 32,
+          "programs": 101,
+          "geometries": 98,
+          "textures": 25,
+          "errors": []
+        },
+        {
+          "name": "mobile-175",
+          "progress": "0.174981",
+          "profile": "gpu",
+          "emblem": {
+            "variant": "glass",
+            "capture": "ready",
+            "width": 384,
+            "height": 831
+          },
+          "drawCalls": 19,
+          "programs": 101,
+          "geometries": 98,
+          "textures": 25,
+          "errors": []
+        },
+        {
+          "name": "mobile-350",
+          "progress": "0.350000",
+          "profile": "gpu",
+          "emblem": {
+            "variant": "glass",
+            "capture": "ready",
+            "width": 384,
+            "height": 831
+          },
+          "drawCalls": 18,
+          "programs": 101,
+          "geometries": 98,
+          "textures": 27,
+          "errors": []
+        },
+        {
+          "name": "mobile-400",
+          "progress": "0.399986",
+          "profile": "gpu",
+          "emblem": {
+            "variant": "glass",
+            "capture": "ready",
+            "width": 384,
+            "height": 831
+          },
+          "drawCalls": 20,
+          "programs": 101,
+          "geometries": 98,
+          "textures": 27,
+          "errors": []
+        },
+        {
+          "name": "mobile-550",
+          "progress": "0.549962",
+          "profile": "gpu",
+          "emblem": {
+            "variant": "glass",
+            "capture": "ready",
+            "width": 384,
+            "height": 831
+          },
+          "drawCalls": 18,
+          "programs": 101,
+          "geometries": 98,
+          "textures": 27,
+          "errors": []
+        },
+        {
+          "name": "mobile-710",
+          "progress": "0.709982",
+          "profile": "gpu",
+          "emblem": {
+            "variant": "glass",
+            "capture": "ready",
+            "width": 384,
+            "height": 831
+          },
+          "drawCalls": 34,
+          "programs": 101,
+          "geometries": 98,
+          "textures": 28,
+          "errors": []
+        },
+        {
+          "name": "mobile-740",
+          "progress": "0.740018",
+          "profile": "gpu",
+          "emblem": {
+            "variant": "glass",
+            "capture": "ready",
+            "width": 384,
+            "height": 831
+          },
+          "drawCalls": 35,
+          "programs": 101,
+          "geometries": 98,
+          "textures": 28,
+          "errors": []
+        },
+        {
+          "name": "mobile-830",
+          "progress": "0.829994",
+          "profile": "gpu",
+          "emblem": {
+            "variant": "glass",
+            "capture": "ready",
+            "width": 384,
+            "height": 831
+          },
+          "drawCalls": 9,
+          "programs": 101,
+          "geometries": 98,
+          "textures": 28,
+          "errors": []
+        },
+        {
+          "name": "mobile-900",
+          "progress": "0.899976",
+          "profile": "gpu",
+          "emblem": {
+            "variant": "glass",
+            "capture": "ready",
+            "width": 384,
+            "height": 831
+          },
+          "drawCalls": 34,
+          "programs": 101,
+          "geometries": 98,
+          "textures": 28,
+          "errors": []
+        },
+        {
+          "name": "mobile-975",
+          "progress": "0.974964",
+          "profile": "gpu",
+          "emblem": {
+            "variant": "glass",
+            "capture": "ready",
+            "width": 384,
+            "height": 831
+          },
+          "drawCalls": 18,
+          "programs": 101,
+          "geometries": 98,
+          "textures": 28,
+          "errors": []
+        }
+      ]
+    },
+    {
+      "version": "after",
+      "frames": [
+        {
+          "name": "desktop-0",
+          "progress": "0.000000",
+          "profile": "gpu",
+          "emblem": {
+            "variant": "glass",
+            "capture": "ready",
+            "width": 720,
+            "height": 450
+          },
+          "drawCalls": 78,
+          "programs": 109,
+          "geometries": 138,
+          "textures": 38,
+          "errors": []
+        },
+        {
+          "name": "desktop-65",
+          "progress": "0.065033",
+          "profile": "gpu",
+          "emblem": {
+            "variant": "glass",
+            "capture": "ready",
+            "width": 720,
+            "height": 450
+          },
+          "drawCalls": 53,
+          "programs": 109,
+          "geometries": 138,
+          "textures": 38,
+          "errors": []
+        },
+        {
+          "name": "desktop-175",
+          "progress": "0.175033",
+          "profile": "gpu",
+          "emblem": {
+            "variant": "glass",
+            "capture": "ready",
+            "width": 720,
+            "height": 450
+          },
+          "drawCalls": 43,
+          "programs": 109,
+          "geometries": 138,
+          "textures": 38,
+          "errors": []
+        },
+        {
+          "name": "desktop-350",
+          "progress": "0.349980",
+          "profile": "gpu",
+          "emblem": {
+            "variant": "glass",
+            "capture": "ready",
+            "width": 720,
+            "height": 450
+          },
+          "drawCalls": 31,
+          "programs": 109,
+          "geometries": 138,
+          "textures": 40,
+          "errors": []
+        },
+        {
+          "name": "desktop-400",
+          "progress": "0.399989",
+          "profile": "gpu",
+          "emblem": {
+            "variant": "glass",
+            "capture": "ready",
+            "width": 720,
+            "height": 450
+          },
+          "drawCalls": 33,
+          "programs": 109,
+          "geometries": 138,
+          "textures": 40,
+          "errors": []
+        },
+        {
+          "name": "desktop-550",
+          "progress": "0.549984",
+          "profile": "gpu",
+          "emblem": {
+            "variant": "glass",
+            "capture": "ready",
+            "width": 720,
+            "height": 450
+          },
+          "drawCalls": 37,
+          "programs": 109,
+          "geometries": 138,
+          "textures": 40,
+          "errors": []
+        },
+        {
+          "name": "desktop-710",
+          "progress": "0.709981",
+          "profile": "gpu",
+          "emblem": {
+            "variant": "glass",
+            "capture": "ready",
+            "width": 720,
+            "height": 450
+          },
+          "drawCalls": 76,
+          "programs": 109,
+          "geometries": 138,
+          "textures": 41,
+          "errors": []
+        },
+        {
+          "name": "desktop-740",
+          "progress": "0.739978",
+          "profile": "gpu",
+          "emblem": {
+            "variant": "glass",
+            "capture": "ready",
+            "width": 720,
+            "height": 450
+          },
+          "drawCalls": 80,
+          "programs": 109,
+          "geometries": 138,
+          "textures": 41,
+          "errors": []
+        },
+        {
+          "name": "desktop-830",
+          "progress": "0.829974",
+          "profile": "gpu",
+          "emblem": {
+            "variant": "glass",
+            "capture": "ready",
+            "width": 720,
+            "height": 450
+          },
+          "drawCalls": 22,
+          "programs": 109,
+          "geometries": 138,
+          "textures": 41,
+          "errors": []
+        },
+        {
+          "name": "desktop-900",
+          "progress": "0.899984",
+          "profile": "gpu",
+          "emblem": {
+            "variant": "glass",
+            "capture": "ready",
+            "width": 720,
+            "height": 450
+          },
+          "drawCalls": 73,
+          "programs": 109,
+          "geometries": 138,
+          "textures": 41,
+          "errors": []
+        },
+        {
+          "name": "desktop-975",
+          "progress": "0.975010",
+          "profile": "gpu",
+          "emblem": {
+            "variant": "glass",
+            "capture": "ready",
+            "width": 720,
+            "height": 450
+          },
+          "drawCalls": 85,
+          "programs": 109,
+          "geometries": 138,
+          "textures": 41,
+          "errors": []
+        },
+        {
+          "name": "mobile-0",
+          "progress": "0.000000",
+          "profile": "gpu",
+          "emblem": {
+            "variant": "glass",
+            "capture": "ready",
+            "width": 384,
+            "height": 831
+          },
+          "drawCalls": 38,
+          "programs": 101,
+          "geometries": 98,
+          "textures": 25,
+          "errors": []
+        },
+        {
+          "name": "mobile-65",
+          "progress": "0.065026",
+          "profile": "gpu",
+          "emblem": {
+            "variant": "glass",
+            "capture": "ready",
+            "width": 384,
+            "height": 831
+          },
+          "drawCalls": 32,
+          "programs": 101,
+          "geometries": 98,
+          "textures": 25,
+          "errors": []
+        },
+        {
+          "name": "mobile-175",
+          "progress": "0.174978",
+          "profile": "gpu",
+          "emblem": {
+            "variant": "glass",
+            "capture": "ready",
+            "width": 384,
+            "height": 831
+          },
+          "drawCalls": 19,
+          "programs": 101,
+          "geometries": 98,
+          "textures": 25,
+          "errors": []
+        },
+        {
+          "name": "mobile-350",
+          "progress": "0.349998",
+          "profile": "gpu",
+          "emblem": {
+            "variant": "glass",
+            "capture": "ready",
+            "width": 384,
+            "height": 831
+          },
+          "drawCalls": 18,
+          "programs": 101,
+          "geometries": 98,
+          "textures": 27,
+          "errors": []
+        },
+        {
+          "name": "mobile-400",
+          "progress": "0.399986",
+          "profile": "gpu",
+          "emblem": {
+            "variant": "glass",
+            "capture": "ready",
+            "width": 384,
+            "height": 831
+          },
+          "drawCalls": 20,
+          "programs": 101,
+          "geometries": 98,
+          "textures": 27,
+          "errors": []
+        },
+        {
+          "name": "mobile-550",
+          "progress": "0.549962",
+          "profile": "gpu",
+          "emblem": {
+            "variant": "glass",
+            "capture": "ready",
+            "width": 384,
+            "height": 831
+          },
+          "drawCalls": 18,
+          "programs": 101,
+          "geometries": 98,
+          "textures": 27,
+          "errors": []
+        },
+        {
+          "name": "mobile-710",
+          "progress": "0.709982",
+          "profile": "gpu",
+          "emblem": {
+            "variant": "glass",
+            "capture": "ready",
+            "width": 384,
+            "height": 831
+          },
+          "drawCalls": 34,
+          "programs": 101,
+          "geometries": 98,
+          "textures": 28,
+          "errors": []
+        },
+        {
+          "name": "mobile-740",
+          "progress": "0.740018",
+          "profile": "gpu",
+          "emblem": {
+            "variant": "glass",
+            "capture": "ready",
+            "width": 384,
+            "height": 831
+          },
+          "drawCalls": 35,
+          "programs": 101,
+          "geometries": 98,
+          "textures": 28,
+          "errors": []
+        },
+        {
+          "name": "mobile-830",
+          "progress": "0.829994",
+          "profile": "gpu",
+          "emblem": {
+            "variant": "glass",
+            "capture": "ready",
+            "width": 384,
+            "height": 831
+          },
+          "drawCalls": 9,
+          "programs": 101,
+          "geometries": 98,
+          "textures": 28,
+          "errors": []
+        },
+        {
+          "name": "mobile-900",
+          "progress": "0.899976",
+          "profile": "gpu",
+          "emblem": {
+            "variant": "glass",
+            "capture": "ready",
+            "width": 384,
+            "height": 831
+          },
+          "drawCalls": 34,
+          "programs": 101,
+          "geometries": 98,
+          "textures": 28,
+          "errors": []
+        },
+        {
+          "name": "mobile-975",
+          "progress": "0.974964",
+          "profile": "gpu",
+          "emblem": {
+            "variant": "glass",
+            "capture": "ready",
+            "width": 384,
+            "height": 831
+          },
+          "drawCalls": 18,
+          "programs": 101,
+          "geometries": 98,
+          "textures": 28,
+          "errors": []
+        }
+      ]
+    }
+  ],
+  "detail": [
+    {
+      "label": "before",
+      "errors": []
+    },
+    {
+      "label": "after",
+      "errors": []
+    }
+  ],
+  "runtime": [
+    {
+      "version": "before",
+      "viewport": [
+        1440,
+        900
+      ],
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 2060 SUPER (0x00001F06) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "errors": [],
+      "sections": [
+        {
+          "progress": 0,
+          "durationMs": 2414.699999809265,
+          "renderedFrames": 150,
+          "smoothedFrameMsMedian": 16.7,
+          "smoothedFrameMsP95": 16.7,
+          "quality": 1,
+          "drawCalls": 135,
+          "programs": 109
+        },
+        {
+          "progress": 0.175,
+          "durationMs": 2400.0999999046326,
+          "renderedFrames": 135,
+          "smoothedFrameMsMedian": 16.7,
+          "smoothedFrameMsP95": 16.7,
+          "quality": 1,
+          "drawCalls": 43,
+          "programs": 109
+        },
+        {
+          "progress": 0.4,
+          "durationMs": 2416,
+          "renderedFrames": 135,
+          "smoothedFrameMsMedian": 16.7,
+          "smoothedFrameMsP95": 16.7,
+          "quality": 1,
+          "drawCalls": 33,
+          "programs": 109
+        },
+        {
+          "progress": 0.65,
+          "durationMs": 2415.899999856949,
+          "renderedFrames": 135,
+          "smoothedFrameMsMedian": 16.7,
+          "smoothedFrameMsP95": 16.7,
+          "quality": 1,
+          "drawCalls": 121,
+          "programs": 109
+        },
+        {
+          "progress": 0.975,
+          "durationMs": 2416.2000000476837,
+          "renderedFrames": 135,
+          "smoothedFrameMsMedian": 16.7,
+          "smoothedFrameMsP95": 16.7,
+          "quality": 1,
+          "drawCalls": 85,
+          "programs": 109
+        }
+      ]
+    },
+    {
+      "version": "before",
+      "viewport": [
+        390,
+        844
+      ],
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 2060 SUPER (0x00001F06) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "errors": [],
+      "sections": [
+        {
+          "progress": 0,
+          "durationMs": 2404.4000000953674,
+          "renderedFrames": 150,
+          "smoothedFrameMsMedian": 16.7,
+          "smoothedFrameMsP95": 16.7,
+          "quality": 1,
+          "drawCalls": 64,
+          "programs": 101
+        },
+        {
+          "progress": 0.175,
+          "durationMs": 2416.399999856949,
+          "renderedFrames": 135,
+          "smoothedFrameMsMedian": 16.7,
+          "smoothedFrameMsP95": 16.7,
+          "quality": 1,
+          "drawCalls": 30,
+          "programs": 101
+        },
+        {
+          "progress": 0.4,
+          "durationMs": 2400.0999999046326,
+          "renderedFrames": 135,
+          "smoothedFrameMsMedian": 16.7,
+          "smoothedFrameMsP95": 16.7,
+          "quality": 1,
+          "drawCalls": 20,
+          "programs": 101
+        },
+        {
+          "progress": 0.65,
+          "durationMs": 2416.2000000476837,
+          "renderedFrames": 135,
+          "smoothedFrameMsMedian": 16.7,
+          "smoothedFrameMsP95": 16.7,
+          "quality": 1,
+          "drawCalls": 44,
+          "programs": 101
+        },
+        {
+          "progress": 0.975,
+          "durationMs": 2400.7999999523163,
+          "renderedFrames": 135,
+          "smoothedFrameMsMedian": 16.7,
+          "smoothedFrameMsP95": 16.7,
+          "quality": 1,
+          "drawCalls": 28,
+          "programs": 101
+        }
+      ]
+    },
+    {
+      "version": "after",
+      "viewport": [
+        1440,
+        900
+      ],
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 2060 SUPER (0x00001F06) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "errors": [],
+      "sections": [
+        {
+          "progress": 0,
+          "durationMs": 2405,
+          "renderedFrames": 150,
+          "smoothedFrameMsMedian": 16.7,
+          "smoothedFrameMsP95": 16.7,
+          "quality": 1,
+          "drawCalls": 135,
+          "programs": 109
+        },
+        {
+          "progress": 0.175,
+          "durationMs": 2416.7999999523163,
+          "renderedFrames": 135,
+          "smoothedFrameMsMedian": 16.7,
+          "smoothedFrameMsP95": 16.7,
+          "quality": 1,
+          "drawCalls": 43,
+          "programs": 109
+        },
+        {
+          "progress": 0.4,
+          "durationMs": 2416.5999999046326,
+          "renderedFrames": 135,
+          "smoothedFrameMsMedian": 16.7,
+          "smoothedFrameMsP95": 16.7,
+          "quality": 1,
+          "drawCalls": 33,
+          "programs": 109
+        },
+        {
+          "progress": 0.65,
+          "durationMs": 2415.2999999523163,
+          "renderedFrames": 135,
+          "smoothedFrameMsMedian": 16.7,
+          "smoothedFrameMsP95": 16.7,
+          "quality": 1,
+          "drawCalls": 121,
+          "programs": 109
+        },
+        {
+          "progress": 0.975,
+          "durationMs": 2416.4000000953674,
+          "renderedFrames": 135,
+          "smoothedFrameMsMedian": 16.7,
+          "smoothedFrameMsP95": 16.7,
+          "quality": 1,
+          "drawCalls": 85,
+          "programs": 109
+        }
+      ]
+    },
+    {
+      "version": "after",
+      "viewport": [
+        390,
+        844
+      ],
+      "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 2060 SUPER (0x00001F06) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "errors": [],
+      "sections": [
+        {
+          "progress": 0,
+          "durationMs": 2404.9000000953674,
+          "renderedFrames": 135,
+          "smoothedFrameMsMedian": 16.7,
+          "smoothedFrameMsP95": 16.7,
+          "quality": 1,
+          "drawCalls": 64,
+          "programs": 101
+        },
+        {
+          "progress": 0.175,
+          "durationMs": 2416.2999999523163,
+          "renderedFrames": 135,
+          "smoothedFrameMsMedian": 16.7,
+          "smoothedFrameMsP95": 16.7,
+          "quality": 1,
+          "drawCalls": 30,
+          "programs": 101
+        },
+        {
+          "progress": 0.4,
+          "durationMs": 2400.399999856949,
+          "renderedFrames": 135,
+          "smoothedFrameMsMedian": 16.7,
+          "smoothedFrameMsP95": 16.7,
+          "quality": 1,
+          "drawCalls": 20,
+          "programs": 101
+        },
+        {
+          "progress": 0.65,
+          "durationMs": 2416.2000000476837,
+          "renderedFrames": 135,
+          "smoothedFrameMsMedian": 16.7,
+          "smoothedFrameMsP95": 16.7,
+          "quality": 1,
+          "drawCalls": 44,
+          "programs": 101
+        },
+        {
+          "progress": 0.975,
+          "durationMs": 2417.0999999046326,
+          "renderedFrames": 135,
+          "smoothedFrameMsMedian": 16.7,
+          "smoothedFrameMsP95": 16.7,
+          "quality": 1,
+          "drawCalls": 28,
+          "programs": 101
+        }
+      ]
+    }
+  ],
+  "runtimeLimit": "RTX 2060 SUPER의 PC·모바일 뷰포트별 2.4초 표본. 앱의 평활 프레임 시간이며 원시 프레임이나 휴대전화 성능 측정이 아님.",
+  "images": [
+    {
+      "path": "images/atmosphere-detail/after-desktop-350.jpg",
+      "bytes": 390857,
+      "sha256": "adbbef02561f3a2a21707715767b888342bd9b1008b3f0a79db34cabd3e6d6cb"
+    },
+    {
+      "path": "images/atmosphere-detail/after-desktop-710.jpg",
+      "bytes": 135513,
+      "sha256": "1389e87d93428a9bb875627e3cb938d39bf9c224b171a22cfec4b17efe332913"
+    },
+    {
+      "path": "images/atmosphere-detail/after-lower-front.jpg",
+      "bytes": 363009,
+      "sha256": "a0ce08f9b32b31f8d4da0b12e76b6cd9e64a521295d44c4bce1fc6a291aa9b12"
+    },
+    {
+      "path": "images/atmosphere-detail/after-mobile-175.jpg",
+      "bytes": 157256,
+      "sha256": "6422b8379ab8fdb08d6ae534e3f2a7a5469ac78ec21815cd21da2ff0d80d60f2"
+    },
+    {
+      "path": "images/atmosphere-detail/after-plate-stroke.jpg",
+      "bytes": 236624,
+      "sha256": "95824c208882bfa5d43bc7c74ddfd2d3880c105509f78c56f78c5b488790fda8"
+    },
+    {
+      "path": "images/atmosphere-detail/after-scale-rest.jpg",
+      "bytes": 378303,
+      "sha256": "048012dac95dda5b489391dcfadbc9b5b92efe46fa57d6ffcaa7fe9179c74737"
+    },
+    {
+      "path": "images/atmosphere-detail/after-upper-front.jpg",
+      "bytes": 518046,
+      "sha256": "89f9f08af2f9976442bceb068ffd41e6d734166f377c6bdcad3f12e33cad58ab"
+    },
+    {
+      "path": "images/atmosphere-detail/after-upper-orbit.jpg",
+      "bytes": 559169,
+      "sha256": "24c3a869defc0c6211cc44d90bccca1bbd9f3691e30e165298a1a9fe54462432"
+    },
+    {
+      "path": "images/atmosphere-detail/before-desktop-350.jpg",
+      "bytes": 369831,
+      "sha256": "7659f67a1e92064de4b37ed4227ad19cfd2ed232a4679507c002f13d52747fae"
+    },
+    {
+      "path": "images/atmosphere-detail/before-desktop-710.jpg",
+      "bytes": 128817,
+      "sha256": "dff43dacbfca4382d0f141de0698fea01e1ee596ad8ad9222dad4d85d5b48ef7"
+    },
+    {
+      "path": "images/atmosphere-detail/before-lower-front.jpg",
+      "bytes": 345756,
+      "sha256": "f905ce2162ba62e7ddd1f8891547d70378d93be2777a5f8b2c02a98e16d93cbe"
+    },
+    {
+      "path": "images/atmosphere-detail/before-mobile-175.jpg",
+      "bytes": 152786,
+      "sha256": "e400f1f25bf6796b82683b9a9e4ddb547720cb5370c1bc2277da26b58d9b516e"
+    },
+    {
+      "path": "images/atmosphere-detail/before-plate-stroke.jpg",
+      "bytes": 228527,
+      "sha256": "4472c621088ee96a9d2ca7feb81b773ffda83c098f4b6170229d7a199bf3c7c7"
+    },
+    {
+      "path": "images/atmosphere-detail/before-scale-rest.jpg",
+      "bytes": 377086,
+      "sha256": "19b69c5ee4f21d74b721f392f1cd596290b78f7a982397841572025d2707d701"
+    },
+    {
+      "path": "images/atmosphere-detail/before-upper-front.jpg",
+      "bytes": 519607,
+      "sha256": "a9868b5eee3d2de2a51eded69a6edbb71c9ee4084999f5d67784150a1be28d1d"
+    },
+    {
+      "path": "images/atmosphere-detail/ring-film-12.jpg",
+      "bytes": 251671,
+      "sha256": "3436349badbccb2030838d95f2ead5c904105c58211fa7bdb9a3d89dd6f80b0b"
+    },
+    {
+      "path": "images/atmosphere-detail/ring-film-18.jpg",
+      "bytes": 199138,
+      "sha256": "5f3274d56637ac06812ae1f6c5344fd0802fe34f1b9c675c507d993758284d61"
+    }
+  ]
+}

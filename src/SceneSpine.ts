@@ -1,19 +1,12 @@
 import * as THREE from 'three'
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
 import { sampleLayers } from './SceneLayers'
+import { sampleJourney } from './Journey'
+import { CHAIN_LINK_COUNT, CHAIN_LINK_PITCH, createChainGeometry, createChainMaterial, sampleChainPath } from './SceneChain'
 
-const TAU = Math.PI * 2
 const HEIGHT = 10.8
 const clamp = (value: number) => Number.isFinite(value) ? THREE.MathUtils.clamp(value, 0, 1) : 0
 const ease = (value: number) => { const t = clamp(value); return t * t * (3 - 2 * t) }
-
-/** Closed oval links, with their long axis along the local chain tangent. */
-class LinkCurve extends THREE.Curve<THREE.Vector3> {
-  constructor() { super() }
-  getPoint(t: number, target = new THREE.Vector3()) {
-    return target.set(Math.sin(t * TAU) * .085, Math.cos(t * TAU) * .145, 0)
-  }
-}
 
 /** Tapered, flattened processes share one surface with the vertebral body. */
 function processGeometry(points: THREE.Vector3[], segments: number, radial: number,
@@ -131,7 +124,6 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
   const group = new THREE.Group()
   group.name = 'aether-spine-assembly'
   const rows = software ? 9 : mobile ? 11 : 13
-  const linksPerStrand = software ? 48 : mobile ? 76 : 104
   const spacing = HEIGHT / rows
   const boneGeometry = vertebraGeometry(software)
   const discGeometry = new THREE.LatheGeometry([
@@ -141,8 +133,7 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
   ], software ? 16 : 28)
   discGeometry.scale(1, 1, .79)
   discGeometry.translate(0, 0, .23)
-  const linkGeometry = new THREE.TubeGeometry(new LinkCurve(), software ? 12 : 20,
-    .024, software ? 5 : 6, true)
+  const linkGeometry = createChainGeometry(software, mobile)
   const boneMaterial = new THREE.MeshPhysicalMaterial({
     color: 0xdce2e6, vertexColors: true, metalness: software ? .48 : .93,
     roughness: software ? .51 : .34, envMapIntensity: 1.28,
@@ -201,10 +192,7 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
     envMapIntensity: .86, iridescence: software ? 0 : .50,
     iridescenceThicknessRange: [160, 380], transparent: true,
   })
-  const linkMaterial = new THREE.MeshStandardMaterial({
-    color: 0xb5c4cf, metalness: software ? .5 : .94, roughness: .28,
-    envMapIntensity: 1.35, transparent: true,
-  })
+  const linkMaterial = createChainMaterial(software)
   const entryEdge = { value: -0.25 }
   const exitEdge = { value: -0.25 }
   for (const material of [boneMaterial, discMaterial, linkMaterial]) {
@@ -236,9 +224,9 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
   const bones = new THREE.InstancedMesh(boneGeometry, boneMaterial, rows)
   bones.name = 'aether-spine-vertebrae'
   const discs = new THREE.InstancedMesh(discGeometry, discMaterial, rows)
-  const chains = new THREE.InstancedMesh(linkGeometry, linkMaterial, linksPerStrand * 2)
+  const chains = new THREE.InstancedMesh(linkGeometry, linkMaterial, CHAIN_LINK_COUNT)
   chains.name = 'aether-spine-chain'
-  group.userData.chainTurns = 2.15
+  group.userData.chainStrands = 1
   group.userData.motion = 'absolute-scroll-phase'
   const meshes = [bones, discs, chains]
   for (const mesh of meshes) {
@@ -250,6 +238,7 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
   const up = new THREE.Vector3(0, 1, 0)
   const tangent = new THREE.Vector3()
   const alternating = new THREE.Quaternion().setFromAxisAngle(up, Math.PI / 2)
+  const chainTwist = new THREE.Quaternion()
   let previousProgress = Number.NaN
   let previousEmergence = Number.NaN
   let disposed = false
@@ -297,33 +286,20 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
       }
       bones.instanceMatrix.needsUpdate = true
       discs.instanceMatrix.needsUpdate = true
-      for (let strand = 0; strand < 2; strand++) {
-        for (let i = 0; i < linksPerStrand; i++) {
-          const t = THREE.MathUtils.euclideanModulo(i / linksPerStrand + progress * 3.4, 1)
-          const y = (t - .5) * HEIGHT
-          const angle = t * TAU * 2.15 + strand * Math.PI + progress * TAU * 3.2
-          const radius = 1.60 + Math.sin(y * .85 + strand) * .075
-          const radiusSlope = Math.cos(y * .85 + strand) * .075 * .85
-          const turnSlope = TAU * 2.15 / HEIGHT
-          const bend = y * .48 + travel * 1.1
-          const edge = ease((HEIGHT * .5 - Math.abs(y)) / .30)
-          // Both strands pass in front of AND behind the actual bone surface.
-          // Their tangent is the analytic derivative of this same helix.
-          dummy.position.set((Math.cos(angle) * radius + Math.sin(bend) * .29) * form,
-            y * form, (Math.sin(angle) * radius + Math.cos(bend * .8) * .18) * form)
-          tangent.set(radiusSlope * Math.cos(angle) - radius * Math.sin(angle) * turnSlope
-            + Math.cos(bend) * .29 * .48, 1,
-          radiusSlope * Math.sin(angle) + radius * Math.cos(angle) * turnSlope
-            - Math.sin(bend * .8) * .18 * .48 * .8)
-          const linkSpacing = tangent.length() * HEIGHT / linksPerStrand
-          tangent.normalize()
-          dummy.quaternion.setFromUnitVectors(up, tangent)
-          // Alternate within each strand, not by the strand's own index.
-          if (i % 2) dummy.quaternion.multiply(alternating)
-          dummy.scale.set(edge * form, linkSpacing / .235 * edge * form, edge * form)
-          dummy.updateMatrix()
-          chains.setMatrixAt(strand * linksPerStrand + i, dummy.matrix)
-        }
+      const chainPath = sampleChainPath(progress)
+      const chainLength = chainPath.getLength()
+      chainTwist.setFromAxisAngle(up, -sampleJourney(progress).structureYaw)
+      for (let i = 0; i < CHAIN_LINK_COUNT; i++) {
+        const t = i * CHAIN_LINK_PITCH / chainLength
+        chainPath.getPointAt(t, dummy.position).multiplyScalar(form)
+        chainPath.getTangentAt(t, tangent)
+        dummy.quaternion.setFromUnitVectors(up, tangent)
+        dummy.quaternion.multiply(chainTwist)
+        if (i % 2) dummy.quaternion.multiply(alternating)
+        // The free end is a full-size closed link, never faded or recycled.
+        dummy.scale.setScalar(form)
+        dummy.updateMatrix()
+        chains.setMatrixAt(i, dummy.matrix)
       }
       chains.instanceMatrix.needsUpdate = true
     },

@@ -4,6 +4,8 @@
 
 PR #6의 본 컬럼·굴절 모니터 기록이다. 이후 실제 영상 재생과 배치를 변경했다. 현재 모니터의 위치·방향은 스크롤을 따라 함께 회전한다. [후속 장면 수정](scene-reference-detail.md) · [영상 자산](media-sources.md)
 
+체인은 이후 [끝 링크가 있는 한 줄 경로](single-chain.md)로 변경했다. 아래 화면과 측정은 당시 구현 기록이다.
+
 [운영 사이트](https://aether-studio-nu.vercel.app/) · [README](../README.md) · [카메라 잠금](mechanical-camera.md)
 
 본 컬럼·모니터 구간을 [Active Theory](https://activetheory.net/)에서 다시 움직여 보며 개선했습니다. 원본의 코드·모델·텍스처·영상을 가져오지 않고, 절차적 본 컬럼과 자체 생성 영상을 사용합니다. 아래 원본 이미지는 비교 근거이며 실행 사이트에는 포함되지 않습니다.

@@ -5,7 +5,7 @@
 | 사용자 요청에서 쓰인 명칭 | 개발 문서 명칭 | 대상과 실제 구현 모듈 |
 | --- | --- | --- |
 | 척추, 뼈 모양 기둥 | **본 컬럼(Bone Column)** | 관절형 세그먼트가 이어진 절차적 mesh. [SceneSpine.ts](../src/SceneSpine.ts) |
-| 사슬, 쇠사슬 | **체인(Chain)** | 본 컬럼 앞뒤를 감는 타원형 링크 인스턴스. [SceneSpine.ts](../src/SceneSpine.ts) |
+| 사슬, 쇠사슬 | **체인(Chain)** | 본 컬럼을 따라 내려오는 한 줄의 캡슐형 링크와 자유단. [SceneChain.ts](../src/SceneChain.ts), [SceneSpine.ts](../src/SceneSpine.ts) |
 | 지하 장치, 중앙 장치 | **리액터(Reactor)** | O 입자를 감싸는 중앙 금속 구조와 받침. 구조는 [SceneWorlds.ts](../src/SceneWorlds.ts), 수렴 입자는 [Atmosphere.ts](../src/Atmosphere.ts) |
 | 지하실, 장치 주변 공간 | **리액터 챔버(Reactor Chamber)** | 리액터가 놓인 방의 천장·바닥·주변 설비·수면. [SceneWorlds.ts](../src/SceneWorlds.ts), [SceneRuins.ts](../src/SceneRuins.ts), [SceneWater.ts](../src/SceneWater.ts) |
 | 비늘, 금속 비늘 벽 | **스케일 패널(Scale Panel)** | 챔버 바닥 아래 독립 층의 육각 금속 타일 표면. [SceneWorlds.ts](../src/SceneWorlds.ts) |

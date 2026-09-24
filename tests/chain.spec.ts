@@ -6,20 +6,20 @@ import { sampleChainPath } from '../src/SceneChain'
 
 test('@interaction chain has a steep pitch and feeds faster for equal scroll input', () => {
   const slope = sampleChainPath(.48).getTangentAt(0)
-  const degrees = Math.atan2(slope.y, Math.hypot(slope.x, slope.z)) * 180 / Math.PI
+  const degrees = Math.atan2(Math.abs(slope.y), Math.hypot(slope.x, slope.z)) * 180 / Math.PI
   expect(degrees).toBeGreaterThan(60)
   expect(degrees).toBeLessThan(66)
   // Two 120px wheel steps on the desktop's 15300px scroll range.
-  // Keep both successive pairs brisk, including the second half of the scene.
+  // Feed the upper terminal quickly through the first half of the column.
   const delta = 240 / 15300
-  for (const p of [.35, .40, .40 + delta, .58]) {
+  for (const p of [.32, .35, .38]) {
     const drop = sampleChainPath(p).getPointAt(0).y - sampleChainPath(p + delta).getPointAt(0).y
-    expect(drop).toBeGreaterThan(.10)
-    expect(drop).toBeLessThan(.28)
+    expect(drop).toBeGreaterThan(.35)
+    expect(drop).toBeLessThan(.65)
   }
   const top = sampleChainPath(.27).getPointAt(0)
   const bottom = sampleChainPath(.65).getPointAt(0)
-  expect(top.y - bottom.y).toBeCloseTo(4.4)
+  expect(top.y - bottom.y).toBeCloseTo(6.25)
 })
 
 test('@interaction links feed through preceding positions on a fixed column-local helix', () => {
@@ -63,23 +63,23 @@ test('@interaction links feed through preceding positions on a fixed column-loca
       }
     }
     expect(maxWorldError).toBeLessThan(.00001)
-    expect(initial[0].elements[13] - previousY).toBeGreaterThan(4.3)
+    expect(initial[0].elements[13] - previousY).toBeGreaterThan(5.8)
     expect(angularTravel).toBeGreaterThan(1)
 
-    // Find when link 6 reaches the old height of link 0. All following links
+    // Find when link 0 reaches the old height of link 6. All following links
     // must pass through their predecessor's full local frame. A translated or
     // camera-facing spiral fails this even if its tip moves down on screen.
     let low = .30, high = .65
     for (let step = 0; step < 32; step++) {
       const mid = (low + high) / 2
-      if (sample(mid)[6].elements[13] > initial[0].elements[13]) low = mid
+      if (sample(mid)[0].elements[13] > initial[6].elements[13]) low = mid
       else high = mid
     }
     const advanced = sample((low + high) / 2)
     let maxTrackError = 0
     for (let i = 0; i < chain.count - 6; i++) {
       for (let e = 0; e < 16; e++) {
-        maxTrackError = Math.max(maxTrackError, Math.abs(advanced[i + 6].elements[e] - initial[i].elements[e]))
+        maxTrackError = Math.max(maxTrackError, Math.abs(advanced[i].elements[e] - initial[i + 6].elements[e]))
       }
     }
     expect(maxTrackError).toBeLessThan(.00001)
@@ -109,7 +109,7 @@ test('@interaction one finite chain stays connected, descends continuously and r
       })
     }
     try {
-      expect(chain.count).toBe(42)
+      expect(chain.count).toBe(mobile ? 30 : 22)
       const initial = sample(.30)
       let previous = initial
       let maxStep = 0, minSpacing = Infinity, maxSpacing = 0, maxRise = -Infinity
@@ -147,7 +147,7 @@ test('@interaction one finite chain stays connected, descends continuously and r
   }
 })
 
-test('@interaction free end remains full size inside desktop and mobile viewports', () => {
+test('@interaction upper end stays in view and stages show the whole strand, half and lower third', () => {
   for (const mobile of [false, true]) {
     const assembly = createSpineAssembly(false, mobile)
     const chain = assembly.group.getObjectByName('aether-spine-chain') as THREE.InstancedMesh
@@ -179,9 +179,41 @@ test('@interaction free end remains full size inside desktop and mobile viewport
           minZ = Math.min(minZ, tip.z)
           maxZ = Math.max(maxZ, tip.z)
         }
+        // Use complete link bounds, including the closed upper cap. Measure
+        // viewport coverage before ordinary monitor/bone depth occlusion.
+        if ([10, 160, 310].includes(step)) {
+          const terminal = chain.localToWorld(new THREE.Vector3().setFromMatrixPosition(matrix))
+          const normal = new THREE.Vector3(0, 0, 1).transformDirection(matrix).transformDirection(chain.matrixWorld)
+          const towardEye = camera.position.clone().sub(terminal).normalize()
+          // The upper closed ring should read as a ring at the three stages,
+          // rather than presenting only its thin edge to the viewer.
+          expect(Math.abs(normal.dot(towardEye))).toBeGreaterThan(.4)
+          let top = Infinity, bottom = -Infinity, upperTop = Infinity
+          for (let i = 0; i < chain.count; i++) {
+            chain.getMatrixAt(i, matrix)
+            for (const x of [bounds.min.x, bounds.max.x]) for (const y of [bounds.min.y, bounds.max.y]) for (const z of [bounds.min.z, bounds.max.z]) {
+              const point = chain.localToWorld(new THREE.Vector3(x, y, z).applyMatrix4(matrix)).project(camera)
+              const screenY = (1 - point.y) / 2
+              top = Math.min(top, screenY)
+              bottom = Math.max(bottom, screenY)
+              if (i === 0) upperTop = Math.min(upperTop, screenY)
+            }
+          }
+          expect(top).toBeCloseTo(upperTop, 5)
+          const visibleSpan = Math.min(1, bottom) - Math.max(0, top)
+          if (step === 10) {
+            expect(top).toBeGreaterThan(0)
+            expect(bottom).toBeLessThan(1)
+            expect(visibleSpan).toBeGreaterThan(.88)
+          } else {
+            expect(bottom).toBeGreaterThan(1)
+            expect(visibleSpan).toBeGreaterThan(step === 160 ? .46 : .29)
+            expect(visibleSpan).toBeLessThan(step === 160 ? .56 : .38)
+          }
+        }
       }
-      expect(maxX, `horizontal bounds, mobile ${mobile}`).toBeLessThan(.95)
-      expect(maxY, `vertical bounds, mobile ${mobile}`).toBeLessThan(.95)
+      expect(maxX, `horizontal bounds, mobile ${mobile}`).toBeLessThan(.995)
+      expect(maxY, `vertical bounds, mobile ${mobile}`).toBeLessThan(.995)
       expect(minZ).toBeGreaterThan(-1)
       expect(maxZ).toBeLessThan(1)
     } finally { assembly.dispose() }

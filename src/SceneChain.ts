@@ -2,7 +2,7 @@ import * as THREE from 'three'
 import { smooth } from './Journey'
 
 const TAU = Math.PI * 2
-export const CHAIN_LINK_COUNT = 42
+export const getChainLinkCount = (mobile: boolean) => mobile ? 30 : 22
 export const CHAIN_LINK_PITCH = .43
 
 /** Rounded, straight-sided forged links; Y is the direction of the chain. */
@@ -37,14 +37,14 @@ const CHAIN_ARC_PER_HEIGHT = Math.hypot(1, CHAIN_RADIUS * CHAIN_TURN_PER_HEIGHT)
 
 /** A finite interval travelling on one fixed column-local helix. */
 class ColumnChainCurve extends THREE.Curve<THREE.Vector3> {
-  private readonly endY: number
-  constructor(endY: number) {
+  private readonly topY: number
+  constructor(topY: number) {
     super()
-    this.endY = endY
+    this.topY = topY
   }
 
   getPoint(t: number, target = new THREE.Vector3()) {
-    const y = this.endY + t * CHAIN_TRACK_HEIGHT
+    const y = this.topY - t * CHAIN_TRACK_HEIGHT
     // Absolute local height anchors the winding to the column. Advancing the
     // strand moves each link along this track, not sideways off the track.
     const angle = -.7 - y * CHAIN_TURN_PER_HEIGHT
@@ -54,19 +54,22 @@ class ColumnChainCurve extends THREE.Curve<THREE.Vector3> {
   getPointAt(t: number, target = new THREE.Vector3()) { return this.getPoint(t, target) }
 
   getTangentAt(t: number, target = new THREE.Vector3()) {
-    const angle = -.7 - (this.endY + t * CHAIN_TRACK_HEIGHT) * CHAIN_TURN_PER_HEIGHT
-    return target.set(Math.sin(angle) * CHAIN_RADIUS * CHAIN_TURN_PER_HEIGHT,
-      1, -Math.cos(angle) * CHAIN_RADIUS * CHAIN_TURN_PER_HEIGHT).normalize()
+    const angle = -.7 - (this.topY - t * CHAIN_TRACK_HEIGHT) * CHAIN_TURN_PER_HEIGHT
+    return target.set(-Math.sin(angle) * CHAIN_RADIUS * CHAIN_TURN_PER_HEIGHT,
+      -1, Math.cos(angle) * CHAIN_RADIUS * CHAIN_TURN_PER_HEIGHT).normalize()
   }
 
   getLength() { return CHAIN_TRACK_HEIGHT * CHAIN_ARC_PER_HEIGHT }
 }
 
-export function sampleChainPath(progress: number) {
+export function sampleChainPath(progress: number, mobile = false) {
   // The complete strand feeds down the helix; neither endpoint wraps or scales.
   // Its common parent still supplies the column's world rotation and descent.
-  // Start higher so the faster feed still leaves the complete free end in view.
-  return new ColumnChainCurve(1.65 - smooth(.27, .65, progress) * 4.4)
+  // The upper terminal descends from the top to the middle, then the lower
+  // third. Overlapping ramps keep it moving through the middle of the scene.
+  // The wider mobile camera needs a longer strand and a taller local travel.
+  const top = 4.4 - 3.6 * smooth(.27, .43, progress) - 2.65 * smooth(.35, .65, progress)
+  return new ColumnChainCurve(top * (mobile ? 1.4 : 1))
 }
 
 export function createChainMaterial(software: boolean) {

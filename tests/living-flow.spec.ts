@@ -86,9 +86,9 @@ test('@interaction spine links wrap in front and behind the bones and reverse wi
       const delta = Math.atan2(centres[i].z, centres[i].x) - Math.atan2(centres[i - 1].z, centres[i - 1].x)
       turn += Math.atan2(Math.sin(delta), Math.cos(delta))
     }
-    // The attached part curves around the column while the free end stays
-    // straight. Keep the winding check without requiring two full-turn coils.
-    expect(Math.abs(turn)).toBeGreaterThan(Math.PI * 1.5)
+    // A steep finite helix still crosses all four sides of the column, but
+    // covers less azimuth than the former shallow coil of the same length.
+    expect(Math.abs(turn)).toBeGreaterThan(Math.PI)
     assembly.update(.4, 0, 1)
     expect(assembly.group.visible).toBe(false)
   } finally {

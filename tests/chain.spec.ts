@@ -2,6 +2,25 @@ import { expect, test } from '@playwright/test'
 import * as THREE from 'three'
 import { createSpineAssembly } from '../src/SceneSpine'
 import { sampleJourney } from '../src/Journey'
+import { sampleChainPath } from '../src/SceneChain'
+
+test('@interaction chain has a steep pitch and feeds faster for equal scroll input', () => {
+  const slope = sampleChainPath(.48).getTangentAt(0)
+  const degrees = Math.atan2(slope.y, Math.hypot(slope.x, slope.z)) * 180 / Math.PI
+  expect(degrees).toBeGreaterThan(60)
+  expect(degrees).toBeLessThan(66)
+  // Two 120px wheel steps on the desktop's 15300px scroll range.
+  // Keep both successive pairs brisk, including the second half of the scene.
+  const delta = 240 / 15300
+  for (const p of [.35, .40, .40 + delta, .58]) {
+    const drop = sampleChainPath(p).getPointAt(0).y - sampleChainPath(p + delta).getPointAt(0).y
+    expect(drop).toBeGreaterThan(.10)
+    expect(drop).toBeLessThan(.28)
+  }
+  const top = sampleChainPath(.27).getPointAt(0)
+  const bottom = sampleChainPath(.65).getPointAt(0)
+  expect(top.y - bottom.y).toBeCloseTo(4.4)
+})
 
 test('@interaction links feed through preceding positions on a fixed column-local helix', () => {
   const assembly = createSpineAssembly(false, false)
@@ -44,7 +63,7 @@ test('@interaction links feed through preceding positions on a fixed column-loca
       }
     }
     expect(maxWorldError).toBeLessThan(.00001)
-    expect(initial[0].elements[13] - previousY).toBeGreaterThan(1.5)
+    expect(initial[0].elements[13] - previousY).toBeGreaterThan(4.3)
     expect(angularTravel).toBeGreaterThan(1)
 
     // Find when link 6 reaches the old height of link 0. All following links

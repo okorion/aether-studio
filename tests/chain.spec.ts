@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 import * as THREE from 'three'
 import { createSpineAssembly } from '../src/SceneSpine'
-import { sampleJourney } from '../src/Journey'
+import { sampleJourney, smooth } from '../src/Journey'
 import { sampleChainPath } from '../src/SceneChain'
 
 test('@interaction resizing at rest synchronizes strand count and travel with the camera mode', () => {
@@ -19,7 +19,7 @@ test('@interaction resizing at rest synchronizes strand count and travel with th
           try {
             fresh.update(progress, 1, 1)
             const expected = fresh.group.getObjectByName('aether-spine-chain') as THREE.InstancedMesh
-            expect(chain.count).toBe(mobileView ? 31 : 23)
+            expect(chain.count).toBe(mobileView ? 52 : 40)
             expect(chain.instanceMatrix.array).toBe(allocation)
             for (let i = 0; i < chain.count; i++) {
               chain.getMatrixAt(i, matrix)
@@ -46,7 +46,7 @@ test('@interaction chain feeds diagonally while retaining its descent timing', (
     expect(drop).toBeGreaterThan(.35)
     expect(drop).toBeLessThan(.65)
   }
-  const top = sampleChainPath(.27).getPointAt(0)
+  const top = sampleChainPath(.29).getPointAt(0)
   const bottom = sampleChainPath(.65).getPointAt(0)
   expect(top.y - bottom.y).toBeCloseTo(6.25)
 })
@@ -66,6 +66,66 @@ test('@interaction scroll advances links along the diagonal, including sideways 
         expect(movement.normalize().dot(path.getTangentAt(t))).toBeGreaterThan(.99999)
       }
     }
+  }
+})
+
+test('@interaction independent feed reinforces the shared rotation and eases without a mid-scene stall', () => {
+  let previousSpeed = Infinity
+  const delta = .00001
+  for (let step = 0; step <= 360; step++) {
+    const p = .29 + step / 1000
+    const a = sampleChainPath(p).getPointAt(0)
+    const b = sampleChainPath(p + delta).getPointAt(0)
+    const speed = (a.y - b.y) / delta
+    const localAngle = Math.atan2(Math.sin(Math.atan2(b.z, b.x) - Math.atan2(a.z, a.x)),
+      Math.cos(Math.atan2(b.z, b.x) - Math.atan2(a.z, a.x)))
+    // In X/Z, Three.js positive Y rotation decreases atan2(z, x).
+    const parentAngle = sampleJourney(p).structureYaw - sampleJourney(p + delta).structureYaw
+    expect(localAngle * parentAngle).toBeGreaterThan(0)
+    expect(Math.abs(localAngle + parentAngle)).toBeGreaterThan(Math.abs(parentAngle))
+    expect(speed).toBeGreaterThan(5.9)
+    expect(speed).toBeLessThanOrEqual(previousSpeed + .0001)
+    if (step) expect(previousSpeed - speed).toBeLessThan(.15)
+    previousSpeed = speed
+  }
+  // No separate temporal animation: stopping/reversing the scene scroll fully
+  // determines the strand pose, including either side of the feed endpoints.
+  for (const p of [.29, .65]) {
+    const before = sampleChainPath(p - delta).getPointAt(0)
+    const at = sampleChainPath(p).getPointAt(0)
+    const after = sampleChainPath(p + delta).getPointAt(0)
+    expect(before.sub(at).length() / delta).toBeCloseTo(after.sub(at).length() / delta, 2)
+  }
+})
+
+test('@interaction the lower terminal remains below the frame throughout column entry and descent', () => {
+  for (const mobile of [false, true]) {
+    const assembly = createSpineAssembly(false, mobile)
+    const chain = assembly.group.getObjectByName('aether-spine-chain') as THREE.InstancedMesh
+    chain.geometry.computeBoundingBox()
+    const bounds = chain.geometry.boundingBox!, matrix = new THREE.Matrix4()
+    const camera = new THREE.PerspectiveCamera(42, mobile ? 390 / 844 : 1440 / 900, .1, 90)
+    try {
+      for (let step = 0; step <= 420; step++) {
+        const p = .23 + step / 1000, journey = sampleJourney(p)
+        const emergence = smooth(.205, .29, p)
+        assembly.update(p, 1, emergence)
+        assembly.group.position.y = journey.height - 12 * (1 - emergence)
+        assembly.group.rotation.y = journey.structureYaw
+        assembly.group.updateMatrixWorld(true)
+        const radius = journey.radius + (mobile ? 4.8 : 0)
+        camera.position.set(Math.sin(journey.azimuth) * Math.cos(journey.elevation) * radius,
+          journey.height + Math.sin(journey.elevation) * radius,
+          Math.cos(journey.azimuth) * Math.cos(journey.elevation) * radius)
+        camera.lookAt(0, journey.height, 0)
+        camera.updateMatrixWorld()
+        chain.getMatrixAt(chain.count - 1, matrix)
+        for (const x of [bounds.min.x, bounds.max.x]) for (const y of [bounds.min.y, bounds.max.y]) for (const z of [bounds.min.z, bounds.max.z]) {
+          const point = chain.localToWorld(new THREE.Vector3(x, y, z).applyMatrix4(matrix)).project(camera)
+          expect((1 - point.y) / 2, `lower terminal at ${p}, mobile ${mobile}`).toBeGreaterThan(1.1)
+        }
+      }
+    } finally { assembly.dispose() }
   }
 })
 
@@ -111,7 +171,7 @@ test('@interaction links feed through preceding positions on a fixed column-loca
     }
     expect(maxWorldError).toBeLessThan(.00001)
     expect(initial[0].elements[13] - previousY).toBeGreaterThan(5.8)
-    expect(angularTravel).toBeGreaterThan(1)
+    expect(angularTravel).toBeLessThan(-1)
 
     // Find when link 0 reaches the old height of link 6. All following links
     // must pass through their predecessor's full local frame. A translated or
@@ -156,7 +216,7 @@ test('@interaction one finite chain stays connected, descends continuously and r
       })
     }
     try {
-      expect(chain.count).toBe(mobile ? 31 : 23)
+      expect(chain.count).toBe(mobile ? 52 : 40)
       const initial = sample(.30)
       let previous = initial
       let maxStep = 0, minSpacing = Infinity, maxSpacing = 0, maxRise = -Infinity
@@ -194,7 +254,7 @@ test('@interaction one finite chain stays connected, descends continuously and r
   }
 })
 
-test('@interaction upper end stays in view and stages show the whole strand, half and lower third', () => {
+test('@interaction upper end stays in view while the strand continues below the viewport', () => {
   for (const mobile of [false, true]) {
     const assembly = createSpineAssembly(false, mobile)
     const chain = assembly.group.getObjectByName('aether-spine-chain') as THREE.InstancedMesh
@@ -250,7 +310,7 @@ test('@interaction upper end stays in view and stages show the whole strand, hal
           const visibleSpan = Math.min(1, bottom) - Math.max(0, top)
           if (step === 10) {
             expect(top).toBeGreaterThan(0)
-            expect(bottom).toBeLessThan(1)
+            expect(bottom).toBeGreaterThan(1.1)
             expect(visibleSpan).toBeGreaterThan(.88)
           } else {
             expect(bottom).toBeGreaterThan(1)

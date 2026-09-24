@@ -7,7 +7,7 @@ import { sampleJourney, smooth } from './Journey'
 import { createSceneGlow } from './SceneGlow'
 import { createSceneForest } from './SceneForest'
 import { createSceneLayers, sampleLayers, sampleEmblemCurtain } from './SceneLayers'
-import { bindGroupCurtain, createCurtainBounds } from './SceneCurtains'
+import { bindCurtain, bindGroupCurtain, createCurtainBounds } from './SceneCurtains'
 import { createSceneVideo } from './SceneVideo'
 import { prepareSceneShaders } from './ScenePreparation'
 import type { LoadingStage } from './loading'
@@ -536,6 +536,8 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
           blending: THREE.AdditiveBlending,
         }),
       )
+      const ambientCurtain = createCurtainBounds()
+      bindCurtain(particlesMaterial, ambientCurtain)
       const particles = new THREE.Points(particlesGeometry, particlesMaterial)
       particles.frustumCulled = false
       world.add(particles)
@@ -560,7 +562,8 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
       distantGeometry.setAttribute('aColor', new THREE.BufferAttribute(distantColors, 3))
       distantGeometry.setAttribute('aSize', new THREE.BufferAttribute(distantSizes, 1))
       distantGeometry.setAttribute('aPhase', new THREE.BufferAttribute(distantPhases, 1))
-      scene.add(new THREE.Points(distantGeometry, particlesMaterial))
+      const distantParticles = new THREE.Points(distantGeometry, particlesMaterial)
+      scene.add(distantParticles)
 
       // Tiny translucent bell creatures lend scale to the surrounding space.
       const creatures: { group: THREE.Group; anchor: THREE.Vector3; phase: number }[] = []
@@ -842,7 +845,7 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
         world.position.copy(centre)
         emblem.position.set(0, 0, 0)
         const statementScale = smooth(.10, .18, scroll) * (1 - smooth(.25, .31, scroll))
-        particles.visible = scroll < .12 || scroll > .93
+        particles.visible = distantParticles.visible = scroll < .20 || scroll > .855
         emblem.scale.setScalar(1.15 + statementScale * .48)
         emblem.rotation.set(0, smooth(.21, .30, scroll) * .7 * (1 - state.end), 0)
         ribbons.rotation.x = 0
@@ -881,6 +884,8 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
         const creatureLayers = sampleLayers(scroll)
         creatureCurtain.upper.value = scroll < .5 ? 1.5 : creatureLayers.forestEntry
         creatureCurtain.lower.value = scroll < .5 ? creatureLayers.forestExit : -.5
+        ambientCurtain.upper.value = creatureCurtain.upper.value
+        ambientCurtain.lower.value = creatureCurtain.lower.value
         creatureRoot.visible = scroll < .20 || scroll > .855
         for (const creature of creatures) {
           creature.group.position.y =

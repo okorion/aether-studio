@@ -18,6 +18,12 @@ test('@interaction reactor GPU grains leave the real aperture, descend and resto
     expect(sampleJourney(.69).azimuth).toBeCloseTo(Math.PI * 2, 6)
     expect(sampleJourney(.69).elevation).toBe(0)
     expect(r.frozen).toEqual(r.stopped)
+    for (const travel of r.continuity) expect(travel).toBeLessThan(.12)
+    expect(r.idleSpeed).toBeGreaterThan(.001)
+    expect(r.idleSpeed).toBeLessThan(.035)
+    // Small grain scatter may breathe; the falling mass must not overshoot
+    // the O and visibly spring back up during formation.
+    expect(r.rebound).toBeLessThan(.09)
     const fluidTravel = r.stopped.reduce((sum, p, i) => sum + Math.hypot(...p.map((v, axis) => v - r.mid[i][axis])), 0) / r.mid.length
     expect(fluidTravel).toBeGreaterThan(.15)
     const heights = r.start.map(p => p[1])

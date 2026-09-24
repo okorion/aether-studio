@@ -37,8 +37,8 @@ export function createScaleBubbles(software: boolean, mobile: boolean) {
           cos(uTime * .27 + phase) * .10);
         vec4 view = modelViewMatrix * vec4(position + drift, 1.);
         gl_Position = projectionMatrix * view;
-        gl_PointSize = clamp((.035 + pow(aBubbleSeed, 4.) * .32) * uViewportHeight
-          * projectionMatrix[1][1] * .5 / max(3., -view.z), 2. * uPointPixelRatio, 42. * uPointPixelRatio);
+        gl_PointSize = clamp((.0175 + pow(aBubbleSeed, 4.) * .16) * uViewportHeight
+          * projectionMatrix[1][1] * .5 / max(3., -view.z), 1. * uPointPixelRatio, 21. * uPointPixelRatio);
         vBubbleOpacity = uOpacity * (.28 + aBubbleSeed * .24);
         vBubbleSeed = aBubbleSeed;
       }

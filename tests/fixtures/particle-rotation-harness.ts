@@ -52,7 +52,13 @@ export function sampleRotation(progress = .4, mobile = false) {
     matter.updateMatrix()
     const expected = new THREE.Vector3(...start.slice(0, 3) as [number, number, number])
       .applyMatrix4(inverseStart).applyMatrix4(matter.matrix).toArray()
-    return { start, expected, end: read(progress + .015), moving: read(progress + .015, true), matched: read(progress + .015, true, true), reverse: read(progress) }
+    const anchorStart = grains.position.y
+    const end = read(progress + .015)
+    const anchorEnd = grains.position.y
+    atmosphere.update(10, .64, 1)
+    const outgoingY = scene.getObjectByName('aether-outgoing-bone-current')!.position.y
+    return { start, expected, end, anchors: [anchorStart, anchorEnd, outgoingY],
+      moving: read(progress + .015, true), matched: read(progress + .015, true, true), reverse: read(progress) }
   } finally {
     worlds.dispose(); atmosphere.dispose(); geometry.dispose(); material.dispose(); target.dispose(); renderer.dispose()
   }

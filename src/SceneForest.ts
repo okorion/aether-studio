@@ -212,6 +212,7 @@ const boundaryVertex = /* glsl */ `
   uniform float uViewportHeight;
   uniform float uPixelRatio;
   uniform float uBoundaryStrength;
+  uniform float uBoundarySide;
   varying float vKind;
   void main() {
     vSeed=aSeed;
@@ -227,6 +228,14 @@ const boundaryVertex = /* glsl */ `
     vWorld=world.xyz;
     vDepth=-view.z;
     vClip=projectionMatrix*view;
+    // Grow a shallow volume directly out of the shared editorial edge. Keep
+    // world X/depth/parallax and lighting, but seat every root on that edge.
+    // The lower forest hangs down from its ceiling rather than growing up.
+    float edge=mix(uEntry,uExit,step(0.,uBoundarySide));
+    float bank=.008+.065*(.5+.5*sin(position.x*.8+position.z*.65));
+    float growth=abs(position.y)*projectionMatrix[1][1]/max(4.,vDepth);
+    vClip.y=(edge*2.-1.+vClip.x/vClip.w*.20
+      +uBoundarySide*(bank+growth))*vClip.w;
     vNormal=vec3(0.,1.,0.);
     vUv=vec2(.5);
     gl_Position=vClip;
@@ -247,7 +256,7 @@ const boundaryFragment = /* glsl */ `
     float plant=step(.5,vKind);
     float mist=step(1.5,vKind);
     float core=1.-smoothstep(mix(.32,.05,mist),1.,r);
-    float coverage=groveCoverage()*uBoundaryStrength*core;
+    float coverage=wipe()*smoothstep(1.2,3.,vDepth)*uBoundaryStrength*core;
     if(coverage<.003||coverage<hash(gl_FragCoord.xy))discard;
     vec3 n=normalize(vec3(q,sqrt(max(.01,1.-r))));
     float facing=.25+.75*max(0.,dot(n,normalize(vec3(-.4,.7,.6))));
@@ -270,12 +279,12 @@ function createBoundaryGeometry(software:boolean,mobile:boolean) {
   const add=(x:number,y:number,z:number,size:number,kind:number)=>{
     positions.push(x,y,z);seeds.push(random(),random(),random());sizes.push(size);kinds.push(kind)
   }
-  const clusters=software?65:mobile?135:250
+  const clusters=software?110:mobile?240:460
   for(let i=0;i<clusters;i++) {
     const angle=i*2.399963+(random()-.5)*.55
     const radius=3.6+random()*7.8
     const rootX=Math.cos(angle)*radius,rootZ=Math.sin(angle)*radius
-    const height=.55+random()*1.1
+    const height=.35+random()*1.35
     const shoots=2+(i%3)
     for(let shoot=0;shoot<shoots;shoot++) {
       const spread=angle+shoot*2.399963
@@ -285,13 +294,22 @@ function createBoundaryGeometry(software:boolean,mobile:boolean) {
         const fan=t*t*(.16+shoot*.085)
         const x=rootX+Math.cos(spread)*fan
         const z=rootZ+Math.sin(spread)*fan
-        add(x,t*length,z,.025+t*.035,1)
+        add(x,t*length,z,.045+t*.035,1)
         if(step>1&&step<5) {
           const side=spread+(step%2?1:-1)*1.05
           add(x+Math.cos(side)*t*.17,t*length-.045,z+Math.sin(side)*t*.17,.045+t*.055,1)
         }
       }
     }
+  }
+  // Dense, uneven soil/canopy grains fill the roots between fern shoots.
+  // One shared point buffer and draw call cover the bank on both profiles.
+  const bank=software?2800:mobile?7000:18000
+  for(let i=0;i<bank;i++) {
+    const angle=random()*Math.PI*2,radius=2.8+random()*11
+    const x=Math.cos(angle)*radius,z=Math.sin(angle)*radius
+    const mound=.10+.35*Math.pow(.5+.5*Math.sin(x*.8+z*.55),2)
+    add(x,random()*mound,z,.025+random()*.065,1)
   }
   const motes=software?220:mobile?600:1400
   for(let i=0;i<motes;i++) {
@@ -369,7 +387,7 @@ export function createSceneForest(scene: THREE.Scene, software: boolean, mobile:
   })
   materials.push(microMaterial)
   const boundary=createBoundaryGeometry(software,mobile)
-  const boundaryUniforms={...shared,uBoundaryStrength:{value:0}}
+  const boundaryUniforms={...shared,uBoundaryStrength:{value:0},uBoundarySide:{value:1}}
   const boundaryMaterial=new THREE.ShaderMaterial({
     uniforms:boundaryUniforms,vertexShader:boundaryVertex,fragmentShader:boundaryFragment,
     depthWrite:false,depthTest:true,defines:{AETHER_LIGHT_FILM:1},
@@ -396,7 +414,11 @@ export function createSceneForest(scene: THREE.Scene, software: boolean, mobile:
     edge.name='aether-forest-boundary-plants-motes-mist'
     edge.position.y=index?6.8:-8.7
     if(!index) edge.scale.set(.82,1,.82)
-    edge.onBeforeRender=micro.onBeforeRender
+    edge.frustumCulled=false
+    edge.onBeforeRender=(...args)=>{
+      micro.onBeforeRender(...args)
+      boundaryUniforms.uBoundarySide.value=index?-1:1
+    }
     grove.add(makeMesh(false),makeMesh(true),micro,edge)
     group.add(grove)
     return grove

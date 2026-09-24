@@ -672,7 +672,9 @@ function probeOutgoingBonePixels() {
     atmosphere.update(time, progress, 1, undefined, probeCamera)
     for (const name of ['aether-current-particles', 'aether-current-filaments', 'aether-volume-shafts'])
       probeScene.getObjectByName(name)!.visible = false
-    reference.position.y = state.height
+    // Compare the unmasked field at the same fixed world anchor as the
+    // production flowers, rather than at the travelling camera focus.
+    reference.position.copy(outgoing.position)
   }
   const read = () => {
     renderer.setRenderTarget(target)

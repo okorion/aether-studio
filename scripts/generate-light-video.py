@@ -136,14 +136,27 @@ def main():
     source = None
     frame_provider = frame_at
     if args.frames_dir:
+        from io import BytesIO
         from PIL import Image
         source = json.loads((args.frames_dir / "source.json").read_text(encoding="utf-8"))
-        if source.get("schemaVersion") != 2 or not source.get("bundleSha256"):
+        if source.get("schemaVersion") != 3 or not source.get("bundleSha256"):
             raise RuntimeError("Column frames need complete rendering inputs; render them again")
         for name, digest in source["sources"].items():
             if sha256(ROOT / name) != digest:
                 raise RuntimeError(f"Column source changed: {name}")
-        column_frames = [np.array(Image.open(args.frames_dir / f"{i:03}.png").convert("RGB")) for i in range(FRAMES + 1)]
+        names = [f"{i:03}.png" for i in range(FRAMES + 1)]
+        digests = source.get("frameSha256", {})
+        if not isinstance(digests, dict) or set(digests) != set(names):
+            raise RuntimeError("Column frame manifest is incomplete; render them again")
+        column_frames = []
+        for name in names:
+            # Decode exactly the bytes that passed verification, even if files
+            # in the capture directory change while the encoder is running.
+            captured = (args.frames_dir / name).read_bytes()
+            if hashlib.sha256(captured).hexdigest() != digests[name]:
+                raise RuntimeError(f"Column frame changed: {name}")
+            with Image.open(BytesIO(captured)) as image:
+                column_frames.append(np.array(image.convert("RGB")))
         if any(frame.shape != (HEIGHT, WIDTH, 3) for frame in column_frames):
             raise RuntimeError("Column frame dimensions mismatch")
         frame_provider = lambda second: column_frames[round(second * FPS)]

@@ -659,7 +659,7 @@ function probeOutgoingBonePixels() {
   // remove shimmer/color so the time and scroll checks measure geometry only.
   coverageMaterial.fragmentShader = coverageMaterial.fragmentShader.replace(
     'gl_FragColor = vec4(color, shape * vAlpha * entry);',
-    'gl_FragColor = vec4(1., 1., 1., 1.);')
+    'if (vAlpha <= 0.) discard; gl_FragColor = vec4(1., 1., 1., 1.);')
   const probeCamera = new THREE.PerspectiveCamera(42, width / height, .1, 100)
   const target = new THREE.WebGLRenderTarget(width, height)
   const saved = { target: renderer.getRenderTarget(), autoClear: renderer.autoClear,
@@ -718,7 +718,7 @@ function probeOutgoingBonePixels() {
     const initial = read()
     at(.645, 12)
     const idle = read()
-    // Clock-driven flower rotation is independent of reversible scroll travel.
+    // Only the distant belt orbits with time; flowers follow scroll alone.
     // Hold time fixed for the forward/reverse comparison.
     at(.66, 10)
     const forward = read()

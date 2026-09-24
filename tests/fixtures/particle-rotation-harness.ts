@@ -14,7 +14,7 @@ export function sampleRotation(progress = .4, mobile = false, lane = .3) {
   const camera = new THREE.PerspectiveCamera()
   camera.position.z = 20
   const geometry = new THREE.BufferGeometry()
-  geometry.setAttribute('position', new THREE.Float32BufferAttribute([.25, 1.2, .3], 3))
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute([.27, 1.43, .3], 3))
   geometry.setAttribute('aDust', new THREE.Float32BufferAttribute([lane, 1, .2, 0], 4))
   geometry.setAttribute('aAdvected', new THREE.Float32BufferAttribute([0], 1))
   // Execute the production vertex shader, then read its local position from
@@ -23,17 +23,19 @@ export function sampleRotation(progress = .4, mobile = false, lane = .3) {
   const material = new THREE.ShaderMaterial({
     uniforms: grains.material.uniforms,
     vertexShader: 'varying vec3 probePosition;\n' + vertex,
-    fragmentShader: 'varying vec3 probePosition; void main() { gl_FragColor = vec4(probePosition, 1.); }',
+    fragmentShader: 'varying vec3 probePosition; varying float vAlpha; void main() { gl_FragColor = vec4(probePosition, vAlpha); }',
     depthTest: false, depthWrite: false,
   })
   const probe = new THREE.Scene()
   const point = new THREE.Points(geometry, material)
   point.frustumCulled = false
   probe.add(point)
-  const read = (progress: number, moving = false, time = 10) => {
+  const read = (progress: number, moving = false, time = 10, bokeh = false, phase = 1.43) => {
     atmosphere.update(time, progress, 1)
-    geometry.getAttribute('position').setX(0, .25)
+    geometry.getAttribute('position').setY(0, phase)
     geometry.getAttribute('position').needsUpdate = true
+    geometry.getAttribute('aDust').setW(0, bokeh ? 1 : 0)
+    geometry.getAttribute('aDust').needsUpdate = true
     geometry.getAttribute('aAdvected').setX(0, moving ? 1 : 0)
     geometry.getAttribute('aAdvected').needsUpdate = true
     renderer.setRenderTarget(target)
@@ -60,7 +62,10 @@ export function sampleRotation(progress = .4, mobile = false, lane = .3) {
       movingStart: read(progress, true), moving: read(progress + .015, true),
       movingReverse: read(progress, true), reverse: read(progress),
       idle: read(progress, false, 18), idleReverse: read(progress, false, 10),
-      movingIdle: read(progress, true, 18) }
+      movingIdle: read(progress, true, 18), bokeh: read(progress, false, 10, true),
+      thinned: read(progress, false, 10, false, 1.2),
+      reactorMoving: read(.71, true), reactorBokeh: read(.71, false, 10, true),
+      forestMoving: read(.065, true), forestBokeh: read(.065, false, 10, true) }
   } finally {
     worlds.dispose(); atmosphere.dispose(); geometry.dispose(); material.dispose(); target.dispose(); renderer.dispose()
   }

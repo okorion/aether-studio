@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 import { build } from 'vite'
 
-test('@interaction flower grains fall with absolute scroll and retrace without wrapping', async ({ page }) => {
+test('@interaction flowers stay still at rest while a sparse distant belt orbits; close non-flower grains are hidden', async ({ page }) => {
   const output = await build({ configFile: false, logLevel: 'silent', build: {
     write: false, minify: false,
     lib: { entry: 'tests/fixtures/particle-rotation-harness.ts', formats: ['iife'], name: 'ParticleRotation' },
@@ -15,33 +15,38 @@ test('@interaction flower grains fall with absolute scroll and retrace without w
     const samples = await page.evaluate(({ progress, mobile, lane }) => (window as unknown as {
       ParticleRotation: { sampleRotation(progress: number, mobile: boolean, lane: number): Record<string, number[]> }
     }).ParticleRotation.sampleRotation(progress, mobile, lane), { progress, mobile, lane })
-    const { start, expected, end, moving, movingStart, movingReverse, reverse, anchors, idle, idleReverse, movingIdle } = samples
+    const { start, expected, end, moving, movingStart, movingReverse, reverse, anchors, idle, idleReverse, movingIdle,
+      bokeh, thinned, reactorMoving, reactorBokeh, forestMoving, forestBokeh } = samples
     const belt = lane !== .3
-    const radius = (point: number[]) => belt
-      ? Math.hypot(point[0] / (mobile ? .62 : 1), (point[2] + 8.5) / .55)
-      : Math.hypot(point[0], point[2])
+    const radius = (point: number[]) => Math.hypot(point[0], point[2])
     expect(anchors).toEqual([-29.8, -29.8, -29.8])
     // GPU trigonometry varies slightly across drivers; 0.005 world-unit tolerance
     // still rejects stationary anchors and the old, separately rotating path.
-    expect(start[3]).toBe(1)
+    expect(start[3]).toBeGreaterThan(0)
     expect(Math.abs(end[1] - start[1])).toBeLessThan(.005)
     expect(Math.abs(radius(end) - radius(start))).toBeLessThan(.005)
     // Compare GPU motion with the actual SceneWorlds matter transform, not
     // a second copy of the shader's rotation convention or a fixed sign.
     expect(Math.hypot(...moving.slice(0, 3).map((v, i) => v - end[i]))).toBeGreaterThan(.1)
     expect(moving[1] - movingStart[1]).toBeCloseTo(-.015 * 45, 3)
-    // The falling population hugs the column independently of the flowers.
-    expect(Math.hypot(moving[0], moving[2])).toBeLessThan(mobile ? 1.6 : 2.6)
-    // Resting flowers orbit continuously without a height drift or breathing
-    // radius. Falling seeds retain their scroll-only path when time changes.
-    expect(Math.hypot(idle[0] - start[0], idle[2] - start[2])).toBeGreaterThan(.15)
+    // Close non-flower grains disappear only in this scene. Their shared
+    // buffer must still render in the forest and reactor.
+    for (const sample of [movingStart, moving, movingIdle, bokeh]) expect(sample[3]).toBe(0)
+    for (const sample of [reactorMoving, reactorBokeh, forestMoving, forestBokeh]) expect(sample[3]).toBeGreaterThan(0)
+    const idleTravel = Math.hypot(idle[0] - start[0], idle[2] - start[2])
+    if (belt) expect(idleTravel).toBeGreaterThan(1)
+    else expect(idleTravel).toBeLessThan(.005)
     expect(Math.abs(idle[1] - start[1])).toBeLessThan(.005)
     expect(Math.abs(radius(idle) - radius(start))).toBeLessThan(.005)
     if (belt) {
       for(const sample of [start,end,idle]) {
-        expect(sample[2]).toBeLessThan(-2)
-        expect(radius(sample)).toBeGreaterThan(8)
+        // The entire orbit clears the camera path and monitor/flower volume.
+        expect(radius(sample)).toBeGreaterThan(22)
       }
+      expect(thinned[3]).toBe(0)
+    } else {
+      // The density mask never removes a flower seed.
+      expect(thinned[3]).toBeGreaterThan(0)
     }
     for (let axis = 0; axis < 3; axis++) {
       if (!belt) expect(Math.abs(end[axis] - expected[axis])).toBeLessThan(.005)

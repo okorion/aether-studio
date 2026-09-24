@@ -47,8 +47,8 @@ const currentField = /* glsl */ `
   uniform float uFieldOpacity;
   varying vec4 vFieldClip;
   const float PI = 3.14159265359;
-  // Scroll travel stays absolute. The flower orbit adds a separate clock phase,
-  // so reversing scroll restores the same geometry at a fixed time.
+  // Flowers follow the column's absolute scroll transform. Only the distant
+  // belt has a clock phase; resting flowers never orbit on their own.
   float motionTime() { return uScroll; }
 
   vec3 rotateSpineField(vec3 p) {
@@ -60,9 +60,7 @@ const currentField = /* glsl */ `
   float flowerRibbon(float lane) { return step(.22, fract(lane * 7.13)); }
 
   vec3 rotateFlowerField(vec3 p) {
-    float angle = uTime * .075;
-    float c = cos(angle), s = sin(angle);
-    return rotateSpineField(vec3(c * p.x + s * p.z, p.y, -s * p.x + c * p.z));
+    return rotateSpineField(p);
   }
 
   vec3 current(float t, float lane, float scrollPhase) {
@@ -74,9 +72,7 @@ const currentField = /* glsl */ `
       -6.6 + t * 6.9,
       -1.4 + sin(t * 8.0 + branch * 6.0) * 1.15
     );
-    // Dense flower volumes and a thinner descending belt share the same slow
-    // orbit. Their height is fixed; the separate falling population still uses
-    // the exact scroll-only path below.
+    // Keep the existing flower seeds, folded shape and scroll orbit intact.
     float tier = min(3., floor(t * 4.));
     float petalAngle = fract(t * 4.) * PI * 2.;
     float petal = .83 + .22 * cos(petalAngle * 5. + tier)
@@ -94,21 +90,19 @@ const currentField = /* glsl */ `
       .85 * branch * branch + .52 * sin(petalAngle * 5. + branch * 8.)
     );
     spine.z += sin(facing) * (spine.x - centre.x);
-    // Most stationary grains belong to a broad, shallow helix behind the
-    // column. Its centre stays behind the column even while phase rotates.
+    // One broad orbital band sits well outside both the column and camera.
+    // Its near half is outside the view; the far half crosses the background.
+    // Do not flatten it into paired curves close behind the column.
     spine = rotateFlowerField(spine);
     float ribbonLane = clamp((fract(lane * 7.13) - .22) / .78, 0., 1.);
-    float strand = step(.5, ribbonLane);
-    float ribbonWidth = fract(ribbonLane * 2.);
-    float ribbonAngle = t * PI * 2. * 1.38 + strand * .24
-      + uSpineYaw * .32 + uTime * .025;
-    float ribbonRadius = 9.2 + ribbonWidth * 1.7 + sin(t * 11.) * .35;
+    float ribbonWidth = ribbonLane;
+    float ribbonAngle = t * PI * 2. * 1.7 + uSpineYaw * .32 + uTime * .016;
+    float ribbonRadius = 24. + ribbonWidth * 3. + sin(t * 11.) * .35;
     vec3 ribbon = vec3(cos(ribbonAngle) * ribbonRadius,
-      18. - t * 36. + strand * .85 + (ribbonWidth - .5) * .28,
-      sin(ribbonAngle) * ribbonRadius * .55 - 8.5);
+      24. - t * 48. + (ribbonWidth - .5) * 2.,
+      sin(ribbonAngle) * ribbonRadius);
+    spine.xz *= uSpineSpread;
     spine = mix(spine, ribbon, flowerRibbon(lane));
-    spine.x *= uSpineSpread;
-    spine.z *= mix(uSpineSpread, 1., flowerRibbon(lane));
     spine.y += -12.0 * (1.0 - smoothstep(.205, .29, uScroll / 55.0));
     float progress = uScroll / 55.;
     float formed = smoothstep(.668, .725, progress);
@@ -215,11 +209,11 @@ const dustVertex = /* glsl */ `
     scatter.z += aDust.z * (0.18 + (1.0 - uWeights.y) * 0.38);
     scatter *= mix(1., mix(.65, 1., smoothstep(.668, .725, uScroll / 55.)), uWeights.y);
     vec3 columnScatter = mix(rotateFlowerField(scatter), rotateSpineField(scatter), aAdvected);
-    float beltPhase = uSpineYaw*.32 + uTime*.025;
+    float beltPhase = uSpineYaw*.32 + uTime*.016;
     vec3 beltScatter = vec3(
-      (cos(beltPhase)*scatter.x-sin(beltPhase)*scatter.z)*uSpineSpread,
+      cos(beltPhase)*scatter.x-sin(beltPhase)*scatter.z,
       scatter.y,
-      (sin(beltPhase)*scatter.x+cos(beltPhase)*scatter.z)*.55);
+      sin(beltPhase)*scatter.x+cos(beltPhase)*scatter.z);
     columnScatter = mix(columnScatter,beltScatter,flowerRibbon(lane)*(1.-aAdvected));
     p += mix(scatter, columnScatter, spineWeight);
     // Most device grains spread across a fine radial cloud, with a few smaller
@@ -281,7 +275,7 @@ const dustVertex = /* glsl */ `
     // Pearlescent grains fill both flower volumes and the thicker reactor rim;
     // sparse strays retain a finer silhouette around the dense core.
     float grainScale = 1.0 + spineWeight * (.55 + .30 * cluster);
-    grainScale *= mix(1., .66, ribbonWeight);
+    grainScale *= mix(1., 1.5, ribbonWeight);
     grainScale *= mix(1., .72, aAdvected * spineWeight);
     grainScale *= mix(1.18, 1.18 * mix(1., .7, stray), uWeights.y);
     gl_PointSize = clamp(aDust.y * grainScale * perspective * uPixelRatio, 0.65, 12.0 * uPixelRatio);
@@ -330,12 +324,18 @@ const dustVertex = /* glsl */ `
     float seam = smoothstep(0.0, 0.045, t) * (1.0 - smoothstep(0.94, 1.0, t));
     float petalPhase = fract(t * 4.);
     seam *= mix(1., smoothstep(0., .015, petalPhase) * (1. - smoothstep(.985, 1., petalPhase)), spineWeight * (1. - aAdvected) * (1. - ribbonWeight));
-    float distanceFade = exp(-max(0.0, -mv.z - 13.0) * 0.043);
+    float distanceFade = exp(-max(0.0, -mv.z - 13.0) * mix(.043, .032, ribbonWeight));
     vAlpha = shimmer * mix(seam, 1.0, uWeights.y) * distanceFade * mix(0.72, 0.19, bokeh);
     vAlpha *= mix(1.0, .62 * mix(1., .22, bokeh), uWeights.y);
     vAlpha *= (1.0 - uDarkness * 0.23) * (1.0 + uWeights.x * 0.16);
     vAlpha *= 1. + spineWeight * (1. - aAdvected) * .30;
     vAlpha *= mix(1., .66, ribbonWeight);
+    // Keep every flower seed. Thin only the distant band with a stable seed
+    // mask (no temporal flicker), and remove the close falling/bokeh grains
+    // only in the column. The shared reactor/forest populations remain intact.
+    float beltSeed = fract(phase * 17.17 + position.x * 31.13);
+    vAlpha *= mix(1., step(.92, beltSeed), ribbonWeight);
+    vAlpha *= 1. - spineWeight * max(aAdvected, bokeh);
     vAlpha *= uFieldOpacity;
   }
 `
@@ -395,6 +395,8 @@ const filamentVertex = /* glsl */ `
     float travel = fract(t * 3.0 - motionTime() * (0.13 + uEnergy * 0.16) + lane);
     float pulse = pow(max(0.0, 1.0 - abs(travel - 0.5) * 2.0), 7.0);
     vAlpha = fan * (0.012 + pulse * 0.10) * (1.0 - uDarkness * 0.65) * uFieldOpacity;
+    float spineWeight = uWeights.x * (1. - uWeights.y) * (1. - uWeights.z) * (1. - uWeights.w);
+    vAlpha *= 1. - spineWeight;
   }
 `
 
@@ -527,7 +529,7 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
   const particles = new THREE.Points(dustGeometry, dustMaterial)
   particles.name = 'aether-current-particles'
   particles.frustumCulled = false
-  particles.userData.motion = 'slow flower and belt orbit; reversible column fall; slow internal reactor current'
+  particles.userData.motion = 'scroll-only flowers; distant slow orbital belt; slow internal reactor current'
   particles.userData.fixedCount = count - advectedCount
   particles.userData.advectedCount = advectedCount
 

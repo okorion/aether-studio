@@ -63,7 +63,10 @@ test('@interaction spine links wrap in front and behind the bones and reverse wi
       twists.push({ y: position.y, yaw: Math.atan2(facing.x, facing.z) })
     }
     twists.sort((a, b) => a.y - b.y)
-    expect(twists.at(-1)!.yaw - twists[0].yaw).toBeGreaterThan(1.5)
+    // Adjacent bodies stay anatomically aligned; the parent owns the two full
+    // scene turns. A corkscrew through the vertebrae must not reappear.
+    expect(twists.at(-1)!.yaw - twists[0].yaw).toBeGreaterThan(.25)
+    expect(twists.at(-1)!.yaw - twists[0].yaw).toBeLessThan(.8)
     for (let i = 1; i < twists.length; i++) {
       expect(twists[i].yaw - twists[i - 1].yaw).toBeGreaterThan(0)
       expect(twists[i].yaw - twists[i - 1].yaw).toBeLessThan(.5)

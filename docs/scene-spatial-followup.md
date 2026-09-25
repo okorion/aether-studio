@@ -19,9 +19,15 @@
 | 대상 | 변경 전 | 변경 후 | 판단 포인트 |
 | --- | --- | --- | --- |
 | 초기 포레스트 | ![이전 초기 포레스트](screenshots/scene-spatial-followup/forest-before.jpg) | ![초기 형태를 유지하는 포레스트](screenshots/scene-spatial-followup/forest-after.jpg) | 첫 화면부터 가지·잎 형태 유지 |
+| 본 컬럼·꽃 | ![이전 본 컬럼과 꽃](screenshots/scene-spatial-followup/column-before.jpg) | ![뼈판과 꽃 밀도 수정](screenshots/scene-spatial-followup/column-after.jpg) | 둥근 돌기 감소, 빈 반지름 구간과 입자 밀도 |
+| 본 컬럼 후반 | ![이전 후반 배치](screenshots/scene-spatial-followup/column-back-before.jpg) | ![수정한 후반 배치](screenshots/scene-spatial-followup/column-back-after.jpg) | 인접 세그먼트 정렬, 체인의 다른 상대 위치 |
 | 스케일 패널 | ![축소됐던 스케일 패널](screenshots/scene-spatial-followup/scales-before.jpg) | ![크기를 복구한 스케일 패널](screenshots/scene-spatial-followup/scales-after.jpg) | 같은 장면 진행률에서 패널 높이 비교 |
 
 실제 실행 화면은 Chromium의 1440×900, 모바일 에뮬레이션 390×844에서 확인한다. 장면 비교는 페이지의 단순 스크롤 비율 대신 같은 장면 진행률을 사용한다. 스케일 장면의 스크롤 거리를 줄였으므로 같은 페이지 비율은 더 이상 같은 장면 위치를 뜻하지 않는다.
+
+2026-09-25 최종 로컬 GPU 검사에서 정·역스크롤 14개 지점의 위치·회전 복원 오차는 0이었다. 8개 장면에서 각 100프레임을 관찰한 중앙값은 약 16.7ms, p95는 16.8ms 이하였고 자동 품질 값은 1.00을 유지했다. 이 수치는 해당 Windows Chromium 실행의 관찰값이며 모든 기기의 성능 보장은 아니다.
+
+전체 로컬 Playwright는 128개 통과·1개 제외·1개 실패였다. 실패한 항목은 이전 본 컬럼의 큰 비틀림을 요구하던 검사로, 새 세그먼트 정렬 범위를 검사하도록 교정한 뒤 재검사했다. 최종 브랜치의 전체 통과 여부는 [PR #51의 CI](https://github.com/okorion/aether-studio/pull/51/checks)에서 확인한다.
 
 포레스트 드래그는 회전 방식 자체가 바뀌었다. 카메라 방위는 유지되고 포레스트·링·리본 트레일·벨 크리처가 회전한다. 상하 카메라 각도와 스크롤 이동에는 영상의 실제 원근이 적용된다. 영상은 360도 파노라마가 아니다.
 

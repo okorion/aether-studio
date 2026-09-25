@@ -295,7 +295,7 @@ test('@interaction production scene accepts background drag and excludes navigat
 test('@interaction device and late scales reject pointer camera input until the lower ring', async ({ page }) => {
   // Several sequential scenes and input types are checked in software WebGL.
   // Linux CI reached its previous 90s total budget while still making progress.
-  test.setTimeout(process.env.CI ? 150_000 : 60_000)
+  test.setTimeout(150_000)
   await readyScene(page)
   const canvas = page.locator('.scene-canvas')
   const moveToProgress = async (progress: number) => {

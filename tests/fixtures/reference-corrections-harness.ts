@@ -37,13 +37,19 @@ export function probeDryContact() {
     for (let i = 0; i <= 12; i++) { flow.move(-.32 + i * .04, 0, 1.6); flow.update(1 / 60) }
     const contact = read(), recovery: number[] = []
     const previous = new Float32Array(pixels.length)
+    const originalDry = Array.from({ length: pixels.length / 4 }, (_, i) => i * 4)
+      .filter(i => (flow.texture.image.data as Uint8Array)[i + 3] < 180)
+    let refill = 0, dryAfterStop = 0
     let reversals = 0, increases = 0
     flow.release()
     for (let frame = 0; frame < 145; frame++) {
       flow.update(1 / 60)
       const sample = read()
       if (frame % 6 === 0) recovery.push(sample.energy)
-      if (frame > 5) for (let i = 0; i < pixels.length; i += 4) {
+      if(frame > 4 && frame < 30) for(const i of originalDry)
+        refill = Math.max(refill, Math.hypot(pixels[i], pixels[i + 1]))
+      if(frame === 18) dryAfterStop = sample.dryPixels
+      if (frame > 40) for (let i = 0; i < pixels.length; i += 4) {
         for (let channel = 0; channel < 2; channel++) {
           const a = previous[i + channel], b = pixels[i + channel]
           if (a * b < -1e-12) reversals++
@@ -52,7 +58,7 @@ export function probeDryContact() {
       }
       previous.set(pixels)
     }
-    return { contact, recovery, reversals, increases, end: read(), error: renderer.getContext().getError() }
+    return { contact, recovery, refill, dryAfterStop, reversals, increases, end: read(), error: renderer.getContext().getError() }
   } finally {
     flow.dispose(); surface.dispose(); target.dispose(); geometry.dispose(); material.dispose()
     renderer.dispose(); renderer.forceContextLoss()

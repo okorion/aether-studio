@@ -1,12 +1,13 @@
 import { test, expect } from '@playwright/test'
 import { journeyHeightSvh, sceneToScroll, scrollToScene } from '../src/ScrollTimeline'
 
-test('@interaction the scale room uses 60 percent of its former scroll distance and restores every authored pose', () => {
+test('@interaction centered scales hand off promptly, formed forests hold longer, and every pose reverses', () => {
   const scrollHeight = journeyHeightSvh - 100
-  expect((sceneToScroll(.925) - sceneToScroll(.765)) * scrollHeight).toBeCloseTo((.925 - .765) * 1700 * .6, 8)
-  for (const [a, b] of [[0, .1], [.3, .6], [.94, 1]]) {
-    expect((sceneToScroll(b) - sceneToScroll(a)) * scrollHeight).toBeCloseTo((b - a) * 1700, 8)
-  }
+  const distance = (a: number, b: number) => (sceneToScroll(b) - sceneToScroll(a)) * scrollHeight
+  expect(distance(.805, .855)).toBeCloseTo(15.3, 8)
+  expect(distance(.065, .14)).toBeCloseTo((.14 - .065) * 1700 * 1.7, 8)
+  expect(distance(.925, 1)).toBeCloseTo((1 - .925) * 1700 * 1.65, 8)
+  expect(distance(.3, .6)).toBeCloseTo(.3 * 1700, 8)
   let previous = -1
   for (let i = 0; i <= 1000; i++) {
     const pose = i / 1000, scroll = sceneToScroll(pose)

@@ -76,7 +76,13 @@ async function assertNeverStarted(page: Page, requests: MediaRequests) {
     const records = await videos(page, film)
     expect(records.length, film.role).toBeGreaterThanOrEqual(1)
     expect(records.every((video) => video.src === null && video.loads === 0 && video.playTimes.length === 0), film.role).toBe(true)
-    expect(requests[film.role], film.role).toEqual([])
+    // The gallery monitor now uses the same MP4. Its request does not mean
+    // the disabled forest decoder started; retain the network assertion when
+    // no other live decoder has explicitly selected this shared asset.
+    const monitorUsesFilm = await page.evaluate(src => window.lightVideoProbe.records.some(
+      ({ video }) => video.dataset.mediaRole !== 'forest-memory' && video.getAttribute('src') === src,
+    ), film.mediaPath)
+    if (!monitorUsesFilm) expect(requests[film.role], film.role).toEqual([])
     await expect.poll(() => status(page, film)).toMatchObject({ active: false, ready: false, attached: false, playing: false, state: 'idle' })
   }
 }

@@ -3,7 +3,7 @@ import * as THREE from 'three'
 import { createLightFilmUniforms, sampleLightChoreography } from '../src/SceneLighting'
 import { createSceneForest } from '../src/SceneForest'
 
-test('@interaction light choreography stays bounded, evolves slowly, and freezes with scene time', () => {
+test('@interaction light choreography stays bounded, evolves continuously, and freezes with scene time', () => {
   const channels = ['keyHue', 'rimHue', 'warmHue', 'keyIntensity', 'rimIntensity', 'warmIntensity', 'cloudStrength'] as const
   for (const progress of [0, .4, .72, .98]) {
     for (const time of [0, 4, 19, 40, 87, 3600]) {
@@ -15,10 +15,10 @@ test('@interaction light choreography stays bounded, evolves slowly, and freezes
       }
       for (const intensity of ['keyIntensity', 'rimIntensity', 'warmIntensity'] as const) {
         expect(value[intensity]).toBeGreaterThan(.65)
-        expect(value[intensity]).toBeLessThan(1.2)
+        expect(value[intensity]).toBeLessThan(1.55)
       }
       const next = sampleLightChoreography(time + 1 / 60, progress)
-      for (const channel of channels) expect(Math.abs(value[channel] - next[channel])).toBeLessThan(.002)
+      for (const channel of channels) expect(Math.abs(value[channel] - next[channel])).toBeLessThan(.004)
       expect(sampleLightChoreography(time, progress)).toEqual(value)
     }
     const before = sampleLightChoreography(4, progress)

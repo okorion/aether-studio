@@ -193,6 +193,27 @@ export function createSceneRuins(parent: THREE.Group, software: boolean, mobile:
       }
     }
   }
+  // Recessed rear service wall: doors, structural seams and vent banks catch
+  // the moving aperture light without covering the reactor's central opening.
+  const rear = create(new THREE.BoxGeometry(1, 1, 1), enamel, 28, 'aether-rear-service-wall')
+  const vents = create(new THREE.BoxGeometry(1, 1, 1), steel, 60, 'aether-rear-vent-ribs')
+  const rearLights = create(new THREE.BoxGeometry(1, 1, 1), lamps, 8, 'aether-rear-status-lights')
+  let rearIndex = 0, ventIndex = 0
+  for (let bay = 0; bay < 4; bay++) {
+    const x = (bay - 1.5) * 2.72, z = hallZ - hallDepth * .5 - .48
+    box(rear, rearIndex++, x, -.15, z, 2.58, 6.65, .32, .72)
+    box(rear, rearIndex++, x, -.82, z + .21, 2.08, 4.56, .12, .48)
+    box(rear, rearIndex++, x, 2.04, z + .24, 2.15, .74, .24, .66)
+    for (const side of [-1, 1]) {
+      box(rear, rearIndex++, x + side * 1.05, -.82, z + .32, .085, 4.68, .13, 1.15)
+      box(rear, rearIndex++, x + side * .80, -.72, z + .35, .05, .38, .07, .9)
+    }
+    for (let rib = 0; rib < 15; rib++) {
+      box(vents, ventIndex++, x, 1.74 + rib * .043, z + .39, 1.85, .018, .07, .8)
+    }
+    box(rearLights, bay * 2, x + .66, .48, z + .33, .13, .025, .025, 1)
+    box(rearLights, bay * 2 + 1, x + .84, .48, z + .33, .06, .025, .025, .52)
+  }
   // Only sparse edge fragments remain; no gravel or loose hoses occupy the
   // centre or the foreground water used by the O reflection.
   const fragment = new THREE.IcosahedronGeometry(.68, 1)

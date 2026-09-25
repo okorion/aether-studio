@@ -56,14 +56,6 @@ SOURCES = [
         "license": "프로젝트 자체 제작 에셋",
         "source": "https://github.com/okorion/aether-studio/blob/17f3abb1f61bf8ce468cd08bef76d68b1ecbeb19/public/media/aurora-bloom.mp4",
     },
-    {
-        "id": "chrome-current",
-        "file": "chrome-current.original.mp4",
-        "sha256": "546f31b436c2c094a119ecd7b76be7f93661b4c2b9cf62f56decc61e211ed123",
-        "creator": "Aether Studio 프로젝트",
-        "license": "프로젝트 자체 제작 에셋",
-        "source": "https://github.com/okorion/aether-studio/blob/17f3abb1f61bf8ce468cd08bef76d68b1ecbeb19/public/media/chrome-current.mp4",
-    },
 ]
 
 # 모든 구간은 원본 시간 기준 4.5초다. 0.5초씩 겹쳐 순환 길이는 24초다.
@@ -74,12 +66,12 @@ CLIPS = [
      "filter": "crop=640:360:0:20,scale=512:288,eq=contrast=1.14:saturation=1.2"},
     {"source": "street-in-mumbai", "in": 16.0, "look": "거리 / amber / 중간 밝기",
      "filter": "crop=720:404:120:70,scale=512:288,eq=contrast=1.08:brightness=0.015:saturation=1.18,colorbalance=rs=0.025:bs=-0.02"},
-    {"source": "chrome-current", "in": 1.75, "look": "유체 / cyan·white / 밝음",
-     "filter": "crop=640:360:0:20,scale=512:288,eq=contrast=1.05:brightness=0.015:saturation=1.2"},
+    {"source": "misty-river", "in": 7.0, "look": "강물·안개 / 은회색·청록 / 중간 밝기",
+     "filter": "scale=512:288,eq=contrast=0.92:brightness=-0.015:saturation=0.85,colorbalance=gs=0.012:bs=0.018"},
     {"source": "misty-river", "in": 22.0, "look": "안개·강 / blue·cyan / 어두움",
      "filter": "scale=512:288,eq=contrast=1.28:brightness=-0.11:saturation=1.0,colorbalance=rs=-0.055:gs=0.005:bs=0.045"},
-    {"source": "chrome-current", "in": 5.0, "look": "유체 / magenta·amber / 밝음",
-     "filter": "crop=640:360:0:20,scale=512:288,colorchannelmixer=rr=0:rg=1:gr=1:gg=0,eq=contrast=1.08:brightness=-0.015:saturation=1.35"},
+    {"source": "flight-over-clouds", "in": 7.0, "look": "구름 / 보라·청색 / 중간 밝기",
+     "filter": "crop=960:540:0:650,scale=512:288,eq=contrast=0.92:brightness=-0.035:saturation=0.9,colorbalance=rs=0.008:bs=0.04"},
 ]
 
 
@@ -178,6 +170,9 @@ def main() -> None:
         if digest(inputs / source["file"]) != source["sha256"]:
             raise SystemExit(f"작업 중 원본이 변경되었습니다: {source['file']}")
 
+    poster = output_dir / "forest-memory.jpg"
+    run([ffmpeg, "-y", "-hide_banner", "-loglevel", "error", "-ss", "2", "-i", str(output), "-frames:v", "1", "-q:v", "2", str(poster)])
+
     if args.qa_directory:
         qa_directory = args.qa_directory.resolve()
         if qa_directory == repository or repository in qa_directory.parents:
@@ -192,7 +187,8 @@ def main() -> None:
     manifest = {
         "schema_version": 1,
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
-        "purpose": "상단·하단 포레스트 배경과 산란광에 사용하는 24초 순환 영상",
+        "purpose": "포레스트 배경·모니터·상세 창과 공유 조명에 사용하는 24초 순환 영상",
+        "poster": {"file": poster.name, "time_seconds": 2, "sha256": digest(poster)},
         "sources": [{**source, "size_bytes": (inputs / source["file"]).stat().st_size} for source in SOURCES],
         "clips": [{**clip, "out": clip["in"] + 4.5} for clip in CLIPS],
         "transform": {"filter_complex": graph, "audio": "removed", "source_metadata": "removed", "crossfade_seconds": 0.5, "cycle_trim_seconds": [0.5, 24.5]},
@@ -201,7 +197,7 @@ def main() -> None:
         "validation": {"source_sha256_before_after": "pass", "full_decode_with_xerror": "pass", "actual_frames": int(frames[-1]), "actual_video": {"codec": stream[1], "width": int(stream[2]), "height": int(stream[3]), "fps": float(stream[4])}, "audio_streams": 0, "moov_offset": boxes["moov"], "mdat_offset": boxes["mdat"], "under_2mb": True},
         "notes": [
             "원본 에셋은 변경하지 않았다.",
-            "실사 색보정과 자체 영상의 채널 교환은 재현용 변환이며 원본 영상의 색과 다르다.",
+            "실사와 자체 영상에 색보정을 적용했으며 원본 영상의 색과 다르다.",
             "CC0는 저작권상 출처 표시를 의무화하지 않지만 원본 추적을 위해 크레딧을 보존한다.",
             "CC0는 별도 초상권·상표권을 부여하지 않는다. 거리 구간은 클로즈업 없는 높은 시점의 전경이다.",
             "리액터 챔버용 light-projection.mp4는 입력으로 사용하지 않았다.",
@@ -209,7 +205,7 @@ def main() -> None:
         "regeneration": {"script": "scripts/" + Path(__file__).name, "script_sha256": digest(Path(__file__)), "ffmpeg_version": run([ffmpeg, "-version"]).splitlines()[0]},
     }
     manifest_path = output_dir / "forest-memory-manifest.json"
-    manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    manifest_path.write_bytes((json.dumps(manifest, ensure_ascii=False, indent=2) + "\n").encode("utf-8"))
     print(json.dumps(manifest["output"], ensure_ascii=False, indent=2))
 
 

@@ -186,10 +186,10 @@ export function createSceneEmblem(options: SceneEmblemOptions) {
           // Spread the live film over the whole curved face, rather than
           // reflecting a narrow, nearly constant patch around its centre.
           vec2 filmUv = .5 + vEmblemLocal.xy * vec2(.32,.38) + normal.xy*.19;
-          vec2 filmBend = normal.xy * .045;
+          vec2 filmBend = normal.xy * .007;
           vec3 emblemFilm = vec3(aetherFilmColor(filmUv+filmBend).r,
             aetherFilmColor(filmUv).g, aetherFilmColor(filmUv-filmBend).b);
-          emblemFilm = max(vec3(0.),mix(vec3(dot(emblemFilm,vec3(.2126,.7152,.0722))),emblemFilm,1.3));
+          emblemFilm = max(vec3(0.),mix(vec3(dot(emblemFilm,vec3(.2126,.7152,.0722))),emblemFilm,1.05));
           emblemFilm = pow(emblemFilm,vec3(.95));
           float emblemFilmLuma = dot(emblemFilm, vec3(.2126,.7152,.0722));
           // A dark film interval also dims the reflected highlight. Its colour
@@ -203,7 +203,7 @@ export function createSceneEmblem(options: SceneEmblemOptions) {
             + glassBody * (.18 + emblemFresnel * .5)
             + emblemReflection * emblemTint * emblemProjection * (.12 + emblemFresnel * 1.4)
             + prism * pow(emblemFresnel, 1.5) * (.05 + emblemFilmLuma*.18)
-            + emblemFilm * (.11 + smoothstep(.08,.65,emblemFilmLuma)*.48 + emblemFresnel*.85);
+            + emblemFilm * (.08 + smoothstep(.08,.65,emblemFilmLuma)*.26 + emblemFresnel*.42);
           #include <opaque_fragment>
         `)
       }

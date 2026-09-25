@@ -4,6 +4,38 @@ import type { probeSpineMaterial } from './fixtures/spine-material-harness'
 import { createSpineAssembly, sampleSpineExposure } from '../src/SceneSpine'
 import * as THREE from 'three'
 
+test('@interaction adjacent vertebrae keep a gradual height twist independently of scroll rotation', () => {
+  const assembly = createSpineAssembly(false, false)
+  const bones = assembly.group.getObjectByName('aether-spine-vertebrae') as THREE.InstancedMesh
+  const matrix = new THREE.Matrix4(), position = new THREE.Vector3(), rotation = new THREE.Quaternion(), scale = new THREE.Vector3()
+  const euler = new THREE.Euler()
+  try {
+    for (const p of [.32, .46, .58]) {
+      assembly.update(p, 1, 1)
+      const levels = []
+      for (let i = 0; i < bones.count; i++) {
+        bones.getMatrixAt(i, matrix)
+        matrix.decompose(position, rotation, scale)
+        if (scale.x < .1) continue
+        euler.setFromQuaternion(rotation)
+        levels.push({ y: position.y, yaw: euler.y })
+      }
+      levels.sort((a, b) => a.y - b.y)
+      expect(levels.length).toBeGreaterThanOrEqual(8)
+      expect(levels.at(-1)!.yaw - levels[0].yaw).toBeGreaterThan(1.8)
+      for (let i = 1; i < levels.length; i++) {
+        const turn = levels[i].yaw - levels[i - 1].yaw
+        expect(turn).toBeGreaterThan(.20)
+        expect(turn).toBeLessThan(.31)
+      }
+      const snapshot = Array.from(bones.instanceMatrix.array)
+      assembly.update(p + .06, 1, 1)
+      assembly.update(p, 1, 1)
+      expect(Array.from(bones.instanceMatrix.array)).toEqual(snapshot)
+    }
+  } finally { assembly.dispose() }
+})
+
 test('@interaction column exposure fades at both ends without altering chain lighting or transforms', () => {
   const assembly = createSpineAssembly(false, false)
   const chain = assembly.group.getObjectByName('aether-spine-chain') as THREE.InstancedMesh<THREE.BufferGeometry, THREE.MeshPhysicalMaterial>

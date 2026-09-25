@@ -1,7 +1,12 @@
 {
   "schema_version": 1,
-  "created_at_utc": "2026-09-24T07:17:30.980648+00:00",
-  "purpose": "상단·하단 포레스트 배경과 산란광에 사용하는 24초 순환 영상",
+  "created_at_utc": "2026-09-25T13:21:17.529149+00:00",
+  "purpose": "포레스트 배경·모니터·상세 창과 공유 조명에 사용하는 24초 순환 영상",
+  "poster": {
+    "file": "forest-memory.jpg",
+    "time_seconds": 2,
+    "sha256": "904e67aba86b9cedb17543100552fd41cb73d32516eb9e32cc9af8cf79a891a7"
+  },
   "sources": [
     {
       "id": "flight-over-clouds",
@@ -45,15 +50,6 @@
       "license": "프로젝트 자체 제작 에셋",
       "source": "https://github.com/okorion/aether-studio/blob/17f3abb1f61bf8ce468cd08bef76d68b1ecbeb19/public/media/aurora-bloom.mp4",
       "size_bytes": 591023
-    },
-    {
-      "id": "chrome-current",
-      "file": "chrome-current.original.mp4",
-      "sha256": "546f31b436c2c094a119ecd7b76be7f93661b4c2b9cf62f56decc61e211ed123",
-      "creator": "Aether Studio 프로젝트",
-      "license": "프로젝트 자체 제작 에셋",
-      "source": "https://github.com/okorion/aether-studio/blob/17f3abb1f61bf8ce468cd08bef76d68b1ecbeb19/public/media/chrome-current.mp4",
-      "size_bytes": 1510755
     }
   ],
   "clips": [
@@ -79,11 +75,11 @@
       "out": 20.5
     },
     {
-      "source": "chrome-current",
-      "in": 1.75,
-      "look": "유체 / cyan·white / 밝음",
-      "filter": "crop=640:360:0:20,scale=512:288,eq=contrast=1.05:brightness=0.015:saturation=1.2",
-      "out": 6.25
+      "source": "misty-river",
+      "in": 7.0,
+      "look": "강물·안개 / 은회색·청록 / 중간 밝기",
+      "filter": "scale=512:288,eq=contrast=0.92:brightness=-0.015:saturation=0.85,colorbalance=gs=0.012:bs=0.018",
+      "out": 11.5
     },
     {
       "source": "misty-river",
@@ -93,15 +89,15 @@
       "out": 26.5
     },
     {
-      "source": "chrome-current",
-      "in": 5.0,
-      "look": "유체 / magenta·amber / 밝음",
-      "filter": "crop=640:360:0:20,scale=512:288,colorchannelmixer=rr=0:rg=1:gr=1:gg=0,eq=contrast=1.08:brightness=-0.015:saturation=1.35",
-      "out": 9.5
+      "source": "flight-over-clouds",
+      "in": 7.0,
+      "look": "구름 / 보라·청색 / 중간 밝기",
+      "filter": "crop=960:540:0:650,scale=512:288,eq=contrast=0.92:brightness=-0.035:saturation=0.9,colorbalance=rs=0.008:bs=0.04",
+      "out": 11.5
     }
   ],
   "transform": {
-    "filter_complex": "[0:v]crop=960:540:0:650,scale=512:288,eq=contrast=1.1:brightness=0.02:saturation=1.25,colorbalance=rs=0.035:bs=-0.025,setsar=1,setpts=PTS-STARTPTS,fps=24,format=yuv420p[c0];[1:v]crop=640:360:0:20,scale=512:288,eq=contrast=1.14:saturation=1.2,setsar=1,setpts=PTS-STARTPTS,fps=24,format=yuv420p[c1];[2:v]crop=720:404:120:70,scale=512:288,eq=contrast=1.08:brightness=0.015:saturation=1.18,colorbalance=rs=0.025:bs=-0.02,setsar=1,setpts=PTS-STARTPTS,fps=24,format=yuv420p[c2];[3:v]crop=640:360:0:20,scale=512:288,eq=contrast=1.05:brightness=0.015:saturation=1.2,setsar=1,setpts=PTS-STARTPTS,fps=24,format=yuv420p[c3];[4:v]scale=512:288,eq=contrast=1.28:brightness=-0.11:saturation=1.0,colorbalance=rs=-0.055:gs=0.005:bs=0.045,setsar=1,setpts=PTS-STARTPTS,fps=24,format=yuv420p[c4];[5:v]crop=640:360:0:20,scale=512:288,colorchannelmixer=rr=0:rg=1:gr=1:gg=0,eq=contrast=1.08:brightness=-0.015:saturation=1.35,setsar=1,setpts=PTS-STARTPTS,fps=24,format=yuv420p[c5];[c0]split=2[first][repeat];[first][c1]xfade=transition=fade:duration=0.5:offset=4,fps=24[mix1];[mix1][c2]xfade=transition=fade:duration=0.5:offset=8,fps=24[mix2];[mix2][c3]xfade=transition=fade:duration=0.5:offset=12,fps=24[mix3];[mix3][c4]xfade=transition=fade:duration=0.5:offset=16,fps=24[mix4];[mix4][c5]xfade=transition=fade:duration=0.5:offset=20,fps=24[mix5];[mix5][repeat]xfade=transition=fade:duration=0.5:offset=24,fps=24[mix6];[mix6]trim=start=0.5:end=24.5,setpts=PTS-STARTPTS,fps=24,format=yuv420p[video]",
+    "filter_complex": "[0:v]crop=960:540:0:650,scale=512:288,eq=contrast=1.1:brightness=0.02:saturation=1.25,colorbalance=rs=0.035:bs=-0.025,setsar=1,setpts=PTS-STARTPTS,fps=24,format=yuv420p[c0];[1:v]crop=640:360:0:20,scale=512:288,eq=contrast=1.14:saturation=1.2,setsar=1,setpts=PTS-STARTPTS,fps=24,format=yuv420p[c1];[2:v]crop=720:404:120:70,scale=512:288,eq=contrast=1.08:brightness=0.015:saturation=1.18,colorbalance=rs=0.025:bs=-0.02,setsar=1,setpts=PTS-STARTPTS,fps=24,format=yuv420p[c2];[3:v]scale=512:288,eq=contrast=0.92:brightness=-0.015:saturation=0.85,colorbalance=gs=0.012:bs=0.018,setsar=1,setpts=PTS-STARTPTS,fps=24,format=yuv420p[c3];[4:v]scale=512:288,eq=contrast=1.28:brightness=-0.11:saturation=1.0,colorbalance=rs=-0.055:gs=0.005:bs=0.045,setsar=1,setpts=PTS-STARTPTS,fps=24,format=yuv420p[c4];[5:v]crop=960:540:0:650,scale=512:288,eq=contrast=0.92:brightness=-0.035:saturation=0.9,colorbalance=rs=0.008:bs=0.04,setsar=1,setpts=PTS-STARTPTS,fps=24,format=yuv420p[c5];[c0]split=2[first][repeat];[first][c1]xfade=transition=fade:duration=0.5:offset=4,fps=24[mix1];[mix1][c2]xfade=transition=fade:duration=0.5:offset=8,fps=24[mix2];[mix2][c3]xfade=transition=fade:duration=0.5:offset=12,fps=24[mix3];[mix3][c4]xfade=transition=fade:duration=0.5:offset=16,fps=24[mix4];[mix4][c5]xfade=transition=fade:duration=0.5:offset=20,fps=24[mix5];[mix5][repeat]xfade=transition=fade:duration=0.5:offset=24,fps=24[mix6];[mix6]trim=start=0.5:end=24.5,setpts=PTS-STARTPTS,fps=24,format=yuv420p[video]",
     "audio": "removed",
     "source_metadata": "removed",
     "crossfade_seconds": 0.5,
@@ -109,6 +105,14 @@
       0.5,
       24.5
     ]
+  },
+  "encoding": {
+    "codec": "libx264",
+    "preset": "medium",
+    "crf": 25,
+    "maxrate": "550k",
+    "bufsize": "1100k",
+    "movflags": "+faststart"
   },
   "output": {
     "file": "forest-memory.mp4",
@@ -118,8 +122,8 @@
     "fps": 24,
     "codec": "H.264 / yuv420p",
     "faststart": true,
-    "size_bytes": 1265758,
-    "sha256": "b1af27b4bb5aa0d5fcb7388b1dca6e6ef2de22a0ec0652b3e9dd426534e1b8b7"
+    "size_bytes": 963587,
+    "sha256": "750c0c34fc74b31aefe539e30a3b6ec1d91a7e107d9b0659e0397e4fe657c962"
   },
   "validation": {
     "source_sha256_before_after": "pass",
@@ -133,27 +137,19 @@
     },
     "audio_streams": 0,
     "moov_offset": 32,
-    "mdat_offset": 7740,
+    "mdat_offset": 7744,
     "under_2mb": true
   },
   "notes": [
     "원본 에셋은 변경하지 않았다.",
-    "실사 색보정과 자체 영상의 채널 교환은 재현용 변환이며 원본 영상의 색과 다르다.",
+    "실사와 자체 영상에 색보정을 적용했으며 원본 영상의 색과 다르다.",
     "CC0는 저작권상 출처 표시를 의무화하지 않지만 원본 추적을 위해 크레딧을 보존한다.",
     "CC0는 별도 초상권·상표권을 부여하지 않는다. 거리 구간은 클로즈업 없는 높은 시점의 전경이다.",
     "리액터 챔버용 light-projection.mp4는 입력으로 사용하지 않았다."
   ],
   "regeneration": {
     "script": "scripts/regenerate-forest-memory.py",
-    "script_sha256": "a68b0d06b27c4fa451a50ecc475f8933b3a3cd805c434218e25befcf30b269c7",
+    "script_sha256": "f990b73977e231333b5d38eea55ba55331a2b4a060ed111d770e8175bfc524a3",
     "ffmpeg_version": "ffmpeg version 7.1-essentials_build-www.gyan.dev Copyright (c) 2000-2024 the FFmpeg developers"
-  },
-  "encoding": {
-    "codec": "libx264",
-    "preset": "medium",
-    "crf": 25,
-    "maxrate": "550k",
-    "bufsize": "1100k",
-    "movflags": "+faststart"
   }
 }

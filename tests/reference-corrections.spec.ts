@@ -24,7 +24,7 @@ test('@interaction statement keeps full coverage until the diagonal reveals the 
   }
 })
 
-test('@interaction production water protects the contact centre while its rim refracts and settles', async ({ page }) => {
+test('@interaction production water refracts at the rim, refills the released contact, and settles without late jitter', async ({ page }) => {
   const output = await build({ configFile: false, logLevel: 'silent', build: { write: false, minify: false,
     lib: { entry: 'tests/fixtures/reference-corrections-harness.ts', formats: ['iife'], name: 'CorrectionProbe' } } })
   const chunk = (Array.isArray(output) ? output : [output]).flatMap(r => 'output' in r ? r.output : []).find(r => r.type === 'chunk')
@@ -35,11 +35,13 @@ test('@interaction production water protects the contact centre while its rim re
   expect(result.contact.dryPixels).toBeGreaterThan(6)
   expect(result.contact.dryMax).toBeLessThan(.000001)
   expect(result.contact.rimMax).toBeGreaterThan(.025)
+  expect(result.refill).toBeGreaterThan(.006)
+  expect(result.dryAfterStop).toBe(0)
   expect(result.end.energy).toBe(0)
   expect(result.reversals).toBe(0)
   expect(result.increases).toBe(0)
   // After the initial moving wake, recovery cannot build repeated oscillations.
-  for (let i = 5; i < result.recovery.length; i++) expect(result.recovery[i]).toBeLessThan(result.recovery[3] * .8)
+  for (let i = 8; i < result.recovery.length; i++) expect(result.recovery[i]).toBeLessThanOrEqual(result.recovery[i - 1])
   await test.info().attach('water-contact-recovery.json', { body: JSON.stringify(result), contentType: 'application/json' })
 })
 

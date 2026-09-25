@@ -19,7 +19,7 @@ export interface SceneVideoStatus {
 }
 
 const defaultSources: readonly [SceneVideoSource, SceneVideoSource] = [
-  { src: '/media/chrome-current.mp4', optimizedSrc: '/media/chrome-current.webm' },
+  { src: '/media/forest-memory.mp4' },
   { src: '/media/aurora-bloom.mp4', optimizedSrc: '/media/aurora-bloom.webm' },
 ]
 

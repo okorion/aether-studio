@@ -69,7 +69,7 @@ test('@interaction scroll advances links along the diagonal, including sideways 
   }
 })
 
-test('@interaction independent feed reinforces the shared rotation and eases without a mid-scene stall', () => {
+test('@interaction clockwise chain feed eases without a mid-scene stall', () => {
   let previousSpeed = Infinity
   const delta = .00001
   for (let step = 0; step <= 360; step++) {
@@ -79,10 +79,9 @@ test('@interaction independent feed reinforces the shared rotation and eases wit
     const speed = (a.y - b.y) / delta
     const localAngle = Math.atan2(Math.sin(Math.atan2(b.z, b.x) - Math.atan2(a.z, a.x)),
       Math.cos(Math.atan2(b.z, b.x) - Math.atan2(a.z, a.x)))
-    // In X/Z, Three.js positive Y rotation decreases atan2(z, x).
-    const parentAngle = sampleJourney(p).structureYaw - sampleJourney(p + delta).structureYaw
-    expect(localAngle * parentAngle).toBeGreaterThan(0)
-    expect(Math.abs(localAngle + parentAngle)).toBeGreaterThan(Math.abs(parentAngle))
+    // Viewed down +Y, increasing atan2(z, x) is clockwise. Measure the local
+    // feed separately from the scene's unchanged common parent rotation.
+    expect(localAngle).toBeGreaterThan(0)
     expect(speed).toBeGreaterThan(5.9)
     expect(speed).toBeLessThanOrEqual(previousSpeed + .0001)
     if (step) expect(previousSpeed - speed).toBeLessThan(.15)
@@ -171,7 +170,7 @@ test('@interaction links feed through preceding positions on a fixed column-loca
     }
     expect(maxWorldError).toBeLessThan(.00001)
     expect(initial[0].elements[13] - previousY).toBeGreaterThan(5.8)
-    expect(angularTravel).toBeLessThan(-1)
+    expect(angularTravel).toBeGreaterThan(1)
 
     // Find when link 0 reaches the old height of link 6. All following links
     // must pass through their predecessor's full local frame. A translated or

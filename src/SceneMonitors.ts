@@ -169,17 +169,21 @@ const fragmentShader = /* glsl */ `
     color += vec3(.18, .26, .24) * hover * .16;
     color += micrograin * .006 + vec3(.1, .15, .17) * pow(detail, 5.) * .10;
 
-    vec2 titleUv = vec2(gl_FrontFacing ? vUv.x : 1. - vUv.x, vUv.y);
-    titleUv += ripple * uHover * 1.8;
-    vec2 split = vec2(.0025 * uHover, 0.);
-    vec3 titleFringe = vec3(texture2D(uTitle, titleUv + split).a,
-      texture2D(uTitle, titleUv).a, texture2D(uTitle, titleUv - split).a);
-    color += titleFringe * uHover * .20;
-    float titleShadow = texture2D(uTitle, titleUv + vec2(.0025, .004)).a;
-    color *= 1. - titleShadow * .65;
-    float title = texture2D(uTitle, titleUv).a;
-    float titleWeight = title * (gl_FrontFacing ? .9 : .27) * (1. - hover * .26);
-    color = mix(color, vec3(.88, .94, .93), titleWeight);
+    // Ink belongs only to the display face; the reverse keeps its glass film.
+    float titleWeight = 0.;
+    if (gl_FrontFacing) {
+      vec2 titleUv = vUv;
+      titleUv += ripple * uHover * 1.8;
+      vec2 split = vec2(.0025 * uHover, 0.);
+      vec3 titleFringe = vec3(texture2D(uTitle, titleUv + split).a,
+        texture2D(uTitle, titleUv).a, texture2D(uTitle, titleUv - split).a);
+      color += titleFringe * uHover * .20;
+      float titleShadow = texture2D(uTitle, titleUv + vec2(.0025, .004)).a;
+      color *= 1. - titleShadow * .65;
+      float title = texture2D(uTitle, titleUv).a;
+      titleWeight = title * .9 * (1. - hover * .26);
+      color = mix(color, vec3(.88, .94, .93), titleWeight);
+    }
     float alpha = mix(.88, .98, uHasBackground);
     alpha = max(alpha, titleWeight);
     gl_FragColor = vec4(color, alpha * uOpacity * mask * passageMask);

@@ -7,7 +7,8 @@ export function createChamberLight(space: THREE.Group, scene: THREE.Scene, film?
   const exit = REACTOR.apertureY - REACTOR.capThickness * .5
   const bottom = -3.62
   const length = exit - bottom
-  const geometry = new THREE.CylinderGeometry(REACTOR.apertureRadius * .86, 2.45, length, 48, 1, true)
+  const footprint = 4.6
+  const geometry = new THREE.CylinderGeometry(REACTOR.apertureRadius * .92, footprint, length, 48, 1, true)
   const material = new THREE.ShaderMaterial({
     uniforms: { uOpacity: { value: 0 }, uTime: { value: 0 },
       ...(film ? { uLightFilm: film.map, uLightFilmReady: film.ready } : {}) },
@@ -30,10 +31,12 @@ export function createChamberLight(space: THREE.Group, scene: THREE.Scene, film?
       void main(){
         #include <logdepthbuf_fragment>
         float ends=smoothstep(0.,.18,vUv.y)*(1.-smoothstep(.92,1.,vUv.y));
-        float strands=.3+.7*pow(.5+.5*sin(vUv.x*75.398+sin(vUv.y*7.-uTime*.19)*1.4),4.);
+        float strands=.74+.26*sin(vUv.x*18.85+sin(vUv.y*3.-uTime*.12)*.8);
         vec3 projected=aetherLightCloud(vWorld,vec3(0.,1.,0.),uTime,0.);
         #ifdef AETHER_LIGHT_FILM
-          if(uLightFilmReady>.5) projected=aetherApertureFilm(vWorld)*4.5;
+          if(uLightFilmReady>.5) projected=(aetherApertureFilm(vWorld)*.4
+            +aetherApertureFilm(vWorld+vec3(.65,0.,.4))*.3
+            +aetherApertureFilm(vWorld-vec3(.65,0.,.4))*.3)*2.4;
         #endif
         float luminance=dot(projected,vec3(.2126,.7152,.0722));
         gl_FragColor=vec4(projected,ends*strands*uOpacity*(.25+luminance)*pow(abs(dot(normalize(vNormal),normalize(cameraPosition-vWorld))),1.6));
@@ -47,7 +50,7 @@ export function createChamberLight(space: THREE.Group, scene: THREE.Scene, film?
   space.add(beam)
   // The light stays in the scene even at zero intensity: shader light counts
   // must not change when crossing a curtain or preparing a hidden chamber.
-  const light = new THREE.SpotLight(0xc6d5e4, 0, Math.hypot(length * REACTOR.heightScale, 2.45) * 1.5, Math.atan(2.45 / (length * REACTOR.heightScale)), .8, 1.4)
+  const light = new THREE.SpotLight(0xc6d5e4, 0, Math.hypot(length * REACTOR.heightScale, footprint) * 1.6, Math.atan(footprint / (length * REACTOR.heightScale)), 1, 1.4)
   light.name = 'aether-aperture-light'
   light.position.set(0, REACTOR.worldY + exit * REACTOR.heightScale, 0)
   light.target.position.set(0, REACTOR.worldY + bottom * REACTOR.heightScale, 0)
@@ -56,9 +59,9 @@ export function createChamberLight(space: THREE.Group, scene: THREE.Scene, film?
   return {
     update(weight: number, time = 0) {
       if (disposed) return
-      material.uniforms.uOpacity.value = weight * .075
+      material.uniforms.uOpacity.value = weight * .055
       material.uniforms.uTime.value = time
-      light.intensity = weight * 165 * (.82 + .18 * Math.sin(time * .37) ** 2)
+      light.intensity = weight * 185 * (.90 + .10 * Math.sin(time * .37) ** 2)
       beam.visible = weight > .001
     },
     dispose() {

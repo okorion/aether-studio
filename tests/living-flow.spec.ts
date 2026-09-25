@@ -116,11 +116,19 @@ test('@interaction particle flow keeps anchors separate and stops its scroll dri
     expect(roles.some(role => role === 0)).toBe(true)
     expect(roles.some(role => role === 1)).toBe(true)
     expect(roles.every(role => role === 0 || role === 1)).toBe(true)
-    const movingFraction = roles.filter(role => role === 1).length / roles.length
+    const baseCount = particles.userData.baseCount as number
+    const movingFraction = roles.slice(0, baseCount).filter(role => role === 1).length / baseCount
     expect(movingFraction).toBeGreaterThan(.18)
     expect(movingFraction).toBeLessThanOrEqual(.2)
+    expect(roles.length).toBeGreaterThan(baseCount)
+    for (let i = baseCount; i < roles.length; i++) {
+      expect(roles[i]).toBe(0)
+      expect(bokeh.getW(i)).toBe(-1)
+      expect((bokeh.getX(i) * 7.13) % 1).toBeLessThan(.22)
+    }
     for (let i = 0; i < roles.length; i++) if (bokeh.getW(i) > .5) expect(roles[i]).toBe(0)
     atmosphere.update(10, .4, 1, pointer)
+    expect(particles.geometry.drawRange.count).toBe(roles.length)
     const initial = current()
     atmosphere.update(40, .4, 1, pointer)
     expect(current()).toEqual(initial)
@@ -136,6 +144,7 @@ test('@interaction particle flow keeps anchors separate and stops its scroll dri
     // Descent moves the camera; the device's circular particle field has
     // already reached one fixed world-space anchor at both of these stops.
     atmosphere.update(44, .70, 1, pointer)
+    expect(particles.geometry.drawRange.count).toBe(baseCount)
     const device = current()
     atmosphere.update(50, .75, 1, pointer)
     expect(current().y).toBeCloseTo(device.y, 8)

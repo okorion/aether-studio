@@ -600,7 +600,8 @@ export function createSceneWorlds(
             vec3 encoded=texture2D(uChamberFilm,uv).rgb;
             radiance=mix(encoded/12.92,pow((encoded+.055)/1.055,vec3(2.4)),step(vec3(.04045),encoded));
           }` : ''}
-          return vec3(.04)+radiance*24.;
+          // Lift the broad pool while compressing hot video highlights.
+          return vec3(.24)+radiance/(vec3(1.)+radiance*.8)*18.;
         }
       ` + shader.fragmentShader
       let direct = THREE.ShaderChunk.lights_fragment_begin
@@ -615,11 +616,12 @@ export function createSceneWorlds(
       shader.fragmentShader = shader.fragmentShader.replace('#include <lights_fragment_begin>', direct)
       shader.fragmentShader = shader.fragmentShader.replace('#include <opaque_fragment>',
         `outgoingLight = reflectedLight.directDiffuse + reflectedLight.directSpecular
-          + reflectedLight.indirectSpecular * min(vec3(.85), apertureRadiance() * .045)
+          + reflectedLight.indirectSpecular * min(vec3(.90), apertureRadiance() * .065)
+          + reflectedLight.indirectDiffuse * .30
           + totalEmissiveRadiance;
         #include <opaque_fragment>`)
     }
-    material.customProgramCacheKey = () => `${previousKey}-aperture-${lightFilm ? 'film' : 'static'}-v3`
+    material.customProgramCacheKey = () => `${previousKey}-aperture-${lightFilm ? 'film' : 'static'}-v4`
   }
   bindGroupCurtain(chamber, deviceCurtain)
   bindGroupCurtain(space, deviceCurtain)

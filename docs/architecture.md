@@ -36,6 +36,8 @@
 
 물막 변위는 `SceneLayers`의 문구 판 재질에서 밀도 기울기를 샘플링해 처리한다. 앞에 놓인 유리 링의 윤곽, 상단·하단 포레스트와 모니터 픽셀은 화면 합성 단계에서 변위시키지 않는다. `SceneLightShafts`의 포레스트 영상 평면은 카메라 회전과 분리하고 스크롤 높이만 따른다. 영상 출처는 [광학 표현](optical-scenes.md), 최근 배치·재질 교정은 [영상 방향·입자 나선·물막 비교](atmosphere-detail-correction.md)에 정리했다.
 
+안개는 `PointerFlow`의 별도 `haze` 필드를 사용한다. UI를 지날 때 새 입력의 연결만 끊고 잔상은 감쇠시키며, 문구 판의 물막 수명과 분리한다. 리액터의 넓은 조명, 꽃 전용 추가 입자와 원경 나선의 감김 간격은 [안개·리액터·꽃 교정](haze-reactor-flower-correction.md)에 정리했다.
+
 [SceneVideo.ts](../src/SceneVideo.ts)는 모니터가 공유하는 영상을 지연 로드한다. VP8 지원 여부에 따라 WebM 또는 MP4를 고르고, 선택한 영상이 실패하면 절차적 셰이더를 표시한다.
 
 [SceneLightVideo.ts](../src/SceneLightVideo.ts)는 `source`·`role`별로 별도 owner를 만든다. `Scene.tsx`는 포레스트의 `forest-memory.mp4`와 리액터의 `light-projection.mp4`를 각각 보관하고 해당 장면에서 활성화한다. 각 owner가 재생·텍스처·실패 상태를 소유하며, 모션 설정으로 장면을 다시 만들 때도 같은 참조와 재생 위치를 유지한다. 정지·복귀·실패·해제는 영상별로 처리한다.

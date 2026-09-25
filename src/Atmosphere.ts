@@ -90,13 +90,13 @@ const currentField = /* glsl */ `
       .85 * branch * branch + .52 * sin(petalAngle * 5. + branch * 8.)
     );
     spine.z += sin(facing) * (spine.x - centre.x);
-    // One broad orbital band sits well outside both the column and camera.
+    // Successive turns form two distant arcs behind the visible column.
     // Its near half is outside the view; the far half crosses the background.
     // Do not flatten it into paired curves close behind the column.
     spine = rotateFlowerField(spine);
     float ribbonLane = clamp((fract(lane * 7.13) - .22) / .78, 0., 1.);
     float ribbonWidth = ribbonLane;
-    float ribbonAngle = t * PI * 2. * 1.7 + uSpineYaw * .32 + uTime * .016;
+    float ribbonAngle = t * PI * 2. * 3.8 + uSpineYaw * .32 + uTime * .016;
     float ribbonRadius = 24. + ribbonWidth * 3. + sin(t * 11.) * .35;
     vec3 ribbon = vec3(cos(ribbonAngle) * ribbonRadius,
       24. - t * 48. + (ribbonWidth - .5) * 2.,
@@ -224,7 +224,7 @@ const dustVertex = /* glsl */ `
     float formed = smoothstep(.668, .725, uScroll / 55.);
     p.xy += radial * radialScatter * uWeights.y * formed;
     p.z += sin(phase * 3.7) * stray * .28 * uWeights.y * formed;
-    float bokeh = aDust.w;
+    float bokeh = max(0., aDust.w);
     if (bokeh > 0.5) {
       vec3 anchored = vec3((lane - 0.5) * 14.0, (position.x - 0.5) * 13.0 + uWeights.w * 3.0, -2.0 + aDust.z * 6.0);
       anchored = mix(anchored, rotateFlowerField(anchored), uWeights.x);
@@ -337,6 +337,8 @@ const dustVertex = /* glsl */ `
     float beltSeed = fract(phase * 17.17 + position.x * 31.13);
     vAlpha *= mix(1., step(.92, beltSeed), ribbonWeight);
     vAlpha *= 1. - spineWeight * max(aAdvected, bokeh);
+    // Negative W marks extra flower seeds; never grow the reactor/forest field.
+    vAlpha *= aDust.w < 0. ? spineWeight : 1.;
     vAlpha *= uFieldOpacity;
   }
 `
@@ -460,8 +462,7 @@ const shaftFragment = /* glsl */ `
   }
 `
 
-function seededRandom() {
-  let seed = 146237
+function seededRandom(seed = 146237) {
   return () => {
     seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0
     return seed / 4294967296
@@ -471,13 +472,15 @@ function seededRandom() {
 /** Three draws plus the outgoing overlap; no per-particle CPU updates or targets. */
 export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: boolean, lightFilm?: LightFilmUniforms) {
   const random = seededRandom()
-  const count = software ? 6000 : mobile ? 40000 : 144000
+  const baseCount = software ? 6000 : mobile ? 40000 : 144000
+  const flowerCount = software ? 1800 : mobile ? 16000 : 44000
+  const count = baseCount + flowerCount
   const bokehCount = software ? 12 : mobile ? 40 : 100
   const positions = new Float32Array(count * 3)
   const dust = new Float32Array(count * 4)
   const advected = new Float32Array(count)
   let advectedCount = 0
-  for (let i = 0; i < count; i += 1) {
+  for (let i = 0; i < baseCount; i += 1) {
     const bokeh = i < bokehCount
     const size = bokeh ? 3.2 + random() * 7.0
       : (software ? 0.9 : 0.64) + Math.pow(random(), 3.4) * (mobile ? 3.1 : 3.7)
@@ -486,6 +489,14 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
     // Dense anchored clouds provide the silhouette; one fifth follows scroll.
     advected[i] = !bokeh && i % 10 >= 8 ? 1 : 0
     advectedCount += advected[i]
+  }
+  // Preserve all previous seeds and the random stream used by filaments/shafts.
+  const flowerRandom = seededRandom(928317)
+  for (let i = baseCount; i < count; i++) {
+    let lane: number
+    do { lane = flowerRandom() } while ((lane * 7.13) % 1 >= .22)
+    positions.set([flowerRandom(), flowerRandom() * Math.PI * 2, Math.pow(flowerRandom(), 1.6)], i * 3)
+    dust.set([lane, .60 + Math.pow(flowerRandom(), 3.4) * (mobile ? 2.7 : 3.3), flowerRandom() * 2 - 1, -1], i * 4)
   }
 
   const uniforms = {
@@ -533,6 +544,8 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
   particles.userData.motion = 'scroll-only flowers; distant slow orbital belt; slow internal reactor current'
   particles.userData.fixedCount = count - advectedCount
   particles.userData.advectedCount = advectedCount
+  particles.userData.baseCount = baseCount
+  particles.userData.flowerCount = flowerCount
 
   const lanes = software ? 6 : mobile ? 16 : 28
   const segments = software ? 52 : mobile ? 112 : 160
@@ -630,6 +643,7 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
       outgoingUniforms.uExitEdge.value = layers.monitorExit
       outgoing.position.y = columnY
       outgoing.visible = p >= .60 && curtainHasCoverage(layers.monitorEntry, layers.monitorExit)
+      dustGeometry.setDrawRange(0, (p > .205 && p < .60) || outgoing.visible ? count : baseCount)
       uniforms.uEntryWipe.value = p >= .20 ? 1 : 0
       uniforms.uDeviceEntryEdge.value = layers.monitorExit
       uniforms.uDeviceEntryWipe.value = p >= .60 ? 1 : 0

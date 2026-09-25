@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { build } from 'vite'
+import type {sampleRotation} from './fixtures/particle-rotation-harness'
 
 test('@interaction flowers stay still at rest while a sparse distant belt orbits; close non-flower grains are hidden', async ({ page }) => {
   const output = await build({ configFile: false, logLevel: 'silent', build: {
@@ -10,6 +11,16 @@ test('@interaction flowers stay still at rest while a sparse distant belt orbits
   if (!chunk || chunk.type !== 'chunk') throw new Error('Particle fixture did not compile')
   await page.goto('about:blank')
   await page.addScriptTag({ content: chunk.code })
+  const turns=await page.evaluate(()=>{
+    const probe=(window as unknown as {ParticleRotation:{sampleRotation:typeof sampleRotation}}).ParticleRotation
+    return [.27,.27+1/3.8].map(t=>probe.sampleRotation(.4,false,.12,t).start)
+  })
+  const [upper,lower]=turns
+  expect(upper[1]-lower[1]).toBeGreaterThan(11)
+  expect(upper[1]-lower[1]).toBeLessThan(14)
+  const heading=(p:number[])=>Math.atan2(p[2],p[0])
+  expect(Math.abs(Math.sin(heading(upper)-heading(lower)))).toBeLessThan(.03)
+  for(const point of turns)expect(Math.hypot(point[0],point[2])).toBeGreaterThan(23)
   // One nearby flower lane and two lanes of the distant, shallow helix.
   for (const mobile of [false, true]) for (const progress of [.30, .36, .4, .49, .55, .58]) for (const lane of progress === .4 ? [.3, .12, .28] : [.3]) {
     const samples = await page.evaluate(({ progress, mobile, lane }) => (window as unknown as {

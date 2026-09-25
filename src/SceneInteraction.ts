@@ -205,16 +205,21 @@ export function createSceneInteraction(
   let retiringSurface = false
   // Shared lighting input stays independent of the scene's orbit permission.
   const flow = createPointerFlow()
+  const haze = software ? undefined : createPointerFlow('haze')
+  let inColumn = false
   const field = {
     ndc: new THREE.Vector2(), strength: 0, aspect: innerWidth / innerHeight, active: false,
     rawNdc: pointer,
     flowTexture: flow.texture,
+    hazeTexture: haze?.texture,
   }
   let fieldTarget = 0
-  const clearField = () => {
+  const clearField = (clearHaze = true) => {
     field.active = false
     fieldTarget = field.strength = 0
     flow.clear()
+    if (clearHaze) haze?.clear()
+    else haze?.release()
   }
   canvas.dataset.cameraMode = 'idle'
   canvas.dataset.orbitEnabled = 'true'
@@ -331,12 +336,13 @@ export function createSceneInteraction(
     }
     pointer.set((event.clientX / innerWidth) * 2 - 1, 1 - (event.clientY / innerHeight) * 2)
     if (interactive(event.target)) {
-      clearField()
+      clearField(false)
       breakStroke()
     } else {
       field.active = true
       fieldTarget = 1
       flow.move(pointer.x, pointer.y, innerWidth / Math.max(1, innerHeight))
+      if (inColumn) haze?.move(pointer.x, pointer.y, innerWidth / Math.max(1, innerHeight))
       const distance = pointer.distanceTo(last)
       if (last.x === -10 || (distance > .006 && event.timeStamp - lastSample >= (software ? 42 : 30))) {
         if (event.timeStamp - lastSample > 180) breakStroke()
@@ -357,9 +363,11 @@ export function createSceneInteraction(
     }
   }
   const down = (event: PointerEvent) => {
-    if (!enabled || reducedMotion || document.hidden || !home() || blocked() ||
-      event.pointerType === 'touch' || interactive(event.target)) {
-      clearField()
+    // Passive Touch Events own this stream; pointerdown must not erase a wake
+    // from the previous finger gesture before touchstart establishes an anchor.
+    if (event.pointerType === 'touch') return
+    if (!enabled || reducedMotion || document.hidden || !home() || blocked() || interactive(event.target)) {
+      clearField(!interactive(event.target) || !enabled || reducedMotion || document.hidden || !home() || blocked())
       return
     }
     if (!orbitEnabled || event.button !== 0) return
@@ -403,6 +411,7 @@ export function createSceneInteraction(
     field.active = false
     fieldTarget = 0
     flow.release()
+    haze?.release()
     breakStroke()
     release()
     velocityYaw = 0
@@ -457,8 +466,9 @@ export function createSceneInteraction(
     // decaying impulse so the scale surface still responds to that tap.
     fieldTarget = Math.min(fieldTarget, .6)
     flow.release()
+    haze?.release()
     breakStroke()
-    if (event.type === 'touchcancel') clearField()
+    if (event.type === 'touchcancel') clearField(false)
   }
   // No preventDefault, pointer capture or touch-action override: vertical
   // dragging and momentum stay owned by the browser, including after cancel.
@@ -503,6 +513,9 @@ export function createSceneInteraction(
     },
     update(delta: number, elapsed: number, ratio: number, progress = 0, frameDelta = delta) {
       time = elapsed
+      const nextColumn = progress > .245 && progress < .675
+      if (inColumn && !nextColumn) haze?.clear()
+      inColumn = nextColumn
       // Clamp both the target and eased value: no hidden overshoot accumulates
       // while dragging against the lower forest's downward limit.
       targetPitch = Math.min(targetPitch, forestPitchLimit(progress))
@@ -535,6 +548,7 @@ export function createSceneInteraction(
       }
       // The simulation uses bounded steps but suspended frames clear old input.
       flow.update(frameDelta > .25 || !Number.isFinite(frameDelta) || frameDelta < 0 ? frameDelta : delta)
+      haze?.update(frameDelta)
       field.ndc.lerp(pointer, 1 - Math.exp(-10 * delta))
       field.strength = THREE.MathUtils.damp(field.strength, fieldTarget, 9, delta)
       fieldTarget *= Math.exp(-1.35 * delta)
@@ -577,6 +591,7 @@ export function createSceneInteraction(
       ribbonGeometry.dispose()
       ribbonMaterial.dispose()
       flow.dispose()
+      haze?.dispose()
     },
   }
 }

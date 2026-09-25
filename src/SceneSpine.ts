@@ -292,7 +292,7 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
   const up = new THREE.Vector3(0, 1, 0)
   const tangent = new THREE.Vector3()
   const alternating = new THREE.Quaternion().setFromAxisAngle(up, Math.PI / 2)
-  const chainRoll = new THREE.Quaternion().setFromAxisAngle(up, Math.PI / 6)
+  const chainRoll = new THREE.Quaternion().setFromAxisAngle(up, Math.PI / 2)
   let previousProgress = Number.NaN
   let previousEmergence = Number.NaN
   let previousMobile = mobile

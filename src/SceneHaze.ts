@@ -20,7 +20,10 @@ export const columnHazeGLSL = /* glsl */ `
     vec2 cloudUV=(uv-displacement*1.8)*vec2(aspect,1.);
     float cloud=hazeNoise(cloudUV*3.6+drift);
     cloud=.7*cloud+.3*hazeNoise(cloudUV*7.1-drift+cloud*.4);
-    vec3 field=texture2D(uSurfaceFlow,uv).rgb;
+    // Fine folds follow the transported gas instead of a circular reveal mask.
+    vec2 folds=vec2(hazeNoise(cloudUV*31.+drift)-.5,
+      hazeNoise(cloudUV*37.-drift+7.3)-.5);
+    vec3 field=texture2D(uSurfaceFlow,uv+folds*.008/vec2(aspect,1.)).rgb;
     vec2 velocity=(field.rg-vec2(128./255.))*(255./127.);
     // The existing advected field opens a soft wake through the veil. It does
     // not brighten the fog or pull the rendered scene/DOM along with the cursor.

@@ -33,9 +33,9 @@ export function createChainGeometry(software: boolean, mobile: boolean) {
 const CHAIN_RADIUS = 1.85
 // About 52 degrees above horizontal. Each unit of descent also travels .777
 // around the column, so the strand visibly feeds along its diagonal links.
-const CHAIN_TURN_PER_HEIGHT = .42
-// Descending links turn in the same direction as the common parent yaw.
-// The opposite winding cancelled part of that rotation and read as a drop.
+const CHAIN_TURN_PER_HEIGHT = -.42
+// Follow the strand downward: positive X/Z angle winds clockwise from above.
+// The column's shared yaw remains independent of this local handedness.
 const chainAngleAtHeight = (y: number) => -1.68 + (y - 3.8) * CHAIN_TURN_PER_HEIGHT
 const CHAIN_TRACK_HEIGHT = 20
 const CHAIN_ARC_PER_HEIGHT = Math.hypot(1, CHAIN_RADIUS * CHAIN_TURN_PER_HEIGHT)

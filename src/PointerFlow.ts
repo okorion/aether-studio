@@ -1,8 +1,9 @@
 import * as THREE from 'three'
 
 /** A small shared screen-space field, independent of the particle count. */
-export function createPointerFlow() {
-  const width = 64, height = 40
+export function createPointerFlow(profile: 'water' | 'haze' = 'water') {
+  const gas = profile === 'haze'
+  const width = gas ? 96 : 64, height = gas ? 64 : 40
   const cells = width * height
   let velocity = new Float32Array(cells * 2)
   let next = new Float32Array(cells * 2)
@@ -19,7 +20,7 @@ export function createPointerFlow() {
     data[i * 4 + 3] = 255
   }
   const texture = new THREE.DataTexture(data, width, height, THREE.RGBAFormat, THREE.UnsignedByteType)
-  texture.name = 'aether-pointer-flow'
+  texture.name = gas ? 'aether-haze-flow' : 'aether-pointer-flow'
   texture.minFilter = texture.magFilter = THREE.LinearFilter
   texture.wrapS = texture.wrapT = THREE.ClampToEdgeWrapping
   texture.colorSpace = THREE.NoColorSpace
@@ -102,7 +103,7 @@ export function createPointerFlow() {
       const speedLimit = Math.min(1, 4 / Math.max(.001, speed))
       const impulseX = dx * speedLimit * 9
       const impulseY = dy * speedLimit * 9
-      const radius = .115 + Math.min(.045, speed * .012)
+      const radius = (.115 + Math.min(.045, speed * .012)) * (gas ? .9 : 1)
       const gaussian = -.5 / (radius * radius)
       for (let y = 0; y < height; y++) {
         const ry = (y + .5) / height * 2 - 1 - centerY
@@ -121,25 +122,29 @@ export function createPointerFlow() {
     update(delta: number) {
       if (disposed) return
       // A suspended tab or invalid clock cannot integrate a giant impulse.
-      if (!Number.isFinite(delta) || delta < 0 || delta > .25) {
+      if (!Number.isFinite(delta) || delta < 0 || delta > (gas ? 2 : .25)) {
         clear()
         return
       }
       sampleAge += delta
       if (!hasFlow || delta === 0) return
+      // A visible frame stall must not replace the entire veil in one frame.
+      // Hidden tabs still clear through the interaction lifecycle.
+      if (gas && delta > .1) { anchored = false; delta = .1 }
       idleAge += delta
-      if (idleAge >= 2.25) {
+      if (!gas && idleAge >= 2.25) {
         clear()
         return
       }
       const steps = Math.max(1, Math.ceil(delta * 60))
       const dt = delta / steps
-      const damping = Math.exp(-3.4 * dt)
-      const densityDamping = Math.exp(-2.6 * dt)
-      const diffusion = 1 - Math.exp(-2.3 * dt)
+      const damping = Math.exp(-(gas ? .85 : 3.4) * dt)
+      const densityDamping = Math.exp(-(gas ? .60 : 2.6) * dt)
+      const diffusion = 1 - Math.exp(-(gas ? .45 : 2.3) * dt)
       const follow = 1 - Math.exp(-12 * dt)
-      const advectX = width * .5 / aspect * dt * .45
-      const advectY = height * .5 * dt * .45
+      const transport = gas ? 2.2 : .45
+      const advectX = width * .5 / aspect * dt * transport
+      const advectY = height * .5 * dt * transport
       const hx = 2 * aspect / width, hy = 2 / height
       const hx2 = hx * hx, hy2 = hy * hy
       for (let step = 0; step < steps; step++) {
@@ -159,7 +164,7 @@ export function createPointerFlow() {
           const gx = (Math.abs(curl[r]) - Math.abs(curl[l])) / (2 * hx)
           const gy = (Math.abs(curl[t]) - Math.abs(curl[b])) / (2 * hy)
           const length = Math.max(.0001, Math.hypot(gx, gy))
-          const force = clamp(curl[cell], -12, 12) * .045 * dt
+          const force = clamp(curl[cell], -12, 12) * (gas ? .14 * Math.sqrt(density[cell]) : .045) * dt
           velocity[cell * 2] = clamp(velocity[cell * 2] + gy / length * force, -.95, .95)
           velocity[cell * 2 + 1] = clamp(velocity[cell * 2 + 1] - gx / length * force, -.95, .95)
         }
@@ -230,6 +235,15 @@ export function createPointerFlow() {
         }
       }
       publish()
+      // Retire only once every published channel is already neutral. No timed
+      // reset is visible, even when a long gas wake outlives its input stroke.
+      if (gas && idleAge > 1) {
+        let visible = false
+        for (let i = 0; i < cells; i++) {
+          if (data[i * 4] !== 128 || data[i * 4 + 1] !== 128 || data[i * 4 + 2] !== 0) { visible = true; break }
+        }
+        if (!visible) clear()
+      }
     },
     // Stop connecting new input to the old stroke without erasing its wake.
     release() { anchored = false },

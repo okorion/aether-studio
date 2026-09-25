@@ -88,7 +88,7 @@ export function probeSurfaceFlow(mobile: boolean) {
   scene.add(new THREE.Mesh(geometry, material))
   const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, .1, 10)
   camera.position.z = 2
-  const flow = createPointerFlow()
+  const flow = createPointerFlow('haze')
   const glow = createSceneGlow(renderer, scene, camera, !mobile)
   glow.resize(width, height, 1)
   const input = { flowTexture: flow.texture, aspect }
@@ -169,7 +169,7 @@ export function probeSurfaceFlow(mobile: boolean) {
     flow.clear()
     const cleared = composed(0)
     stroke()
-    flow.update(.5)
+    flow.update(3)
     const gapCleared = composed(0)
     // A new position after a gap establishes an anchor without resurrecting a wake.
     flow.move(.64, -.64, aspect)
@@ -219,7 +219,7 @@ export function probeSurfaceFlow(mobile: boolean) {
     const strokeRegion = (x: number,y: number) => x < .30 && y > .17 && y < .33
     const restingError = difference(directGrid,restingGrid,strokeRegion).meanError
     const clearedError = difference(directGrid,mistGrid,strokeRegion).meanError
-    for(let i=0;i<150;i++)flow.update(1/60)
+    for(let i=0;i<720;i++)flow.update(1/60)
     const recoveredGrid = composed(.4).pixels
     const screenAnchor = difference(composed(.35).pixels,composed(.55).pixels)
     stroke(true,true)

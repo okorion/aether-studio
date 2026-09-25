@@ -18,7 +18,7 @@ test('@interaction curved forest film remains anchored while camera movement pro
     const vertices = film.geometry.getAttribute('position')
     let minZ = Infinity, maxZ = -Infinity
     for (let i = 0; i < vertices.count; i++) { minZ = Math.min(minZ, vertices.getZ(i)); maxZ = Math.max(maxZ, vertices.getZ(i)) }
-    expect(maxZ - minZ).toBeGreaterThan(7)
+    expect(maxZ - minZ).toBeGreaterThan(1)
     for (const [progress, zone] of [[.04, 0], [.975, 1]]) {
       const height = sampleJourney(progress).height
       camera.position.set(0, height, 12); camera.lookAt(0, height, 0)

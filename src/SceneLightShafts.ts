@@ -47,7 +47,7 @@ export function createSceneLightShafts(
   const vertices = backdropGeometry.getAttribute('position')
   for (let i = 0; i < vertices.count; i++) {
     const x = vertices.getX(i)
-    vertices.setZ(i, x * x * 32)
+    vertices.setZ(i, x * x * 12)
   }
   backdropGeometry.computeVertexNormals()
   const backdropMaterial = new THREE.ShaderMaterial({
@@ -106,7 +106,9 @@ export function createSceneLightShafts(
   backdropGeometry.setAttribute('aZone', new THREE.InstancedBufferAttribute(new Float32Array([0, 1]), 1))
   const transform = new THREE.Matrix4()
   const rotation = new THREE.Quaternion()
-  const scale = new THREE.Vector3(48, 27, 1)
+  // A bounded 16:9 screen by the forest boundary, not a full-view backdrop.
+  // Its dimensions account for this scene's shorter camera-to-film distance.
+  const scale = new THREE.Vector3(22, 12.375, 1)
   for (let i = 0; i < 2; i++) {
     rotation.setFromAxisAngle(new THREE.Vector3(0, 0, 1), i ? Math.PI : 0)
     transform.compose(new THREE.Vector3(0, FOREST_FILM_HEIGHTS[i], -14), rotation, scale)

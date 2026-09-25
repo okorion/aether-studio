@@ -614,6 +614,7 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
   test('outgoing bone grains orbit above the chamber and retrace scroll at fixed time', async ({ page }) => {
     const result = await page.evaluate(() => window.interactionHarness.probeOutgoingBonePixels())
     expect(result.geometryShared).toBe(true)
+    expect(result.flowerGeometryShared).toBe(true)
     expect(result.cases).toHaveLength(3)
     for (const sample of result.cases) {
       const label = `outgoing grains at ${sample.progress}`

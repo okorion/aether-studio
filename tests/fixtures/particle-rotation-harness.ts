@@ -2,7 +2,7 @@ import * as THREE from 'three'
 import { createAtmosphere } from '../../src/Atmosphere'
 import { createSceneWorlds } from '../../src/SceneWorlds'
 
-export function sampleRotation(progress = .4, mobile = false, lane = .3) {
+export function sampleRotation(progress = .4, mobile = false, lane = .3, heightSeed = .27) {
   const scene = new THREE.Scene()
   const worlds = createSceneWorlds(scene, true, mobile)
   const matter = scene.getObjectByName('aether-matter')!
@@ -14,7 +14,7 @@ export function sampleRotation(progress = .4, mobile = false, lane = .3) {
   const camera = new THREE.PerspectiveCamera()
   camera.position.z = 20
   const geometry = new THREE.BufferGeometry()
-  geometry.setAttribute('position', new THREE.Float32BufferAttribute([.27, 1.43, .3], 3))
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute([heightSeed, 1.43, .3], 3))
   geometry.setAttribute('aDust', new THREE.Float32BufferAttribute([lane, 1, .2, 0], 4))
   geometry.setAttribute('aAdvected', new THREE.Float32BufferAttribute([0], 1))
   // Execute the production vertex shader, then read its local position from

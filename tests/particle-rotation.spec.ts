@@ -40,10 +40,11 @@ test('@interaction flowers stay still at rest while a sparse distant belt orbits
     // a second copy of the shader's rotation convention or a fixed sign.
     expect(Math.hypot(...moving.slice(0, 3).map((v, i) => v - end[i]))).toBeGreaterThan(.1)
     expect(moving[1] - movingStart[1]).toBeCloseTo(-.015 * 45, 3)
-    // Close non-flower grains disappear only in this scene. Their shared
-    // buffer must still render in the forest and reactor.
+    // Close non-flower grains disappear in the column and initial forest.
+    // The forest now uses its own assembling tree points, without the V belt.
     for (const sample of [movingStart, moving, movingIdle, bokeh]) expect(sample[3]).toBe(0)
-    for (const sample of [reactorMoving, reactorBokeh, forestMoving, forestBokeh]) expect(sample[3]).toBeGreaterThan(0)
+    for (const sample of [reactorMoving, reactorBokeh]) expect(sample[3]).toBeGreaterThan(0)
+    for (const sample of [forestMoving, forestBokeh]) expect(sample[3]).toBe(0)
     const idleTravel = Math.hypot(idle[0] - start[0], idle[2] - start[2])
     if (belt) expect(idleTravel).toBeGreaterThan(1)
     else expect(idleTravel).toBeLessThan(.005)

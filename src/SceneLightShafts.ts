@@ -263,7 +263,7 @@ export function createSceneLightShafts(
       shared.uForestEntry.value = layers.forestEntry
       shared.uDeviceEntry.value = layers.monitorExit
       shared.uWeights.value.set(1 - smooth(.18, .235, p), smooth(.855, .925, p),
-        windowWeight(p, .595, .655, .79, .865), windowWeight(p, .725, .775, .89, .945))
+        0, 0)
       shared.uBoundaryMist.value.set(windowWeight(p,.055,.12,.175,.205),
         windowWeight(p,.845,.895,.955,.985))
       camera.updateMatrixWorld()

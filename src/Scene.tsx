@@ -323,11 +323,12 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
           surface.emissive.copy(surface.color).multiplyScalar(0.16)
         }
       }
-      const lightVideo = lightVideoRef.current ??= createSceneLightVideo()
-      const lightFilm = createLightFilmUniforms(lightVideo.texture)
       const forestVideo = forestVideoRef.current ??= createSceneLightVideo({
         source: '/media/forest-memory.mp4', role: 'forest-memory',
       })
+      // One source and decoder drive the forest, reactor and water ceiling.
+      const lightVideo = lightVideoRef.current = forestVideo
+      const lightFilm = createLightFilmUniforms(lightVideo.texture)
       const forestFilm = createLightFilmUniforms(forestVideo.texture)
       const particleFilm = createLightFilmUniforms(forestVideo.texture)
       const world = new THREE.Group()
@@ -610,10 +611,7 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
         interaction.setActive(enabled, !foreground && !document.hidden && activeRef.current &&
           (!location.hash || location.hash === '#home') && !document.querySelector('dialog[open]'))
         worlds.setMediaActive(enabled && targetHasMonitors, reducedMotion)
-        lightVideo.setActive(enabled && !softwareRenderer && !preparing &&
-          (targetProgress > .60 && targetProgress < .90), reducedMotion)
-        forestVideo.setActive(enabled && !softwareRenderer && !preparing &&
-          (targetProgress < .32 || targetProgress > .855), reducedMotion)
+        forestVideo.setActive(enabled && !softwareRenderer && !preparing, reducedMotion)
         canvas.dataset.videoState = JSON.stringify(worlds.getVideoStatus())
         if (!enabled || reducedMotion) {
           clearMonitorHover()

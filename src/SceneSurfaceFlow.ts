@@ -2,7 +2,7 @@ import * as THREE from 'three'
 
 export type SurfaceFlowInput = { flowTexture?: THREE.Texture; hazeTexture?: THREE.Texture; aspect: number }
 
-/** Shared RG velocity / B density contract. Neutral bytes have no UV offset. */
+/** RG velocity, B water height, inverse A stationary dry contact. */
 export const surfaceFlowGLSL = /* glsl */ `
   uniform sampler2D uSurfaceFlow;
   uniform vec2 uFlowTexel;
@@ -30,10 +30,13 @@ export const surfaceFlowGLSL = /* glsl */ `
       texture2D(uSurfaceFlow, uv + vec2(0., uFlowTexel.y)).b
         - texture2D(uSurfaceFlow, uv - vec2(0., uFlowTexel.y)).b);
     vec2 p = uv * vec2(max(uFlowAspect, .25), 1.);
-    vec2 fold = vec2(sin(p.y * 147. + velocity.x * 14. + sin(p.x * 73.)),
-      cos(p.x * 131. + velocity.y * 12. + sin(p.y * 89.)));
-    vec2 normal = slope * (1. + fold * .48)
-      + fold * field.b * min(.15, length(velocity)) * .10;
+    // Fixed spatial folds fade with height. Quantized velocity must never move
+    // a high-frequency phase back and forth while the wake is settling.
+    vec2 fold = vec2(sin(p.y * 89. + sin(p.x * 43.)),
+      cos(p.x * 83. + sin(p.y * 47.)));
+    float wet = 1. - smoothstep(.055, .28, 1. - texture2D(uSurfaceFlow, uv).a);
+    vec2 normal = (slope * (1. + fold * .36)
+      + fold * field.b * min(.15, length(velocity)) * .045) * wet;
     return vec3(normal, field.b);
   }
 `

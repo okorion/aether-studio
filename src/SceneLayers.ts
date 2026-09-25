@@ -115,7 +115,10 @@ export function createSceneLayers(scene: THREE.Scene) {
         const size = w * (narrow ? .145 : .088)
         c.font = `400 ${size}px "IBM Plex Mono", monospace`
         const x = w * .1, y = h * (narrow ? .27 : .25)
+        c.shadowColor = 'rgba(211, 225, 255, .48)'
+        c.shadowBlur = size * .10
         for (const [j, text] of ['WORLDS', 'IN HUMAN', 'MOTION.'].entries()) c.fillText(text, x, y + j * size * 1.04)
+        c.shadowBlur = 0
         const body = w * (narrow ? .026 : .012)
         c.font = `400 ${body}px "IBM Plex Mono", monospace`
         c.fillStyle = '#b9cdc8'

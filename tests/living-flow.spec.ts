@@ -8,20 +8,20 @@ import { createSceneForest } from '../src/SceneForest'
 // No page or browser fixture: these inspect the production scene objects and
 // camera projections on the CPU. Shader pixels remain part of visual GPU QA.
 test('@interaction lower descent restores orbit continuously after the locked gallery', () => {
-  for (const p of [.24, .34, .64, .76, .90, .94]) {
+  for (const p of [.24, .34, .64, .76, .85, .86]) {
     expect(sampleJourney(p).orbitEnabled).toBe(false)
     expect(sampleJourney(p).orbitWeight).toBe(0)
   }
-  let previous = sampleJourney(.94)
-  for (let i = 1; i <= 35; i++) {
-    const current = sampleJourney(.94 + i * .001)
+  let previous = sampleJourney(.86)
+  for (let i = 1; i <= 20; i++) {
+    const current = sampleJourney(.86 + i * .001)
     expect(current.orbitEnabled).toBe(true)
     expect(current.orbitWeight).toBeGreaterThan(previous.orbitWeight)
-    expect(current.orbitWeight - previous.orbitWeight).toBeLessThan(.05)
+    expect(current.orbitWeight - previous.orbitWeight).toBeLessThan(.08)
     expect(current.height).toBeLessThan(previous.height)
     previous = current
   }
-  expect(sampleJourney(.975).orbitWeight).toBe(1)
+  expect(sampleJourney(.88).orbitWeight).toBe(1)
   expect(sampleJourney(1).orbitWeight).toBe(1)
 })
 
@@ -164,7 +164,6 @@ test('@interaction forest anchors stay in the world while orbit changes their pr
   const group = scene.getObjectByName('aether-forest')!
   const groves = ['aether-forest-upper', 'aether-forest-lower'].map(name => scene.getObjectByName(name)!)
   const camera = new THREE.PerspectiveCamera(42, 1.6, .1, 90)
-  const matrix = new THREE.Matrix4()
   try {
     for (const [index, p] of [0, .98].entries()) {
       const focus = new THREE.Vector3(0, sampleJourney(p).height, 0)
@@ -176,12 +175,11 @@ test('@interaction forest anchors stay in the world while orbit changes their pr
       expect(group.visible).toBe(true)
       expect(groves[index].visible).toBe(true)
       expect(groves[1 - index].visible).toBe(false)
-      const branches = groves[index].getObjectByName('aether-forest-branches-roots') as THREE.InstancedMesh
+      const branches = groves[index].getObjectByName('aether-forest-microfoliage') as THREE.Points
       const beforeWorld = branches.matrixWorld.toArray()
-      const beforeInstances = Array.from(branches.instanceMatrix.array)
-      const points = Array.from({ length: Math.min(80, branches.count) }, (_, i) => {
-        branches.getMatrixAt(i, matrix)
-        return new THREE.Vector3().setFromMatrixPosition(matrix).applyMatrix4(branches.matrixWorld)
+      const beforeInstances = Array.from(branches.geometry.getAttribute('position').array)
+      const points = Array.from({ length: Math.min(80, branches.geometry.getAttribute('position').count) }, (_, i) => {
+        return new THREE.Vector3().fromBufferAttribute(branches.geometry.getAttribute('position'), i).applyMatrix4(branches.matrixWorld)
       })
       const initialProjection = points.map(point => point.clone().project(camera))
       const initialCamera = camera.position.clone()
@@ -191,7 +189,7 @@ test('@interaction forest anchors stay in the world while orbit changes their pr
       forest.update(4, p, camera, { ndc: new THREE.Vector2(.4, .2), strength: 1, aspect: 1.6 }, 1.5)
       scene.updateMatrixWorld(true)
       expect(branches.matrixWorld.toArray()).toEqual(beforeWorld)
-      expect(Array.from(branches.instanceMatrix.array)).toEqual(beforeInstances)
+      expect(Array.from(branches.geometry.getAttribute('position').array)).toEqual(beforeInstances)
       expect(points.every(point => point.clone().project(camera).toArray().every(Number.isFinite))).toBe(true)
       const motion = points.map((point, i) => point.clone().project(camera).distanceTo(initialProjection[i]))
       expect(Math.max(...motion)).toBeGreaterThan(.05)

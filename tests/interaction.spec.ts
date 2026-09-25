@@ -331,7 +331,7 @@ test('@interaction device and late scales reject pointer camera input until the 
     expect(Math.abs(after.targetY - before.targetY)).toBeLessThan(.0002)
   }
 
-  for (const progress of [.72, .83, .90, .94]) {
+  for (const progress of [.72, .80, .83, .85]) {
     const before = await moveToProgress(progress)
     await expect(canvas).toHaveAttribute('data-orbit-enabled', 'false')
     const savedYaw = Number(await canvas.getAttribute('data-orbit-yaw'))
@@ -348,7 +348,7 @@ test('@interaction device and late scales reject pointer camera input until the 
     expect(Math.abs(Number(await canvas.getAttribute('data-orbit-yaw')) - savedYaw)).toBeLessThan(.0002)
   }
 
-  const lowerRing = await moveToProgress(1)
+  const lowerRing = await moveToProgress(.89)
   await expect(canvas).toHaveAttribute('data-orbit-enabled', 'true')
   await page.mouse.move(1100, 340)
   await page.mouse.down()
@@ -358,7 +358,7 @@ test('@interaction device and late scales reject pointer camera input until the 
   expect(Math.abs(turned.viewAzimuth - lowerRing.viewAzimuth)).toBeGreaterThan(.2)
 
   // Returning into the visible scale curtain cancels an already-held drag.
-  const lockedAgain = await moveToProgress(.94)
+  const lockedAgain = await moveToProgress(.85)
   await expect(canvas).toHaveAttribute('data-orbit-enabled', 'false')
   await expect(canvas).toHaveAttribute('data-camera-mode', 'idle')
   await expect(page.locator('html')).not.toHaveClass(/scene-dragging/)
@@ -793,7 +793,7 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
     expect(pixels.chamberEntry[1].visibleBelow).toBeGreaterThan(0)
     expect(pixels.chamberEntry[1].visibleBelow).toBeLessThan(pixels.chamberEntry[2].visibleBelow)
     expect(pixels.chamberEntry[2].visibleBelow).toBeGreaterThan(20)
-    expect(pixels.roomVisibility).toEqual([[true, true, true], [true, true, true], [false, false, false], [true, true, true]])
+    expect(pixels.roomVisibility).toEqual([[true, false, false], [true, false, false], [false, false, false], [true, false, false]])
   })
 
   test('forest grains move at both endpoints and visible curtain boundaries without moving their anchors', async ({ page }) => {
@@ -1003,7 +1003,7 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
 
   test('orbit locks preserve the chosen view and mechanical scroll can stop and reverse', async ({ page }) => {
     const lockedBoundaries = await page.evaluate(() =>
-      [.235, .24, .45, .72, .83, .86, .89, .90, .94]
+      [.235, .24, .45, .72, .83, .85, .86]
         .map((progress) => window.interactionHarness.sampleJourney(progress)),
     )
     for (const state of lockedBoundaries) {
@@ -1011,7 +1011,7 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
       expect(state.orbitWeight).toBe(0)
     }
     const returningOrbit = await page.evaluate(() =>
-      [0, .95, .975, 1].map((progress) => window.interactionHarness.sampleJourney(progress)),
+      [0, .87, .88, 1].map((progress) => window.interactionHarness.sampleJourney(progress)),
     )
     for (const state of returningOrbit) {
       expect(state.orbitEnabled).toBe(true)

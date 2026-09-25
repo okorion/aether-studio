@@ -15,7 +15,7 @@ export function sampleSpineExposure(progress: number) {
 
 /** Tapered, flattened processes share one surface with the vertebral body. */
 function processGeometry(points: THREE.Vector3[], segments: number, radial: number,
-  radius: number, flatten = 1) {
+  radius: number, flatten = 1, arch = false) {
   const curve = new THREE.CatmullRomCurve3(points)
   const geometry = new THREE.TubeGeometry(curve, segments, 1, radial, false)
   const positions = geometry.getAttribute('position')
@@ -24,8 +24,8 @@ function processGeometry(points: THREE.Vector3[], segments: number, radial: numb
     const t = i / segments
     curve.getPointAt(t, centre)
     // Broad roots, a small knuckle, and a closed tip avoid a tube-like silhouette.
-    const width = radius * (.98 - t * .66 + Math.sin(t * Math.PI) * .10)
-      * (1 - ease((t - .84) / .16))
+    const width = radius * (arch ? .86 + .14 * Math.sin(t * Math.PI)
+      : (.98 - t * .50 + Math.sin(t * Math.PI) * .18) * (1 - ease((t - .88) / .12)))
     for (let j = 0; j <= radial; j++) {
       const k = i * (radial + 1) + j
       positions.setXYZ(k,
@@ -71,25 +71,28 @@ function vertebraGeometry(software: boolean) {
     new THREE.Vector3(-.40, .16, -.99), new THREE.Vector3(0, .18, -1.13),
     new THREE.Vector3(.43, .13, -1.01), new THREE.Vector3(.71, .05, -.59),
     new THREE.Vector3(.49, .02, -.09),
-  ], segments + 4, sides, .20, .92)
+  ], segments + 4, sides, .24, .78, true)
   const parts: THREE.BufferGeometry[] = [body, arch]
   for (const side of [-1, 1]) {
     parts.push(processGeometry([
       new THREE.Vector3(side * .50, -.01, -.05),
       new THREE.Vector3(side * .80, .11, -.26),
-      new THREE.Vector3(side * 1.10, .04, -.39),
-      new THREE.Vector3(side * (side > 0 ? 1.31 : 1.22), -.16, -.26),
-    ], segments, sides, .23, .68))
-    const facet = new THREE.SphereGeometry(1, software ? 8 : 12, software ? 5 : 8)
-    facet.scale(.27, .17, .28)
-    facet.rotateX(side * .22)
-    facet.translate(side * .51, .30, -.58)
-    parts.push(facet)
+      new THREE.Vector3(side * 1.10, .14, -.56),
+      new THREE.Vector3(side * (side > 0 ? 1.43 : 1.35), .25, -.62),
+    ], segments, sides, .30, .48))
+    // Paired articular processes grow out of the neural arch, with broad
+    // flattened facets rather than disconnected round knobs.
+    for (const direction of [-1, 1]) parts.push(processGeometry([
+      new THREE.Vector3(side * .52, direction * .04, -.48),
+      new THREE.Vector3(side * .59, direction * .27, -.67),
+      new THREE.Vector3(side * .46, direction * .49, -.76),
+      new THREE.Vector3(side * .34, direction * .52, -.65),
+    ], segments, sides, .27, .74))
   }
   parts.push(processGeometry([
-    new THREE.Vector3(0, .12, -.92), new THREE.Vector3(.03, .08, -1.23),
-    new THREE.Vector3(.01, -.17, -1.39), new THREE.Vector3(-.07, -.34, -1.53),
-  ], segments, sides, .23, .72))
+    new THREE.Vector3(0, .12, -.92), new THREE.Vector3(.02, .02, -1.37),
+    new THREE.Vector3(.01, -.22, -1.74), new THREE.Vector3(-.04, -.45, -1.84),
+  ], segments, sides, .34, .60))
 
   const tint = new THREE.Color()
   const silver = new THREE.Color(.76, .77, .82)
@@ -130,7 +133,7 @@ function vertebraGeometry(software: boolean) {
 export function createSpineAssembly(software: boolean, mobile: boolean) {
   const group = new THREE.Group()
   group.name = 'aether-spine-assembly'
-  const rows = software ? 9 : mobile ? 11 : 13
+  const rows = 10
   const spacing = HEIGHT / rows
   const boneGeometry = vertebraGeometry(software)
   const discGeometry = new THREE.LatheGeometry([
@@ -213,9 +216,13 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
         float spinePink = pow(max(0., dot(spineReflection, normalize(vec3(-.62,.38,.69)))), 2.8);
         float spineCyan = pow(max(0., dot(spineReflection, normalize(vec3(.73,-.13,.67)))), 3.4);
         float spineViolet = pow(max(0., dot(spineReflection, normalize(vec3(.12,.80,-.56)))), 2.5);
+        float spineGold = pow(max(0., dot(spineReflection, normalize(vec3(-.72,-.32,-.60)))), 3.1);
+        float spineGreen = pow(max(0., dot(spineReflection, normalize(vec3(.40,.56,-.73)))), 3.8);
         vec3 spineReflectionColor = vec3(.90,.31,.62) * spinePink
           + vec3(.26,.68,.88) * spineCyan
-          + vec3(.43,.26,.70) * spineViolet * .75;
+          + vec3(.43,.26,.70) * spineViolet * .75
+          + vec3(.94,.59,.22) * spineGold * .48
+          + vec3(.25,.82,.46) * spineGreen * .60;
         float spineFresnel = pow(1. - max(dot(normal, normalize(vViewPosition)), 0.), 2.);
         // Compress strong studio radiance without changing its RGB ratios.
         // Broad reflected color coats the midtones; only the brightest metal
@@ -224,7 +231,7 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
         float spineSilverPeak = min(outgoingLight.r, min(outgoingLight.g, outgoingLight.b));
         float spineWhiteHighlight = smoothstep(1.4, 4., spineLightPeak);
         float spineColorPeak = max(spineReflectionColor.r, max(spineReflectionColor.g, spineReflectionColor.b));
-        vec3 spineCoatTint = mix(vec3(.58,.39,.76),
+        vec3 spineCoatTint = mix(vec3(.62,.60,.67),
           spineReflectionColor / max(.12, spineColorPeak), .78);
         spineCoatTint = mix(spineCoatTint, vec3(.96,.98,1.), spineWhiteHighlight * .68);
         vec3 spineRadiance = outgoingLight / (1. + spineLightPeak * .38);
@@ -241,7 +248,7 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
         #include <opaque_fragment>
       `)
     }
-    boneMaterial.customProgramCacheKey = () => 'aether-spine-layered-silver-v5'
+    boneMaterial.customProgramCacheKey = () => 'aether-spine-layered-silver-v6'
   }
   const discMaterial = new THREE.MeshPhysicalMaterial({
     color: 0x26364a, metalness: software ? .45 : .86, roughness: .44,
@@ -307,17 +314,20 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
   const dummy = new THREE.Object3D()
   const up = new THREE.Vector3(0, 1, 0)
   const tangent = new THREE.Vector3()
+  const projection = new THREE.Matrix4()
+  const terminal = new THREE.Vector3()
   const alternating = new THREE.Quaternion().setFromAxisAngle(up, Math.PI / 2)
   const chainRoll = new THREE.Quaternion().setFromAxisAngle(up, Math.PI / 2)
   let previousProgress = Number.NaN
   let previousEmergence = Number.NaN
   let previousMobile = mobile
+  let previousAnchor = Number.NaN
   let disposed = false
   group.visible = false
 
   return {
     group,
-    update(value: number, opacity: number, emergence: number, mobileView = mobile) {
+    update(value: number, opacity: number, emergence: number, mobileView = mobile, camera?: THREE.Camera) {
       if (disposed) return
       const alpha = clamp(opacity)
       const form = ease(emergence)
@@ -332,10 +342,26 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
       discMaterial.opacity = alpha * .9
       linkMaterial.opacity = alpha
       if (!group.visible) return
-      if (progress === previousProgress && form === previousEmergence && mobileView === previousMobile) return
+      const chainPath = sampleChainPath(progress, mobileView)
+      let anchorOffset = 0
+      if (camera) {
+        // Solve clipY / clipW = .72 for the terminal's local height. This
+        // compensates perspective as the strand winds between front and back.
+        group.updateWorldMatrix(true, false)
+        projection.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse).multiply(group.matrixWorld)
+        chainPath.getPointAt(0, terminal).multiplyScalar(form)
+        const m = projection.elements, x = terminal.x, z = terminal.z, screenY = .72
+        const denominator = m[5] - screenY * m[7]
+        if (Math.abs(denominator) > .00001) {
+          const y = (screenY * (m[3]*x + m[11]*z + m[15]) - (m[1]*x + m[9]*z + m[13])) / denominator
+          anchorOffset = (y - terminal.y) * ease((progress - .235) / .055)
+        }
+      }
+      if (progress === previousProgress && form === previousEmergence && mobileView === previousMobile && anchorOffset === previousAnchor) return
       previousProgress = progress
       previousEmergence = form
       previousMobile = mobileView
+      previousAnchor = anchorOffset
       chains.count = getChainLinkCount(mobileView)
       const travel = progress * 1.4
       for (let i = 0; i < rows; i++) {
@@ -361,11 +387,11 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
       }
       bones.instanceMatrix.needsUpdate = true
       discs.instanceMatrix.needsUpdate = true
-      const chainPath = sampleChainPath(progress, mobileView)
       const chainLength = chainPath.getLength()
       for (let i = 0; i < chains.count; i++) {
         const t = i * CHAIN_LINK_PITCH / chainLength
         chainPath.getPointAt(t, dummy.position).multiplyScalar(form)
+        dummy.position.y += anchorOffset
         chainPath.getTangentAt(t, tangent)
         dummy.quaternion.setFromUnitVectors(up, tangent)
         // A fixed roll opens the upper terminal toward the authored stage

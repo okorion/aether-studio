@@ -41,7 +41,7 @@ test('@interaction projected forest light preserves geometry and is independent 
   camera.updateMatrixWorld()
   const group = scene.getObjectByName('aether-forest')!
   const bark = scene.getObjectByName('aether-forest-lower')!
-    .getObjectByName('aether-forest-branches-roots') as THREE.InstancedMesh<THREE.BufferGeometry, THREE.ShaderMaterial>
+    .getObjectByName('aether-forest-microfoliage') as THREE.Points<THREE.BufferGeometry, THREE.ShaderMaterial>
   const uniforms = bark.material.uniforms
   const lighting = () => ({
     time: uniforms.uTime.value as number,
@@ -53,7 +53,7 @@ test('@interaction projected forest light preserves geometry and is independent 
     scene.updateMatrixWorld(true)
     const paused = lighting()
     const worldMatrix = bark.matrixWorld.toArray()
-    const instances = Array.from(bark.instanceMatrix.array)
+    const instances = Array.from(bark.geometry.getAttribute('position').array)
     for (let i = 0; i < 20; i++) forest.update(18, .98, camera, undefined, 1)
     expect(lighting()).toEqual(paused)
     forest.update(18, .98, camera, { ndc: new THREE.Vector2(.3, -.2), strength: 1, aspect: 1.6 }, 1)
@@ -63,7 +63,7 @@ test('@interaction projected forest light preserves geometry and is independent 
     expect(lighting().time).toBe(38)
     expect(lighting().depth).toBe(paused.depth)
     expect(bark.matrixWorld.toArray()).toEqual(worldMatrix)
-    expect(Array.from(bark.instanceMatrix.array)).toEqual(instances)
+    expect(Array.from(bark.geometry.getAttribute('position').array)).toEqual(instances)
     expect(group.visible).toBe(true)
     const lights: THREE.Object3D[] = []
     scene.traverse(object => { if (object instanceof THREE.Light) lights.push(object) })
@@ -110,7 +110,7 @@ test('@interaction forest shares film updates without owning the external textur
 
   const isolatedScene = new THREE.Scene()
   const isolatedForest = createSceneForest(isolatedScene, true, false)
-  const bark = isolatedScene.getObjectByName('aether-forest-branches-roots') as THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMaterial>
+  const bark = isolatedScene.getObjectByName('aether-forest-microfoliage') as THREE.Mesh<THREE.BufferGeometry, THREE.ShaderMaterial>
   let ownDisposals = 0
   ;(bark.material.uniforms.uLightFilm.value as THREE.Texture).addEventListener('dispose', () => { ownDisposals++ })
   isolatedForest.dispose()

@@ -120,6 +120,14 @@ test('@interaction real film spill pixels change with the shared frame, not elap
     for (const result of results) {
       const label = `progress ${result.progress}`
       expect(result.black.nonBlackPixels, label).toBe(0)
+      if (result.progress === .72 || result.progress === .80) {
+        // Chamber surfaces receive video light, but no visible fan or ray.
+        expect(result.white.nonBlackPixels, label).toBe(0)
+        expect(result.colorChanges, label).toBe(0)
+        expect(result.calls.every(calls => calls === 0), label).toBe(true)
+        expect(result.errors, label).toEqual([0, 0, 0, 0, 0, 0])
+        continue
+      }
       expect(result.white.brightPixels, label).toBeGreaterThan(result.pixelCount * .001)
       expect(result.white.total, label).toBeGreaterThan(result.pixelCount)
       expect(result.warm.red, label).toBeGreaterThan(result.warm.blue * 3)
@@ -144,6 +152,11 @@ test('@interaction real film spill pixels change with the shared frame, not elap
     for (const result of isolated) {
       const label = `independent films at progress ${result.progress}`
       const forestWindow = result.progress < .2 || result.progress > .95
+      if (!forestWindow) {
+        expect(result.forest.white.nonBlackPixels, label).toBe(0)
+        expect(result.chamber.white.nonBlackPixels, label).toBe(0)
+        continue
+      }
       const visible = forestWindow ? result.forest : result.chamber
       const hidden = forestWindow ? result.chamber : result.forest
       expect(visible.white.total, label).toBeGreaterThan(visible.pixelCount)

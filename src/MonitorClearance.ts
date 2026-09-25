@@ -19,10 +19,12 @@ export const monitorClearanceGLSL = /* glsl */ `
       vec3 q = (uMonitorInverse[i] * vec4(world, 1.)).xyz;
       vec3 halfSize = uMonitorHalf[i];
       vec2 edge = 1. - smoothstep(halfSize.xy, halfSize.xy + .22, abs(q.xy));
-      float approach = 1. - smoothstep(halfSize.z, halfSize.z + .9, q.z);
       // Deflect inward before the curved glass, with a soft approach outside
       // its edges. Behind the glass, the flower keeps its original silhouette.
-      float push = min(0., -halfSize.z - q.z) * edge.x * edge.y * approach;
+      // A smooth minimum keeps every approaching seed behind the clearance
+      // plane. A depth fade could interpolate a seed back through the glass.
+      float gap = -halfSize.z - q.z;
+      float push = .5 * (gap - sqrt(gap * gap + .016)) * edge.x * edge.y;
       world += uMonitorNormal[i] * push;
     }
     return world;

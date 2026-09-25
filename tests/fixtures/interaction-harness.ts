@@ -6,6 +6,7 @@ import { createSceneMonitors } from '../../src/SceneMonitors'
 import { createAtmosphere } from '../../src/Atmosphere'
 import { createSceneForest } from '../../src/SceneForest'
 import { sampleJourney } from '../../src/Journey'
+import { sampleScaleOffset } from '../../src/ScaleStage'
 import { createSceneLayers, sampleEmblemCurtain, sampleLayers } from '../../src/SceneLayers'
 import { bindCurtain, bindGroupCurtain, createCurtainBounds } from '../../src/SceneCurtains'
 import { createLightFilmUniforms } from '../../src/SceneLighting'
@@ -766,8 +767,10 @@ function probeScalePointer() {
   const assembly = createSceneWorlds(modelScene, true)
   const probeScene = new THREE.Scene()
   const probeCamera = new THREE.PerspectiveCamera(42, 4 / 3, .1, 60)
-  probeCamera.position.set(0, -48, 10)
-  probeCamera.lookAt(0, -48, 0)
+  // Follow the panel's scroll offset to isolate pointer shading from framing.
+  const panelY = -48 + sampleScaleOffset(.83)
+  probeCamera.position.set(0, panelY, 10)
+  probeCamera.lookAt(0, panelY, 0)
   probeCamera.updateMatrixWorld()
   assembly.update(10, .83)
   modelScene.updateMatrixWorld(true)
@@ -782,8 +785,8 @@ function probeScalePointer() {
   // fixed oblique key observes the actual hinge shading, without depending
   // on the removed pointer-driven albedo boost or an artificial normal bend.
   const key = new THREE.DirectionalLight(0xffffff, 4)
-  key.position.set(-4, -43, 6)
-  key.target.position.set(0, -48, 0)
+  key.position.set(-4, panelY + 5, 6)
+  key.target.position.set(0, panelY, 0)
   probeScene.add(key, key.target)
   const target = new THREE.WebGLRenderTarget(160, 120)
   const previousTarget = renderer.getRenderTarget()

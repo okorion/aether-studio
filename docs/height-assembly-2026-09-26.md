@@ -26,12 +26,15 @@
 | --- | --- | --- | --- |
 | 상단 포레스트 · 0% | ![전](verification/height-assembly/forest-top-before.jpg) | ![후](verification/height-assembly/forest-top-after.jpg) | 식물 높이와 첫 화면의 여백 |
 | 하단 포레스트 · 100% | ![전](verification/height-assembly/forest-bottom-before.jpg) | ![후](verification/height-assembly/forest-bottom-after.jpg) | 낮아진 식물과 보강 전 위치 |
+| 좌측 문구 · 15% | ![전](verification/height-assembly/text-before.jpg) | ![후](verification/height-assembly/text-after.jpg) | `/` 방향 빛 번짐 |
 | 본 컬럼 · 40% | ![전](verification/height-assembly/column-before.jpg) | ![후](verification/height-assembly/column-after.jpg) | 마디 간격·반사·추가 입자 |
 | 모니터와 꽃 · 46% | ![전](verification/height-assembly/flowers-before.jpg) | ![후](verification/height-assembly/flowers-after.jpg) | 유리면 주변의 입자 배치 |
 | 하단 링 진입 · 91% | ![전](verification/height-assembly/ring-before.jpg) | ![후](verification/height-assembly/ring-after.jpg) | 경계 뒤 링의 완성된 형태 |
 
+문구가 모두 드러난 [22% 지점의 수정 후 화면](verification/height-assembly/text-full-after.jpg)에서도 사선 빛 번짐을 확인했다.
+
 ## 검증 범위
 
-GPU 셰이더 검사에서 기존 꽃의 위치·밀도 유지, 추가 입자의 수직 이동·역방향 복원, 모니터 유리면과의 간격, 하단 링의 일정한 알파를 확인했다. 포레스트 높이·이동 입자 비율·높이별 합류와 패널의 연속 상승도 검사한다. 전체 실행 결과는 PR 검증란에 기록한다.
+GPU 셰이더 검사에서 기존 꽃의 위치·밀도 유지, 추가 입자의 수직 이동·역방향 복원, 모니터 유리면과의 간격, 하단 링의 일정한 알파를 확인했다. 모니터로 접근하는 31개 깊이에서도 유리면 앞뒤를 통과하지 않고 연속 이동하는지 검사했다. 포레스트 높이·이동 입자 비율·높이별 합류와 패널의 연속 상승도 검사한다. 전체 실행 결과는 PR 검증란에 기록한다.
 
 실제 GPU 화면은 1600×900, 2480×1080, 390×844에서 확인했다. 모바일은 Chromium 에뮬레이션이며 실제 Safari/iOS와 저사양 GPU의 장시간 성능은 확인하지 않았다. 꽃의 추가 입자는 일반 데스크톱 120,000개, 모바일 38,000개, 소프트웨어 모드 3,600개다. AT와 동일한 자산이나 물리 시뮬레이션을 사용한 것은 아니다.

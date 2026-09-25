@@ -27,8 +27,8 @@ export function probeHeightAssembly() {
   const camera = new THREE.PerspectiveCamera(); camera.position.z = 20
   const monitors = createSceneMonitors(true, false, undefined, [monitorCatalog[0]])
   const parent = new THREE.Group(); parent.position.y = FLOWER_WORLD_Y; parent.add(monitors.group)
-  const read = (cameraY: number, localY: number, baseline = false, blocked = false) => {
-    geometry.getAttribute('aFlowerPosition').setXYZW(0, 0, localY, blocked ? 3.53 : 1, 0)
+  const read = (cameraY: number, localY: number, baseline = false, blocked = false, depth = 3.53) => {
+    geometry.getAttribute('aFlowerPosition').setXYZW(0, 0, localY, blocked ? depth : 1, 0)
     geometry.getAttribute('aFlowerPosition').needsUpdate = true
     geometry.getAttribute('aDust').setW(0, baseline ? -1 : -2)
     geometry.getAttribute('aDust').needsUpdate = true
@@ -55,6 +55,10 @@ export function probeHeightAssembly() {
     const blocked = read(FLOWER_WORLD_Y, 0, true, true)
     const obstacle = monitors.getParticleObstacles()[0]
     const local = new THREE.Vector3(...blocked as [number, number, number]).add(new THREE.Vector3(0,FLOWER_WORLD_Y,0)).applyMatrix4(obstacle.inverse)
+    const approach = Array.from({length: 31}, (_, i) => {
+      const world = read(FLOWER_WORLD_Y, 0, true, true, 2.8 + i * .08)
+      return new THREE.Vector3(...world as [number,number,number]).add(new THREE.Vector3(0,FLOWER_WORLD_Y,0)).applyMatrix4(obstacle.inverse).z
+    })
     const opacities = [.87, .90, .925, .95, 1, .95, .90].map(p => {
       emblem.update(10, p)
       const values: number[] = []
@@ -63,7 +67,7 @@ export function probeHeightAssembly() {
     })
     return { upper, lower, reverse, baseline, local: local.toArray(), clearance: obstacle.half.z,
       count: source.userData.flowerCount, extra: source.userData.reinforcementCount,
-      opacities, error: renderer.getContext().getError() }
+      opacities, approach, error: renderer.getContext().getError() }
   } finally {
     atmosphere.dispose(); monitors.dispose(); emblem.dispose(); chrome.dispose(); filmTexture.dispose()
     geometry.dispose(); material.dispose(); target.dispose(); renderer.dispose(); renderer.forceContextLoss()

@@ -50,6 +50,9 @@ async function settledScene(page: Page) {
 test('wheel input descends and reverses before 24 settled scroll checkpoints', async ({
   page,
 }) => {
+  // This journey includes two GPU preparations and 24 settled views. Keep
+  // individual action limits while allowing their measured cumulative cost.
+  test.setTimeout(process.env.CI ? 90_000 : 60_000)
   await readyScene(page)
   const startingView = await settledScene(page)
   let previous = startingView
@@ -131,7 +134,9 @@ test('wheel input descends and reverses before 24 settled scroll checkpoints', a
 test('@interaction production scene accepts background drag and excludes navigation buttons', async ({
   page,
 }) => {
-  test.setTimeout(process.env.CI ? 150_000 : 45_000)
+  // Two full GPU rebuilds and 175+ render frames exceeded the old total 45s
+  // budget; each frame wait and input action retains its existing timeout.
+  test.setTimeout(process.env.CI ? 150_000 : 75_000)
   // Freeze ambient animation time while allowing input and camera interpolation
   // to render. A changed image can then be attributed to the held camera.
   await page.addInitScript(() => {

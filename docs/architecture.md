@@ -26,7 +26,7 @@
 | 리액터 | 고정된 높이의 금속 장치 안으로 O 입자가 모인다. 포인터 주변의 입자는 변형됐다가 돌아온다. | [SceneWorlds](../src/SceneWorlds.ts), [Atmosphere](../src/Atmosphere.ts) |
 | 스케일 패널 | 7초 주기로 파동이 발생해 3초 동안 바깥으로 퍼진다. 중앙 타일의 높이·기울기·반사 차이가 O 로고를 만들며 파동에 함께 접힌다. 마우스가 브라우저 밖으로 나가도 남은 변형은 자연스럽게 감쇠한다. | [SceneScaleSurface](../src/SceneScaleSurface.ts) |
 | 벨 크리처 | 몸통·테두리·촉수가 상단·하단 포레스트의 경계를 공유한다. 중간 장면에는 배치하지 않는다. | [Scene](../src/Scene.tsx) |
-| 표면 흐름·안개막 | 포인터의 속도·밀도 필드로 큰 2D 문구가 놓인 검은 판만 굴절시킨다. 전체 화면 굴절은 사용하지 않으며 본 컬럼 좌하단에는 안개 색만 합성한다. | [PointerFlow](../src/PointerFlow.ts), [SceneSurfaceFlow](../src/SceneSurfaceFlow.ts), [SceneLayers](../src/SceneLayers.ts), [SceneGlow](../src/SceneGlow.ts) |
+| 표면 흐름·안개막 | 포인터의 속도·밀도 필드로 큰 2D 문구가 놓인 검은 판만 굴절시킨다. 본 컬럼에서는 전체 뷰포트 비율에 맞춘 좌하단 안개를 걷어내며 원래 화면 좌표·색을 드러낸다. 약한 모서리 색감은 입력과 분리한다. | [PointerFlow](../src/PointerFlow.ts), [SceneSurfaceFlow](../src/SceneSurfaceFlow.ts), [SceneLayers](../src/SceneLayers.ts), [SceneHaze](../src/SceneHaze.ts), [SceneGlow](../src/SceneGlow.ts) |
 
 명칭과 사용자 별칭은 [용어집](scene-glossary.md)에서 찾을 수 있다. 모니터 나선과 입자 비율, O 크기를 바꾼 근거는 [장면 수정 기록](scene-reference-detail.md)에 있다.
 

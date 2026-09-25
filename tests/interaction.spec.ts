@@ -327,7 +327,9 @@ test('@interaction device and late scales reject pointer camera input until the 
     expect(Math.abs(after.targetY - before.targetY)).toBeLessThan(.0002)
   }
 
-  for (const progress of [.72, .80, .90, .925]) {
+  // Keep browser probes inside the band: integer scroll pixels can round the
+  // exact .925 boundary into the first frame of the returning orbit.
+  for (const progress of [.72, .80, .90, .92]) {
     const before = await moveToProgress(progress)
     await expect(canvas).toHaveAttribute('data-orbit-enabled', 'false')
     const savedYaw = Number(await canvas.getAttribute('data-orbit-yaw'))

@@ -327,7 +327,7 @@ test('@interaction device and late scales reject pointer camera input until the 
     expect(Math.abs(after.targetY - before.targetY)).toBeLessThan(.0002)
   }
 
-  for (const progress of [.72, .80, .83, .85]) {
+  for (const progress of [.72, .80, .90, .925]) {
     const before = await moveToProgress(progress)
     await expect(canvas).toHaveAttribute('data-orbit-enabled', 'false')
     const savedYaw = Number(await canvas.getAttribute('data-orbit-yaw'))
@@ -344,7 +344,7 @@ test('@interaction device and late scales reject pointer camera input until the 
     expect(Math.abs(Number(await canvas.getAttribute('data-orbit-yaw')) - savedYaw)).toBeLessThan(.0002)
   }
 
-  const lowerRing = await moveToProgress(.89)
+  const lowerRing = await moveToProgress(.95)
   await expect(canvas).toHaveAttribute('data-orbit-enabled', 'true')
   await page.mouse.move(1100, 340)
   await page.mouse.down()

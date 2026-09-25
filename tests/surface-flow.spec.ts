@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { build } from 'vite'
-import type { probeSurfaceFlow, probeStatementPlate } from './fixtures/surface-flow-harness'
+import type { probeSurfaceFlow, probeStatementPlate, probeColumnParticleColor } from './fixtures/surface-flow-harness'
 
 test('@interaction screen flow leaves both forests and foreground pixels intact while the statement plate refracts', async ({ page }) => {
   const output = await build({ configFile: false, logLevel: 'silent', build: { write: false, minify: false,
@@ -13,13 +13,18 @@ test('@interaction screen flow leaves both forests and foreground pixels intact 
   page.on('console', message => { if (message.type() === 'error') consoleErrors.push(message.text()) })
   await page.goto('about:blank')
   await page.addScriptTag({ content: chunk.code })
+  const colors = await page.evaluate(() => (window as unknown as {
+    SurfaceFlowFixture: {probeColumnParticleColor: typeof probeColumnParticleColor}
+  }).SurfaceFlowFixture.probeColumnParticleColor())
+  expect(colors.visible).toBeGreaterThan(100)
+  expect(colors.changed).toBe(0)
   const results = []
   for (const mobile of [false, true]) {
     const result = await page.evaluate(mobile => (window as unknown as {
       SurfaceFlowFixture: { probeSurfaceFlow: typeof probeSurfaceFlow }
     }).SurfaceFlowFixture.probeSurfaceFlow(mobile), mobile)
     results.push(result)
-    const label = mobile ? '96×128 without a bloom allocation' : '128×96 with bloom disabled'
+    const label = mobile ? '117×253 without a bloom allocation' : '160×100 with bloom disabled'
     expect(result.errors, label).toEqual([])
     expect(result.preparation.restoredTarget, label).toBe(true)
     expect(result.preparation.viewportPreserved, label).toBe(true)
@@ -46,9 +51,14 @@ test('@interaction screen flow leaves both forests and foreground pixels intact 
     expect(result.mist.residualMean, label).toBeLessThan(.5)
     expect(result.mist.residualBeyondTwo, label).toBe(0)
     expect(result.mist.leftMistPixels, label).toBeGreaterThan(5)
-    expect(result.mist.outsideMistPixels, label).toBe(0)
+    // Other corners retain a faint, non-interactive edge glow.
+    expect(result.mist.outsideMistPixels, label).toBeGreaterThan(0)
     expect(result.mist.protectedRegion.maxError, label).toBeLessThanOrEqual(1)
     expect(result.mist.response.differentComponents, label).toBeGreaterThan(3)
+    expect(result.mist.restingError, label).toBeGreaterThan(10)
+    expect(result.mist.clearedError, label).toBeLessThan(result.mist.restingError*.8)
+    expect(result.mist.recovery.maxError, label).toBe(0)
+    expect(result.mist.screenAnchor.maxError, label).toBe(0)
     const plate = await page.evaluate(mobile => (window as unknown as {
       SurfaceFlowFixture: { probeStatementPlate: typeof probeStatementPlate }
     }).SurfaceFlowFixture.probeStatementPlate(mobile), mobile)

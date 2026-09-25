@@ -316,8 +316,9 @@ const dustVertex = /* glsl */ `
     float mineral = .20 + .80 * pow(.5 + .5 * sin(phase * 17. + lane * 53.), 2.);
     float arcLight = .24 + .76 * pow(.5 + .5 * sin(t * 8. + .8), 3.);
     vColor *= mix(.62 + mineral * .45, mineral * arcLight, uWeights.y);
+    // Clearing the column veil reveals the existing flower color without a white flash.
     vColor += mix(vec3(.28, .72, .29), vec3(.58, .53, .85), uWeights.x)
-      * touch * 1.8 * mix(1., .45, uWeights.y);
+      * touch * 1.8 * mix(1., .45, uWeights.y) * (1. - spineWeight);
     vBokeh = bokeh;
     vMachine = uWeights.y;
     float shimmer = 0.73 + sin(uTime * 1.7 + phase * 7.0) * 0.2;

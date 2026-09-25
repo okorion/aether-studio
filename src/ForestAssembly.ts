@@ -12,6 +12,7 @@ export function createForestParticles(assets: ReturnType<typeof createForestGeom
   const total = count + barkCount
   const positions = new Float32Array(total * 3), origins = new Float32Array(total * 3)
   const seeds = new Float32Array(total * 3), sizes = new Float32Array(total)
+  const assemblyPhases = new Float32Array(total)
   let state = 0x51a745
   const random = () => ((state = Math.imul(state, 1664525) + 1013904223 >>> 0) / 4294967296)
   const matrix = new THREE.Matrix4(), point = new THREE.Vector3()
@@ -43,10 +44,13 @@ export function createForestParticles(assets: ReturnType<typeof createForestGeom
     }
     point.toArray(positions, i * 3)
     const seed = random(), angle = random() * Math.PI * 2
-    // A nearby reservoir reinforces existing branches, instead of sweeping
-    // up to 100 world units through the camera during a short scroll interval.
-    const radius = .18 + random() ** 1.7 * 1.15
-    const lift = 2.4 + seed ** 1.4 * 8.2
+    // Most seeds wait just above their own branch/canopy surface. A smaller
+    // outer population bridges neighbouring crowns without a distant rain.
+    const local = seed < .82
+    const radius = .06 + random() ** 1.7 * (local ? .38 : .75)
+    const lift = local ? .22 + (seed / .82) ** 1.6 * 1.18 : 1.4 + ((seed - .82) / .18) ** 1.6 * 1.8
+    // Broad, staggered arrival windows do not inherit the leaf's colour seed.
+    assemblyPhases[i] = .5 + .5 * Math.sin(point.x * .31 + point.z * .27 + point.y * .13 + seed * 2)
     origins.set([point.x + Math.cos(angle) * radius, point.y + lift,
       point.z + Math.sin(angle) * radius], i * 3)
     // A standing forest is already legible on entry. The remaining population
@@ -58,5 +62,6 @@ export function createForestParticles(assets: ReturnType<typeof createForestGeom
   geometry.setAttribute('aOrigin', new THREE.BufferAttribute(origins, 3))
   geometry.setAttribute('aSeed', new THREE.BufferAttribute(seeds, 3))
   geometry.setAttribute('aSize', new THREE.BufferAttribute(sizes, 1))
+  geometry.setAttribute('aAssemblyPhase', new THREE.BufferAttribute(assemblyPhases, 1))
   return { geometry, barkCount, total }
 }

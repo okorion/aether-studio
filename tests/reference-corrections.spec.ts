@@ -51,20 +51,22 @@ test('@interaction forest assembly has sparse arrivals, particle trunks and exac
   try {
     expect(particles.barkCount).toBeGreaterThan(2000)
     const positions = particles.geometry.getAttribute('position'), origins = particles.geometry.getAttribute('aOrigin')
-    let standingLeaves = 0, standingBark = 0
+    let standingLeaves = 0, standingBark = 0, arrivals = 0, localArrivals = 0
     let minLift = Infinity, maxLift = 0, maxDrift = 0, standingDrift = 0
     for (let i = 0; i < positions.count; i++) {
       const lift = origins.getY(i) - positions.getY(i)
       const drift = Math.hypot(origins.getX(i) - positions.getX(i), origins.getZ(i) - positions.getZ(i))
       minLift = Math.min(minLift, lift); maxLift = Math.max(maxLift, lift); maxDrift = Math.max(maxDrift, drift)
+      if(lift>0) { arrivals++; if(lift<1.41) localArrivals++ }
       if (origins.getY(i) === positions.getY(i)) {
         standingDrift = Math.max(standingDrift, drift)
         if (i < 7000) standingLeaves++; else standingBark++
       }
     }
     expect(minLift).toBeGreaterThanOrEqual(0)
-    expect(maxLift).toBeLessThanOrEqual(10.61)
-    expect(maxDrift).toBeLessThan(1.34)
+    expect(maxLift).toBeLessThanOrEqual(3.21)
+    expect(maxDrift).toBeLessThan(.82)
+    expect(localArrivals/arrivals).toBeGreaterThan(.79)
     expect(standingDrift).toBe(0)
     // The standing silhouette stays intact while nearby seeds reinforce it.
     expect(standingLeaves / 7000).toBeGreaterThan(.29)

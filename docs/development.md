@@ -26,6 +26,7 @@ npm test
 프로젝트 데이터는 [projects.ts](../src/projects.ts), 소개·연락처는 [App.tsx](../src/App.tsx)에 있다. 현재 프로젝트와 연락처는 예시다. 실제 콘텐츠로 바꿀 때는 메타데이터의 제목·설명·공유 이미지도 함께 확인한다.
 
 - [모니터 영상](media-sources.md): Python 생성·인코딩 명령, 파일 규격과 실패 시 표시.
+- [모니터 배치·모델 설정](scene-flow-and-monitors.md): 목록 추가·삭제, 영상 선택, 화면 비율·곡률·테두리와 클릭 연결.
 - [조명 영상](light-projection-media.md): 생성 조건, 밝기·루프 검증, 재생 수명.
 - [메타데이터](metadata.md): HTML·manifest·공유 이미지·아이콘과 재생성 명령.
 

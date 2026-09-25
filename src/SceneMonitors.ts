@@ -2,6 +2,8 @@ import * as THREE from 'three'
 import { smooth, windowWeight } from './Journey'
 import { sampleLayers } from './SceneLayers'
 import { createSceneVideo } from './SceneVideo'
+import { monitorCatalog, monitorMedia, sampleMonitorLayout, type MonitorDefinition } from './MonitorCatalog'
+import { createMonitorGeometry } from './MonitorGeometry'
 import { createCurtainVisibility, curtainHasCoverage } from './SceneVisibility'
 
 type MonitorPointer = { ndc: THREE.Vector2; strength: number; aspect: number; active?: boolean }
@@ -29,6 +31,11 @@ const fragmentShader = /* glsl */ `
   uniform sampler2D uTitle;
   uniform sampler2D uVideo;
   uniform float uVideoMix;
+  uniform vec2 uVideoScale;
+  uniform vec2 uVideoFocus;
+  uniform float uExposure;
+  uniform float uPanelAspect;
+  uniform float uCornerRadius;
   uniform vec2 uPointerUv;
   uniform float uHover;
   uniform float uHasBackground;
@@ -103,15 +110,15 @@ const fragmentShader = /* glsl */ `
     return color;
   }
   void main() {
-    vec2 panel = (vUv - .5) * vec2(1.6, 1.);
-    vec2 corner = abs(panel) - vec2(.745, .445);
-    float distanceToEdge = length(max(corner, 0.)) + min(max(corner.x, corner.y), 0.) - .055;
+    vec2 panel = (vUv - .5) * vec2(uPanelAspect, 1.);
+    vec2 corner = abs(panel) - (vec2(uPanelAspect, 1.) * .5 - uCornerRadius);
+    float distanceToEdge = length(max(corner, 0.)) + min(max(corner.x, corner.y), 0.) - uCornerRadius;
     float antialias = max(fwidth(distanceToEdge), .0004);
     float mask = 1. - smoothstep(-antialias, antialias, distanceToEdge);
     if (mask <= .001 || uOpacity <= .001) discard;
 
     float t = uTime;
-    vec2 touch = (vUv - uPointerUv) * vec2(1.6, 1.);
+    vec2 touch = (vUv - uPointerUv) * vec2(uPanelAspect, 1.);
     float touchRadius = length(touch);
     float hover = exp(-dot(touch, touch) * 15.) * uHover;
     float wave = sin(touchRadius * 30. - t * 2.1) * hover;
@@ -141,12 +148,13 @@ const fragmentShader = /* glsl */ `
     // and raycast surface stay on the same reversible scroll orbit.
     vec2 videoUv = vUv + ripple * (2.5 + hover * 3.) + (uPointerUv - .5) * uHover * .035;
     videoUv.x = gl_FrontFacing ? videoUv.x : 1. - videoUv.x;
+    videoUv = videoUv * uVideoScale + (1. - uVideoScale) * uVideoFocus;
     videoUv = clamp(videoUv, vec2(.002), vec2(.998));
     // Custom ShaderMaterial samplers do not get Three's map-video decode.
     vec3 videoSrgb = texture2D(uVideo, videoUv).rgb;
     vec3 videoLinear = mix(pow((videoSrgb + .055) / 1.055, vec3(2.4)), videoSrgb / 12.92,
       step(videoSrgb, vec3(.04045)));
-    image = mix(image, videoLinear * (.72 + hover * .12), uVideoMix);
+    image = mix(image, videoLinear * (uExposure + hover * .12), uVideoMix);
     image *= gl_FrontFacing ? 1. : .52;
     vec3 color = image * .88 + uTint * .014;
     if (uHasBackground > .5) {
@@ -192,12 +200,15 @@ const fragmentShader = /* glsl */ `
   }
 `
 
-function titleTexture(lines: string[]) {
+function titleTexture(lines: readonly string[], aspect: number) {
   const canvas = document.createElement('canvas')
-  canvas.width = 1024
-  canvas.height = 640
+  canvas.width = Math.round(Math.min(1024, 2048 * aspect))
+  canvas.height = Math.round(canvas.width / aspect)
   const context = canvas.getContext('2d')
   if (context) {
+    context.translate(canvas.width / 2, canvas.height / 2)
+    const scale = Math.min(canvas.width / 1024, canvas.height / 640)
+    context.scale(scale, scale)
     context.textAlign = 'center'
     context.textBaseline = 'middle'
     context.fillStyle = '#ffffff'
@@ -205,34 +216,21 @@ function titleTexture(lines: string[]) {
     context.strokeStyle = '#ffffff'
     // Original O identity, independent of the reference studio's branding.
     context.beginPath()
-    context.ellipse(512, 223 - (lines.length - 1) * 26, 12, 16, 0, 0, Math.PI * 2)
+    context.ellipse(0, -97 - (lines.length - 1) * 26, 12, 16, 0, 0, Math.PI * 2)
     context.stroke()
     context.font = '400 66px "IBM Plex Mono", monospace'
     lines.forEach((line, index) => {
-      context.fillText(line, 512, 324 + (index - (lines.length - 1) / 2) * 70, 780)
+      context.fillText(line, 0, 4 + (index - (lines.length - 1) / 2) * 70, 780)
     })
     context.font = '14px monospace'
     context.globalAlpha = .68
-    context.fillText('A E T H E R   /   M O T I O N   S T U D Y', 512, 405 + (lines.length - 1) * 25)
+    context.fillText('A E T H E R   /   M O T I O N   S T U D Y', 0, 85 + (lines.length - 1) * 25)
   }
   const texture = new THREE.CanvasTexture(canvas)
   texture.colorSpace = THREE.SRGBColorSpace
   texture.minFilter = THREE.LinearFilter
   texture.generateMipmaps = false
   return texture
-}
-
-function roundedPath(path: THREE.Path, w: number, h: number, r: number) {
-  const x = -w / 2, y = -h / 2
-  path.moveTo(x + r, y)
-  path.lineTo(x + w - r, y)
-  path.quadraticCurveTo(x + w, y, x + w, y + r)
-  path.lineTo(x + w, y + h - r)
-  path.quadraticCurveTo(x + w, y + h, x + w - r, y + h)
-  path.lineTo(x + r, y + h)
-  path.quadraticCurveTo(x, y + h, x, y + h - r)
-  path.lineTo(x, y + r)
-  path.quadraticCurveTo(x, y, x + r, y)
 }
 
 const rimFragment = /* glsl */ `
@@ -260,69 +258,54 @@ const rimFragment = /* glsl */ `
   }
 `
 
-/** Scroll arranges six finite glass screens; media and subtle hover remain independent. */
-export function createSceneMonitors(software: boolean, mobile: boolean, externalMedia?: ReturnType<typeof createSceneVideo>) {
+/** The catalogue owns display content/modeling; scroll owns a count-independent passage. */
+export function createSceneMonitors(software: boolean, mobile: boolean, externalMedia?: ReturnType<typeof createSceneVideo>,
+  definitions: readonly MonitorDefinition[] = monitorCatalog) {
   const media = externalMedia ?? createSceneVideo()
   let mediaActive = false
   let reducedMotion = false
   const group = new THREE.Group()
   group.name = 'aether-monitors'
   group.visible = false
-  const width = 6.1
-  const height = 3.8
-  const geometry = new THREE.PlaneGeometry(width, height, software || mobile ? 12 : 28, software || mobile ? 8 : 18)
-  const positions = geometry.getAttribute('position')
-  for (let i = 0; i < positions.count; i++) {
-    const x = positions.getX(i) / (width / 2)
-    const y = positions.getY(i) / (height / 2)
-    positions.setZ(i, .035 * (1 - x * x) + .009 * (1 - y * y))
-  }
-  geometry.computeVertexNormals()
-  geometry.computeBoundingSphere()
-
+  const models = definitions.map(definition => createMonitorGeometry(definition.model, software || mobile))
+  const layoutWidth = Math.max(6.1, ...models.map(asset => asset.model.width))
+  const layoutHeight = Math.max(3.8, ...models.map(asset => asset.model.height))
+  const mediaIndices = definitions.map(definition => monitorMedia.findIndex(source => source.id === definition.mediaId))
   // Sampler uniforms always have a valid texture, including before first capture.
   const fallback = new THREE.DataTexture(new Uint8Array([2, 5, 7, 255]), 1, 1, THREE.RGBAFormat)
   fallback.colorSpace = THREE.LinearSRGBColorSpace
   fallback.needsUpdate = true
-  const names = [['LIMINAL'], ['PULSE', 'ARCHIVE'], ['ORBITAL'], ['SOLSTICE'], ['LIMINAL'], ['PULSE', 'ARCHIVE']]
-  const tints = [0x80b9ca, 0xb697db, 0x769cd4, 0xd8ad71, 0xa4c6ae, 0x69baaa]
-  const textures = names.map(titleTexture)
+  const textures = definitions.map((definition, i) => titleTexture(definition.title, models[i].model.width / models[i].model.height))
   const materials = textures.map((texture, i) => new THREE.ShaderMaterial({
     vertexShader, fragmentShader,
     uniforms: {
       uBackground: { value: fallback }, uTitle: { value: texture },
       uVideo: { value: fallback }, uVideoMix: { value: 0 },
+      uVideoScale: { value: new THREE.Vector2(1, 1) },
+      uVideoFocus: { value: new THREE.Vector2(...(definitions[i].focus ?? [.5, .5])).clampScalar(0, 1) },
+      uExposure: { value: definitions[i].exposure ?? .72 },
+      uPanelAspect: { value: models[i].model.width / models[i].model.height },
+      uCornerRadius: { value: models[i].model.cornerRadius / models[i].model.height },
       uPointerUv: { value: new THREE.Vector2(.5, .5) }, uHover: { value: 0 },
       uHasBackground: { value: 0 }, uTime: { value: 0 },
       uFilm: { value: i }, uOpacity: { value: 0 },
       uEntryEdge: { value: 1.5 }, uExitEdge: { value: -.5 },
-      uTint: { value: new THREE.Color(tints[i]) },
+      uTint: { value: new THREE.Color(definitions[i].tint) },
     },
     transparent: true, depthWrite: false, depthTest: true,
     side: THREE.DoubleSide, forceSinglePass: true, blending: THREE.NormalBlending,
   }))
-  const rimShape = new THREE.Shape()
-  roundedPath(rimShape, width, height, .21)
-  const rimHole = new THREE.Path()
-  roundedPath(rimHole, width - .045, height - .045, .19)
-  rimShape.holes.push(rimHole)
-  const rimGeometry = new THREE.ExtrudeGeometry(rimShape, {
-    depth: .048, bevelEnabled: true, bevelThickness: .006, bevelSize: .006,
-    bevelSegments: 1, steps: 1, curveSegments: 6,
-  })
-  rimGeometry.translate(0, 0, -.028)
-  geometry.computeBoundingBox()
-  rimGeometry.computeBoundingBox()
-  const captureBounds = geometry.boundingBox!.clone().union(rimGeometry.boundingBox!)
   const rimMaterials = materials.map((material) => new THREE.ShaderMaterial({
     vertexShader, fragmentShader: rimFragment, uniforms: material.uniforms,
     transparent: true, depthWrite: false, side: THREE.DoubleSide, forceSinglePass: true,
   }))
   const panels = materials.map((material, i) => {
-    const panel = new THREE.Mesh(geometry, material)
+    const panel = new THREE.Mesh(models[i].lens, material)
     panel.name = `aether-monitor-${i}`
+    panel.userData.monitorId = definitions[i].id
+    panel.userData.projectIndex = definitions[i].projectIndex
     panel.renderOrder = 3
-    const rim = new THREE.Mesh(rimGeometry, rimMaterials[i])
+    const rim = new THREE.Mesh(models[i].rim, rimMaterials[i])
     rim.renderOrder = 3
     panel.add(rim)
     group.add(panel)
@@ -411,7 +394,7 @@ export function createSceneMonitors(software: boolean, mobile: boolean, external
   }
 
   const hit = (ndc: THREE.Vector2, camera: THREE.Camera) => {
-    if (disposed || !group.visible) return null
+    if (disposed || !group.visible || !panels.length) return null
     const boundary = ndc.y * .5 + .5 - ndc.x * .1
     if (boundary > materials[0].uniforms.uEntryEdge.value || boundary < materials[0].uniforms.uExitEdge.value) return null
     group.updateWorldMatrix(true, true)
@@ -420,9 +403,11 @@ export function createSceneMonitors(software: boolean, mobile: boolean, external
       const index = panels.indexOf(intersection.object as typeof panels[number])
       if (index < 0 || !panels[index].visible || !intersection.uv || materials[index].uniforms.uOpacity.value < .2) continue
       // Ignore the transparent corners of the rectangular raycast geometry.
-      const x = Math.abs((intersection.uv.x - .5) * 1.6) - .745
-      const y = Math.abs(intersection.uv.y - .5) - .445
-      if (Math.hypot(Math.max(x, 0), Math.max(y, 0)) + Math.min(Math.max(x, y), 0) > .055) continue
+      const model = models[index].model
+      const radius = model.cornerRadius / model.height, aspect = model.width / model.height
+      const x = Math.abs((intersection.uv.x - .5) * aspect) - (aspect * .5 - radius)
+      const y = Math.abs(intersection.uv.y - .5) - (.5 - radius)
+      if (Math.hypot(Math.max(x, 0), Math.max(y, 0)) + Math.min(Math.max(x, y), 0) > radius) continue
       if (occluded(intersection.distance, camera)) return null
       return { index, uv: intersection.uv }
     }
@@ -448,6 +433,10 @@ export function createSceneMonitors(software: boolean, mobile: boolean, external
     },
     getVideoStatus: () => media.status(),
     getHoveredPanel: () => hoveredPanel,
+    pickProject(ndc: THREE.Vector2, camera: THREE.Camera) {
+      const selected = hit(ndc, camera)
+      return selected ? definitions[selected.index].projectIndex : null
+    },
     pick: (ndc: THREE.Vector2, camera: THREE.Camera) => hit(ndc, camera)?.index ?? null,
     update(time: number, progress: number, pointer?: MonitorPointer, camera?: THREE.Camera) {
       if (disposed) return
@@ -461,7 +450,7 @@ export function createSceneMonitors(software: boolean, mobile: boolean, external
       // Prepare the front card behind the wipe before the first visible sliver.
       // A second, deep descent previously exposed empty space and the column.
       group.position.y = -1.4 * (1 - smooth(.245, .303, p))
-      group.visible = weight > .001 && curtainHasCoverage(layers.monitorEntry, layers.monitorExit)
+      group.visible = panels.length > 0 && weight > .001 && curtainHasCoverage(layers.monitorEntry, layers.monitorExit)
       if (!group.visible) { captureVisible = false; captureDirty = true }
       media.update(mediaActive && group.visible, reducedMotion)
       const video = media.status()
@@ -469,29 +458,33 @@ export function createSceneMonitors(software: boolean, mobile: boolean, external
       lastTime = time
       const ease = 1 - Math.exp(-delta * 10)
       for (const material of materials) material.uniforms.uTime.value = Number.isFinite(time) ? time : 0
-      const passage = Math.max(0, (p - .303) / .064)
       const mobileScale = mobile ? .74 : 1
       for (let i = 0; i < panels.length; i++) {
         const panel = panels[i]
-        const step = i - passage
+        const { step, angle, y, radiusX, radiusZ } = sampleMonitorLayout(p, i, panels.length, layoutWidth, layoutHeight)
         hover[i] = THREE.MathUtils.lerp(hover[i], hoveredPanel === i && !reducedMotion ? 1 : 0, ease)
         if (hover[i] < .0001) hover[i] = 0
         // A diagonal helix: the central card faces forward, its neighbours
         // turn edge-on at the sides, and the remaining cards pass behind.
         // Absolute scroll phase makes upward travel retrace the same orbit.
-        const angle = step * 1.30
         const radialHover = hover[i] * .24
-        panel.position.set(Math.sin(angle) * (4.7 + radialHover) * mobileScale,
-          -step * 2.05 * mobileScale, Math.cos(angle) * (3.8 + radialHover))
+        panel.position.set(Math.sin(angle) * (radiusX + radialHover) * mobileScale,
+          y * mobileScale, Math.cos(angle) * (radiusZ + radialHover))
         panel.rotation.set(.018, angle, -Math.sin(angle) * .035)
         panel.scale.setScalar(mobileScale * .86)
         const localWeight = 1 - smooth(2.7, 3.6, Math.abs(step))
         panel.visible = localWeight > .001
         materials[i].uniforms.uOpacity.value = weight * localWeight
         const uniforms = materials[i].uniforms
-        const videoIndex = i % 2
-        uniforms.uVideo.value = video.ready[videoIndex] ? media.textures[videoIndex] : fallback
-        uniforms.uVideoMix.value = video.ready[videoIndex]
+        const videoIndex = mediaIndices[i]
+        const texture = media.textures[videoIndex]
+        const ready = !!texture && video.ready[videoIndex]
+        uniforms.uVideo.value = ready ? texture : fallback
+        const image = texture?.image as HTMLVideoElement | undefined
+        const aspect = image?.videoWidth && image.videoHeight ? image.videoWidth / image.videoHeight : uniforms.uPanelAspect.value
+        const ratio = aspect / uniforms.uPanelAspect.value
+        uniforms.uVideoScale.value.set(Math.min(1, 1 / ratio), Math.min(1, ratio))
+        uniforms.uVideoMix.value = ready
           ? (reducedMotion ? 1 : THREE.MathUtils.lerp(uniforms.uVideoMix.value, 1, ease)) : 0
         uniforms.uHover.value = hover[i]
         if (hoveredPanel === i) uniforms.uPointerUv.value.copy(pointerUv)
@@ -522,7 +515,7 @@ export function createSceneMonitors(software: boolean, mobile: boolean, external
         for (const panel of panels) {
           if (panel.visible && panel.material.uniforms.uOpacity.value > .001
             && captureVisibility.intersects(panel, panel.material.uniforms.uEntryEdge.value,
-              panel.material.uniforms.uExitEdge.value, captureBounds)) {
+              panel.material.uniforms.uExitEdge.value, models[panels.indexOf(panel)].bounds)) {
             visible = true
             break
           }
@@ -576,8 +569,7 @@ export function createSceneMonitors(software: boolean, mobile: boolean, external
       group.removeFromParent()
       clearBackground()
       target?.dispose()
-      geometry.dispose()
-      rimGeometry.dispose()
+      models.forEach(asset => asset.dispose())
       rimMaterials.forEach((material) => material.dispose())
       materials.forEach((material) => material.dispose())
       textures.forEach((texture) => texture.dispose())

@@ -215,12 +215,21 @@ const dustVertex = /* glsl */ `
     // Only the feathered outer half of the end heads joins through the curtain.
     vec3 blossom = aFlowerPosition.xyz;
     float joinSeed = fract(phase * 13.71 + lane * 93.17);
-    float entry = smoothstep(.238 + joinSeed * .012, .315 + joinSeed * .012, uScroll / 55.);
-    float exit = smoothstep(.573 + joinSeed * .017, .655 + joinSeed * .012, uScroll / 55.);
-    blossom.y += aFlowerPosition.w * ((1. - entry) + exit) * (4.5 + joinSeed * 2.);
+    float entry = smoothstep(.226 + joinSeed * .016, .338 + joinSeed * .016, uScroll / 55.);
+    float topJoin = max(0., aFlowerPosition.w);
+    float bottomJoin = max(0., -aFlowerPosition.w);
+    float entryLift = (1. - entry);
+    // The upper half arrives from the incoming curtain, while the lower half
+    // first assembles locally and later follows a broad, descending funnel.
+    blossom.y += topJoin * entryLift * (8.5 + joinSeed * 1.2);
+    blossom.y -= bottomJoin * entryLift * (2.4 + joinSeed * .7);
+    float drain = smoothstep(.559 + joinSeed * .016, .694 + joinSeed * .016, uScroll / 55.) * bottomJoin;
+    vec2 tangent = vec2(-blossom.z, blossom.x) / max(.1, length(blossom.xz));
+    blossom.xz = blossom.xz * (1. - drain * .87) + tangent * sin(drain * PI) * .32;
+    blossom.y = mix(blossom.y, ${REACTOR.worldY + REACTOR.apertureY * REACTOR.heightScale + 29.8} - joinSeed * .24, drain);
     blossom = rotateFlowerField(blossom);
     blossom.xz *= uSpineSpread;
-    blossom.y -= 12. * (1. - smoothstep(.205, .29, uScroll / 55.));
+    blossom.y -= 12. * (1. - smoothstep(.205, .29, uScroll / 55.)) * (1. - topJoin);
     p = mix(p, blossom, flowerWeight);
     // Most device grains spread across a fine radial cloud, with a few smaller
     // strays. This is still the same field, without a second opaque ring.
@@ -286,12 +295,12 @@ const dustVertex = /* glsl */ `
     float grainScale = 1.0 + spineWeight * (.32 + .20 * cluster);
     grainScale *= mix(1., 1.5, ribbonWeight);
     grainScale *= mix(1., .72, aAdvected * spineWeight);
-    grainScale *= mix(1.18, 1.92 * mix(1., .72, stray), uWeights.y);
+    grainScale *= mix(1.18, 1.66 * mix(1., .72, stray), uWeights.y);
     gl_PointSize = clamp(aDust.y * grainScale * perspective * uPixelRatio, 0.65, 12.0 * uPixelRatio);
     float pearl = .5 + .5 * sin(phase * 2.3 + lane * 11.);
-    vec3 deviceColor = mix(vec3(.035, .34, .16), vec3(.06, .64, .42), pearl);
-    deviceColor = mix(deviceColor, vec3(.24, .065, .65), (1. - formed) * (.4 + pearl * .6));
-    deviceColor = mix(deviceColor, vec3(.90, .56, .20), pow(pearl, 7.) * .7);
+    vec3 deviceColor = mix(vec3(.08, .31, .18), vec3(.12, .32, .57), pearl);
+    deviceColor = mix(deviceColor, vec3(.28, .10, .47), pow(.5 + .5 * sin(phase * 7.7), 4.) * .65);
+    deviceColor = mix(deviceColor, vec3(.68, .46, .12), pow(pearl, 7.) * .8);
     vColor = mix(currentColor(lane, t), deviceColor, uWeights.y);
     float ribbonHue = .5 + .5 * sin(t * 11. + lane * 4.);
     vec3 ribbonColor = mix(vec3(.30,.12,.72), vec3(.91,.23,.56), ribbonHue);
@@ -320,8 +329,8 @@ const dustVertex = /* glsl */ `
           vColor = mix(vColor, forestColor, forestWeight);
         }
         vec3 aperture = aetherApertureFilm(litWorld);
-        vColor = mix(vColor, vColor * (.18 + dot(aperture, vec3(.2126,.7152,.0722)) * 2.5)
-          + aperture * 1.5, uWeights.y);
+        vColor = mix(vColor, vColor * (.45 + dot(aperture, vec3(.2126,.7152,.0722)) * 1.4)
+          + aperture * .38, uWeights.y);
       }
     #endif
     float mineral = .20 + .80 * pow(.5 + .5 * sin(phase * 17. + lane * 53.), 2.);
@@ -392,7 +401,7 @@ const dustFragment = /* glsl */ `
     vec3 color = vColor * (.65 + facet * .45 + rim * .32);
     color += mix(vColor, vec3(.70,.64,.85), .3) * glint * .34;
     shape *= .61 + rim * .25 + facet * .12;
-    if (max(vMachine, vFlower) > .5) {
+    if (vFlower > .5) {
       // Rounded grains have a shaded core and a compact specular highlight.
       // Fine rounded pollen grains also preserve the curved petal surfaces.
       float z = sqrt(max(0., 1. - rr));
@@ -405,7 +414,22 @@ const dustFragment = /* glsl */ `
         + mix(vColor, vec3(.65,.76,.88), .42) * specular * .48;
       shape = (1. - smoothstep(.82, 1., rr)) * (.73 + diffuse * .18);
     }
-    if (vBokeh > 0.5) {
+    if (vMachine > .5) {
+      // Opaque-looking mineral beads: a filled, uneven diffuse face, with no
+      // transparent membrane or concentric halo. Keep the existing flow/alpha.
+      vec2 facetUv = uv * vec2(1. + sin(vGrainSeed * 23.) * .055, 1.);
+      float surface = dot(facetUv, facetUv);
+      float z = sqrt(max(0., 1. - surface));
+      vec3 n = normalize(vec3(facetUv, z));
+      vec3 light = normalize(vec3(-.42, .62, .9));
+      float diffuse = .48 + .52 * max(0., dot(n, light));
+      float grain = fract(sin(dot(floor(uv * 9.) + vGrainSeed * 37., vec2(127.1,311.7))) * 43758.5453);
+      float highlight = pow(max(0., dot(n, normalize(light + vec3(0.,0.,1.)))), 12.);
+      color = vColor * diffuse * (.90 + grain * .12)
+        + mix(vColor, vec3(.57,.67,.69), .16) * highlight * .16;
+      shape = 1. - smoothstep(.74, 1., surface);
+    }
+    if (vBokeh > 0.5 && vMachine < .5) {
       shape = exp(-rr * 6.0) * 0.36 + (1.0 - smoothstep(0.06, 0.22, abs(rr - 0.52))) * 0.18;
       color = vColor;
     }

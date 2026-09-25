@@ -73,27 +73,42 @@ const currentField = /* glsl */ `
       -6.6 + t * 6.9,
       -1.4 + sin(t * 8.0 + branch * 6.0) * 1.15
     );
-    // Keep the existing flower seeds, folded shape and scroll orbit intact.
-    float tier = min(3., floor(t * 4.));
-    float petalAngle = fract(t * 4.) * PI * 2.;
-    float petal = .83 + .22 * cos(petalAngle * 5. + tier)
-      + .13 * sin(petalAngle * 9. + branch * 7.)
-      + .06 * sin(petalAngle * 23. + tier * 4.);
-    // Unequal folded petal ridges leave creases through the dense volume.
-    // Flower lanes occupy disjoint bands. Normalize WITHIN each band; using
-    // lane*2 as a radius left entire annuli empty regardless of particle count.
+    // Four large layered blooms and eight satellites per side. Separate
+    // folded petals share a recessed centre instead of filling a noisy ball.
+    float bloomId = min(11., floor(t * 12.));
+    float tier = floor(bloomId / 3.);
+    float satellite = mod(bloomId, 3.);
+    float smallBloom = step(.5, satellite);
+    float petalAngle = fract(t * 12.) * PI * 2.;
     float petalRadius = clamp(fract(lane * 7.13) / .22, 0., 1.);
-    float folded = petalRadius + sin(petalRadius * PI * 6. + petalAngle * 2.) * .025;
-    float radius = (.18 + sqrt(max(.001, folded)) * (1.58 + .35 * sin(tier * 4. + side))) * petal;
-    float facing = side * .45 + (tier - 1.5) * .53;
-    vec3 centre = vec3(side * (2.2 + .55 * sin(tier * 2.4)),
-      (tier - 1.5) * 3.25 + side * .6, sin(tier * 2.1 + side) * 1.5);
-    vec3 spine = centre + vec3(
-      cos(petalAngle) * radius,
-      sin(petalAngle) * radius,
-      .70 * petalRadius * petalRadius + .36 * sin(petalAngle * 5. + petalRadius * 8.)
-    );
+    float ring = floor(petalRadius * 3.);
+    float withinPetal = fract(petalRadius * 3.);
+    float petals = 5. + ring * 2.;
+    float petalLobe = .5 + .5 * cos(petalAngle * petals + ring * 2.4 + tier);
+    float scallop = .38 + .62 * pow(petalLobe, .26);
+    float size = mix(1.24 + .15 * sin(tier * 2.7 + side), .38 + satellite * .095, smallBloom);
+    float radius = (.12 + (ring + sqrt(withinPetal)) / 3. * .88) * size * scallop;
+    float facing = side * .32 + (tier - 1.5) * .42;
+    vec3 centre = vec3(side * (3.65 + .3 * sin(tier * 2.4) + smallBloom * .55),
+      (tier - 1.5) * 3.0 + side * .45 + smallBloom * (satellite - 1.5) * 2.1,
+      sin(tier * 2.1 + side) * 1.25 + smallBloom * .65);
+    vec3 spine = centre + vec3(cos(petalAngle) * radius, sin(petalAngle) * radius,
+      size * (.22 * ring + .34 * sin(withinPetal * PI) + .30 * pow(petalLobe, 2.)));
     spine.z += sin(facing) * (spine.x - centre.x);
+    // Each end bloom's outer half joins from above/below. Per-seed feathering
+    // prevents a visible hemispheric cut; the central and small blooms stay put.
+    float endTier = 1. - step(.1, min(tier, 3. - tier));
+    float endSign = tier < 1.5 ? -1. : 1.;
+    float seed = fract(sin(t * 173.1 + lane * 791.7) * 43758.5453);
+    float edgeHalf = smoothstep(-.22, .42, endSign * sin(petalAngle) + (seed - .5) * .36);
+    float joining = endTier * (1. - smallBloom) * edgeHalf;
+    float entry = smoothstep(.238 + seed * .012, .315 + seed * .012, uScroll / 55.);
+    float exit = smoothstep(.573 + seed * .017, .655 + seed * .012, uScroll / 55.);
+    spine.y += endSign * joining * ((1. - entry) + exit) * (4.5 + seed * 2.);
+    spine.x += side * joining * sin((1. - entry + exit) * PI) * .5;
+    // A clear cylindrical channel surrounds the helix, even during rotation.
+    float corridor = length(spine.xz);
+    spine.xz *= max(1., 2.5 / max(.01, corridor));
     // Successive turns form two distant arcs behind the visible column.
     // Its near half is outside the view; the far half crosses the background.
     // Do not flatten it into paired curves close behind the column.
@@ -161,7 +176,7 @@ const currentField = /* glsl */ `
     float variation = sin(lane * 39.0 + t * 5.0) * 0.5 + 0.5;
     vec3 gold = mix(vec3(0.28, 0.36, 0.08), vec3(0.95, 0.51, 0.10), variation);
     // Color follows coherent flower lobes, not an independent rainbow per seed.
-    float hue = .5 + .5 * sin(t * 29. + sin(t * 73.) * .4 + floor(lane * 2.) * 1.8 + fract(lane * 2.) * .5);
+    float hue = .5 + .5 * sin(floor(t * 12.) * 1.83 + floor(lane * 2.) * 1.8 + fract(lane * 2.) * .16);
     vec3 violet = mix(vec3(.20, .055, .52), vec3(.85, .16, .49), smoothstep(.18, .82, hue));
     violet = mix(violet, vec3(.08, .65, .63), smoothstep(.86, .97, hue) * .9);
     violet = mix(violet, vec3(.95, .42, .21), pow(variation, 8.) * .45);
@@ -203,14 +218,14 @@ const dustVertex = /* glsl */ `
     // reverses exactly with scroll, without wrapping or time integration.
     float streamY = -7. + position.x * 31. - max(0., uScroll / 55. - .25) * 45.;
     float streamAngle = lane * PI * 2. + position.x * 5.;
-    float streamRadius = 1.25 + .75 * fract(lane * 9.) + .18 * sin(position.x * 37.);
+    float streamRadius = 2.7 + .65 * fract(lane * 9.) + .18 * sin(position.x * 37.);
     vec3 falling = rotateSpineField(vec3(cos(streamAngle) * streamRadius * uSpineSpread,
       streamY, sin(streamAngle) * streamRadius * uSpineSpread));
     p = mix(p, falling, aAdvected * spineWeight);
     float cluster = 0.32 + 0.68 * pow(sin(t * 35.0 + lane * 8.0) * 0.5 + 0.5, 2.0);
     float width = (0.13 + position.z * (0.72 + uWeights.x * .73)) * cluster;
     width *= 1.0 - uWeights.y * 0.65;
-    width *= 1.0 - uWeights.x * (1.0 - uWeights.y) * .80;
+    width *= 1.0 - uWeights.x * (1.0 - uWeights.y) * .88;
     float turn = phase + t * 37.0 + phaseScroll * 0.6 * (1.0 - max(spineWeight, uWeights.y));
     vec3 scatter = vec3(cos(turn), sin(turn * 0.83) * 0.62, sin(turn)) * width;
     scatter.z += aDust.z * (0.18 + (1.0 - uWeights.y) * 0.38);
@@ -284,10 +299,10 @@ const dustVertex = /* glsl */ `
     float perspective = 12.0 / max(2.0, -mv.z);
     // Pearlescent grains fill both flower volumes and the thicker reactor rim;
     // sparse strays retain a finer silhouette around the dense core.
-    float grainScale = 1.0 + spineWeight * (.85 + .45 * cluster);
+    float grainScale = 1.0 + spineWeight * (.32 + .20 * cluster);
     grainScale *= mix(1., 1.5, ribbonWeight);
     grainScale *= mix(1., .72, aAdvected * spineWeight);
-    grainScale *= mix(1.18, 1.18 * mix(1., .7, stray), uWeights.y);
+    grainScale *= mix(1.18, 1.92 * mix(1., .72, stray), uWeights.y);
     gl_PointSize = clamp(aDust.y * grainScale * perspective * uPixelRatio, 0.65, 12.0 * uPixelRatio);
     float pearl = .5 + .5 * sin(phase * 2.3 + lane * 11.);
     vec3 deviceColor = mix(vec3(.035, .34, .16), vec3(.06, .64, .42), pearl);
@@ -335,11 +350,14 @@ const dustVertex = /* glsl */ `
     vMachine = uWeights.y;
     float shimmer = 0.73 + sin(uTime * 1.7 + phase * 7.0) * 0.2;
     float seam = smoothstep(0.0, 0.045, t) * (1.0 - smoothstep(0.94, 1.0, t));
-    float petalPhase = fract(t * 4.);
+    float petalPhase = fract(t * 12.);
     seam *= mix(1., smoothstep(0., .015, petalPhase) * (1. - smoothstep(.985, 1., petalPhase)), spineWeight * (1. - aAdvected) * (1. - ribbonWeight));
     float distanceFade = exp(-max(0.0, -mv.z - 13.0) * mix(.043, .032, ribbonWeight));
     vAlpha = shimmer * mix(seam, 1.0, uWeights.y) * distanceFade * mix(0.72, 0.19, bokeh);
     vAlpha *= mix(1.0, .62 * mix(1., .22, bokeh), uWeights.y);
+    // Larger reactor beads keep room between them; a stable seed mask avoids
+    // turning their shared flow into one opaque, powdery tube.
+    vAlpha *= mix(1., step(.48, fract(phase * 23.71 + lane * 13.17)), uWeights.y);
     vAlpha *= (1.0 - uDarkness * 0.23) * (1.0 + uWeights.x * 0.16);
     vAlpha *= 1. + spineWeight * (1. - aAdvected) * 1.10;
     vAlpha *= mix(1., .66, ribbonWeight);
@@ -522,7 +540,7 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
     let lane: number
     do { lane = flowerRandom() } while ((lane * 7.13) % 1 >= .22)
     positions.set([flowerRandom(), flowerRandom() * Math.PI * 2, Math.pow(flowerRandom(), 1.6)], i * 3)
-    dust.set([lane, .95 + Math.pow(flowerRandom(), 2.4) * (mobile ? 2.1 : 2.6), flowerRandom() * 2 - 1, -1], i * 4)
+    dust.set([lane, .70 + Math.pow(flowerRandom(), 2.7) * (mobile ? 1.65 : 1.9), flowerRandom() * 2 - 1, -1], i * 4)
   }
 
   const reactorFlow = !software && options

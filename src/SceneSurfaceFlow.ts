@@ -2,7 +2,7 @@ import * as THREE from 'three'
 
 export type SurfaceFlowInput = { flowTexture?: THREE.Texture; waterTexture?: THREE.Texture; hazeTexture?: THREE.Texture; aspect: number }
 
-/** RG velocity, B water height, inverse A stationary dry contact. */
+/** RG velocity, B water height, inverse A transient moving contact. */
 export const surfaceFlowGLSL = /* glsl */ `
   uniform sampler2D uSurfaceFlow;
   uniform vec2 uFlowTexel;

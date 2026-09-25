@@ -10,7 +10,7 @@ export function createPointerFlow(profile: 'water' | 'haze' = 'water') {
   const response = new Float32Array(cells * 2)
   let density = new Float32Array(cells)
   let nextDensity = new Float32Array(cells)
-  // Stationary dry contact history. It must not advect with the surrounding water.
+  // Contact stays under the moving pointer, then releases before the wake dies.
   const contact = new Float32Array(cells)
   const curl = new Float32Array(cells)
   const divergence = new Float32Array(cells)
@@ -118,9 +118,9 @@ export function createPointerFlow(profile: 'water' | 'haze' = 'water') {
       if (resume || resized || distance < .00001) return
       const dt = clamp(seconds, 1 / 240, .05)
       const speed = distance / dt
-      const speedLimit = Math.min(1, 4 / Math.max(.001, speed))
-      const impulseX = dx * speedLimit * 9
-      const impulseY = dy * speedLimit * 9
+      const impulseGain = 5 + Math.min(8, speed) * 2.2
+      const impulseX = dx * impulseGain
+      const impulseY = dy * impulseGain
       const radius = (.115 + Math.min(.045, speed * .012)) * (gas ? .54 : 1)
       const gaussian = -.5 / (radius * radius)
       for (let y = 0; y < height; y++) {
@@ -131,7 +131,7 @@ export function createPointerFlow(profile: 'water' | 'haze' = 'water') {
           const i = (y * width + x) * 2
           velocity[i] = clamp(velocity[i] + impulseX * weight, -.95, .95)
           velocity[i + 1] = clamp(velocity[i + 1] + impulseY * weight, -.95, .95)
-          density[i / 2] = Math.min(1, density[i / 2] + distance * 10 * weight)
+          density[i / 2] = Math.min(1, density[i / 2] + distance * (7 + Math.min(7, speed) * 2) * weight)
           if (!gas) contact[i / 2] = Math.max(contact[i / 2], clamp((weight - .68) / .20, 0, 1))
         }
       }
@@ -155,12 +155,12 @@ export function createPointerFlow(profile: 'water' | 'haze' = 'water') {
         clear()
         return
       }
-      // Once the pointer stops, every displacement follows one monotone decay.
-      // No residual pressure iterations, advection or contact-mask rebound can
-      // alternately bend the same text edge in opposite directions.
-      if (!gas && idleAge > .065) {
-        const fade = Math.exp(-4.5 * delta)
+      // Transport continues after release: water closes the contact channel.
+      // Once its momentum is spent, retire the remaining slope monotonically.
+      if (!gas && idleAge > .55) {
+        const fade = Math.exp(-5.5 * delta)
         for (let i = 0; i < cells; i++) {
+          contact[i] *= Math.exp(-22 * delta)
           density[i] *= fade
           velocity[i * 2] *= fade; velocity[i * 2 + 1] *= fade
           response[i * 2] *= fade; response[i * 2 + 1] *= fade
@@ -170,17 +170,17 @@ export function createPointerFlow(profile: 'water' | 'haze' = 'water') {
       }
       const steps = Math.max(1, Math.ceil(delta * 60))
       const dt = delta / steps
-      const damping = Math.exp(-(gas ? 7.5 : 3.4) * dt)
-      const densityDamping = Math.exp(-(gas ? 7 : 2.6) * dt)
+      const damping = Math.exp(-(gas ? 4.8 : 3.8) * dt)
+      const densityDamping = Math.exp(-(gas ? 6 : 2.8) * dt)
       const diffusion = 1 - Math.exp(-(gas ? .45 : 2.3) * dt)
-      const follow = 1 - Math.exp(-(gas ? 22 : 12) * dt)
-      const transport = gas ? 2.2 : .45
+      const follow = 1 - Math.exp(-(gas ? 16 : 14) * dt)
+      const transport = gas ? 2.4 : 1.25
       const advectX = width * .5 / aspect * dt * transport
       const advectY = height * .5 * dt * transport
       const hx = 2 * aspect / width, hy = 2 / height
       const hx2 = hx * hx, hy2 = hy * hy
       for (let step = 0; step < steps; step++) {
-        for (let i = 0; i < cells; i++) contact[i] *= Math.exp(-1.1 * dt)
+        for (let i = 0; i < cells; i++) contact[i] *= Math.exp(-(idleAge > .035 ? 22 : 2.5) * dt)
         // Curl confinement rolls the wake without introducing radial splashes.
         // Both derivatives use screen-height units, including portrait views.
         for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {

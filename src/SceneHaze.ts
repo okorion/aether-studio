@@ -37,7 +37,8 @@ export const columnHazeGLSL = /* glsl */ `
     float front=length(gradient)*3.5;
     vec2 warp=vec2(hazeNoise(cloudUV*8.+cloud),hazeNoise(cloudUV*9.-cloud+4.));
     float wisps=hazeNoise(cloudUV*vec2(19.,48.)+warp*3.5+displacement*35.);
-    float filament=pow(1.-abs(wisps*2.-1.),5.);
+    float smallFold=hazeNoise(cloudUV*vec2(53.,87.)+warp*5.+displacement*48.);
+    float filament=pow(1.-abs(wisps*2.-1.),7.)*(.45+smallFold*.55);
     float edgeBand=1.-smoothstep(.08,.46,abs(field.b-.34));
     float pressure=min(.72,pow(length(velocity)*2.8,2.)+front*.38)*edgeBand;
     // Displace the corner's optical boundary instead of erasing a Gaussian
@@ -45,7 +46,8 @@ export const columnHazeGLSL = /* glsl */ `
     optical+=vec2(pressure*(.75+wisps*.25),pressure*.35)
       +gradient*vec2(.18,.10);
     envelope=1.-smoothstep(.20,.65,length(optical));
-    float compression=pressure*(.22+filament*.78);
+    float compression=pressure*(.12+filament*.88);
+    envelope*=1.-min(.22,front*.20)*(1.-smallFold);
     float coverage=envelope*(.69+cloud*.22+wisps*.09)*visibility;
     vec3 tint=mix(vec3(.11,.067,.205),vec3(.18,.13,.285),cloud*.65+wisps*.35);
     sceneColor+=mix(vec3(.13,.08,.30),vec3(.16,.29,.38),wisps)

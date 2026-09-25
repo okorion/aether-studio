@@ -53,7 +53,7 @@ function ProjectDialog({
   const [failedFilm, setFailedFilm] = useState('')
   const isOpen = project !== null
   const filmIndex = project ? projects.indexOf(project) % 2 : 0
-  const filmName = filmIndex === 0 ? 'chrome-current' : 'aurora-bloom'
+  const filmName = filmIndex === 0 ? 'forest-memory' : 'aurora-bloom'
   useEffect(() => {
     const video = film.current
     if (!video || !isOpen) return

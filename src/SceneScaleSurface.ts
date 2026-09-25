@@ -170,7 +170,8 @@ export function createScaleSurface(
         radialField += normalize(delta+vec2(.0001))*pulse*.78;
         heartbeat = max(heartbeat,pulse*.78);
       }
-      float tileAngle = min(1.48, heartbeat * 1.32 + vSurfaceHeat * 1.05 + vScaleMark.x*.20);
+      float flip = smoothstep(.035,.27,localTouch);
+      float tileAngle = mix(min(1.48, heartbeat * 1.32 + vSurfaceHeat * 1.05 + vScaleMark.x*.20), 3.14159265, flip);
       vec2 radial = normalize(radialField + tileCentre.xy*.0001+vec2(.00001));
       vec3 tileAxis = tileRadius > .001 ? vec3(radial.y, -radial.x, 0.) : vec3(0., 1., 0.);
       float tileCos = cos(tileAngle);

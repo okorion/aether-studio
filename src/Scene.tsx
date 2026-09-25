@@ -635,7 +635,7 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
         activeRenderer.toneMappingExposure = state.exposure
         ambient.intensity = 1.1 - state.darkness * .68
         const light = sampleLightChoreography(elapsed, scroll)
-        keyLight.color.setHSL(light.keyHue, .22, .88)
+        keyLight.color.setHSL(light.keyHue, .22 + light.machine * .34, .88 - light.machine * .15)
         keyLight.intensity = (3.4 - state.scales * .5 - state.darkness * 1.8) * light.keyIntensity
         rimLight.color.setHSL(light.rimHue, .8, .64)
         rimLight.intensity = (22 + state.energy * 12 + input.burst * 10) * light.rimIntensity

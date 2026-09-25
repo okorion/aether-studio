@@ -143,7 +143,7 @@ test('@interaction winding retains a fixed height envelope and reverses exactly'
     expect(sampleChainPath(.29,mobile).getPointAt(0)).toEqual(initial);
   }
 });
-test('@interaction chain terminal keeps the same screen height through winding and reverse scroll', () => {
+test('@interaction chain terminal descends to the lower third at the outgoing curtain and restores on reverse', () => {
   for(const mobile of [false,true]) {
     const assembly=createSpineAssembly(false,mobile);
     const chain=assembly.group.getObjectByName('aether-spine-chain') as THREE.InstancedMesh;
@@ -157,7 +157,9 @@ test('@interaction chain terminal keeps the same screen height through winding a
       assembly.update(p,1,1,mobile,camera);assembly.group.updateMatrixWorld(true);
       chain.getMatrixAt(0,matrix);
       const top=chain.localToWorld(new THREE.Vector3().setFromMatrixPosition(matrix)).project(camera);
-      expect(top.y).toBeCloseTo(.72,5);
+      const t = THREE.MathUtils.clamp((p - .40) / .215, 0, 1);
+      expect(top.y).toBeCloseTo(.72 - 1.06 * t * t * (3 - 2 * t),5);
+      if(p >= .615) expect((top.y + 1) / 2).toBeCloseTo(.33,2);
       return Array.from(chain.instanceMatrix.array);
     };
     try {const initial=sample(.31);for(let i=0;i<=34;i++)sample(.31+i*.01);for(let i=34;i>=0;i--)sample(.31+i*.01);expect(sample(.31)).toEqual(initial);}finally{assembly.dispose();}

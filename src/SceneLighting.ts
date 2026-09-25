@@ -11,23 +11,24 @@ export function createLightFilmUniforms(fallback: THREE.Texture): LightFilmUnifo
   return { map: { value: fallback }, ready: { value: 0 } }
 }
 
-/** Slow light motion uses the scene's preserved elapsed time, never wall time. */
+/** Light motion uses the scene's preserved elapsed time, never wall time. */
 export function sampleLightChoreography(time: number, progress: number) {
   const elapsed = Number.isFinite(time) ? Math.max(0, time) : 0
   const p = Number.isFinite(progress) ? Math.max(0, Math.min(1, progress)) : 0
   const depth = smooth(.81, .97, p)
   const machine = windowWeight(p, .60, .69, .79, .88)
   const spine = windowWeight(p, .20, .29, .60, .69)
-  // Unequal periods (roughly 47–76 seconds) avoid a synchronized light pulse.
-  // These multipliers accompany the spatial projection; they do not replace it.
+  // The chamber cycles through colored pools in 8–16 seconds, with no
+  // all-dark phase. Other scenes retain their slower light choreography.
+  const cycle = elapsed * (1 + machine * 4.5)
   return {
     time: elapsed, depth, machine,
-    keyHue: .47 + depth * .055 + Math.sin(elapsed * .133) * .032,
-    rimHue: .57 + spine * .16 + depth * .07 + Math.sin(elapsed * .117 + 1.3) * .055,
-    warmHue: .11 + spine * .61 + depth * .04 + Math.sin(elapsed * .083 + 3.4) * .035,
-    keyIntensity: .95 + Math.sin(elapsed * .133 + .7) * .14,
-    rimIntensity: .90 + Math.sin(elapsed * .117 + 2.3) * .19,
-    warmIntensity: .94 + Math.sin(elapsed * .083 + 4.1) * .22,
+    keyHue: .47 + depth * .055 + Math.sin(cycle * .133) * (.032 + machine * .17),
+    rimHue: .57 + spine * .16 + depth * .07 + Math.sin(cycle * .117 + 1.3) * (.055 + machine * .13),
+    warmHue: .11 + spine * .61 + depth * .04 + Math.sin(cycle * .083 + 3.4) * .035,
+    keyIntensity: .95 + machine * .34 + Math.sin(cycle * .133 + .7) * .14,
+    rimIntensity: .90 + machine * .28 + Math.sin(cycle * .117 + 2.3) * .19,
+    warmIntensity: .94 + machine * .26 + Math.sin(cycle * .083 + 4.1) * .22,
     cloudStrength: 1 + machine * .18 - depth * .12,
   }
 }

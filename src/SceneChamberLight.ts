@@ -61,7 +61,8 @@ export function createChamberLight(space: THREE.Group, scene: THREE.Scene, film?
       if (disposed) return
       material.uniforms.uOpacity.value = weight * .055
       material.uniforms.uTime.value = time
-      light.intensity = weight * 185 * (.90 + .10 * Math.sin(time * .37) ** 2)
+      light.color.setHSL(.54 + Math.sin(time * .53) * .20, .46, .74)
+      light.intensity = weight * 235 * (1. + .17 * Math.sin(time * .77))
       beam.visible = false
     },
     dispose() {

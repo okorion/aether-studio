@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
+import lumbarMesh from './assets/lumbar-vertebra.json' with { type: 'json' }
 import { sampleLayers } from './SceneLayers'
 import { getChainLinkCount, CHAIN_LINK_PITCH, createChainGeometry, createChainMaterial, sampleChainPath } from './SceneChain'
 
@@ -13,134 +13,16 @@ export function sampleSpineExposure(progress: number) {
   return .22 + .78 * ease((p - .275) / .11) * ease((.665 - p) / .11)
 }
 
-/** Thin laminae taper along their entire length, with broad planar roots. */
-function processGeometry(points: THREE.Vector3[], segments: number, radial: number,
-  radius: number, flatten = 1, arch = false) {
-  const curve = new THREE.CatmullRomCurve3(points)
-  const vertices: number[] = [], uv: number[] = [], indices: number[] = []
-  const centre = new THREE.Vector3(), tangent = new THREE.Vector3()
-  const across = new THREE.Vector3(), thickness = new THREE.Vector3()
-  for (let i = 0; i <= segments; i++) {
-    const t = i / segments
-    curve.getPointAt(t, centre)
-    curve.getTangentAt(t, tangent)
-    across.set(tangent.z, 0, -tangent.x).normalize()
-    thickness.crossVectors(tangent, across).normalize()
-    const taper = arch ? .92 : (1 - .68 * t) * (1 - ease((t - .94) / .06))
-    const width = radius * taper
-    for (let j = 0; j <= radial; j++) {
-      const angle = j / radial * Math.PI * 2, c = Math.cos(angle), s = Math.sin(angle)
-      const u = Math.sign(c) * Math.pow(Math.abs(c), .72) * width
-      const v = s * width * flatten * (.82 + .18 * Math.abs(c))
-      vertices.push(centre.x + across.x * u + thickness.x * v,
-        centre.y + across.y * u + thickness.y * v,
-        centre.z + across.z * u + thickness.z * v)
-      uv.push(j / radial, t)
-      if (i < segments && j < radial) {
-        const a = i * (radial + 1) + j, b = a + radial + 1
-        indices.push(a, a + 1, b, a + 1, b + 1, b)
-      }
-    }
-  }
+/** Licensed anatomical body, neural arch and processes share one continuous mesh. */
+function vertebraGeometry() {
   const geometry = new THREE.BufferGeometry()
-  geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3))
-  geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2))
-  geometry.setIndex(indices)
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(lumbarMesh.positions, 3))
+  geometry.setIndex(lumbarMesh.indices)
+  const colors = new Float32Array(lumbarMesh.positions.length).fill(.94)
+  geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3))
   geometry.computeVertexNormals()
+  geometry.computeBoundingSphere()
   return geometry
-}
-
-function vertebraGeometry(software: boolean) {
-  const radial = software ? 20 : 64
-  const body = new THREE.LatheGeometry([
-    new THREE.Vector2(0, -.43), new THREE.Vector2(.57, -.43),
-    new THREE.Vector2(.88, -.42), new THREE.Vector2(.89, -.39),
-    new THREE.Vector2(.84, -.34), new THREE.Vector2(.81, -.22),
-    new THREE.Vector2(.79, -.10), new THREE.Vector2(.80, .12),
-    new THREE.Vector2(.80, .28), new THREE.Vector2(.89, .38),
-    new THREE.Vector2(.89, .41), new THREE.Vector2(.75, .43),
-    new THREE.Vector2(.52, .44), new THREE.Vector2(0, .44),
-  ], radial)
-  const positions = body.getAttribute('position')
-  for (let i = 0; i < positions.count; i++) {
-    const x = positions.getX(i), y = positions.getY(i), z = positions.getZ(i)
-    const angle = Math.atan2(x, z)
-    const bulge = 1 + Math.sin(angle * 3 + y * 4.1) * .045
-      + Math.cos(angle + .7) * .055 + Math.sin(angle * 5 - y * 10.7) * .025
-    const rimWarp = (Math.sin(angle + .3) * .030 + Math.sin(angle * 3 - y * 7) * .016)
-      * Math.min(1, Math.hypot(x, z) / .4)
-    // A kidney-shaped body leaves space behind it for the neural arch.
-    const back = Math.max(0, -Math.cos(angle))
-    const radius = Math.hypot(x, z)
-    const broadX = Math.sign(x) * Math.pow(Math.abs(x) / Math.max(radius, .00001), .80) * radius
-    positions.setXYZ(i, broadX * bulge * 1.02 + Math.sin(y * 5) * .038,
-      y + rimWarp,
-      z * bulge * .78 + .22 + back * back * .09)
-  }
-  body.computeVertexNormals()
-  const segments = software ? 10 : 24
-  const sides = software ? 6 : 14
-  const arch = processGeometry([
-    new THREE.Vector3(-.50, .15, -.12), new THREE.Vector3(-.60, .04, -.55),
-    new THREE.Vector3(-.35, -.02, -.88), new THREE.Vector3(0, -.04, -1.02),
-    new THREE.Vector3(.35, -.02, -.88), new THREE.Vector3(.60, .04, -.55),
-    new THREE.Vector3(.50, .15, -.12),
-  ], segments + 4, sides, .23, 1.05, true)
-  const parts: THREE.BufferGeometry[] = [body, arch]
-  for (const side of [-1, 1]) {
-    parts.push(processGeometry([
-      new THREE.Vector3(side * .50, -.01, -.05),
-      new THREE.Vector3(side * .80, .11, -.26),
-      new THREE.Vector3(side * 1.10, .08, -.56),
-      new THREE.Vector3(side * (side > 0 ? 1.52 : 1.46), .15, -.72),
-    ], segments, sides, .43, .29))
-    // Paired articular processes grow out of the neural arch, with broad
-    // flattened facets rather than disconnected round knobs.
-    for (const direction of [-1, 1]) parts.push(processGeometry([
-      new THREE.Vector3(side * .52, direction * .04, -.48),
-      new THREE.Vector3(side * .57, direction * .22, -.65),
-      new THREE.Vector3(side * .49, direction * .44, -.78),
-      new THREE.Vector3(side * .43, direction * .48, -.83),
-    ], segments, sides, .30, .44))
-  }
-  parts.push(processGeometry([
-    new THREE.Vector3(0, .14, -.90), new THREE.Vector3(.01, .00, -1.27),
-    new THREE.Vector3(.01, -.30, -1.56), new THREE.Vector3(-.02, -.59, -1.65),
-  ], segments, sides, .33, .70))
-
-  const tint = new THREE.Color()
-  const silver = new THREE.Color(.76, .77, .82)
-  const teal = new THREE.Color(.21, .31, .34)
-  const violet = new THREE.Color(.31, .23, .36)
-  for (const part of parts) {
-    const p = part.getAttribute('position')
-    const normals = part.getAttribute('normal')
-    const colors = new Float32Array(p.count * 3)
-    for (let i = 0; i < p.count; i++) {
-      // Broad, non-periodic-looking dents break a lathed rim's straight highlight.
-      const relief = Math.sin(p.getX(i) * 5.7 + p.getZ(i) * 3.1)
-        * Math.cos(p.getY(i) * 11.3 - p.getZ(i) * 4.2) * .018
-      p.setXYZ(i, p.getX(i) + normals.getX(i) * relief,
-        p.getY(i) + normals.getY(i) * relief, p.getZ(i) + normals.getZ(i) * relief)
-      const angle = Math.atan2(p.getX(i), p.getZ(i) - .13)
-      const shift = .5 + .5 * Math.sin(angle * 1.35 + p.getY(i) * 3.2 + p.getZ(i) * 1.7)
-      const weathering = .5 + .5 * Math.sin(p.getX(i) * 12.3 + p.getY(i) * 7.7 + p.getZ(i) * 9.1)
-      // Restrained patina leaves a silver base for reflected light instead of
-      // baking the old yellow/green stripes into every segment.
-      tint.copy(silver)
-        .lerp(teal, ease((shift - .46) / .54) * .22)
-        .lerp(violet, ease((.52 - shift) / .52) * .24)
-        .multiplyScalar(.94 + weathering * .06)
-      tint.toArray(colors, i * 3)
-    }
-    part.setAttribute('color', new THREE.BufferAttribute(colors, 3))
-    part.computeVertexNormals()
-  }
-  const merged = mergeGeometries(parts)
-  parts.forEach(part => part.dispose())
-  if (!merged) throw new Error('Unable to build the shared vertebra geometry')
-  merged.computeBoundingSphere()
-  return merged
 }
 
 /** Scroll-only articulated spine. Its parent owns world height and overall yaw. */
@@ -149,7 +31,7 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
   group.name = 'aether-spine-assembly'
   const rows = 10
   const spacing = HEIGHT / rows
-  const boneGeometry = vertebraGeometry(software)
+  const boneGeometry = vertebraGeometry()
   const discGeometry = new THREE.LatheGeometry([
     new THREE.Vector2(0, -.035), new THREE.Vector2(.45, -.035),
     new THREE.Vector2(.56, -.015), new THREE.Vector2(.57, .012),
@@ -162,7 +44,7 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
   const boneMaterial = new THREE.MeshPhysicalMaterial({
     color: 0xe2e4ec, vertexColors: true, metalness: software ? .48 : .96,
     roughness: software ? .51 : .29, envMapIntensity: 1.18,
-    iridescence: software ? 0 : .40, iridescenceIOR: 1.36,
+    iridescence: software ? 0 : .24, iridescenceIOR: 1.36,
     iridescenceThicknessRange: [180, 460], clearcoat: software ? 0 : .12,
     clearcoatRoughness: .38, transparent: true,
   })
@@ -207,7 +89,7 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
         // change the reflection shape, never the coating's RGB phase.
         float spineCoating = spineNoise(vSpineSurface * vec3(1.6, 2.8, 1.6));
         float spineRelief = spineGrain * .00048 * spineGrainWeight
-          + spineFold * .011 + spineNoise(vSpineSurface * 4.7) * .002;
+          + spineFold * .006 + spineNoise(vSpineSurface * 4.7) * .002;
         vec3 spineGradient = dFdx(spineRelief) * spineRx + dFdy(spineRelief) * spineRy;
         normal = normalize(max(abs(spineDet), 0.0000001) * normal
           - sign(spineDet) * spineGradient);
@@ -234,9 +116,9 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
         float spineGreen = pow(max(0., dot(spineReflection, normalize(vec3(.40,.56,-.73)))), 3.8);
         vec3 spineReflectionColor = vec3(.90,.31,.62) * spinePink
           + vec3(.26,.68,.88) * spineCyan
-          + vec3(.43,.26,.70) * spineViolet * .75
-          + vec3(.94,.59,.22) * spineGold * .48
-          + vec3(.25,.82,.46) * spineGreen * .60;
+          + vec3(.43,.26,.70) * spineViolet * 1.05
+          + vec3(.94,.59,.22) * spineGold * .12
+          + vec3(.25,.82,.46) * spineGreen * .22;
         float spineFresnel = pow(1. - max(dot(normal, normalize(vViewPosition)), 0.), 2.);
         // Compress strong studio radiance without changing its RGB ratios.
         // Broad reflected color coats the midtones; only the brightest metal
@@ -249,8 +131,8 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
           spineReflectionColor / max(.12, spineColorPeak), .78);
         spineCoatTint = mix(spineCoatTint, vec3(.96,.98,1.), spineWhiteHighlight * .68);
         vec3 spineRadiance = outgoingLight / (1. + spineLightPeak * .38);
-        outgoingLight = spineRadiance * spineCoatTint * (.52 + spineCoating * .16)
-          + spineReflectionColor * (.34 + spineFresnel * .35)
+        outgoingLight = spineRadiance * spineCoatTint * (.68 + spineCoating * .16)
+          + spineReflectionColor * (.46 + spineFresnel * .35)
             * (.84 + spineCoating * .16);
         // The common RGB component of a bright PBR reflection is its neutral
         // silver glint. Keep that narrow peak above the colored coating; tinting
@@ -258,7 +140,7 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
         float spineSilverGlint = smoothstep(.45, 1.4, spineSilverPeak);
         spineSilverGlint *= spineSilverGlint;
         vec3 spineSilverRadiance = vec3(spineSilverPeak * .90 / (1. + spineSilverPeak * .32));
-        outgoingLight = mix(outgoingLight, spineSilverRadiance, spineSilverGlint * .88);
+        outgoingLight = mix(outgoingLight, spineSilverRadiance, spineSilverGlint * .72);
         #include <opaque_fragment>
       `)
     }
@@ -359,12 +241,13 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
       const chainPath = sampleChainPath(progress, mobileView)
       let anchorOffset = 0
       if (camera) {
-        // Solve clipY / clipW = .72 for the terminal's local height. This
-        // compensates perspective as the strand winds between front and back.
+        // The free end descends across the frame with scroll. At the lower
+        // curtain it occupies only the bottom third, including camera motion.
         group.updateWorldMatrix(true, false)
         projection.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse).multiply(group.matrixWorld)
         chainPath.getPointAt(0, terminal).multiplyScalar(form)
-        const m = projection.elements, x = terminal.x, z = terminal.z, screenY = .72
+        const screenY = .72 - 1.06 * ease((progress - .40) / .215)
+        const m = projection.elements, x = terminal.x, z = terminal.z
         const denominator = m[5] - screenY * m[7]
         if (Math.abs(denominator) > .00001) {
           const y = (screenY * (m[3]*x + m[11]*z + m[15]) - (m[1]*x + m[9]*z + m[13])) / denominator
@@ -384,14 +267,15 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
         const bend = y * .48 + travel * 1.1
         const scale = edge * form
         dummy.position.set(Math.sin(bend) * .29 * form, y * form, Math.cos(bend * .8) * .18)
-        // Consecutive bodies turn together along the column rather than
-        // jittering independently around one straight, front-facing axis.
+        // The authored twist follows height, independently of the parent's
+        // scroll rotation. Each adjacent body turns about 15 degrees, so the
+        // neural arches form a continuous spiral instead of a straight seam.
         dummy.rotation.set(Math.sin(bend * .8) * .07,
-          y * .045 + Math.sin(bend * .72) * .075,
+          y * .24 + Math.sin(bend * .72) * .035,
           -Math.cos(bend) * .13)
         // Fewer, taller bodies retain narrow joints instead of widely spaced rings.
         dummy.scale.set((.97 + Math.sin(i * 1.37) * .045) * scale,
-          spacing / .98 * scale, (.96 + Math.cos(i * .87) * .065) * scale)
+          spacing / .76 * scale, (.96 + Math.cos(i * .87) * .065) * scale)
         dummy.updateMatrix()
         bones.setMatrixAt(i, dummy.matrix)
         dummy.position.y -= spacing * .47 * form

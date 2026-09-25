@@ -2,7 +2,7 @@ import * as THREE from 'three'
 import { sampleJourney } from './Journey'
 import { createForestParticles, sampleForestAssembly } from './ForestAssembly'
 import { sampleLayers } from './SceneLayers'
-import { createForestGeometry, FOREST_FLOOR_Y } from './ForestGeometry'
+import { createForestGeometry, FOREST_FLOOR_Y, FOREST_GROVE_OFFSETS } from './ForestGeometry'
 import { createLightFilmUniforms, lightChoreographyGLSL, sampleLightChoreography } from './SceneLighting'
 import type { LightFilmUniforms } from './SceneLighting'
 
@@ -109,14 +109,15 @@ const microFragment = /* glsl */ `
     float r=dot(p,p);
     if(r>1.)discard;
     float edge=1.-smoothstep(.64,1.,r);
-    float coverage=groveCoverage()*edge;
-    if(coverage<.003||coverage<hash(gl_FragCoord.xy))discard;
+
+    if(edge<.12||groveCoverage()<hash(vSeed.xy))discard;
     vec3 n=vec3(p,sqrt(max(0.,1.-r)));
     float light=max(0.,dot(n,normalize(vec3(-.4,.65,.65))));
     vec3 olive=mix(vec3(.014,.028,.003),vec3(.17,.22,.026),vSeed.x);
     vec3 green=mix(vec3(.006,.026,.009),vec3(.036,.13,.046),vSeed.x);
     vec3 color=mix(olive,green,smoothstep(.27,.75,vSeed.z))*(.3+light*.65);
-    color+=vec3(.24,.31,.10)*pow(light,16.)*(.12+vSeed.y*.3);
+    color*=.52+vSeed.y*.65;
+    color+=vec3(.44,.51,.30)*pow(light,24.)*(.10+vSeed.y*.45);
     color+=aetherLightCloud(vWorld,vNormal,uTime,uLightDepth)*uLightStrength*(.13+light*.08);
     color+=vec3(.14,.35,.23)*pointerLight()*(.3+light*.4);
     gl_FragColor=vec4(finishForest(color),1.);
@@ -222,7 +223,7 @@ function createBoundaryGeometry(software:boolean,mobile:boolean) {
   }
   // Dense, uneven soil/canopy grains fill the roots between fern shoots.
   // One shared point buffer and draw call cover the bank on both profiles.
-  const bank=software?2800:mobile?7000:18000
+  const bank=software?5000:mobile?18000:56000
   for(let i=0;i<bank;i++) {
     const angle=random()*Math.PI*2,radius=Math.sqrt(random())*13.8
     const x=Math.cos(angle)*radius,z=Math.sin(angle)*radius
@@ -291,7 +292,7 @@ export function createSceneForest(scene: THREE.Scene, software: boolean, mobile:
     // Fixed heights span the two clearings. Their common parent turns the
     // foreground on drag; the separate world-space video remains in place.
     // Translate soil, branches and foliage together, independently of the wrapper.
-    grove.position.y=sampleJourney(index?1:0).height+(index?4.2:-1.2)
+    grove.position.y=sampleJourney(index?1:0).height+FOREST_GROVE_OFFSETS[index]
     grove.rotation.y=index?.83:0
     grove.rotation.z=index?Math.PI:0
     const micro=new THREE.Points(microGeometry,microMaterial)

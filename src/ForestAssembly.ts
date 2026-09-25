@@ -4,7 +4,7 @@ import type { createForestGeometry } from './ForestGeometry'
 
 /** Absolute scroll poses, shared by both directions of travel. */
 export function sampleForestAssembly(progress: number, lower: boolean) {
-  return lower ? 1 - smooth(.90, .995, progress) : smooth(.008, .135, progress)
+  return lower ? 1 - smooth(.975, 1.025, progress) : smooth(.008, .073, progress)
 }
 
 export function createForestParticles(assets: ReturnType<typeof createForestGeometry>, count: number) {

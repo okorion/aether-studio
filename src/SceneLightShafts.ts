@@ -1,10 +1,17 @@
 import * as THREE from 'three'
-import { smooth, windowWeight } from './Journey'
+import { smooth, windowWeight, sampleJourney } from './Journey'
 import { sampleLayers } from './SceneLayers'
+import { FOREST_FLOOR_Y, FOREST_GROVE_OFFSETS } from './ForestGeometry'
 import { lightChoreographyGLSL, type LightFilmUniforms } from './SceneLighting'
 
 // Close to the upper grove's floor and the inverted lower grove's ceiling.
-export const FOREST_FILM_HEIGHTS = [-6.5, -52.8] as const
+export const FOREST_FILM_SIZE = { width: 22, height: 12.375, gap: .45 } as const
+export const FOREST_FILM_HEIGHTS = [
+  sampleJourney(0).height + FOREST_GROVE_OFFSETS[0] + FOREST_FLOOR_Y
+    + FOREST_FILM_SIZE.gap + FOREST_FILM_SIZE.height * .5,
+  sampleJourney(1).height + FOREST_GROVE_OFFSETS[1] - FOREST_FLOOR_Y
+    - FOREST_FILM_SIZE.gap - FOREST_FILM_SIZE.height * .5,
+] as const
 
 const boundaryGLSL = /* glsl */ `
   uniform vec4 uWeights;
@@ -108,9 +115,9 @@ export function createSceneLightShafts(
   const rotation = new THREE.Quaternion()
   // A bounded 16:9 screen by the forest boundary, not a full-view backdrop.
   // Its dimensions account for this scene's shorter camera-to-film distance.
-  const scale = new THREE.Vector3(22, 12.375, 1)
+  const scale = new THREE.Vector3(FOREST_FILM_SIZE.width, FOREST_FILM_SIZE.height, 1)
   for (let i = 0; i < 2; i++) {
-    rotation.setFromAxisAngle(new THREE.Vector3(0, 0, 1), i ? Math.PI : 0)
+    rotation.identity()
     transform.compose(new THREE.Vector3(0, FOREST_FILM_HEIGHTS[i], -14), rotation, scale)
     backdrop.setMatrixAt(i, transform)
   }

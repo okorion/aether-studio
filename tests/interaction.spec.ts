@@ -235,7 +235,9 @@ test('@interaction production scene accepts background drag and excludes navigat
   expect(held.equals(before)).toBe(false)
   await test.info().attach('camera-before', { body: before, contentType: 'image/png' })
   await test.info().attach('camera-held', { body: held, contentType: 'image/png' })
-  await page.mouse.move(950, 440, { steps: 8 })
+  // Continue in the same direction so release momentum cannot cancel the
+  // selected orbit before the pause/rebuild preservation assertions below.
+  await page.mouse.move(850, 440, { steps: 8 })
   await page.mouse.up()
   await expect(canvas).toHaveAttribute('data-camera-mode', 'idle')
   await expect(page.locator('html')).not.toHaveClass(/scene-dragging/)
@@ -295,7 +297,7 @@ test('@interaction production scene accepts background drag and excludes navigat
 test('@interaction device and late scales reject pointer camera input until the lower ring', async ({ page }) => {
   // Several sequential scenes and input types are checked in software WebGL.
   // Linux CI reached its previous 90s total budget while still making progress.
-  test.setTimeout(process.env.CI ? 150_000 : 60_000)
+  test.setTimeout(150_000)
   await readyScene(page)
   const canvas = page.locator('.scene-canvas')
   const moveToProgress = async (progress: number) => {

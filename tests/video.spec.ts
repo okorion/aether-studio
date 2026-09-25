@@ -121,7 +121,7 @@ test('@interaction production monitor videos load on entry and retain playback a
   const mediaRequests: string[] = []
   page.on('pageerror', (error) => pageErrors.push(error.message))
   page.on('request', (request) => {
-    if (/\/media\/(chrome-current|aurora-bloom)\.(mp4|webm|jpg)(?:\?|$)/.test(request.url())) mediaRequests.push(request.url())
+    if (/\/media\/(forest-memory|aurora-bloom)\.(mp4|webm|jpg)(?:\?|$)/.test(request.url())) mediaRequests.push(request.url())
   })
   await installVideoProbe(page)
   await page.goto('/')
@@ -131,7 +131,8 @@ test('@interaction production monitor videos load on entry and retain playback a
   expect(initial.length).toBeGreaterThanOrEqual(2)
   expect(initial.every((video) => video.src === null && video.poster === null && video.loads === 0 && video.playTimes.length === 0)).toBe(true)
   expect(initial.every(video => video.supportQueries.length === 0)).toBe(true)
-  expect(mediaRequests).toEqual([])
+  expect(mediaRequests.every(url => new URL(url).pathname === '/media/forest-memory.mp4')).toBe(true)
+  mediaRequests.length = 0
 
   const enterMonitors = async () => {
     await scrollToProgress(page, .4)
@@ -152,8 +153,9 @@ test('@interaction production monitor videos load on entry and retain playback a
     return HTMLMediaElement.prototype.canPlayType.call(record.video, 'video/webm; codecs="vp8"') ? 'webm' : 'mp4'
   })
   expect(new Set(mediaRequests.map(url => new URL(url).pathname)))
-    .toEqual(new Set([`/media/chrome-current.${extension}`, `/media/aurora-bloom.${extension}`]))
-  expect((await attachedVideos(page)).every(video => video.poster === null && video.supportQueries.length === 1)).toBe(true)
+    .toEqual(new Set(['/media/forest-memory.mp4', `/media/aurora-bloom.${extension}`]))
+  expect((await attachedVideos(page)).map(video => video.supportQueries.length)).toEqual([0, 1])
+  expect((await attachedVideos(page)).every(video => video.poster === null)).toBe(true)
   const recordCount = (await snapshots(page)).length
   await page.getByRole('button', { name: 'Pause motion' }).click()
   const pausedMotion = await stoppedVideos(page)
@@ -355,12 +357,12 @@ test.describe('@interaction isolated monitor video failure lifecycle', () => {
       })
       const playing = await playingVideos(page)
       const extension = support ? 'webm' : 'mp4'
-      const paths = [`/media/chrome-current.${extension}`, `/media/aurora-bloom.${extension}`]
+      const paths = ['/media/forest-memory.mp4', `/media/aurora-bloom.${extension}`]
       expect(playing.map(video => video.src)).toEqual(paths)
       expect(new Set(requests)).toEqual(new Set(paths))
       expect(playing.every(video => video.poster === null && video.loads === 1)).toBe(true)
       expect(playing.map(video => video.supportQueries))
-        .toEqual([['video/webm; codecs="vp8"'], ['video/webm; codecs="vp8"']])
+        .toEqual([[], ['video/webm; codecs="vp8"']])
       expect(await page.evaluate(() => window.videoHarness.status().ready)).toEqual([true, true])
       await page.evaluate(() => window.videoHarness.update(false, false))
       const paused = await stoppedVideos(page)
@@ -387,7 +389,7 @@ test.describe('@interaction isolated monitor video failure lifecycle', () => {
     expect(requests).toEqual([])
     await page.evaluate(() => window.videoHarness.update(true, false))
     await verifyTerminalFallback(page, 'error')
-    expect(requests.sort()).toEqual(['/media/aurora-bloom.webm', '/media/chrome-current.webm'])
+    expect(requests.sort()).toEqual(['/media/aurora-bloom.webm', '/media/forest-memory.mp4'])
     expect(errors).toEqual([])
   })
 

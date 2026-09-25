@@ -215,6 +215,10 @@ export function createSceneJellyfish(
       }
     }
   }
+  // Prime both forests before shader preparation uploads hidden geometry.
+  // Missing normals would otherwise warm a flat-shaded variant and compile
+  // a different program on the lower forest's first visible frame.
+  update(0, 1)
   update(0, 0)
   return {
     group, curtain, update,

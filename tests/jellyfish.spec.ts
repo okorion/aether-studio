@@ -76,6 +76,13 @@ test('@interaction 벨 크리처는 정지 시간, 재진입, 품질별 개수�
     const scene = new THREE.Scene()
     const jellyfish = createSceneJellyfish(scene, software, mobile)
     expect(jellyfish.group.children).toHaveLength(count)
+    // Shader preparation traverses hidden forests before their first update.
+    jellyfish.group.traverse(child => {
+      if (!(child instanceof THREE.Mesh)) return
+      expect(child.geometry.attributes.normal.count).toBe(child.geometry.attributes.position.count)
+      expect(Array.from(child.geometry.attributes.normal.array).every(Number.isFinite)).toBe(true)
+      expect(Array.from(child.geometry.attributes.position.array).some(value => value !== 0)).toBe(true)
+    })
     const root = jellyfish.group.children[0]
     const read = () => JSON.stringify(root.toJSON())
     jellyfish.update(12, 0)

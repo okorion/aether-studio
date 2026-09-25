@@ -144,8 +144,8 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
   const exposure = { value: sampleSpineExposure(0) }
   const boneMaterial = new THREE.MeshPhysicalMaterial({
     color: 0xe2e4ec, vertexColors: true, metalness: software ? .48 : .96,
-    roughness: software ? .51 : .34, envMapIntensity: 1.18,
-    iridescence: software ? 0 : .48, iridescenceIOR: 1.36,
+    roughness: software ? .51 : .29, envMapIntensity: 1.18,
+    iridescence: software ? 0 : .40, iridescenceIOR: 1.36,
     iridescenceThicknessRange: [180, 460], clearcoat: software ? 0 : .12,
     clearcoatRoughness: .38, transparent: true,
   })
@@ -167,12 +167,12 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
             mix(mix(spineHash(i+vec3(0,0,1)),spineHash(i+vec3(1,0,1)),f.x),
             mix(spineHash(i+vec3(0,1,1)),spineHash(i+vec3(1,1,1)),f.x),f.y),f.z);
         }
-        float spineFolds(vec3 p) {
+        float spineFolds(vec3 p, float footprint) {
           float warp = spineNoise(p * 2.1);
           p += vec3(warp, spineNoise(p.zxy * 3.3), spineNoise(p.yzx * 2.7)) * .8;
-          return spineNoise(p * vec3(7., 29., 7.)) * .55
-            + spineNoise(p * vec3(17., 65., 17.)) * .30
-            + spineNoise(p * vec3(41., 135., 41.)) * .15;
+          float fineWeight = 1. - smoothstep(.4, 1.5, footprint * 65.);
+          return spineNoise(p * vec3(5., 19., 5.)) * .70
+            + mix(.5, spineNoise(p * vec3(13., 49., 13.)), fineWeight) * .30;
         }
       ` + shader.fragmentShader
       shader.fragmentShader = shader.fragmentShader.replace('#include <normal_fragment_maps>', `
@@ -182,50 +182,58 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
         vec3 spineRx = cross(spineDy, normal);
         vec3 spineRy = cross(normal, spineDx);
         float spineDet = dot(spineDx, spineRx);
-        float spineFootprint = max(length(dFdx(vSpineSurface)), length(dFdy(vSpineSurface))) * 160.0;
+        float spineFootprint = max(length(dFdx(vSpineSurface)), length(dFdy(vSpineSurface)));
         float spineGrain = spineNoise(vSpineSurface * 160.) * 2. - 1.;
-        float spineGrainWeight = 1.0 - smoothstep(1.5, 6.0, spineFootprint);
-        float spineFold = spineFolds(vSpineSurface);
-        float spineRelief = spineGrain * .00065 * spineGrainWeight
-          + spineFold * .009 + spineNoise(vSpineSurface * 4.7) * .003;
+        float spineGrainWeight = 1.0 - smoothstep(1., 3.2, spineFootprint * 160.);
+        float spineFold = spineFolds(vSpineSurface, spineFootprint);
+        // Coating thickness varies across broad patches. Folds and grain only
+        // change the reflection shape, never the coating's RGB phase.
+        float spineCoating = spineNoise(vSpineSurface * vec3(1.6, 2.8, 1.6));
+        float spineRelief = spineGrain * .00048 * spineGrainWeight
+          + spineFold * .011 + spineNoise(vSpineSurface * 4.7) * .002;
         vec3 spineGradient = dFdx(spineRelief) * spineRx + dFdy(spineRelief) * spineRy;
         normal = normalize(max(abs(spineDet), 0.0000001) * normal
           - sign(spineDet) * spineGradient);
         roughnessFactor = clamp(roughnessFactor
-          + (spineFold - .5) * .14
-          + spineGrain * spineGrainWeight * .09, .17, .43);
+          + (spineCoating - .5) * .10 + (spineFold - .5) * .14
+          + spineGrain * spineGrainWeight * .065, .17, .43);
+      `)
+      shader.fragmentShader = shader.fragmentShader.replace('#include <lights_physical_fragment>', `
+        #include <lights_physical_fragment>
+        #ifdef USE_IRIDESCENCE
+          material.iridescenceThickness = mix(iridescenceThicknessMinimum,
+            iridescenceThicknessMaximum, spineCoating);
+        #endif
       `)
       // Broad reflected colour follows the view and surface orientation. Fine
       // grain only roughens those reflections; it never drives rainbow bands.
       shader.fragmentShader = shader.fragmentShader.replace('#include <opaque_fragment>', `
         vec3 spineReflection = inverseTransformDirection(
           reflect(-normalize(vViewPosition), normal), viewMatrix);
-        float spinePink = pow(max(0., dot(spineReflection, normalize(vec3(-.62,.38,.69)))), 3.2);
-        float spineCyan = pow(max(0., dot(spineReflection, normalize(vec3(.73,-.13,.67)))), 4.0);
-        float spineViolet = pow(max(0., dot(spineReflection, normalize(vec3(.12,.80,-.56)))), 3.0);
-        float spineWindow = max(spinePink, max(spineCyan, spineViolet * .65));
-        float spineDarkFace = .10 + .90 * smoothstep(.025, .52, spineWindow);
-        // Folded silver carries thin-film color within its highlights. It is not
-        // divided into uniformly painted magenta and cyan lobes.
-        float spineCoating = spineNoise(vSpineSurface * 2.8) * 4.
-          + spineFold * 5. + dot(spineReflection, vec3(1.3, .7, -.9));
-        vec3 spineOxide = .5 + .5 * cos(vec3(.1, 2.2, 4.3) + spineCoating * 2.);
-        vec3 spineReflectionColor = vec3(.80,.46,.69) * spinePink
-          + vec3(.37,.73,.86) * spineCyan
-          + vec3(.44,.36,.67) * spineViolet * .6;
-        spineReflectionColor = mix(spineReflectionColor, spineOxide * spineWindow, .38);
-        float spineScrape = smoothstep(.45, .64, spineFold);
+        float spinePink = pow(max(0., dot(spineReflection, normalize(vec3(-.62,.38,.69)))), 2.8);
+        float spineCyan = pow(max(0., dot(spineReflection, normalize(vec3(.73,-.13,.67)))), 3.4);
+        float spineViolet = pow(max(0., dot(spineReflection, normalize(vec3(.12,.80,-.56)))), 2.5);
+        vec3 spineReflectionColor = vec3(.90,.31,.62) * spinePink
+          + vec3(.26,.68,.88) * spineCyan
+          + vec3(.43,.26,.70) * spineViolet * .75;
         float spineFresnel = pow(1. - max(dot(normal, normalize(vViewPosition)), 0.), 2.);
-        vec3 spineHighlight = outgoingLight / (vec3(1.) + outgoingLight * .48);
-        vec3 spineHighlightTint = mix(vec3(.60,.71,.82), spineOxide, .58);
-        outgoingLight = spineHighlight * spineHighlightTint * spineDarkFace * (.60 + spineScrape * .50)
-          + spineReflectionColor * (.22 + spineFresnel * .55)
-            * (.35 + spineScrape * 1.30 + spineGrain * spineGrainWeight * .26)
-          + vec3(.55,.63,.70) * pow(spineScrape, 5.) * spineWindow * .26;
+        // Compress strong studio radiance without changing its RGB ratios.
+        // Broad reflected color coats the midtones; only the brightest metal
+        // highlights approach silver. Grain never controls the coating hue.
+        float spineLightPeak = max(outgoingLight.r, max(outgoingLight.g, outgoingLight.b));
+        float spineWhiteHighlight = smoothstep(1.4, 4., spineLightPeak);
+        float spineColorPeak = max(spineReflectionColor.r, max(spineReflectionColor.g, spineReflectionColor.b));
+        vec3 spineCoatTint = mix(vec3(.58,.39,.76),
+          spineReflectionColor / max(.12, spineColorPeak), .78);
+        spineCoatTint = mix(spineCoatTint, vec3(.96,.98,1.), spineWhiteHighlight * .68);
+        vec3 spineRadiance = outgoingLight / (1. + spineLightPeak * .38);
+        outgoingLight = spineRadiance * spineCoatTint * (.52 + spineCoating * .16)
+          + spineReflectionColor * (.34 + spineFresnel * .35)
+            * (.84 + spineCoating * .16);
         #include <opaque_fragment>
       `)
     }
-    boneMaterial.customProgramCacheKey = () => 'aether-spine-folded-silver-v2'
+    boneMaterial.customProgramCacheKey = () => 'aether-spine-layered-silver-v4'
   }
   const discMaterial = new THREE.MeshPhysicalMaterial({
     color: 0x26364a, metalness: software ? .45 : .86, roughness: .44,

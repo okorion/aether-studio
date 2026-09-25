@@ -23,6 +23,8 @@ Playwright 설정은 [playwright.config.ts](../playwright.config.ts), CI 설정�
 
 ## 최근 확인 결과
 
+2026-09-25 재질·유체 변경의 검사 범위와 실제 GPU 관찰은 [재질·유체 표현과 검증](graphics-detail-fidelity.md)에 있다. 아래 PR #20 측정은 당시 상태를 보존한 기록이다.
+
 [PR #20 최종 CI](https://github.com/okorion/aether-studio/actions/runs/35721404162)는 2026-09-22의 `b8da2eb` 기준이다. 인터랙션 57개, PC·WebGL 미지원 9개, 모바일 8개가 재시도 없이 통과했고 lint·typecheck·build도 통과했다. 병합 커밋은 `03f5130`이다. 이후 변경의 상태는 [Actions](https://github.com/okorion/aether-studio/actions)에서 확인한다.
 
 같은 배포의 공개 사이트에서 PC 11개·모바일 5개 상태를 확인했다. 역스크롤과 마우스 이동을 포함하며 브라우저 오류는 없었다. 배포 장면 파일과 로컬 검증본의 SHA-256도 일치했다. [배포 검수 기록](https://github.com/okorion/aether-studio/pull/20#issuecomment-5775722227)

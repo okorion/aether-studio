@@ -292,11 +292,32 @@ export async function probeStatementPlate(mobile: boolean) {
     }
     const after = draw(.175)
     let ringPixels=0, ringChanged=0, plateChanged=0
+    let displacedInkPixels=0, maximumInkDistance=0
+    const white=(pixels:Uint8Array,x:number,y:number)=>{
+      if(x<0||y<0||x>=width||y>=height)return false
+      const i=(y*width+x)*4
+      return Math.min(pixels[i],pixels[i+1],pixels[i+2])>180
+    }
     for(let i=0;i<before.length;i+=4){
       const changed=Math.max(...[0,1,2].map(c=>Math.abs(before[i+c]-after[i+c])))>2
       if(before[i]>240&&before[i+1]<5&&before[i+2]<5){ringPixels++;if(changed)ringChanged++}
       else if(changed)plateChanged++
     }
+    // Measure moved white ink against the actual resting glyphs. This rejects
+    // a barely visible subpixel offset without prescribing a shader formula.
+    for(let y=0;y<height;y++)for(let x=0;x<width;x++){
+      if(!white(after,x,y)||white(before,x,y))continue
+      let nearest=20
+      for(let dy=-20;dy<=20;dy++)for(let dx=-20;dx<=20;dx++){
+        const distance=Math.hypot(dx,dy)
+        if(distance<nearest&&white(before,x+dx,y+dy))nearest=distance
+      }
+      maximumInkDistance=Math.max(maximumInkDistance,nearest)
+      if(nearest>3)displacedInkPixels++
+    }
+    for(let i=0;i<24;i++)flow.update(1/60)
+    const tail=draw(.175)
+    const tailChanged=before.filter((v,i)=>Math.abs(v-tail[i])>2).length
     const programsAfter = renderer.info.programs?.length
     flow.clear()
     const cleared=draw(.175)
@@ -308,7 +329,8 @@ export async function probeStatementPlate(mobile: boolean) {
       const moved=draw(p)
       forests.push(still.filter((v,i)=>v!==moved[i]).length)
     }
-    return {ringPixels,ringChanged,plateChanged,clearChanged,forests,programs,programsAfter}
+    return {ringPixels,ringChanged,plateChanged,displacedInkPixels,maximumInkDistance,
+      tailChanged,clearChanged,forests,programs,programsAfter}
   } finally {
     glow.dispose();layers.dispose();flow.dispose();geometry.dispose();material.dispose()
     renderer.dispose();renderer.forceContextLoss()

@@ -43,6 +43,7 @@ function scaleGeometry(software: boolean) {
 export function createSceneWorlds(
   scene: THREE.Scene, software: boolean, mobile = false,
   externalMedia?: ReturnType<typeof createSceneVideo>, lightFilm?: LightFilmUniforms,
+  scaleArtwork?: LightFilmUniforms,
 ) {
   const geometries: THREE.BufferGeometry[] = []
   const materials: THREE.Material[] = []
@@ -90,15 +91,15 @@ export function createSceneWorlds(
   const pointerFlow = { value: neutralFlow as THREE.Texture }
   const metal = mat(createScaleSurface(software,
     { pointerNdc, pointerStrength, pointerAspect, pointerFlow, surfaceTime, surfaceExtent,
-      pointerWaves, lightDepth }, lightFilm))
+      pointerWaves, lightDepth }, lightFilm, scaleArtwork))
   const silver = mat(new THREE.MeshStandardMaterial({
-    color: 0x929197, metalness: software ? .45 : .96, roughness: .24, envMapIntensity: 1.25, transparent: true,
+    color: 0x72777f, metalness: software ? .45 : .96, roughness: .28, envMapIntensity: .68, transparent: true,
   }))
   const dark = mat(new THREE.MeshStandardMaterial({
-    color: 0x19191d, metalness: software ? .35 : .86, roughness: .38, envMapIntensity: .95, transparent: true,
+    color: 0x19191d, metalness: software ? .35 : .86, roughness: .38, envMapIntensity: .60, transparent: true,
   }))
   const machineMetal = mat(new THREE.MeshStandardMaterial({
-    color: 0x56535a, metalness: software ? .4 : .94, roughness: .32, envMapIntensity: 1.05, transparent: true,
+    color: 0x454b55, metalness: software ? .4 : .94, roughness: .33, envMapIntensity: .60, transparent: true,
   }))
   const cableMaterial = mat(new THREE.MeshStandardMaterial({
     color: 0x242326, metalness: software ? .3 : .76, roughness: .43, envMapIntensity: .9, transparent: true,
@@ -141,7 +142,9 @@ export function createSceneWorlds(
         float coneRadius = ${REACTOR.apertureRadius} + max(0., belowAperture) * .20;
         float aperturePool = (1. - smoothstep(coneRadius * .6, coneRadius, length(vMachinePoint.xz)))
           * step(0., belowAperture);
-        totalEmissiveRadiance += projectedLight * aperturePool * .28;
+        // A faint local bounce only. Metal must retain dark intervals rather
+        // than becoming an emissive light source across the whole socket.
+        totalEmissiveRadiance += projectedLight * aperturePool * .018;
       `)
       shader.fragmentShader = shader.fragmentShader.replace('#include <color_fragment>', `
         #include <color_fragment>
@@ -168,7 +171,7 @@ export function createSceneWorlds(
         normal = normalize(max(abs(machineDet), .00000001) * normal - machineGradient);
       `)
     }
-    surface.customProgramCacheKey = () => `aether-machined-steel-${software ? 'lite' : 'detailed'}-v1`
+    surface.customProgramCacheKey = () => `aether-machined-steel-${software ? 'lite' : 'detailed'}-v2`
   }
   const glow = mat(new THREE.MeshBasicMaterial({
     color: 0x537b8a, transparent: true, opacity: .3,
@@ -569,6 +572,8 @@ export function createSceneWorlds(
     }
   })
   for (const material of chamberMaterials) {
+    const fixtureMetal = material === silver || material === dark
+      || material === machineMetal || material === capMaterial
     material.emissiveIntensity = 0
     const previous = material.onBeforeCompile
     const previousKey = material.customProgramCacheKey()
@@ -612,7 +617,12 @@ export function createSceneWorlds(
         direct = direct.replace(actual, `${actual} directLight.color = vec3(0.);`)
       }
       direct = direct.replace('getSpotLightInfo( spotLight, geometryPosition, directLight );',
-        'getSpotLightInfo( spotLight, geometryPosition, directLight ); directLight.color *= apertureRadiance();')
+        // The broad room projection has a high radiance gain to reach stone.
+        // Applying it unchanged to nearly metallic horizontal collars clips
+        // them to white and blooms across the rods. Keep the room light while
+        // calibrating its reflected contribution only on the reactor hardware.
+        `getSpotLightInfo( spotLight, geometryPosition, directLight );
+          directLight.color *= apertureRadiance() * ${fixtureMetal ? '.085' : '1.'};`)
       shader.fragmentShader = shader.fragmentShader.replace('#include <lights_fragment_begin>', direct)
       shader.fragmentShader = shader.fragmentShader.replace('#include <opaque_fragment>',
         `outgoingLight = reflectedLight.directDiffuse + reflectedLight.directSpecular
@@ -621,7 +631,7 @@ export function createSceneWorlds(
           + totalEmissiveRadiance;
         #include <opaque_fragment>`)
     }
-    material.customProgramCacheKey = () => `${previousKey}-aperture-${lightFilm ? 'film' : 'static'}-v4`
+    material.customProgramCacheKey = () => `${previousKey}-aperture-${lightFilm ? 'film' : 'static'}-${fixtureMetal ? 'steel' : 'room'}-v5`
   }
   bindGroupCurtain(chamber, deviceCurtain)
   bindGroupCurtain(space, deviceCurtain)

@@ -22,13 +22,16 @@ function createScaleFinish() {
   }
   for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
     const broad = noise(x / 32, y / 32, 8)
+    const middle = noise(x / 16, y / 16, 16)
     const pits = noise(x / 4, y / 4, 64)
     const grain = hash(x, y)
     const scratch = Math.pow(noise(x / 2, y / 32, 128), 5)
     const offset = (y * size + x) * 4
-    pixels[offset] = Math.round((broad * .55 + pits * .30 + grain * .15) * 255)
-    pixels[offset + 1] = Math.round((pits * .65 + grain * .35) * 255)
-    pixels[offset + 2] = Math.round(Math.max(0, pits * .63 + grain * .27 - scratch * .2) * 255)
+    // Color changes on a larger scale than pits or machining marks. Packing
+    // independent bands prevents every scratch from becoming a colored speck.
+    pixels[offset] = Math.round((broad * .75 + middle * .25) * 255)
+    pixels[offset + 1] = Math.round((broad * .50 + middle * .30 + pits * .20) * 255)
+    pixels[offset + 2] = Math.round(Math.max(0, pits * .68 + grain * .16 - scratch * .12) * 255)
     pixels[offset + 3] = 255
   }
   const texture = new THREE.DataTexture(pixels, size, size)
@@ -52,27 +55,34 @@ export type ScaleSurfaceUniforms = {
   lightDepth: { value: number }
 }
 
+export type ScaleArtworkUniforms = {
+  map: { value: THREE.Texture }
+  ready: { value: number }
+}
+
 /** One material for the existing instanced hexagons; the caller owns disposal. */
 export function createScaleSurface(
   software: boolean,
   uniforms: ScaleSurfaceUniforms,
   lightFilm?: LightFilmUniforms,
+  artwork?: ScaleArtworkUniforms,
 ) {
   const filmEnabled = !software && Boolean(lightFilm)
   const finish = createScaleFinish()
   const material = new THREE.MeshPhysicalMaterial({
     color: 0xb4b5bb,
-    metalness: software ? .45 : .86,
-    roughness: software ? .46 : .27,
-    envMapIntensity: 1.10,
-    clearcoat: software ? 0 : .12,
+    metalness: software ? .45 : .92,
+    roughness: software ? .46 : .31,
+    envMapIntensity: .92,
+    clearcoat: software ? 0 : .08,
     clearcoatRoughness: .31,
-    iridescence: software ? 0 : .62,
-    iridescenceIOR: 1.36,
-    iridescenceThicknessRange: [145, 475],
+    // Panel color comes from continuous patina and reflected light. A strong
+    // thin-film layer turned neighboring tiles into unrelated rainbow patches.
+    iridescence: 0,
     transparent: true,
   })
-  if (filmEnabled) material.defines = { AETHER_LIGHT_FILM: 1 }
+  material.defines = { ...(filmEnabled ? { AETHER_LIGHT_FILM: 1 } : {}),
+    ...(artwork ? { AETHER_SCALE_ARTWORK: 1 } : {}) }
   material.addEventListener('dispose', () => finish.dispose())
 
   material.onBeforeCompile = shader => {
@@ -84,6 +94,10 @@ export function createScaleSurface(
     shader.uniforms.uSurfaceExtent = uniforms.surfaceExtent
     shader.uniforms.uPointerWaves = uniforms.pointerWaves
     shader.uniforms.uScaleFinish = { value: finish }
+    if (artwork) {
+      shader.uniforms.uScaleArtwork = artwork.map
+      shader.uniforms.uScaleArtworkReady = artwork.ready
+    }
     if (lightFilm && filmEnabled) {
       shader.uniforms.uLightFilm = lightFilm.map
       shader.uniforms.uLightFilmReady = lightFilm.ready
@@ -104,6 +118,7 @@ export function createScaleSurface(
       varying vec3 vTileFinish;
       varying vec2 vSheetPoint;
       varying vec2 vScaleMark;
+      varying float vTileFace;
       ${filmEnabled ? 'varying vec3 vTileWorld;' : ''}
     ` + shader.vertexShader
     shader.vertexShader = shader.vertexShader.replace('#include <beginnormal_vertex>', /* glsl */ `
@@ -162,7 +177,8 @@ export function createScaleSurface(
       float tileSin = sin(tileAngle);
       objectNormal = aArmourNormal * tileCos + cross(tileAxis, aArmourNormal) * tileSin
         + tileAxis * dot(tileAxis, aArmourNormal) * (1.0 - tileCos);
-      objectNormal = normalize(objectNormal + vec3(tileDelta * vSurfaceHeat * .20, 0.0));
+      objectNormal = normalize(objectNormal);
+      vTileFace = abs(aArmourNormal.z);
       // The finish belongs to each tile; it does not drift with the light/time.
       // Broad diagonal domains avoid the previous concentric pattern.
       vTileFinish = vec3(
@@ -194,7 +210,12 @@ export function createScaleSurface(
       varying vec3 vTileFinish;
       varying vec2 vSheetPoint;
       varying vec2 vScaleMark;
+      varying float vTileFace;
       uniform sampler2D uScaleFinish;
+      #ifdef AETHER_SCALE_ARTWORK
+        uniform sampler2D uScaleArtwork;
+        uniform float uScaleArtworkReady;
+      #endif
       ${filmEnabled ? /* glsl */ `
         varying vec3 vTileWorld;
         uniform float uScaleDepth;
@@ -211,55 +232,82 @@ export function createScaleSurface(
         smoothstep(.54, .92, vTileFinish.z) * .24);
       // A weathered continuous finish crosses tile boundaries; the small grain
       // stays attached to the metal instead of crawling with the animation.
-      vec3 scaleWear = texture2D(uScaleFinish, vSheetPoint * .31).rgb;
-      diffuseColor.rgb *= scaleFinishTint * mix(.48, 1.38, scaleWear.r);
+      vec3 scaleWear = texture2D(uScaleFinish, vSheetPoint * .073 + vec2(.17,.31)).rgb;
+      diffuseColor.rgb *= scaleFinishTint * mix(.58, 1.16, smoothstep(.22,.78,scaleWear.r));
       diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(1.19, .86, .68),
         smoothstep(.55, .82, scaleWear.r) * .45);
-      diffuseColor.rgb *= 1. + vSurfaceHeat * .12;
-      diffuseColor.rgb = mix(diffuseColor.rgb, vec3(.66,.73,.71), vScaleMark.x*.92);
+      #ifdef AETHER_SCALE_ARTWORK
+        float scaleArtworkLuma = .5;
+        if (uScaleArtworkReady > .5) {
+          // One continuous sheet in the undeformed panel coordinates. Every
+          // tile carries its own piece through the hinge transform. SRGB image
+          // textures are decoded by their WebGL SRGB internal format already.
+          vec2 scaleArtworkUv = clamp(vSheetPoint / vec2(11., 5.4) + .5, .001, .999);
+          vec3 scaleArtworkColor = texture2D(uScaleArtwork, scaleArtworkUv).rgb;
+          scaleArtworkLuma = dot(scaleArtworkColor, vec3(.2126,.7152,.0722));
+          diffuseColor.rgb = mix(diffuseColor.rgb,
+            scaleArtworkColor * (.90 + scaleWear.r * .20), .82);
+        }
+      #endif
+      // Preserve the raised metal mark above the authored patina.
+      diffuseColor.rgb = mix(diffuseColor.rgb, vec3(.59,.65,.63), vScaleMark.x*.84);
       diffuseColor.rgb *= 1. - vScaleMark.y*.18;
     `)
     shader.fragmentShader = shader.fragmentShader.replace('#include <roughnessmap_fragment>', /* glsl */ `
       #include <roughnessmap_fragment>
       // Adjacent satin and polished tiles catch different widths of reflection.
-      float scaleSatin = smoothstep(.24, .86, vTileFinish.y);
-      roughnessFactor = clamp(roughnessFactor + scaleSatin * .12 + (scaleWear.g - .5) * .23
-        - (1. - scaleSatin) * .065 - vSurfaceHeat * .055, .17, .52);
-      roughnessFactor = mix(roughnessFactor,.19,vScaleMark.x*.7);
+      float scaleSatin = smoothstep(.28, .76, scaleWear.g);
+      roughnessFactor = clamp(roughnessFactor + (scaleSatin - .5) * .18
+        + (vTileFinish.y - .5) * .035, .20, .48);
+      #ifdef AETHER_SCALE_ARTWORK
+        if (uScaleArtworkReady > .5) {
+          // This is an authored polish cue, not a measured material map. The
+          // procedural machining relief stays independent of painted color.
+          roughnessFactor += (.40 - scaleArtworkLuma) * .085;
+        }
+      #endif
+      roughnessFactor = mix(roughnessFactor,.22,vScaleMark.x*.65);
     `)
     if (!software) {
       shader.fragmentShader = shader.fragmentShader.replace('#include <normal_fragment_maps>', /* glsl */ `
         #include <normal_fragment_maps>
         float scaleFootprint = max(length(dFdx(vTilePoint)), length(dFdy(vTilePoint)));
-        float scaleDetailFade = 1. - smoothstep(.025, .09, scaleFootprint);
+        float scaleDetailFade = 1. - smoothstep(.008, .035, scaleFootprint);
         float scaleHammer = sin(vTilePoint.x * 63. + sin(vTilePoint.y * 43.) * 1.4)
           * sin(vTilePoint.y * 67. + cos(vTilePoint.x * 29.));
         float scaleBrush = sin(vTilePoint.x * 153. + vTilePoint.y * 13.);
-        float scaleRelief = (scaleWear.b * .006 + scaleHammer * .00035 + scaleBrush * .00012) * scaleDetailFade;
+        float scaleMicroWear = texture2D(uScaleFinish,
+          vTilePoint.xy * .7 + vec2(vTileFinish.y, vTileFinish.y * .37)).b;
+        float scaleRelief = (scaleMicroWear * .0011 + scaleHammer * .00016
+          + scaleBrush * .00008) * scaleDetailFade;
         vec3 scaleDx = dFdx(-vViewPosition), scaleDy = dFdy(-vViewPosition);
         vec3 scaleRx = cross(scaleDy, normal), scaleRy = cross(normal, scaleDx);
         float scaleDet = dot(scaleDx, scaleRx);
         vec3 scaleGradient = dFdx(scaleRelief) * scaleRx + dFdy(scaleRelief) * scaleRy;
         normal = normalize(max(abs(scaleDet), .0000001) * normal
           - sign(scaleDet) * scaleGradient);
-        roughnessFactor = clamp(roughnessFactor + scaleHammer * scaleDetailFade * .022, .19, .60);
-      `)
-      shader.fragmentShader = shader.fragmentShader.replace('#include <lights_physical_fragment>', /* glsl */ `
-        #include <lights_physical_fragment>
-        #ifdef USE_IRIDESCENCE
-          material.iridescenceThickness = mix(iridescenceThicknessMinimum,
-            iridescenceThicknessMaximum, clamp(vTileFinish.z * .76 + vTileFinish.y * .24, 0., 1.));
-          material.iridescence *= .45 + vTileFinish.y * .55;
-        #endif
+        roughnessFactor = clamp(roughnessFactor + scaleHammer * scaleDetailFade * .014, .19, .52);
       `)
     }
+    shader.fragmentShader = shader.fragmentShader.replace('#include <aomap_fragment>', /* glsl */ `
+      #include <aomap_fragment>
+      // Local edge occlusion only: this is not a cast shadow from neighboring
+      // tiles. Direct bevel highlights remain intact as each rigid tile turns.
+      float scaleEdgeDistance = max(abs(vTilePoint.x),
+        dot(abs(vTilePoint.xy), vec2(.5, .8660254)));
+      float scaleCrease = smoothstep(.375, .426, scaleEdgeDistance);
+      float scaleOcclusion = mix(.62, 1., smoothstep(.08, .94, vTileFace))
+        * (1. - scaleCrease * .12);
+      reflectedLight.indirectDiffuse *= scaleOcclusion;
+      reflectedLight.indirectSpecular *= mix(1., scaleOcclusion, .70);
+    `)
     shader.fragmentShader = shader.fragmentShader.replace('#include <emissivemap_fragment>', /* glsl */ `
       #include <emissivemap_fragment>
       // Pointer response changes the metal's angle and reflected light. Adding
       // a colored emissive wash here would flatten its facets into pastel tiles.
       ${filmEnabled ? /* glsl */ `
         vec3 scaleFilm = aetherFilmRadiance(vTileWorld);
-        totalEmissiveRadiance += scaleFilm * .10 * (1. - clamp(uScaleDepth, 0., 1.) * .25);
+        totalEmissiveRadiance += scaleFilm * .045 * (1. - clamp(uScaleDepth, 0., 1.) * .25);
       ` : ''}
     `)
     shader.fragmentShader = shader.fragmentShader.replace('#include <opaque_fragment>', /* glsl */ `
@@ -271,6 +319,6 @@ export function createScaleSurface(
     `)
   }
   material.customProgramCacheKey = () =>
-    `aether-scale-facet-mark-${software ? 'lite' : 'detailed'}-${filmEnabled ? 'film' : 'static'}-v6`
+    `aether-scale-continuous-metal-${software ? 'lite' : 'detailed'}-${filmEnabled ? 'film' : 'static'}-${artwork ? 'artwork' : 'procedural'}-v8`
   return material
 }

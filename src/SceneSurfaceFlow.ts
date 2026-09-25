@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 
-export type SurfaceFlowInput = { flowTexture?: THREE.Texture; aspect: number }
+export type SurfaceFlowInput = { flowTexture?: THREE.Texture; hazeTexture?: THREE.Texture; aspect: number }
 
 /** Shared RG velocity / B density contract. Neutral bytes have no UV offset. */
 export const surfaceFlowGLSL = /* glsl */ `
@@ -48,10 +48,10 @@ export function createSurfaceFlowUniforms() {
   }
   return {
     uniforms,
-    update(input?: SurfaceFlowInput) {
-      uniforms.uSurfaceFlow.value = input?.flowTexture ?? neutral
+    update(input?: SurfaceFlowInput, texture = input?.flowTexture) {
+      uniforms.uSurfaceFlow.value = texture ?? neutral
       uniforms.uFlowAspect.value = input?.aspect ?? 1
-      const size = input?.flowTexture?.image as { width?: number; height?: number } | undefined
+      const size = texture?.image as { width?: number; height?: number } | undefined
       uniforms.uFlowTexel.value.set(1 / (size?.width || 64), 1 / (size?.height || 40))
     },
     dispose() { neutral.dispose() },

@@ -213,3 +213,28 @@ test('@interaction pointer flow keeps one bounded texture and releases it once',
   flow.dispose()
   expect(disposals).toBe(1)
 })
+
+test('@interaction gas wake survives release and frame stalls, transports its tail and fades without a timed reset', () => {
+  const flow = createPointerFlow('haze')
+  const mass = () => {
+    const bytes = pixels(flow), width = flow.texture.image.width
+    let total = 0, x = 0
+    for (let i=0; i<bytes.length; i+=4) { total+=bytes[i+2]; x+=(i/4%width)*bytes[i+2] }
+    return {total,x:x/Math.max(1,total)}
+  }
+  try {
+    stroke(flow,true,1,1.6)
+    const start = mass()
+    flow.release()
+    flow.update(.36)
+    expect(mass().total).toBeGreaterThan(start.total*.5)
+    for(let i=0;i<132;i++)flow.update(frame)
+    const wake = mass()
+    expect(wake.total).toBeGreaterThan(0)
+    expect(wake.x).toBeGreaterThan(start.x+.3)
+    flow.update(frame)
+    expect(mass().total).toBeGreaterThan(wake.total*.7)
+    for(let i=0;i<720;i++)flow.update(frame)
+    expectNeutral(flow)
+  } finally {flow.dispose()}
+})

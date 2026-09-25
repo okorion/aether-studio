@@ -63,7 +63,7 @@ export function createSceneGlow(renderer: THREE.WebGLRenderer, scene: THREE.Scen
       uniforms.uResolution.value.set(width * dpr, height * dpr)
     },
     update(time: number, progress: number, input?: SurfaceFlowInput) {
-      field.update(input)
+      field.update(input, input?.hazeTexture ?? input?.flowTexture)
       const weights = sampleSurfaceFlow(progress)
       uniforms.uTime.value = time
       uniforms.uMist.value = weights.mist

@@ -313,6 +313,15 @@ export function createSceneWorlds(
   const chamberLight = createChamberLight(space, scene, lightFilm)
   // The scale room owns its ceiling and light, on the incoming side of
   // the same screen edge that clips every upper-room object.
+  const ceilingCoverageGLSL = /* glsl */ `
+    float ceilingHorizonCoverage(vec3 viewPosition, vec3 viewNormal) {
+      vec3 normal = normalize(viewNormal);
+      float distanceCoverage = 1. - smoothstep(48., 76., length(viewPosition));
+      float facing = abs(dot(normal, normalize(viewPosition)));
+      float nearby = 1. - smoothstep(1., 3., abs(dot(normal, viewPosition)));
+      return distanceCoverage * mix(1., smoothstep(.015, .12, facing), nearby);
+    }
+  `
   const undersideMaterial = mat(new THREE.MeshStandardMaterial({
     color: 0x090d12, metalness: .43, roughness: .57, envMapIntensity: .42,
     transparent: true, depthWrite: true,
@@ -320,15 +329,19 @@ export function createSceneWorlds(
   // A finite ceiling edge previously crossed the scale room as a hard screen
   // line. Extend beyond the useful view distance, then fade before either the
   // geometry boundary or camera far clip. Nearby ceiling still occludes fully.
+  // Immediately below the floor, distance alone collapses into a few screen
+  // pixels. An angular fade softens that horizon without changing the ceiling
+  // once the camera has descended three world units into the scale room.
   undersideMaterial.onBeforeCompile = shader => {
+    shader.fragmentShader = ceilingCoverageGLSL + shader.fragmentShader
     shader.fragmentShader = shader.fragmentShader.replace('#include <opaque_fragment>', `
-      float ceilingCoverage = 1. - smoothstep(48., 76., length(vViewPosition));
+      float ceilingCoverage = ceilingHorizonCoverage(vViewPosition, vNormal);
       if (ceilingCoverage < .001) discard;
       diffuseColor.a *= ceilingCoverage;
       #include <opaque_fragment>
     `)
   }
-  undersideMaterial.customProgramCacheKey = () => 'aether-ceiling-distance-coverage-v1'
+  undersideMaterial.customProgramCacheKey = () => 'aether-ceiling-distance-coverage-v2'
   const undersideGeometry = geo(new THREE.PlaneGeometry(192, 192))
   // Keep the shared relief's world-space scale and centre phase unchanged.
   const undersideUv = undersideGeometry.getAttribute('uv')
@@ -348,11 +361,16 @@ export function createSceneWorlds(
     defines: lightFilm ? { AETHER_LIGHT_FILM: 1 } : {},
     vertexShader: /* glsl */ `
       varying vec3 vCeilingWorld;
+      varying vec3 vCeilingView;
+      varying vec3 vCeilingNormal;
       varying vec2 vCeilingUv;
       void main() {
         vCeilingWorld = (modelMatrix * vec4(position, 1.)).xyz;
+        vec4 viewPosition = modelViewMatrix * vec4(position, 1.);
+        vCeilingView = -viewPosition.xyz;
+        vCeilingNormal = normalMatrix * normal;
         vCeilingUv = uv;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.);
+        gl_Position = projectionMatrix * viewPosition;
       }
     `,
     fragmentShader: /* glsl */ `
@@ -360,8 +378,11 @@ export function createSceneWorlds(
       uniform float uOpacity;
       uniform float uLightDepth;
       varying vec3 vCeilingWorld;
+      varying vec3 vCeilingView;
+      varying vec3 vCeilingNormal;
       varying vec2 vCeilingUv;
       ${lightChoreographyGLSL}
+      ${ceilingCoverageGLSL}
       vec2 causticSeed(vec2 p) {
         vec3 h = fract(vec3(p.xyx) * vec3(.1031, .1030, .0973));
         h += dot(h, h.yzx + 33.33);
@@ -405,7 +426,8 @@ export function createSceneWorlds(
         float filmLuma = dot(film, vec3(.2126, .7152, .0722));
         color += film * .30;
         float coverage = light + smoothstep(.05, .45, filmLuma) * .48;
-        gl_FragColor = vec4(color, min(1., coverage) * edge * uOpacity);
+        float horizon = ceilingHorizonCoverage(vCeilingView, vCeilingNormal);
+        gl_FragColor = vec4(color, min(1., coverage) * edge * horizon * uOpacity);
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
       }

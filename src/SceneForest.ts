@@ -80,11 +80,12 @@ const microVertex = /* glsl */ `
   attribute vec3 aSeed;
   attribute float aSize;
   attribute vec3 aOrigin;
+  attribute float aAssemblyPhase;
   uniform float uAssembly;
   uniform float uViewportHeight;
   uniform float uPixelRatio;
   void main() {
-    float arrival=smoothstep(aSeed.y*.16,.84+aSeed.y*.16,uAssembly);
+    float arrival=smoothstep(aAssemblyPhase*.20,.80+aAssemblyPhase*.20,uAssembly);
     vec3 p=mix(aOrigin,position,arrival);
     p.y+=sin(uTime*.62+aSeed.y*29.)*.008;
     vec4 world=modelMatrix*vec4(p,1.);
@@ -111,7 +112,9 @@ const microFragment = /* glsl */ `
     if(r>1.)discard;
     float edge=1.-smoothstep(.64,1.,r);
 
-    if(edge<.12||groveCoverage()<hash(vSeed.xy))discard;
+    float coverage=groveCoverage();
+    // A zero hash must not survive a completely closed curtain.
+    if(edge<.12||coverage<.003||coverage<hash(vSeed.xy))discard;
     vec3 n=vec3(p,sqrt(max(0.,1.-r)));
     float light=max(0.,dot(n,normalize(vec3(-.4,.65,.65))));
     vec3 olive=mix(vec3(.014,.028,.003),vec3(.17,.22,.026),vSeed.x);

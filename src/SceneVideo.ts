@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { monitorMedia } from './MonitorCatalog'
 
 export interface SceneVideoSource {
   src: string
@@ -12,19 +13,14 @@ export type SceneVideoState = 'idle' | 'loading' | 'ready' | 'playing' | 'paused
 export interface SceneVideoStatus {
   active: boolean
   disposed: boolean
-  ready: [boolean, boolean]
-  playing: [boolean, boolean]
-  state: [SceneVideoState, SceneVideoState]
-  errors: [string | null, string | null]
+  ready: boolean[]
+  playing: boolean[]
+  state: SceneVideoState[]
+  errors: (string | null)[]
 }
 
-const defaultSources: readonly [SceneVideoSource, SceneVideoSource] = [
-  { src: '/media/forest-memory.mp4' },
-  { src: '/media/aurora-bloom.mp4', optimizedSrc: '/media/aurora-bloom.webm' },
-]
-
-/** Two shared decoders; callers use ready=false to retain their shader fallback. */
-export function createSceneVideo(sources: readonly [SceneVideoSource, SceneVideoSource] = defaultSources) {
+/** One decoder per shared source; unavailable films retain the shader fallback. */
+export function createSceneVideo(sources: readonly SceneVideoSource[] = monitorMedia) {
   let requestedActive = false
   let reduced = false
   let active = false
@@ -156,7 +152,7 @@ export function createSceneVideo(sources: readonly [SceneVideoSource, SceneVideo
     }
   }
 
-  const slots = [createSlot(sources[0], 0), createSlot(sources[1], 1)] as const
+  const slots = sources.map(createSlot)
   const reconcile = () => {
     const next = !disposed && requestedActive && !reduced && !document.hidden
     if (next === active) return
@@ -169,7 +165,7 @@ export function createSceneVideo(sources: readonly [SceneVideoSource, SceneVideo
   document.addEventListener('visibilitychange', reconcile)
 
   return {
-    textures: [slots[0].texture, slots[1].texture] as [THREE.VideoTexture, THREE.VideoTexture],
+    textures: slots.map(slot => slot.texture),
     update(nextActive: boolean, reducedMotion: boolean) {
       if (disposed) return
       requestedActive = nextActive
@@ -177,15 +173,14 @@ export function createSceneVideo(sources: readonly [SceneVideoSource, SceneVideo
       reconcile()
     },
     status(): SceneVideoStatus {
-      const first = slots[0].status()
-      const second = slots[1].status()
+      const states = slots.map(slot => slot.status())
       return {
         active,
         disposed,
-        ready: [first.ready, second.ready],
-        playing: [first.playing, second.playing],
-        state: [first.state, second.state],
-        errors: [first.error, second.error],
+        ready: states.map(slot => slot.ready),
+        playing: states.map(slot => slot.playing),
+        state: states.map(slot => slot.state),
+        errors: states.map(slot => slot.error),
       }
     },
     dispose() {

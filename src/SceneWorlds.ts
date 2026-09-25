@@ -709,7 +709,7 @@ export function createSceneWorlds(
       return monitorAssembly.getHoveredPanel()
     },
     getMonitorHit(ndc: THREE.Vector2, camera: THREE.Camera) {
-      return monitorAssembly.pick(ndc, camera)
+      return monitorAssembly.pickProject(ndc, camera)
     },
     update(time: number, progress: number,
       pointer?: { ndc: THREE.Vector2; rawNdc?: THREE.Vector2; strength: number; aspect: number; active?: boolean; flowTexture?: THREE.Texture }, camera?: THREE.Camera,

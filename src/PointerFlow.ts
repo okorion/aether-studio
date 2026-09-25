@@ -10,6 +10,8 @@ export function createPointerFlow(profile: 'water' | 'haze' = 'water') {
   const response = new Float32Array(cells * 2)
   let density = new Float32Array(cells)
   let nextDensity = new Float32Array(cells)
+  // Stationary dry contact history. It must not advect with the surrounding water.
+  const contact = new Float32Array(cells)
   const curl = new Float32Array(cells)
   const divergence = new Float32Array(cells)
   let pressure = new Float32Array(cells)
@@ -41,11 +43,13 @@ export function createPointerFlow(profile: 'water' | 'haze' = 'water') {
       const red = 128 + Math.round(clamp(response[i * 2], -1, 1) * 127)
       const green = 128 + Math.round(clamp(response[i * 2 + 1], -1, 1) * 127)
       const blue = Math.round(clamp(density[i], 0, 1) * 255)
+      const alpha = 255 - Math.round(clamp(contact[i], 0, 1) * 255)
       const offset = i * 4
-      if (data[offset] !== red || data[offset + 1] !== green || data[offset + 2] !== blue) {
+      if (data[offset] !== red || data[offset + 1] !== green || data[offset + 2] !== blue || data[offset + 3] !== alpha) {
         data[offset] = red
         data[offset + 1] = green
         data[offset + 2] = blue
+        data[offset + 3] = alpha
         changed = true
       }
     }
@@ -61,6 +65,7 @@ export function createPointerFlow(profile: 'water' | 'haze' = 'water') {
     next.fill(0)
     response.fill(0)
     density.fill(0)
+    contact.fill(0)
     nextDensity.fill(0)
     curl.fill(0)
     divergence.fill(0)
@@ -103,7 +108,7 @@ export function createPointerFlow(profile: 'water' | 'haze' = 'water') {
       const speedLimit = Math.min(1, 4 / Math.max(.001, speed))
       const impulseX = dx * speedLimit * 9
       const impulseY = dy * speedLimit * 9
-      const radius = (.115 + Math.min(.045, speed * .012)) * (gas ? .9 : 1)
+      const radius = (.115 + Math.min(.045, speed * .012)) * (gas ? .54 : 1)
       const gaussian = -.5 / (radius * radius)
       for (let y = 0; y < height; y++) {
         const ry = (y + .5) / height * 2 - 1 - centerY
@@ -114,6 +119,7 @@ export function createPointerFlow(profile: 'water' | 'haze' = 'water') {
           velocity[i] = clamp(velocity[i] + impulseX * weight, -.95, .95)
           velocity[i + 1] = clamp(velocity[i + 1] + impulseY * weight, -.95, .95)
           density[i / 2] = Math.min(1, density[i / 2] + distance * 10 * weight)
+          if (!gas) contact[i / 2] = Math.max(contact[i / 2], clamp((weight - .68) / .20, 0, 1))
         }
       }
       idleAge = 0
@@ -138,16 +144,17 @@ export function createPointerFlow(profile: 'water' | 'haze' = 'water') {
       }
       const steps = Math.max(1, Math.ceil(delta * 60))
       const dt = delta / steps
-      const damping = Math.exp(-(gas ? .85 : 3.4) * dt)
-      const densityDamping = Math.exp(-(gas ? .60 : 2.6) * dt)
+      const damping = Math.exp(-(gas ? 7.5 : 3.4) * dt)
+      const densityDamping = Math.exp(-(gas ? 7 : 2.6) * dt)
       const diffusion = 1 - Math.exp(-(gas ? .45 : 2.3) * dt)
-      const follow = 1 - Math.exp(-12 * dt)
+      const follow = 1 - Math.exp(-(gas ? 22 : 12) * dt)
       const transport = gas ? 2.2 : .45
       const advectX = width * .5 / aspect * dt * transport
       const advectY = height * .5 * dt * transport
       const hx = 2 * aspect / width, hy = 2 / height
       const hx2 = hx * hx, hy2 = hy * hy
       for (let step = 0; step < steps; step++) {
+        for (let i = 0; i < cells; i++) contact[i] *= Math.exp(-1.1 * dt)
         // Curl confinement rolls the wake without introducing radial splashes.
         // Both derivatives use screen-height units, including portrait views.
         for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {

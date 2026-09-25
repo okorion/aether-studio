@@ -452,13 +452,15 @@ export function createSceneMonitors(software: boolean, mobile: boolean, external
     update(time: number, progress: number, pointer?: MonitorPointer, camera?: THREE.Camera) {
       if (disposed) return
       const p = Number.isFinite(progress) ? THREE.MathUtils.clamp(progress, 0, 1) : 0
-      const weight = windowWeight(p, .23, .27, .675, .70)
+      const weight = windowWeight(p, .23, .245, .675, .70)
       const layers = sampleLayers(p)
       for (const material of materials) {
         material.uniforms.uEntryEdge.value = layers.monitorEntry
         material.uniforms.uExitEdge.value = layers.monitorExit
       }
-      group.position.y = -5 * (1 - smooth(.23, .305, p))
+      // Prepare the front card behind the wipe before the first visible sliver.
+      // A second, deep descent previously exposed empty space and the column.
+      group.position.y = -1.4 * (1 - smooth(.245, .303, p))
       group.visible = weight > .001 && curtainHasCoverage(layers.monitorEntry, layers.monitorExit)
       if (!group.visible) { captureVisible = false; captureDirty = true }
       media.update(mediaActive && group.visible, reducedMotion)
@@ -467,7 +469,7 @@ export function createSceneMonitors(software: boolean, mobile: boolean, external
       lastTime = time
       const ease = 1 - Math.exp(-delta * 10)
       for (const material of materials) material.uniforms.uTime.value = Number.isFinite(time) ? time : 0
-      const passage = (p - .303) / .064
+      const passage = Math.max(0, (p - .303) / .064)
       const mobileScale = mobile ? .74 : 1
       for (let i = 0; i < panels.length; i++) {
         const panel = panels[i]

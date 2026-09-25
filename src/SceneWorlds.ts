@@ -196,9 +196,10 @@ export function createSceneWorlds(
   }
 
   const wallColumns = software ? 24 : mobile ? 34 : 44
-  const wallRows = software ? 14 : mobile ? 20 : 25
+  const originalRows = software ? 14 : mobile ? 20 : 25
+  const wallRows = Math.round(originalRows * .60)
   const count = wallColumns * wallRows
-  const tileHeight = 5.4 / ((wallRows - 1) * .75 + 1)
+  const tileHeight = 5.4 / ((originalRows - 1) * .75 + 1)
   const tileWidth = tileHeight * Math.sqrt(3) / 2
   const feathers = instanced(scaleWall, geo(scaleGeometry(software)), metal, count, false)
   feathers.name = 'aether-scale-tiles'
@@ -383,49 +384,43 @@ export function createSceneWorlds(
       varying vec2 vCeilingUv;
       ${lightChoreographyGLSL}
       ${ceilingCoverageGLSL}
-      vec2 causticSeed(vec2 p) {
-        vec3 h = fract(vec3(p.xyx) * vec3(.1031, .1030, .0973));
-        h += dot(h, h.yzx + 33.33);
-        return fract((h.xx + h.yz) * h.zy);
+      float causticGrain(vec2 p) {
+        vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
+        vec4 h=fract(sin(vec4(dot(i,vec2(127.1,311.7)),dot(i+vec2(1.,0.),vec2(127.1,311.7)),
+          dot(i+vec2(0.,1.),vec2(127.1,311.7)),dot(i+1.,vec2(127.1,311.7))))*43758.5453);
+        return mix(mix(h.x,h.y,f.x),mix(h.z,h.w,f.x),f.y);
       }
       float causticNetwork(vec2 p) {
-        vec2 cell = floor(p);
-        vec2 local = fract(p);
-        float nearest = 8.;
-        float second = 8.;
-        // Nine cheap hash samples form connected, unequal cells. Domain
-        // warping below bends their boundaries into a fine moving light net.
-        for (int y = -1; y <= 1; y++) {
-          for (int x = -1; x <= 1; x++) {
-            vec2 offset = vec2(float(x), float(y));
-            vec2 delta = offset + .18 + causticSeed(cell + offset) * .64 - local;
-            float distanceSquared = dot(delta, delta);
-            second = min(second, max(nearest, distanceSquared));
-            nearest = min(nearest, distanceSquared);
-          }
-        }
-        float boundary = sqrt(second) - sqrt(nearest);
-        float antialias = clamp(fwidth(boundary), .008, .075);
-        return 1. - smoothstep(.018 - antialias, .062 + antialias, boundary);
+        // Smooth interfering waves form curved, unequal caustic folds. There
+        // are no polygon cells or straight Voronoi borders in this surface.
+        float t=uTime*.22;
+        vec2 q=p+vec2(sin(p.y*1.37-t),cos(p.x*.93+t*.7))*.85;
+        q+=vec2(sin(p.x*.47+p.y*.72+t*.3),sin(p.y*.63-p.x*.38))*.6;
+        q+=vec2(sin(q.y*4.2+sin(q.x*2.7)),cos(q.x*3.4+sin(q.y*2.1)))*.085;
+        float fold=sin(q.x+sin(q.y*.79)*1.2)+sin(q.y+cos(q.x*.71)*1.1);
+        float width=.035+causticGrain(p*2.7)*.08+fwidth(fold)*.7;
+        float filigree=.40+.40*causticGrain(p*27.)+.20*causticGrain(p*83.);
+        return (pow(width/(width+abs(fold)),2.1)+.13/(1.+fold*fold*4.))*filigree;
       }
       void main() {
-        vec2 p = vCeilingWorld.xz * 4.3;
+        vec2 p = vCeilingWorld.xz * 1.55;
         float t = uTime * .14;
         p += vec2(sin(p.y * .61 + t), cos(p.x * .57 - t * .8)) * .43;
         p += vec2(t * .09, -t * .07);
         float detailFade = 1. - smoothstep(.12, .48, length(fwidth(p)));
-        float light = causticNetwork(p) * detailFade;
-        light *= .60 + .40 * sin(p.x * .29 + p.y * .17 + t);
+        float light = (causticNetwork(p) + causticNetwork(p*1.73+vec2(8.3,2.7))*.30) * detailFade;
+        light *= .78 + .22 * sin(p.x * .29 + p.y * .17 + t);
         float edge = 1. - smoothstep(.46, .5,
           max(abs(vCeilingUv.x - .5), abs(vCeilingUv.y - .5)));
         vec3 cloud = aetherLightCloud(vCeilingWorld, vec3(0., -1., 0.), uTime, uLightDepth);
-        vec3 color = vec3(.10, .19, .21) + cloud * .16;
+        vec3 color = vec3(.38, .61, .54) + cloud * .12;
         // Reuse the one low-resolution film decoder. Recognizable moving
         // light masses sit over the fine caustic network, with a static fallback.
         vec3 film = aetherFilmRadiance(vCeilingWorld);
         float filmLuma = dot(film, vec3(.2126, .7152, .0722));
-        color += film * .30;
-        float coverage = light + smoothstep(.05, .45, filmLuma) * .48;
+        color *= .8 + filmLuma * .65;
+        color = mix(color, color*(vec3(.5)+film*2.4), .35);
+        float coverage = .035 + light;
         float horizon = ceilingHorizonCoverage(vCeilingView, vCeilingNormal);
         gl_FragColor = vec4(color, min(1., coverage) * edge * horizon * uOpacity);
         #include <tonemapping_fragment>
@@ -639,8 +634,7 @@ export function createSceneWorlds(
         varying vec3 vChamberWorld;
         ${lightFilm ? 'uniform sampler2D uChamberFilm; uniform float uChamberFilmReady;' : ''}
         vec3 apertureRadiance() {
-          float drop=max(.1,${REACTOR.worldY + REACTOR.apertureY * REACTOR.heightScale}-vChamberWorld.y);
-          vec2 uv=clamp(.5+vChamberWorld.xz/(2.2+drop*.4),.002,.998);
+          vec2 uv=clamp(.5+vChamberWorld.xz*.035,.002,.998);
           vec3 radiance=vec3(.48,.60,.72);
           ${lightFilm ? `if(uChamberFilmReady>.5) {
             vec3 encoded=texture2D(uChamberFilm,uv).rgb;
@@ -663,16 +657,18 @@ export function createSceneWorlds(
         // them to white and blooms across the rods. Keep the room light while
         // calibrating its reflected contribution only on the reactor hardware.
         `getSpotLightInfo( spotLight, geometryPosition, directLight );
-          directLight.color *= apertureRadiance() * ${fixtureMetal ? '.085' : '1.'};`)
+          directLight.color *= apertureRadiance() * ${fixtureMetal ? '.14' : '1.'};`)
       shader.fragmentShader = shader.fragmentShader.replace('#include <lights_fragment_begin>', direct)
       shader.fragmentShader = shader.fragmentShader.replace('#include <opaque_fragment>',
         `outgoingLight = reflectedLight.directDiffuse + reflectedLight.directSpecular
           + reflectedLight.indirectSpecular * min(vec3(.90), apertureRadiance() * .065)
           + reflectedLight.indirectDiffuse * .30
+          + apertureRadiance() * ${fixtureMetal ? '.0035' : '.0045'}
+            * (.18 + .82 * max(0.,dot(normal,normalize(vec3(-.4,.8,.5)))))
           + totalEmissiveRadiance;
         #include <opaque_fragment>`)
     }
-    material.customProgramCacheKey = () => `${previousKey}-aperture-${lightFilm ? 'film' : 'static'}-${fixtureMetal ? 'steel' : 'room'}-v5`
+    material.customProgramCacheKey = () => `${previousKey}-world-film-${lightFilm ? 'film' : 'static'}-${fixtureMetal ? 'steel' : 'room'}-v6`
   }
   bindGroupCurtain(chamber, deviceCurtain)
   bindGroupCurtain(space, deviceCurtain)
@@ -744,7 +740,7 @@ export function createSceneWorlds(
       const spineOffset = -12 * (1 - emergence)
       spineAssembly.group.position.y = spineOffset
       matter.visible = spineWeight > .001 && curtainHasCoverage(layers.monitorEntry, layers.monitorExit)
-      spineAssembly.update(progress, journey.core * spineWeight, emergence, mobileView)
+      spineAssembly.update(progress, journey.core * spineWeight, emergence, mobileView, camera)
       const deviceWeight = smooth(.59, .615, progress) * (1 - smooth(.79, .88, progress))
       const scaleWeight = smooth(.705, .735, progress) * (1 - smooth(.93, .95, progress))
       chamber.visible = deviceWeight > .001
@@ -796,7 +792,7 @@ export function createSceneWorlds(
       floorMaterial.opacity = smooth(.60, .68, progress) * (1 - smooth(.87, .95, progress)) * .97
       floor.visible = floorMaterial.opacity > .001
       causticMaterial.uniforms.uTime.value = time
-      causticMaterial.uniforms.uOpacity.value = scaleWeight * .19
+      causticMaterial.uniforms.uOpacity.value = scaleWeight * .46
       causticMaterial.uniforms.uLightDepth.value = sampleLightChoreography(time, progress).depth
       caustics.visible = scaleWeight > .001
       let aboveFloor = journey.height > floorHeight

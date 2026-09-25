@@ -12,7 +12,10 @@ test('@interaction haze survives UI crossing, touch pointerdown and a visible fr
   expect(r.before).toBeGreaterThan(100)
   expect(r.hover).toBe(r.before)
   expect(r.reentry).toBe(r.before)
-  expect(r.stalled).toBeGreaterThan(r.before*.5)
+  // The new one-second dissipation keeps a visible wake after the bounded
+  // 100ms stall step, rather than preserving the previous multi-second mass.
+  expect(r.stalled).toBeGreaterThan(r.before*.25)
+  expect(r.stalled).toBeLessThan(r.before)
   expect(r.touchStart).toBe(r.stalled)
   expect(r.inactive).toBe(0)
   expect(r.resumed).toBe(0)

@@ -4,8 +4,6 @@ import type { createSceneLightVideo } from '../src/SceneLightVideo'
 type LightStatus = ReturnType<ReturnType<typeof createSceneLightVideo>['getStatus']>
 type LightRecord = { video: HTMLVideoElement; loads: number; playTimes: number[] }
 const films = [
-  { role: 'light-projection', mediaPath: '/media/light-projection.mp4', statusKey: 'lightVideoState',
-    initial: .72, pause: .4, resume: .72, width: 256, height: 160 },
   { role: 'forest-memory', mediaPath: '/media/forest-memory.mp4', statusKey: 'forestVideoState',
     initial: 0, pause: .4, resume: .97, width: 512, height: 288 },
 ] as const
@@ -42,7 +40,7 @@ async function installProbe(page: Page) {
 }
 
 function watchRequests(page: Page): MediaRequests {
-  const requests: MediaRequests = { 'light-projection': [], 'forest-memory': [] }
+  const requests: MediaRequests = { 'forest-memory': [] }
   page.on('request', (request) => {
     const film = films.find((entry) => new URL(request.url()).pathname === entry.mediaPath)
     if (film) requests[film.role].push(request.url())
@@ -142,10 +140,15 @@ test(`@interaction production ${film.role} follows scene and motion activity, wi
   expect(requests[film.role].length).toBeGreaterThan(0)
   const count = (await videos(page, film)).length
   await stage(page, film.pause)
-  const monitorPause = await paused(page, film)
-  await expect.poll(() => status(page, film)).toMatchObject({ active: false, ready: true, playing: false, state: 'paused' })
+  // One decoder continues across the forest, gallery and chamber.
+  const gallery = await playing(page, film)
+  await stage(page, .72)
+  const chamber = await playing(page, film)
+  expect(chamber.id).toBe(gallery.id)
+  expect(chamber.loads).toBe(gallery.loads)
+  expect(chamber.playTimes.length).toBe(gallery.playTimes.length)
+  expect(await page.locator('.scene-canvas').getAttribute('data-light-video-state')).toBe(await page.locator('.scene-canvas').getAttribute('data-forest-video-state'))
   await stage(page, film.resume)
-  expectResume(monitorPause, await playing(page, film))
   await page.getByRole('button', { name: 'Pause motion' }).click()
   const motionPause = await paused(page, film)
   await expect(page.getByRole('button', { name: 'Motion reduced' })).toHaveAttribute('aria-pressed', 'true')

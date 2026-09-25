@@ -59,10 +59,9 @@ export function sampleJourney(value: number) {
   const scales = windowWeight(progress, .74, .81, .87, .94)
   const core = windowWeight(progress, .20, .28, .88, .96)
   const end = smooth(.86, .97, progress)
-  // Camera input stays fully locked while the mechanical structure is present,
-  // including the scale curtain's fade above the lower ring. Sharing this
-  // weight with the input gate also prevents hover parallax inside locked scenes.
-  const orbitWeight = 1 - windowWeight(progress, .20, .235, .94, .975)
+  // Restore camera control as the lower forest enters the scale curtain.
+  // The same weight gates drag and hover parallax in the mechanical scenes.
+  const orbitWeight = 1 - windowWeight(progress, .20, .235, .86, .88)
   const overlay = progress < .1 ? 'entry' : progress < .235 ? 'statement'
     : progress < .65 ? 'work' : progress < .78 ? 'machine'
       : progress < .89 ? 'scales' : 'contact'

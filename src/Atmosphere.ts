@@ -281,7 +281,7 @@ const dustVertex = /* glsl */ `
     float perspective = 12.0 / max(2.0, -mv.z);
     // Pearlescent grains fill both flower volumes and the thicker reactor rim;
     // sparse strays retain a finer silhouette around the dense core.
-    float grainScale = 1.0 + spineWeight * (.55 + .30 * cluster);
+    float grainScale = 1.0 + spineWeight * (.85 + .45 * cluster);
     grainScale *= mix(1., 1.5, ribbonWeight);
     grainScale *= mix(1., .72, aAdvected * spineWeight);
     grainScale *= mix(1.18, 1.18 * mix(1., .7, stray), uWeights.y);
@@ -298,7 +298,7 @@ const dustVertex = /* glsl */ `
     // Broad folds have shaded recesses and lit crests. Keeping this attached
     // to the flower coordinates gives volume without whitening every grain.
     float flowerFold = .5 + .5 * sin(fract(lane * 2.) * 23. + t * 79. + sin(t * 29.) * 3.);
-    vColor *= mix(1., .16 + .84 * pow(flowerFold, 1.8), spineWeight * (1. - aAdvected) * (1. - ribbonWeight));
+    vColor *= mix(1., .26 + .74 * pow(flowerFold, 1.8), spineWeight * (1. - aAdvected) * (1. - ribbonWeight));
     vec3 litWorld = (modelMatrix * vec4(p, 1.)).xyz;
     vColor += aetherLightCloud(litWorld, vec3(0., .5, .866), uTime, uDarkness)
       * (.07 + uWeights.y * .10);
@@ -338,7 +338,7 @@ const dustVertex = /* glsl */ `
     vAlpha = shimmer * mix(seam, 1.0, uWeights.y) * distanceFade * mix(0.72, 0.19, bokeh);
     vAlpha *= mix(1.0, .62 * mix(1., .22, bokeh), uWeights.y);
     vAlpha *= (1.0 - uDarkness * 0.23) * (1.0 + uWeights.x * 0.16);
-    vAlpha *= 1. + spineWeight * (1. - aAdvected) * .30;
+    vAlpha *= 1. + spineWeight * (1. - aAdvected) * 1.10;
     vAlpha *= mix(1., .66, ribbonWeight);
     // Keep every flower seed. Thin only the distant band with a stable seed
     // mask (no temporal flicker), and remove the close falling/bokeh grains
@@ -496,7 +496,7 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
   options?: { renderer: THREE.WebGLRenderer; reducedMotion?: boolean; reactorSnapshot?: Float32Array }) {
   const random = seededRandom()
   const baseCount = software ? 6000 : mobile ? 40000 : 144000
-  const flowerCount = software ? 1800 : mobile ? 16000 : 44000
+  const flowerCount = software ? 5400 : mobile ? 60000 : 180000
   const count = baseCount + flowerCount
   const bokehCount = software ? 12 : mobile ? 40 : 100
   const positions = new Float32Array(count * 3)
@@ -681,8 +681,7 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
       uniforms.uWeights.value.set(smooth(.205, .29, p), morph, 0, 0)
       uniforms.uEnergy.value = journey.energy
       uniforms.uDarkness.value = journey.darkness
-      uniforms.uFieldOpacity.value = .06 * (1 - smooth(.10, .18, p))
-        + smooth(.245, .31, p) * (1 - smooth(.75, .81, p))
+      uniforms.uFieldOpacity.value = smooth(.245, .31, p) * (1 - smooth(.75, .81, p))
       uniforms.uEntryEdge.value = layers.monitorEntry
       uniforms.uForestExit.value = p < .20 ? layers.forestExit : -.5
       uniforms.uExitEdge.value = layers.deviceExit
@@ -710,7 +709,8 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
       uniforms.uPixelRatio.value = THREE.MathUtils.clamp(Number.isFinite(ratio) ? ratio : 1, 0.4, 2)
       const visible = uniforms.uFieldOpacity.value > .001
         && (p < .60 || curtainHasCoverage(layers.monitorExit, layers.deviceExit))
-      particles.visible = filaments.visible = shafts.visible = visible
+      particles.visible = visible
+      filaments.visible = shafts.visible = false
       if (reactorFlow && _camera) {
         reactorFlow.update(time, visible ? p : 0, _camera, pointer, !options?.reducedMotion, flowActive)
         // Scroll formation continues while GPU advancement is suspended.

@@ -179,6 +179,7 @@ function sampleEditorial(progress: number) {
     return {
       matrix: panel.matrixWorld.toArray(), visible: panel.visible,
       opacity: panel.material.uniforms.uOpacity.value as number,
+      inkOffset: panel.material.uniforms.uInkOffset.value as number,
       top: panel.material.uniforms.uTop.value as number,
       bottom: panel.material.uniforms.uBottom.value as number,
     }

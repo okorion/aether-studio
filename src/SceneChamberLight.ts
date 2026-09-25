@@ -62,7 +62,7 @@ export function createChamberLight(space: THREE.Group, scene: THREE.Scene, film?
       material.uniforms.uOpacity.value = weight * .055
       material.uniforms.uTime.value = time
       light.intensity = weight * 185 * (.90 + .10 * Math.sin(time * .37) ** 2)
-      beam.visible = weight > .001
+      beam.visible = false
     },
     dispose() {
       if (disposed) return

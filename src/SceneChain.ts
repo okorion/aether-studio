@@ -27,7 +27,7 @@ class LinkCurve extends THREE.Curve<THREE.Vector3> {
 
 export function createChainGeometry(software: boolean, mobile: boolean) {
   return new THREE.TubeGeometry(new LinkCurve(), software ? 32 : mobile ? 48 : 64,
-    .047, software ? 6 : mobile ? 8 : 10, true)
+    .057, software ? 6 : mobile ? 8 : 12, true)
 }
 
 const CHAIN_RADIUS = 1.85
@@ -40,26 +40,28 @@ const chainAngleAtHeight = (y: number) => -1.68 + (y - 3.8) * CHAIN_TURN_PER_HEI
 const CHAIN_TRACK_HEIGHT = 20
 const CHAIN_ARC_PER_HEIGHT = Math.hypot(1, CHAIN_RADIUS * CHAIN_TURN_PER_HEIGHT)
 
-/** A finite interval travelling on one fixed column-local helix. */
+/** A finite helix with a stable height envelope and scroll-driven phase. */
 class ColumnChainCurve extends THREE.Curve<THREE.Vector3> {
   private readonly topY: number
-  constructor(topY: number) {
+  private readonly phase: number
+  constructor(topY: number, phase: number) {
     super()
     this.topY = topY
+    this.phase = phase
   }
 
   getPoint(t: number, target = new THREE.Vector3()) {
     const y = this.topY - t * CHAIN_TRACK_HEIGHT
-    // Absolute local height anchors the winding to the column. Advancing the
-    // strand moves each link along this track, not sideways off the track.
-    const angle = chainAngleAtHeight(y)
+    // Scroll rotates the helical strand while preserving each link's height.
+    // SceneSpine compensates for camera travel at the upper terminal.
+    const angle = chainAngleAtHeight(y) + this.phase
     return target.set(Math.cos(angle) * CHAIN_RADIUS, y, Math.sin(angle) * CHAIN_RADIUS)
   }
 
   getPointAt(t: number, target = new THREE.Vector3()) { return this.getPoint(t, target) }
 
   getTangentAt(t: number, target = new THREE.Vector3()) {
-    const angle = chainAngleAtHeight(this.topY - t * CHAIN_TRACK_HEIGHT)
+    const angle = chainAngleAtHeight(this.topY - t * CHAIN_TRACK_HEIGHT) + this.phase
     return target.set(Math.sin(angle) * CHAIN_RADIUS * CHAIN_TURN_PER_HEIGHT,
       -1, -Math.cos(angle) * CHAIN_RADIUS * CHAIN_TURN_PER_HEIGHT).normalize()
   }
@@ -79,14 +81,16 @@ export function sampleChainPath(progress: number, mobile = false) {
     + (-2 * t3 + 3 * t2) * -1.85
     + (t3 - t2) * -6 * duration
     - 36 * Math.min(0, progress - start) - 6 * Math.max(0, progress - end)
-  return new ColumnChainCurve(top * (mobile ? 1.38 : 1))
+  // Feed changes the helix phase, while its height envelope stays anchored.
+  // A turn appears to descend diagonally without lowering the whole strand.
+  return new ColumnChainCurve(4.4 * (mobile ? 1.38 : 1), (top - 4.4) * CHAIN_TURN_PER_HEIGHT)
 }
 
 export function createChainMaterial(software: boolean) {
   const material = new THREE.MeshPhysicalMaterial({
-    color: 0x526b9b, metalness: software ? .72 : 1, roughness: .29,
-    envMapIntensity: 1.35, iridescence: software ? 0 : .9,
-    iridescenceIOR: 1.38, iridescenceThicknessRange: [240, 430],
+    color: 0x667792, metalness: software ? .72 : 1, roughness: .22,
+    envMapIntensity: 1.4, iridescence: software ? 0 : .52,
+    iridescenceIOR: 1.38, iridescenceThicknessRange: [160, 540],
     clearcoat: software ? 0 : .2, clearcoatRoughness: .25, transparent: true,
   })
   material.onBeforeCompile = shader => {
@@ -118,7 +122,17 @@ export function createChainMaterial(software: boolean) {
           iridescenceThicknessMaximum, chainWear);
       #endif
     `)
+    shader.fragmentShader = shader.fragmentShader.replace('#include <opaque_fragment>', `
+      vec3 chainR = inverseTransformDirection(reflect(-normalize(vViewPosition), normal), viewMatrix);
+      vec3 coat = vec3(.28,.48,.90) * pow(max(0.,dot(chainR,normalize(vec3(.7,.2,.6)))),3.)
+        + vec3(.74,.29,.57) * pow(max(0.,dot(chainR,normalize(vec3(-.6,.6,.5)))),3.)
+        + vec3(.68,.60,.28) * pow(max(0.,dot(chainR,normalize(vec3(-.7,-.2,-.7)))),4.)
+        + vec3(.17,.65,.51) * pow(max(0.,dot(chainR,normalize(vec3(.4,.6,-.6)))),4.);
+      float peak=max(outgoingLight.r,max(outgoingLight.g,outgoingLight.b));
+      outgoingLight=outgoingLight/(1.+peak*.15) + coat*(.26+chainWear*.16);
+      #include <opaque_fragment>
+    `)
   }
-  material.customProgramCacheKey = () => 'aether-forged-chain-v1'
+  material.customProgramCacheKey = () => 'aether-forged-chain-v2'
   return material
 }

@@ -70,8 +70,8 @@ export function sampleJourney(value: number) {
   // The same weight gates drag and hover parallax in the mechanical scenes.
   const orbitWeight = 1 - windowWeight(progress, .20, .235, .925, .95)
   const scaleFraming = windowWeight(progress, .69, .715, .925, .95)
-  const overlay = progress < .1 ? 'entry' : progress < .235 ? 'statement'
-    : progress < .65 ? 'work' : progress < .78 ? 'machine'
+  const overlay = progress < .1 ? 'entry' : progress < .305 ? 'statement'
+    : progress < .65 ? 'work' : progress < .735 ? 'machine'
       : progress < .89 ? 'scales' : 'contact'
   return {
     progress, index: Math.min(23, Math.round(position)),

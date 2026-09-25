@@ -76,8 +76,8 @@ test('wheel input descends and reverses before 24 settled scroll checkpoints', a
   await expect(page.locator('.scene-canvas')).toHaveAttribute('data-render-state', 'ready')
   const expectedStages = [
     'entry', 'entry', 'entry', 'statement', 'statement', 'statement',
-    'work', 'work', 'work', 'work', 'work', 'work', 'work', 'work', 'work',
-    'machine', 'machine', 'machine', 'scales', 'scales', 'scales',
+    'statement', 'statement', 'work', 'work', 'work', 'work', 'work', 'work', 'work',
+    'machine', 'machine', 'scales', 'scales', 'scales', 'scales',
     'contact', 'contact', 'contact',
   ]
   let previousHeight = startingView.targetY

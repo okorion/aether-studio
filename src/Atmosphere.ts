@@ -6,6 +6,8 @@ import { curtainHasCoverage } from './SceneVisibility'
 import { lightChoreographyGLSL, type LightFilmUniforms } from './SceneLighting'
 import { createReactorFlow } from './ReactorFlow'
 import { createFlowerAttributes } from './FlowerGeometry'
+import { FLOWER_WORLD_Y, flowerAssemblyGLSL } from './FlowerAssembly'
+import { createMonitorObstacle, MAX_MONITOR_OBSTACLES, monitorClearanceGLSL, type MonitorObstacle } from './MonitorClearance'
 
 // The intro's tiny ambient field remains visible before the incoming spine.
 // All later particles and lights enter below the monitor's shared diagonal.
@@ -165,6 +167,9 @@ const dustVertex = /* glsl */ `
   attribute vec4 aFlowerPosition;
   attribute vec3 aFlowerNormal;
   attribute vec3 aFlowerColor;
+  uniform float uFlowerCameraY;
+  ${flowerAssemblyGLSL}
+  ${monitorClearanceGLSL}
   uniform sampler2D uReactorPositions;
   uniform float uReactorStateWeight;
   uniform float uPixelRatio;
@@ -218,11 +223,14 @@ const dustVertex = /* glsl */ `
     float entry = smoothstep(.226 + joinSeed * .016, .338 + joinSeed * .016, uScroll / 55.);
     float topJoin = max(0., aFlowerPosition.w);
     float bottomJoin = max(0., -aFlowerPosition.w);
+    float reinforcement = step(aDust.w, -1.5);
+    float fill = flowerAssembly(uFlowerCameraY, blossom.y, joinSeed);
+    float verticalOffset = (1. - fill) * (1.8 + joinSeed * .8);
+    blossom.y += reinforcement * (aFlowerPosition.y >= 0. ? verticalOffset : -verticalOffset);
     float entryLift = (1. - entry);
     // The upper half arrives from the incoming curtain, while the lower half
     // first assembles locally and later follows a broad, descending funnel.
-    blossom.y += topJoin * entryLift * (8.5 + joinSeed * 1.2);
-    blossom.y -= bottomJoin * entryLift * (2.4 + joinSeed * .7);
+    blossom.y += topJoin * entryLift * (5.0 + joinSeed * 1.2) * reinforcement;
     float drain = smoothstep(.559 + joinSeed * .016, .694 + joinSeed * .016, uScroll / 55.) * bottomJoin;
     vec2 tangent = vec2(-blossom.z, blossom.x) / max(.1, length(blossom.xz));
     blossom.xz = blossom.xz * (1. - drain * .87) + tangent * sin(drain * PI) * .32;
@@ -250,6 +258,11 @@ const dustVertex = /* glsl */ `
     p = mix(p, texture2D(uReactorPositions, aReactorUv).xyz, uReactorStateWeight * uWeights.y);
     // Scale the complete ring, including its diffuse rim, about its own centre.
     p.xy *= mix(1.0, uReactorScale, uWeights.y);
+    if (flowerWeight > .99 && uMonitorCount > 0) {
+      vec3 world = (modelMatrix * vec4(p, 1.)).xyz;
+      // Both flower draws have translation-only roots.
+      p += clearMonitors(world) - world;
+    }
     vec4 mv = modelViewMatrix * vec4(p, 1.0);
     gl_Position = projectionMatrix * mv;
     vec2 pointerDelta = gl_Position.xy / max(.01, gl_Position.w) - uPointer;
@@ -540,7 +553,8 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
   const random = seededRandom()
   const baseCount = software ? 6000 : mobile ? 40000 : 144000
   const flowerCount = software ? 9000 : mobile ? 95000 : 300000
-  const count = baseCount + flowerCount
+  const reinforcementCount = Math.floor(flowerCount * .4)
+  const count = baseCount + flowerCount + reinforcementCount
   const bokehCount = software ? 12 : mobile ? 40 : 100
   const positions = new Float32Array(count * 3)
   const dust = new Float32Array(count * 4)
@@ -562,7 +576,8 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
     let lane: number
     do { lane = flowerRandom() } while ((lane * 7.13) % 1 >= .22)
     positions.set([flowerRandom(), flowerRandom() * Math.PI * 2, Math.pow(flowerRandom(), 1.6)], i * 3)
-    dust.set([lane, .70 + Math.pow(flowerRandom(), 2.7) * (mobile ? 1.65 : 1.9), flowerRandom() * 2 - 1, -1], i * 4)
+    dust.set([lane, .70 + Math.pow(flowerRandom(), 2.7) * (mobile ? 1.65 : 1.9), flowerRandom() * 2 - 1,
+      i < baseCount + flowerCount ? -1 : -2], i * 4)
   }
 
   const reactorFlow = !software && options
@@ -577,10 +592,17 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
     reactorUv[i * 2 + 1] = (Math.floor(i / side) + .5) / side
   }
 
+  const obstacles = Array.from({ length: MAX_MONITOR_OBSTACLES }, createMonitorObstacle)
+  const cameraPosition = new THREE.Vector3()
   const uniforms = {
     ...(lightFilm ? { uLightFilm: lightFilm.map, uLightFilmReady: lightFilm.ready } : {}),
     uTime: { value: 0 },
     uScroll: { value: 0 },
+    uFlowerCameraY: { value: 0 },
+    uMonitorCount: { value: 0 },
+    uMonitorInverse: { value: obstacles.map(o => o.inverse) },
+    uMonitorNormal: { value: obstacles.map(o => o.normal) },
+    uMonitorHalf: { value: obstacles.map(o => o.half) },
     uSpineYaw: { value: 0 },
     uSpineSpread: { value: mobile ? .62 : 1 },
     uScrollStep: { value: 0 },
@@ -647,6 +669,7 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
   particles.userData.advectedCount = advectedCount
   particles.userData.baseCount = baseCount
   particles.userData.flowerCount = flowerCount
+  particles.userData.reinforcementCount = reinforcementCount
   particles.userData.reactorSimulation = reactorFlow ? 'gpu-position-history' : 'analytic'
 
   const lanes = software ? 6 : mobile ? 16 : 28
@@ -725,7 +748,8 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
     snapshotFlow: () => reactorFlow?.snapshot(),
     getFlowStatus: () => reactorFlow?.getStatus() ?? { enabled: false, active: false, initialized: false, count: 0, steps: 0 },
     update(time: number, progress: number, pixelRatio?: number,
-      pointer?: { ndc: THREE.Vector2; strength: number; aspect: number; active?: boolean; flowTexture?: THREE.Texture }, _camera?: THREE.Camera) {
+      pointer?: { ndc: THREE.Vector2; strength: number; aspect: number; active?: boolean; flowTexture?: THREE.Texture }, _camera?: THREE.Camera,
+      monitorObstacles: readonly MonitorObstacle[] = []) {
       if (disposed) return
       const journey = sampleJourney(progress)
       const p = journey.progress
@@ -738,10 +762,17 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
       previousProgress = p
       uniforms.uTime.value = Number.isFinite(time) ? time : 0
       uniforms.uScroll.value = p * 55
+      uniforms.uFlowerCameraY.value = _camera ? _camera.getWorldPosition(cameraPosition).y : journey.height
+      uniforms.uMonitorCount.value = Math.min(monitorObstacles.length, MAX_MONITOR_OBSTACLES)
+      for (let i = 0; i < uniforms.uMonitorCount.value; i++) {
+        obstacles[i].inverse.copy(monitorObstacles[i].inverse)
+        obstacles[i].normal.copy(monitorObstacles[i].normal)
+        obstacles[i].half.copy(monitorObstacles[i].half)
+      }
       uniforms.uSpineYaw.value = journey.structureYaw
       uniforms.uScrollStep.value = signedStep
       // The incoming field uses the device anchor throughout its visible descent.
-      const columnY = -29.8
+      const columnY = FLOWER_WORLD_Y
       const fieldY = morph ? REACTOR.worldY : THREE.MathUtils.lerp(journey.height, columnY, smooth(.205, .29, p))
       particles.position.y = filaments.position.y = shafts.position.y = fieldY
       uniforms.uWeights.value.set(smooth(.205, .29, p), morph, 0, 0)

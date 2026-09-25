@@ -27,7 +27,7 @@ function vertebraGeometry() {
     const bottom = -.00913 * x - .12398 * z - .58966
     const top = -.06666 * x + .13745 * z + .12915
     const height = THREE.MathUtils.clamp((y - bottom) / Math.max(.25, top - bottom), -.035, 1.035)
-    vertices.setY(i, THREE.MathUtils.lerp(y, -.535 + height * .60, weight))
+    vertices.setY(i, THREE.MathUtils.lerp(y, -.511 + height * .552, weight))
   }
   geometry.setIndex(lumbarMesh.indices)
   const colors = new Float32Array(lumbarMesh.positions.length).fill(.94)
@@ -47,11 +47,11 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
   const linkGeometry = createChainGeometry(software, mobile)
   const exposure = { value: sampleSpineExposure(0) }
   const boneMaterial = new THREE.MeshPhysicalMaterial({
-    color: 0xa3bce1, vertexColors: true, metalness: software ? .48 : .96,
-    roughness: software ? .51 : .29, envMapIntensity: 1.18,
-    iridescence: software ? 0 : .24, iridescenceIOR: 1.36,
-    iridescenceThicknessRange: [180, 460], clearcoat: software ? 0 : .12,
-    clearcoatRoughness: .38, transparent: true,
+    color: 0x8299c1, vertexColors: true, metalness: software ? .65 : 1,
+    roughness: software ? .42 : .23, envMapIntensity: 1.5,
+    iridescence: software ? 0 : .48, iridescenceIOR: 1.38,
+    iridescenceThicknessRange: [160, 530], clearcoat: software ? 0 : .26,
+    clearcoatRoughness: .23, transparent: true,
   })
   if (!software) {
     // Texture-free micrograin stays attached to the bone through instancing.
@@ -93,14 +93,14 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
         // Coating thickness varies across broad patches. Folds and grain only
         // change the reflection shape, never the coating's RGB phase.
         float spineCoating = spineNoise(vSpineSurface * vec3(1.6, 2.8, 1.6));
-        float spineRelief = spineGrain * .00048 * spineGrainWeight
-          + spineFold * .006 + spineNoise(vSpineSurface * 4.7) * .002;
+        float spineRelief = spineGrain * .00022 * spineGrainWeight
+          + spineFold * .0032 + spineNoise(vSpineSurface * 4.7) * .0014;
         vec3 spineGradient = dFdx(spineRelief) * spineRx + dFdy(spineRelief) * spineRy;
         normal = normalize(max(abs(spineDet), 0.0000001) * normal
           - sign(spineDet) * spineGradient);
         roughnessFactor = clamp(roughnessFactor
-          + (spineCoating - .5) * .10 + (spineFold - .5) * .14
-          + spineGrain * spineGrainWeight * .065, .17, .43);
+          + (spineCoating - .5) * .08 + (spineFold - .5) * .08
+          + spineGrain * spineGrainWeight * .025, .14, .34);
       `)
       shader.fragmentShader = shader.fragmentShader.replace('#include <lights_physical_fragment>', `
         #include <lights_physical_fragment>
@@ -137,7 +137,7 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
         spineCoatTint = mix(spineCoatTint, vec3(.96,.98,1.), spineWhiteHighlight * .68);
         vec3 spineRadiance = outgoingLight / (1. + spineLightPeak * .38);
         outgoingLight = spineRadiance * spineCoatTint * (.68 + spineCoating * .16)
-          + spineReflectionColor * (.46 + spineFresnel * .35)
+          + spineReflectionColor * (.30 + spineFresnel * .38)
             * (.84 + spineCoating * .16);
         // The common RGB component of a bright PBR reflection is its neutral
         // silver glint. Keep that narrow peak above the colored coating; tinting
@@ -149,7 +149,7 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
         #include <opaque_fragment>
       `)
     }
-    boneMaterial.customProgramCacheKey = () => 'aether-spine-layered-silver-v6'
+    boneMaterial.customProgramCacheKey = () => 'aether-spine-layered-silver-v7'
   }
   for (const material of [boneMaterial]) {
     const previousCompile = material.onBeforeCompile

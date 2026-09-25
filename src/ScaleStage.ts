@@ -3,7 +3,11 @@ import { smooth } from './Journey'
 /** The panel travels with its curtain instead of crossing a second tall room. */
 export function sampleScaleOffset(progress: number) {
   const p = Number.isFinite(progress) ? Math.max(0, Math.min(1, progress)) : 0
-  return -4.2 * (1 - smooth(.715, .785, p)) + 3.6 * smooth(.855, .925, p)
+  // Keep a small, nonzero ascent through the frontal interval. A flat middle
+  // segment made wheel input look ignored even though scroll kept advancing.
+  const travel = Math.max(0, Math.min(1, (p - .715) / .21))
+  return -3.75 * (1 - smooth(.715, .785, p))
+    + 3.15 * smooth(.855, .925, p) + (travel - .5) * .9
 }
 
 // The outgoing floor and incoming ceiling meet at the same screen-space cut.

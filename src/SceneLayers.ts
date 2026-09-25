@@ -57,8 +57,8 @@ export function createSceneLayers(scene: THREE.Scene) {
         // The density edge folds the ink into a local wake. A screen-height
         // bound keeps portrait/landscape strokes comparable without reducing
         // the deformation to a subpixel shimmer on the text.
-        vec2 displacement=water.xy*.20;
-        displacement*=min(1.,.055/max(length(displacement),.00001));
+        vec2 displacement=water.xy*.15;
+        displacement*=min(1.,.035/max(length(displacement),.00001));
         displacement.x/=max(uFlowAspect,.25);
         vec2 inkUv=vUv-vec2(0.,uInkOffset)-displacement;
         vec4 ink=texture2D(uMap,clamp(inkUv,vec2(0.),vec2(1.)));

@@ -8,7 +8,7 @@ test('@interaction adjacent vertebrae keep a gradual height twist independently 
   const assembly = createSpineAssembly(false, false)
   const bones = assembly.group.getObjectByName('aether-spine-vertebrae') as THREE.InstancedMesh
   const matrix = new THREE.Matrix4(), position = new THREE.Vector3(), rotation = new THREE.Quaternion(), scale = new THREE.Vector3()
-  const euler = new THREE.Euler()
+  const facing = new THREE.Vector3()
   try {
     for (const p of [.32, .46, .58]) {
       assembly.update(p, 1, 1)
@@ -17,17 +17,20 @@ test('@interaction adjacent vertebrae keep a gradual height twist independently 
         bones.getMatrixAt(i, matrix)
         matrix.decompose(position, rotation, scale)
         if (scale.x < .1) continue
-        euler.setFromQuaternion(rotation)
-        levels.push({ y: position.y, yaw: euler.y })
+        facing.set(0, 0, 1).applyQuaternion(rotation)
+        levels.push({ y: position.y, yaw: Math.atan2(facing.x, facing.z) })
       }
       levels.sort((a, b) => a.y - b.y)
       expect(levels.length).toBeGreaterThanOrEqual(8)
-      expect(levels.at(-1)!.yaw - levels[0].yaw).toBeGreaterThan(1.8)
+      let totalTurn = 0
       for (let i = 1; i < levels.length; i++) {
-        const turn = levels[i].yaw - levels[i - 1].yaw
-        expect(turn).toBeGreaterThan(.20)
-        expect(turn).toBeLessThan(.31)
+        const difference = levels[i].yaw - levels[i - 1].yaw
+        const turn = Math.atan2(Math.sin(difference), Math.cos(difference))
+        totalTurn += turn
+        expect(turn).toBeGreaterThan(.40)
+        expect(turn).toBeLessThan(.50)
       }
+      expect(totalTurn).toBeGreaterThan(3.1)
       const snapshot = Array.from(bones.instanceMatrix.array)
       assembly.update(p + .06, 1, 1)
       assembly.update(p, 1, 1)

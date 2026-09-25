@@ -653,6 +653,13 @@ function probeOutgoingBonePixels() {
   const reference = new THREE.Points(grains.geometry, referenceMaterial)
   reference.frustumCulled = false
   reference.visible = false
+  const outgoingFlowers = outgoing.children[0] as THREE.Points<THREE.BufferGeometry, THREE.ShaderMaterial>
+  const originalFlowerMaterial = outgoingFlowers.material
+  const referenceFlowerMaterial = originalFlowerMaterial.clone()
+  referenceFlowerMaterial.uniforms = referenceMaterial.uniforms
+  const referenceFlowers = new THREE.Points(outgoingFlowers.geometry, referenceFlowerMaterial)
+  referenceFlowers.frustumCulled = false
+  reference.add(referenceFlowers)
   probeScene.add(reference)
   const coverageMaterial = originalMaterial.clone()
   coverageMaterial.uniforms = originalMaterial.uniforms
@@ -661,6 +668,9 @@ function probeOutgoingBonePixels() {
   coverageMaterial.fragmentShader = coverageMaterial.fragmentShader.replace(
     'gl_FragColor = vec4(color, shape * vAlpha * entry);',
     'if (vAlpha <= 0.) discard; gl_FragColor = vec4(1., 1., 1., 1.);')
+  const flowerCoverageMaterial = originalFlowerMaterial.clone()
+  flowerCoverageMaterial.uniforms = originalFlowerMaterial.uniforms
+  flowerCoverageMaterial.fragmentShader = coverageMaterial.fragmentShader
   const probeCamera = new THREE.PerspectiveCamera(42, width / height, .1, 100)
   const target = new THREE.WebGLRenderTarget(width, height)
   const saved = { target: renderer.getRenderTarget(), autoClear: renderer.autoClear,
@@ -715,6 +725,7 @@ function probeOutgoingBonePixels() {
       return { progress, visibleAbove, changedAbove, hiddenBaseline, leakedBelow }
     })
     outgoing.material = coverageMaterial
+    outgoingFlowers.material = flowerCoverageMaterial
     at(.645, 10)
     const initial = read()
     at(.645, 12)
@@ -730,13 +741,17 @@ function probeOutgoingBonePixels() {
       return outgoing.visible
     })
     return { cases, geometryShared: outgoing.geometry === grains.geometry,
+      flowerGeometryShared: outgoingFlowers.geometry === (grains.children[0] as THREE.Points).geometry,
       idleChanged: changed(initial, idle), forwardChanged: changed(initial, forward),
       reverseChanged: changed(initial, reverse), closed }
   } finally {
     outgoing.material = originalMaterial
+    outgoingFlowers.material = originalFlowerMaterial
     probeScene.remove(reference)
     referenceMaterial.dispose()
+    referenceFlowerMaterial.dispose()
     coverageMaterial.dispose()
+    flowerCoverageMaterial.dispose()
     atmosphere.dispose()
     target.dispose()
     renderer.setRenderTarget(saved.target)

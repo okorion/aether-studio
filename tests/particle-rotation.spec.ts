@@ -27,7 +27,7 @@ test('@interaction flowers stay still at rest while a sparse distant belt orbits
       ParticleRotation: { sampleRotation(progress: number, mobile: boolean, lane: number): Record<string, number[]> }
     }).ParticleRotation.sampleRotation(progress, mobile, lane), { progress, mobile, lane })
     const { start, expected, end, moving, movingStart, movingReverse, reverse, anchors, idle, idleReverse, movingIdle,
-      bokeh, thinned, reactorMoving, reactorBokeh, forestMoving, forestBokeh } = samples
+      bokeh, thinned, reactorMoving, reactorBokeh, forestMoving, forestBokeh, normal, expectedNormal } = samples
     const belt = lane !== .3
     const radius = (point: number[]) => Math.hypot(point[0], point[2])
     expect(anchors).toEqual([-29.8, -29.8, -29.8])
@@ -61,6 +61,9 @@ test('@interaction flowers stay still at rest while a sparse distant belt orbits
       expect(thinned[3]).toBeGreaterThan(0)
     }
     for (let axis = 0; axis < 3; axis++) {
+      // Production GPU normals must match the inverse transpose of the actual
+      // mobile squeeze and yaw, including finite zero normals for other grains.
+      expect(normal[axis]).toBeCloseTo(expectedNormal[axis], 3)
       if (!belt) expect(Math.abs(end[axis] - expected[axis])).toBeLessThan(.005)
       expect(movingReverse[axis]).toBeCloseTo(movingStart[axis], 3)
       expect(reverse[axis]).toBeCloseTo(start[axis], 3)

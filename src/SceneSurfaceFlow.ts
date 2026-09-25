@@ -33,7 +33,7 @@ export const surfaceFlowGLSL = /* glsl */ `
     vec2 slope = vec2(
       surfaceSample(uv + vec2(uFlowTexel.x, 0.)).b - surfaceSample(uv - vec2(uFlowTexel.x, 0.)).b,
       surfaceSample(uv + vec2(0., uFlowTexel.y)).b - surfaceSample(uv - vec2(0., uFlowTexel.y)).b);
-    float wet = 1. - smoothstep(.055, .28, 1. - field.a);
+    float wet = 1. - smoothstep(.015, .72, 1. - field.a);
     vec2 normal = slope * wet;
     return vec3(normal, field.b);
   }

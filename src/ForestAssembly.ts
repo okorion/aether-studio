@@ -43,10 +43,12 @@ export function createForestParticles(assets: ReturnType<typeof createForestGeom
     }
     point.toArray(positions, i * 3)
     const seed = random(), angle = random() * Math.PI * 2
-    const radius = .65 + random() ** 1.7 * 5.5
-    const lift = random() < .025 ? 5 + seed * 18 : 18 + seed ** 1.4 * 82
-    origins.set([Math.cos(angle) * radius, point.y + lift,
-      Math.sin(angle) * radius - 1.4], i * 3)
+    // A nearby reservoir reinforces existing branches, instead of sweeping
+    // up to 100 world units through the camera during a short scroll interval.
+    const radius = .18 + random() ** 1.7 * 1.15
+    const lift = 2.4 + seed ** 1.4 * 8.2
+    origins.set([point.x + Math.cos(angle) * radius, point.y + lift,
+      point.z + Math.sin(angle) * radius], i * 3)
     // A standing forest is already legible on entry. The remaining population
     // descends into these same branches; reversing scroll removes only that fill.
     if (random() < (i < count ? .32 : .54)) point.toArray(origins, i * 3)

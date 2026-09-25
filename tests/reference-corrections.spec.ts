@@ -52,16 +52,21 @@ test('@interaction forest assembly has sparse arrivals, particle trunks and exac
     expect(particles.barkCount).toBeGreaterThan(2000)
     const positions = particles.geometry.getAttribute('position'), origins = particles.geometry.getAttribute('aOrigin')
     let standingLeaves = 0, standingBark = 0
+    let minLift = Infinity, maxLift = 0, maxDrift = 0, standingDrift = 0
     for (let i = 0; i < positions.count; i++) {
-      expect(origins.getY(i)).toBeGreaterThanOrEqual(positions.getY(i))
+      const lift = origins.getY(i) - positions.getY(i)
+      const drift = Math.hypot(origins.getX(i) - positions.getX(i), origins.getZ(i) - positions.getZ(i))
+      minLift = Math.min(minLift, lift); maxLift = Math.max(maxLift, lift); maxDrift = Math.max(maxDrift, drift)
       if (origins.getY(i) === positions.getY(i)) {
-        expect(origins.getX(i)).toBe(positions.getX(i))
-        expect(origins.getZ(i)).toBe(positions.getZ(i))
+        standingDrift = Math.max(standingDrift, drift)
         if (i < 7000) standingLeaves++; else standingBark++
       }
     }
-    // A small foreground population is visible at arrival; the dense forest
-    // remains above the frame until scroll brings it down.
+    expect(minLift).toBeGreaterThanOrEqual(0)
+    expect(maxLift).toBeLessThanOrEqual(10.61)
+    expect(maxDrift).toBeLessThan(1.34)
+    expect(standingDrift).toBe(0)
+    // The standing silhouette stays intact while nearby seeds reinforce it.
     expect(standingLeaves / 7000).toBeGreaterThan(.29)
     expect(standingLeaves / 7000).toBeLessThan(.35)
     expect(standingBark / particles.barkCount).toBeGreaterThan(.50)

@@ -127,12 +127,16 @@ export function createPointerFlow(profile: 'water' | 'haze' = 'water') {
         const ry = (y + .5) / height * 2 - 1 - centerY
         for (let x = 0; x < width; x++) {
           const rx = ((x + .5) / width * 2 - 1 - centerX) * aspect
-          const weight = Math.exp((rx * rx + ry * ry) * gaussian)
+          const squared = rx * rx + ry * ry
+          // Enlarge the contact by 1.5, independently of the thin displaced rim.
+          const contactWeight = Math.exp(squared * gaussian / 2.25)
+          const edge = clamp((Math.sqrt(squared) / radius - 1.15) / .65, 0, 1)
+          const weight = Math.exp(squared * gaussian) * (gas ? 1 : 1 - edge * edge * (3 - 2 * edge))
           const i = (y * width + x) * 2
           velocity[i] = clamp(velocity[i] + impulseX * weight, -.95, .95)
           velocity[i + 1] = clamp(velocity[i + 1] + impulseY * weight, -.95, .95)
           density[i / 2] = Math.min(1, density[i / 2] + distance * (7 + Math.min(7, speed) * 2) * weight)
-          if (!gas) contact[i / 2] = Math.max(contact[i / 2], clamp((weight - .68) / .20, 0, 1))
+          if (!gas) contact[i / 2] = Math.max(contact[i / 2], clamp((contactWeight - .68) / .20, 0, 1))
         }
       }
       idleAge = 0
@@ -155,12 +159,12 @@ export function createPointerFlow(profile: 'water' | 'haze' = 'water') {
         clear()
         return
       }
-      // Transport continues after release: water closes the contact channel.
-      // Once its momentum is spent, retire the remaining slope monotonically.
-      if (!gas && idleAge > .55) {
-        const fade = Math.exp(-5.5 * delta)
+      // Ease transport to rest before retiring the residual slope. Its decay
+      // rate stays continuous across this handoff, avoiding a visible snap.
+      if (!gas && idleAge > .85) {
+        const fade = Math.exp(-3.8 * delta)
         for (let i = 0; i < cells; i++) {
-          contact[i] *= Math.exp(-22 * delta)
+          contact[i] *= Math.exp(-4.2 * delta)
           density[i] *= fade
           velocity[i * 2] *= fade; velocity[i * 2 + 1] *= fade
           response[i * 2] *= fade; response[i * 2 + 1] *= fade
@@ -171,16 +175,18 @@ export function createPointerFlow(profile: 'water' | 'haze' = 'water') {
       const steps = Math.max(1, Math.ceil(delta * 60))
       const dt = delta / steps
       const damping = Math.exp(-(gas ? 4.8 : 3.8) * dt)
-      const densityDamping = Math.exp(-(gas ? 6 : 2.8) * dt)
-      const diffusion = 1 - Math.exp(-(gas ? .45 : 2.3) * dt)
+      const settle = clamp((idleAge - .12) / .73, 0, 1)
+      const transportWeight = 1 - settle * settle * (3 - 2 * settle)
+      const densityDamping = Math.exp(-(gas ? 6 : 3.8) * dt)
+      const diffusion = 1 - Math.exp(-(gas ? .45 : 1.5 * transportWeight) * dt)
       const follow = 1 - Math.exp(-(gas ? 16 : 14) * dt)
-      const transport = gas ? 2.4 : 1.25
+      const transport = gas ? 2.4 : .9 * transportWeight
       const advectX = width * .5 / aspect * dt * transport
       const advectY = height * .5 * dt * transport
       const hx = 2 * aspect / width, hy = 2 / height
       const hx2 = hx * hx, hy2 = hy * hy
       for (let step = 0; step < steps; step++) {
-        for (let i = 0; i < cells; i++) contact[i] *= Math.exp(-(idleAge > .035 ? 22 : 2.5) * dt)
+        for (let i = 0; i < cells; i++) contact[i] *= Math.exp(-(gas ? 22 : 4.2) * dt)
         // Curl confinement rolls the wake without introducing radial splashes.
         // Both derivatives use screen-height units, including portrait views.
         for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {

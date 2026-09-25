@@ -65,12 +65,16 @@ test('@interaction spine links wrap in front and behind the bones and reverse wi
     twists.sort((a, b) => a.y - b.y)
     // Each successive vertebra turns gradually along the column, independently
     // of the parent assembly's scroll-driven rotation.
-    expect(twists.at(-1)!.yaw - twists[0].yaw).toBeGreaterThan(1.8)
-    expect(twists.at(-1)!.yaw - twists[0].yaw).toBeLessThan(3)
+    let totalTurn = 0
     for (let i = 1; i < twists.length; i++) {
-      expect(twists[i].yaw - twists[i - 1].yaw).toBeGreaterThan(.20)
-      expect(twists[i].yaw - twists[i - 1].yaw).toBeLessThan(.31)
+      const difference = twists[i].yaw - twists[i - 1].yaw
+      const turn = Math.atan2(Math.sin(difference), Math.cos(difference))
+      totalTurn += turn
+      expect(turn).toBeGreaterThan(.40)
+      expect(turn).toBeLessThan(.50)
     }
+    expect(totalTurn).toBeGreaterThan(3.1)
+    expect(totalTurn).toBeLessThan(4.6)
     // Inspect the whole finite strand. Its lower end hangs freely; dividing
     // these links in half would invent two chains that no longer exist.
     const centres: THREE.Vector3[] = []
@@ -131,7 +135,11 @@ test('@interaction particle flow keeps anchors separate and stops its scroll dri
     }
     for (let i = 0; i < roles.length; i++) if (bokeh.getW(i) > .5) expect(roles[i]).toBe(0)
     atmosphere.update(10, .4, 1, pointer)
-    expect(particles.geometry.drawRange.count).toBe(roles.length)
+    expect(particles.geometry.drawRange.count).toBe(baseCount)
+    const flowers = scene.getObjectByName('aether-flower-petal-surfaces') as THREE.Points<THREE.BufferGeometry, THREE.ShaderMaterial>
+    expect(flowers.visible).toBe(true)
+    expect(flowers.geometry.index!.count).toBeGreaterThan(roles.length - baseCount)
+    expect(flowers.material.depthWrite).toBe(true)
     const initial = current()
     atmosphere.update(40, .4, 1, pointer)
     expect(current()).toEqual(initial)
@@ -147,6 +155,7 @@ test('@interaction particle flow keeps anchors separate and stops its scroll dri
     // Descent moves the camera; the device's circular particle field has
     // already reached one fixed world-space anchor at both of these stops.
     atmosphere.update(44, .70, 1, pointer)
+    expect(flowers.visible).toBe(false)
     expect(particles.geometry.drawRange.count).toBe(baseCount)
     const device = current()
     atmosphere.update(50, .75, 1, pointer)

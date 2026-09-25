@@ -84,7 +84,8 @@ const microVertex = /* glsl */ `
   uniform float uViewportHeight;
   uniform float uPixelRatio;
   void main() {
-    vec3 p=mix(aOrigin,position,uAssembly);
+    float arrival=smoothstep(aSeed.y*.16,.84+aSeed.y*.16,uAssembly);
+    vec3 p=mix(aOrigin,position,arrival);
     p.y+=sin(uTime*.62+aSeed.y*29.)*.008;
     vec4 world=modelMatrix*vec4(p,1.);
     vec4 view=viewMatrix*world;

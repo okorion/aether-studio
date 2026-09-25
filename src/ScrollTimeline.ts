@@ -1,10 +1,10 @@
 // Positive distance weights preserve an exact inverse for reverse scrolling.
-export const SCALE_SCROLL_START = .765
+export const SCALE_SCROLL_START = .715
 export const SCALE_SCROLL_END = .925
 export const SCALE_SCROLL_HEIGHT_SVH = 100
 export const SCALE_SCROLL_RATIO = SCALE_SCROLL_HEIGHT_SVH / (1700 * (SCALE_SCROLL_END - SCALE_SCROLL_START))
 const spans = [
-  [0, .065, 1.2], [.065, .14, 1.7], [.14, .765, 1],
+  [0, .065, 1.2], [.065, .14, 1.7], [.14, SCALE_SCROLL_START, 1],
   [SCALE_SCROLL_START, SCALE_SCROLL_END, SCALE_SCROLL_RATIO], [.925, 1, 1.65],
 ] as const
 const length = spans.reduce((sum, [a, b, weight]) => sum + (b - a) * weight, 0)

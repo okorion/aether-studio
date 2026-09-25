@@ -4,6 +4,8 @@ import { SCALE_WAVE_INTERVAL_SECONDS, SCALE_WAVE_TRAVEL_SECONDS } from '../src/S
 import type {} from './fixtures/interaction-harness'
 import { scrollToProgress } from './scroll'
 import { scrollToScene } from '../src/ScrollTimeline'
+import { sampleJourney } from '../src/Journey'
+import { sampleScaleOffset, SCALE_CEILING_CLEARANCE } from '../src/ScaleStage'
 
 declare global {
   interface Window {
@@ -520,10 +522,11 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
     expect(result.forward[0].inkOffset).not.toEqual(result.first[0].inkOffset)
     expect(result.reverse).toEqual(result.first)
     expect(result.first[0].visible).toBe(true)
-    for (const state of result.fixed) {
+    for (const [index, state] of result.fixed.entries()) {
       expect(state.fixed.machineY).toBeCloseTo(-40.4, 8)
       expect(state.fixed.floorY).toBeCloseTo(-43.212, 8)
-      expect(state.fixed.scaleY).toBeCloseTo(-48, 8)
+      const p = [.70, .76, .82, .86, .93, .82][index]
+      expect(state.fixed.scaleY).toBeCloseTo(sampleJourney(p).height + sampleScaleOffset(p), 8)
       expect(state.scaleTiles).toEqual(result.fixed[0].scaleTiles)
     }
     expect(result.fixed[0].fixed.machineVisible).toBe(true)
@@ -549,7 +552,7 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
     expect(contact.ceilingVisible).toBe(false)
     expect(contact.scaleCorePresent).toBe(false)
     expect(contact.ceilingWidth).toBeCloseTo(64, 5)
-    expect(contact.undersideY).toBeLessThan(contact.floorMin)
+    expect(contact.undersideY).toBeCloseTo(sampleJourney(.70).height + SCALE_CEILING_CLEARANCE, 5)
     expect(contact.undersideWidth).toBeCloseTo(192, 5)
     expect(surfaces.visibility[0]).toMatchObject({ machine: true, ruins: true, upperStructure: true, underside: false })
     // The partial wrapper overlap retains the upper room after the eye has
@@ -1007,7 +1010,7 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
       expect(state.orbitWeight).toBe(0)
     }
     const returningOrbit = await page.evaluate(() =>
-      [0, .87, .88, 1].map((progress) => window.interactionHarness.sampleJourney(progress)),
+      [0, .94, .95, 1].map((progress) => window.interactionHarness.sampleJourney(progress)),
     )
     for (const state of returningOrbit) {
       expect(state.orbitEnabled).toBe(true)

@@ -5,7 +5,7 @@
 - 원본: [NIH 3D · 3DPX-000307](https://3d.nih.gov/entries/3DPX-000307)
 - 라이선스: [Creative Commons Attribution 4.0 International](https://creativecommons.org/licenses/by/4.0/)
 - 확인일: 2026-09-25. 원본 페이지의 라이선스 링크를 확인했습니다.
-- 변경: 삼각형 267,680개를 10,000개로 축소하고 좌표축·크기·높이를 조정했습니다. 재질과 반복 배치는 Aether에서 작성했습니다.
+- 변경: 삼각형 267,680개를 10,000개로 축소하고 좌표축·크기·높이를 조정했습니다. 런타임에서는 본체 상·하단의 기울기를 보정하고 신경궁으로 갈수록 보정량을 줄입니다. 재질과 반복 배치는 Aether에서 작성했습니다.
 - 재생성: `scripts/prepare-vertebra.py`. 입력 STL SHA-256은 JSON의 `sourceSha256`에 보관합니다.
 - 이 라이선스는 해당 메시와 파생 메시에 적용되며 나머지 프로젝트의 라이선스를 변경하지 않습니다.
 

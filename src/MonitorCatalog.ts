@@ -56,6 +56,6 @@ export function sampleMonitorLayout(progress: number, index: number, count: numb
   const step = index - passage
   const turn = MathUtils.clamp(1.30 * width / 6.1, 1.05, 1.55)
   return { step, angle: step * turn, y: -step * 2.05 * height / 3.8,
-    radiusX: 4.7 + Math.max(0, width - 6.1) * .45,
-    radiusZ: 3.8 + Math.max(0, width - 6.1) * .22 }
+    radiusX: 5.15 + Math.max(0, width - 6.1) * .45,
+    radiusZ: 4.1 + Math.max(0, width - 6.1) * .22 }
 }

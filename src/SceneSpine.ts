@@ -17,6 +17,18 @@ export function sampleSpineExposure(progress: number) {
 function vertebraGeometry() {
   const geometry = new THREE.BufferGeometry()
   geometry.setAttribute('position', new THREE.Float32BufferAttribute(lumbarMesh.positions, 3))
+  const vertices = geometry.getAttribute('position')
+  // The scan's body endplates form a wedge even with an upright instance.
+  // Level those two fitted surfaces, blending out before the neural arch.
+  // Preserve the source mesh connectivity and the open vertebral foramen.
+  for (let i = 0; i < vertices.count; i++) {
+    const x = vertices.getX(i), y = vertices.getY(i), z = vertices.getZ(i)
+    const weight = 1 - THREE.MathUtils.smoothstep(z, -.40, .12)
+    const bottom = -.00913 * x - .12398 * z - .58966
+    const top = -.06666 * x + .13745 * z + .12915
+    const height = THREE.MathUtils.clamp((y - bottom) / Math.max(.25, top - bottom), -.035, 1.035)
+    vertices.setY(i, THREE.MathUtils.lerp(y, -.535 + height * .60, weight))
+  }
   geometry.setIndex(lumbarMesh.indices)
   const colors = new Float32Array(lumbarMesh.positions.length).fill(.94)
   geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3))
@@ -32,17 +44,10 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
   const rows = 10
   const spacing = HEIGHT / rows
   const boneGeometry = vertebraGeometry()
-  const discGeometry = new THREE.LatheGeometry([
-    new THREE.Vector2(0, -.035), new THREE.Vector2(.45, -.035),
-    new THREE.Vector2(.56, -.015), new THREE.Vector2(.57, .012),
-    new THREE.Vector2(.45, .04), new THREE.Vector2(0, .04),
-  ], software ? 16 : 28)
-  discGeometry.scale(1, 1, .79)
-  discGeometry.translate(0, 0, .23)
   const linkGeometry = createChainGeometry(software, mobile)
   const exposure = { value: sampleSpineExposure(0) }
   const boneMaterial = new THREE.MeshPhysicalMaterial({
-    color: 0xe2e4ec, vertexColors: true, metalness: software ? .48 : .96,
+    color: 0xa3bce1, vertexColors: true, metalness: software ? .48 : .96,
     roughness: software ? .51 : .29, envMapIntensity: 1.18,
     iridescence: software ? 0 : .24, iridescenceIOR: 1.36,
     iridescenceThicknessRange: [180, 460], clearcoat: software ? 0 : .12,
@@ -114,9 +119,9 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
         float spineViolet = pow(max(0., dot(spineReflection, normalize(vec3(.12,.80,-.56)))), 2.5);
         float spineGold = pow(max(0., dot(spineReflection, normalize(vec3(-.72,-.32,-.60)))), 3.1);
         float spineGreen = pow(max(0., dot(spineReflection, normalize(vec3(.40,.56,-.73)))), 3.8);
-        vec3 spineReflectionColor = vec3(.90,.31,.62) * spinePink
-          + vec3(.26,.68,.88) * spineCyan
-          + vec3(.43,.26,.70) * spineViolet * 1.05
+        vec3 spineReflectionColor = vec3(.58,.26,.58) * spinePink
+          + vec3(.12,.51,1.0) * spineCyan * 1.25
+          + vec3(.24,.32,.88) * spineViolet * 1.05
           + vec3(.94,.59,.22) * spineGold * .12
           + vec3(.25,.82,.46) * spineGreen * .22;
         float spineFresnel = pow(1. - max(dot(normal, normalize(vViewPosition)), 0.), 2.);
@@ -146,12 +151,7 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
     }
     boneMaterial.customProgramCacheKey = () => 'aether-spine-layered-silver-v6'
   }
-  const discMaterial = new THREE.MeshPhysicalMaterial({
-    color: 0x26364a, metalness: software ? .45 : .86, roughness: .44,
-    envMapIntensity: .58, iridescence: software ? 0 : .14,
-    iridescenceThicknessRange: [160, 380], transparent: true,
-  })
-  for (const material of [boneMaterial, discMaterial]) {
+  for (const material of [boneMaterial]) {
     const previousCompile = material.onBeforeCompile
     const previousCacheKey = material.customProgramCacheKey()
     material.onBeforeCompile = (shader, renderer) => {
@@ -166,7 +166,7 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
   const linkMaterial = createChainMaterial(software)
   const entryEdge = { value: -0.25 }
   const exitEdge = { value: -0.25 }
-  for (const material of [boneMaterial, discMaterial, linkMaterial]) {
+  for (const material of [boneMaterial, linkMaterial]) {
     // Keep the bone's micrograin hook and share the same diagonal boundary as
     // the outgoing ring and incoming monitors. Hidden fragments write no depth.
     const previousCompile = material.onBeforeCompile
@@ -194,14 +194,13 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
   }
   const bones = new THREE.InstancedMesh(boneGeometry, boneMaterial, rows)
   bones.name = 'aether-spine-vertebrae'
-  const discs = new THREE.InstancedMesh(discGeometry, discMaterial, rows)
   // Reserve the longer layout once; resizing only changes the active range.
   const chains = new THREE.InstancedMesh(linkGeometry, linkMaterial, getChainLinkCount(true))
   chains.count = getChainLinkCount(mobile)
   chains.name = 'aether-spine-chain'
   group.userData.chainStrands = 1
   group.userData.motion = 'absolute-scroll-phase'
-  const meshes = [bones, discs, chains]
+  const meshes = [bones, chains]
   for (const mesh of meshes) {
     mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage)
     mesh.frustumCulled = false
@@ -235,24 +234,31 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
       group.userData.entryEdge = entryEdge.value
       group.visible = alpha > .001 && form > .001
       boneMaterial.opacity = alpha
-      discMaterial.opacity = alpha * .9
       linkMaterial.opacity = alpha
       if (!group.visible) return
       const chainPath = sampleChainPath(progress, mobileView)
-      let anchorOffset = 0
+      let anchorOffset = chainPath.getPointAt(0, terminal).y
       if (camera) {
         // The free end descends across the frame with scroll. At the lower
         // curtain it occupies only the bottom third, including camera motion.
         group.updateWorldMatrix(true, false)
         projection.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse).multiply(group.matrixWorld)
         chainPath.getPointAt(0, terminal).multiplyScalar(form)
-        const screenY = .72 - 1.06 * ease((progress - .40) / .215)
-        const m = projection.elements, x = terminal.x, z = terminal.z
-        const denominator = m[5] - screenY * m[7]
-        if (Math.abs(denominator) > .00001) {
-          const y = (screenY * (m[3]*x + m[11]*z + m[15]) - (m[1]*x + m[9]*z + m[13])) / denominator
-          anchorOffset = (y - terminal.y) * ease((progress - .235) / .055)
+        const startY = terminal.applyMatrix4(projection).y
+        const screenY = THREE.MathUtils.lerp(startY,
+          .72 - 1.06 * ease((progress - .40) / .215), ease((progress - .235) / .055))
+        // Solve on the helix itself. A Y-only correction detaches the links
+        // from their track and makes the diagonal strand fall vertically.
+        let low = -30, high = 30
+        for (let iteration = 0; iteration < 30; iteration++) {
+          const height = (low + high) * .5
+          chainPath.setTopHeight(height)
+          chainPath.getPointAt(0, terminal).multiplyScalar(form).applyMatrix4(projection)
+          if (terminal.y < screenY) low = height
+          else high = height
         }
+        anchorOffset = (low + high) * .5
+        chainPath.setTopHeight(anchorOffset)
       }
       if (progress === previousProgress && form === previousEmergence && mobileView === previousMobile && anchorOffset === previousAnchor) return
       previousProgress = progress
@@ -270,26 +276,18 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
         // The authored twist follows height, independently of the parent's
         // scroll rotation. Each adjacent body turns about 26 degrees, so the
         // neural arches form a continuous spiral instead of a straight seam.
-        dummy.rotation.set(Math.sin(bend * .8) * .07,
-          y * .42 + Math.sin(bend * .72) * .035,
-          -Math.cos(bend) * .13)
+        dummy.rotation.set(0, y * .42 + Math.sin(bend * .72) * .035, 0)
         // Fewer, taller bodies retain narrow joints instead of widely spaced rings.
         dummy.scale.set((.97 + Math.sin(i * 1.37) * .045) * scale,
           spacing / .61 * scale, (.96 + Math.cos(i * .87) * .065) * scale)
         dummy.updateMatrix()
         bones.setMatrixAt(i, dummy.matrix)
-        dummy.position.y -= spacing * .47 * form
-        dummy.scale.set(.97 * scale, spacing / .54 * scale, .97 * scale)
-        dummy.updateMatrix()
-        discs.setMatrixAt(i, dummy.matrix)
       }
       bones.instanceMatrix.needsUpdate = true
-      discs.instanceMatrix.needsUpdate = true
       const chainLength = chainPath.getLength()
       for (let i = 0; i < chains.count; i++) {
         const t = i * CHAIN_LINK_PITCH / chainLength
         chainPath.getPointAt(t, dummy.position).multiplyScalar(form)
-        dummy.position.y += anchorOffset
         chainPath.getTangentAt(t, tangent)
         dummy.quaternion.setFromUnitVectors(up, tangent)
         // A fixed roll opens the upper terminal toward the authored stage
@@ -309,10 +307,8 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
       group.removeFromParent()
       meshes.forEach(mesh => mesh.dispose())
       boneGeometry.dispose()
-      discGeometry.dispose()
       linkGeometry.dispose()
       boneMaterial.dispose()
-      discMaterial.dispose()
       linkMaterial.dispose()
       group.clear()
     },

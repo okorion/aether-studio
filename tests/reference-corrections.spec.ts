@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { build } from 'vite'
 import * as THREE from 'three'
-import { createForestGeometry } from '../src/ForestGeometry'
+import { createForestGeometry, FOREST_FLOOR_Y } from '../src/ForestGeometry'
 import { createForestParticles, sampleForestAssembly } from '../src/ForestAssembly'
 import { createSceneForest } from '../src/SceneForest'
 import type { probeDryContact, probeStatementHandoff } from './fixtures/reference-corrections-harness'
@@ -57,14 +57,19 @@ test('@interaction forest assembly has sparse arrivals, particle trunks and exac
       const lift = origins.getY(i) - positions.getY(i)
       const drift = Math.hypot(origins.getX(i) - positions.getX(i), origins.getZ(i) - positions.getZ(i))
       minLift = Math.min(minLift, lift); maxLift = Math.max(maxLift, lift); maxDrift = Math.max(maxDrift, drift)
-      if(lift>0) { arrivals++; if(lift<1.41) localArrivals++ }
+      const formerHeight = FOREST_FLOOR_Y + (positions.getY(i) - FOREST_FLOOR_Y) * 2
+      const seedLift = origins.getY(i) - Math.max(positions.getY(i), formerHeight)
+      if(lift>0) { arrivals++; if(seedLift<1.41) localArrivals++ }
+      if (i < 7000) expect(positions.getY(i)).toBeCloseTo(
+        FOREST_FLOOR_Y + (assets.leafMatrices[i * 16 + 13] - FOREST_FLOOR_Y) * .5, 4)
       if (origins.getY(i) === positions.getY(i)) {
         standingDrift = Math.max(standingDrift, drift)
         if (i < 7000) standingLeaves++; else standingBark++
       }
     }
     expect(minLift).toBeGreaterThanOrEqual(0)
-    expect(maxLift).toBeLessThanOrEqual(3.21)
+    expect(maxLift).toBeGreaterThan(8)
+    expect(maxLift).toBeLessThan(18)
     expect(maxDrift).toBeLessThan(.82)
     expect(localArrivals/arrivals).toBeGreaterThan(.79)
     expect(standingDrift).toBe(0)
@@ -82,6 +87,7 @@ test('@interaction forest assembly has sparse arrivals, particle trunks and exac
     expect(sampleForestAssembly(0, false)).toBe(0)
     expect(sampleForestAssembly(.14, false)).toBe(1)
     expect(sampleForestAssembly(.89, true)).toBe(1)
+    expect(sampleForestAssembly(1, true)).toBe(0)
   } finally { particles.geometry.dispose(); assets.barkGeometry.dispose(); assets.leafGeometry.dispose() }
   const scene = new THREE.Scene(), forest = createSceneForest(scene, true, false)
   try {

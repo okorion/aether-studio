@@ -1,42 +1,40 @@
 import * as THREE from 'three'
 
-export type SurfaceFlowInput = { flowTexture?: THREE.Texture; hazeTexture?: THREE.Texture; aspect: number }
+export type SurfaceFlowInput = { flowTexture?: THREE.Texture; waterTexture?: THREE.Texture; hazeTexture?: THREE.Texture; aspect: number }
 
 /** RG velocity, B water height, inverse A stationary dry contact. */
 export const surfaceFlowGLSL = /* glsl */ `
   uniform sampler2D uSurfaceFlow;
   uniform vec2 uFlowTexel;
   uniform float uFlowAspect;
+  // Explicit bilinear filtering also supports devices without float-linear.
+  vec4 surfaceSample(vec2 uv) {
+    vec2 p = uv / uFlowTexel - .5, f = fract(p);
+    vec2 a = (floor(p) + .5) * uFlowTexel;
+    return mix(mix(texture2D(uSurfaceFlow, a), texture2D(uSurfaceFlow, a + vec2(uFlowTexel.x, 0.)), f.x),
+      mix(texture2D(uSurfaceFlow, a + vec2(0., uFlowTexel.y)), texture2D(uSurfaceFlow, a + uFlowTexel), f.x), f.y);
+  }
   vec2 surfaceDisplacement(vec2 uv) {
-    vec3 field = texture2D(uSurfaceFlow, uv).rgb;
+    vec3 field = surfaceSample(uv).rgb;
     vec2 velocity = (field.rg - vec2(128. / 255.)) * (255. / 127.);
     vec2 gradient = vec2(
-      texture2D(uSurfaceFlow, uv + vec2(uFlowTexel.x, 0.)).b
-        - texture2D(uSurfaceFlow, uv - vec2(uFlowTexel.x, 0.)).b,
-      texture2D(uSurfaceFlow, uv + vec2(0., uFlowTexel.y)).b
-        - texture2D(uSurfaceFlow, uv - vec2(0., uFlowTexel.y)).b);
+      surfaceSample(uv + vec2(uFlowTexel.x, 0.)).b
+        - surfaceSample(uv - vec2(uFlowTexel.x, 0.)).b,
+      surfaceSample(uv + vec2(0., uFlowTexel.y)).b
+        - surfaceSample(uv - vec2(0., uFlowTexel.y)).b);
     vec2 offset = velocity * .065 + gradient * .018;
     offset *= min(1., .035 / max(length(offset), .00001));
     return offset / vec2(max(uFlowAspect, .25), 1.);
   }
-  // A shallow film refracts through its HEIGHT GRADIENT, rather than dragging
-  // the printed ink along the whole velocity brush. Fine folds ride the wake.
+  // A shallow film refracts through a continuous height gradient around the
+  // dry contact, without adding an oscillating spatial or temporal carrier.
   vec3 surfaceWater(vec2 uv) {
-    vec3 field = texture2D(uSurfaceFlow, uv).rgb;
-    vec2 velocity = (field.rg - vec2(128. / 255.)) * (255. / 127.);
+    vec4 field = surfaceSample(uv);
     vec2 slope = vec2(
-      texture2D(uSurfaceFlow, uv + vec2(uFlowTexel.x, 0.)).b
-        - texture2D(uSurfaceFlow, uv - vec2(uFlowTexel.x, 0.)).b,
-      texture2D(uSurfaceFlow, uv + vec2(0., uFlowTexel.y)).b
-        - texture2D(uSurfaceFlow, uv - vec2(0., uFlowTexel.y)).b);
-    vec2 p = uv * vec2(max(uFlowAspect, .25), 1.);
-    // Fixed spatial folds fade with height. Quantized velocity must never move
-    // a high-frequency phase back and forth while the wake is settling.
-    vec2 fold = vec2(sin(p.y * 89. + sin(p.x * 43.)),
-      cos(p.x * 83. + sin(p.y * 47.)));
-    float wet = 1. - smoothstep(.055, .28, 1. - texture2D(uSurfaceFlow, uv).a);
-    vec2 normal = (slope * (1. + fold * .36)
-      + fold * field.b * min(.15, length(velocity)) * .045) * wet;
+      surfaceSample(uv + vec2(uFlowTexel.x, 0.)).b - surfaceSample(uv - vec2(uFlowTexel.x, 0.)).b,
+      surfaceSample(uv + vec2(0., uFlowTexel.y)).b - surfaceSample(uv - vec2(0., uFlowTexel.y)).b);
+    float wet = 1. - smoothstep(.055, .28, 1. - field.a);
+    vec2 normal = slope * wet;
     return vec3(normal, field.b);
   }
 `
@@ -51,7 +49,7 @@ export function createSurfaceFlowUniforms() {
   }
   return {
     uniforms,
-    update(input?: SurfaceFlowInput, texture = input?.flowTexture) {
+    update(input?: SurfaceFlowInput, texture = input?.waterTexture ?? input?.flowTexture) {
       uniforms.uSurfaceFlow.value = texture ?? neutral
       uniforms.uFlowAspect.value = input?.aspect ?? 1
       const size = texture?.image as { width?: number; height?: number } | undefined

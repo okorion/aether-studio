@@ -6,43 +6,32 @@ import { createLightFilmUniforms } from '../src/SceneLighting'
 import { createSceneLightShafts } from '../src/SceneLightShafts'
 import type {} from './fixtures/light-spill-harness'
 
-test('@interaction forest film keeps its screen direction through orbit and moves only with scroll', () => {
+test('@interaction curved forest film remains anchored while camera movement produces real parallax', () => {
   const texture = new THREE.DataTexture(new Uint8Array([180, 120, 60, 255]), 1, 1)
   const scene = new THREE.Scene()
   const spill = createSceneLightShafts(scene, false, false, createLightFilmUniforms(texture))
   const film = scene.getObjectByName('aether-curved-light-film') as THREE.InstancedMesh
   const camera = new THREE.PerspectiveCamera(42, 1.6, .1, 100)
-  const matrix = new THREE.Matrix4()
-  const corners = [new THREE.Vector3(-.5, -.5, 0), new THREE.Vector3(.5, .5, 0)]
-  const projected = (progress: number, yaw: number, pitch: number, zone: number) => {
-    const { height } = sampleJourney(progress)
-    camera.position.set(Math.sin(yaw) * Math.cos(pitch) * 12,
-      height + Math.sin(pitch) * 12, Math.cos(yaw) * Math.cos(pitch) * 12)
-    camera.lookAt(0, height, 0)
-    spill.update(18, progress, camera)
-    scene.updateMatrixWorld(true)
-    film.getMatrixAt(zone, matrix)
-    return corners.map(corner => corner.clone().applyMatrix4(matrix).project(camera))
-  }
+  const matrix = new THREE.Matrix4(), centre = new THREE.Vector3()
+  const saved = film.instanceMatrix.array.slice()
   try {
+    const vertices = film.geometry.getAttribute('position')
+    let minZ = Infinity, maxZ = -Infinity
+    for (let i = 0; i < vertices.count; i++) { minZ = Math.min(minZ, vertices.getZ(i)); maxZ = Math.max(maxZ, vertices.getZ(i)) }
+    expect(maxZ - minZ).toBeGreaterThan(7)
     for (const [progress, zone] of [[.04, 0], [.975, 1]]) {
-      const front = projected(progress, 0, 0, zone)
-      for (const [yaw, pitch] of [[1.4, .4], [-2.7, -.3], [Math.PI * 4, .6]]) {
-        const orbit = projected(progress, yaw, pitch, zone)
-        orbit.forEach((point, i) => {
-          expect(point.x).toBeCloseTo(front[i].x, 5)
-          expect(point.y).toBeCloseTo(front[i].y, 5)
-          expect(point.z).toBeCloseTo(front[i].z, 5)
-        })
-      }
-      const down = projected(progress + .01, 1.4, .4, zone)
-      down.forEach((point, i) => {
-        expect(point.x).toBeCloseTo(front[i].x, 5)
-        expect(point.y).toBeGreaterThan(front[i].y)
-        expect(point.z).toBeCloseTo(front[i].z, 5)
-      })
-      const restored = projected(progress, -2.7, -.3, zone)
-      restored.forEach((point, i) => expect(point.distanceTo(front[i])).toBeLessThan(.00001))
+      const height = sampleJourney(progress).height
+      camera.position.set(0, height, 12); camera.lookAt(0, height, 0)
+      spill.update(18, progress, camera)
+      film.getMatrixAt(zone, matrix); centre.setFromMatrixPosition(matrix)
+      const front = centre.clone().project(camera)
+      camera.position.y -= 1; camera.lookAt(0, height - 1, 0)
+      spill.update(19, progress + .01, camera)
+      expect(centre.clone().project(camera).y).toBeGreaterThan(front.y)
+      camera.position.x = 4; camera.lookAt(0, height, 0)
+      spill.update(20, progress, camera)
+      expect(Math.abs(centre.clone().project(camera).x - front.x)).toBeGreaterThan(.01)
+      expect(film.instanceMatrix.array).toEqual(saved)
     }
   } finally { spill.dispose(); texture.dispose() }
 })

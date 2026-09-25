@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { sampleJourney, smooth, windowWeight } from './Journey'
+import { smooth, windowWeight } from './Journey'
 import { sampleLayers } from './SceneLayers'
 import { lightChoreographyGLSL, type LightFilmUniforms } from './SceneLighting'
 
@@ -25,7 +25,7 @@ const boundaryGLSL = /* glsl */ `
   }
 `
 
-/** One camera-facing film draw and one fan draw; no capture or media owner. */
+/** Fixed curved world-space film, behind the rotating foreground grove. */
 export function createSceneLightShafts(
   scene: THREE.Scene, software: boolean, mobile: boolean, film: LightFilmUniforms,
   forestFilm: LightFilmUniforms = film,
@@ -43,9 +43,13 @@ export function createSceneLightShafts(
     uCameraRight: { value: new THREE.Vector3(1, 0, 0) },
   }
 
-  // The memory stays front-facing while the forest orbits. Its height follows
-  // the journey alone; pointer yaw/pitch must not pan or tilt the movie.
-  const backdropGeometry = new THREE.PlaneGeometry(1, 1)
+  const backdropGeometry = new THREE.PlaneGeometry(1, 1, 48, 12)
+  const vertices = backdropGeometry.getAttribute('position')
+  for (let i = 0; i < vertices.count; i++) {
+    const x = vertices.getX(i)
+    vertices.setZ(i, x * x * 32)
+  }
+  backdropGeometry.computeVertexNormals()
   const backdropMaterial = new THREE.ShaderMaterial({
     uniforms: { ...shared, uLightFilm: forestFilm.map, uLightFilmReady: forestFilm.ready },
     defines: { AETHER_LIGHT_FILM: 1 },
@@ -74,21 +78,14 @@ export function createSceneLightShafts(
         float weight = sceneWeight();
         if (weight < .001) discard;
         vec2 uv = vUv;
-        // Keep a readable center sample; the four shoulders soften the source
-        // shapes without blurring the foreground foliage or transition mask.
-        vec3 color = aetherFilmColor(uv) * .40
-          + aetherFilmColor(uv + vec2(.035, .024)) * .15
-          + aetherFilmColor(uv - vec2(.035, .024)) * .15
-          + aetherFilmColor(uv + vec2(.035, -.024)) * .15
-          + aetherFilmColor(uv + vec2(-.035, .024)) * .15;
+        // Keep the film's own shapes; geometric curvature supplies perspective.
+        vec3 color = aetherFilmColor(uv);
         float luminance = dot(color, vec3(.2126, .7152, .0722));
         // Compress highlights without flattening the live-action silhouette.
         // Black film pixels remain black instead of becoming a uniform veil.
         color = color / (vec3(1.) + color * 1.9) * .72;
         float darkHold = smoothstep(.014, .13, luminance);
-        float window = smoothstep(.29, .43, vUv.y) * (1. - smoothstep(.57, .71, vUv.y));
-        // The film dissolves into the forest without a visible rectangle.
-        window *= smoothstep(.015, .10, uv.x) * (1. - smoothstep(.90, .985, uv.x));
+        float window = 1. - smoothstep(.24, .60, length((uv - .5) * vec2(1., 1.2)));
         float cloud = .60 + .40 * sin(vUv.x * 9.2 + sin(vUv.y * 4.7));
         float presence = smoothstep(.035, .32, luminance);
         float highlight = smoothstep(.22, .65, luminance);
@@ -110,8 +107,12 @@ export function createSceneLightShafts(
   const transform = new THREE.Matrix4()
   const rotation = new THREE.Quaternion()
   const scale = new THREE.Vector3(48, 27, 1)
-  const forward = new THREE.Vector3(), up = new THREE.Vector3()
-  const cameraPosition = new THREE.Vector3(), filmPosition = new THREE.Vector3()
+  for (let i = 0; i < 2; i++) {
+    rotation.setFromAxisAngle(new THREE.Vector3(0, 0, 1), i ? Math.PI : 0)
+    transform.compose(new THREE.Vector3(0, FOREST_FILM_HEIGHTS[i], -14), rotation, scale)
+    backdrop.setMatrixAt(i, transform)
+  }
+  backdrop.userData.worldSpace = true
   backdrop.frustumCulled = false
   backdrop.renderOrder = -4
   group.add(backdrop)
@@ -267,18 +268,6 @@ export function createSceneLightShafts(
       shared.uBoundaryMist.value.set(windowWeight(p,.055,.12,.175,.205),
         windowWeight(p,.845,.895,.955,.985))
       camera.updateMatrixWorld()
-      camera.getWorldPosition(cameraPosition)
-      camera.getWorldQuaternion(rotation)
-      camera.getWorldDirection(forward)
-      up.setFromMatrixColumn(camera.matrixWorld, 1).normalize()
-      const journeyHeight = sampleJourney(p).height
-      for (let i = 0; i < 2; i++) {
-        filmPosition.copy(cameraPosition).addScaledVector(forward, 30)
-          .addScaledVector(up, FOREST_FILM_HEIGHTS[i] - journeyHeight)
-        transform.compose(filmPosition, rotation, scale)
-        backdrop.setMatrixAt(i, transform)
-      }
-      backdrop.instanceMatrix.needsUpdate = true
       right.setFromMatrixColumn(camera.matrixWorld, 0)
       right.y = 0
       if (right.lengthSq() < .001) right.set(1, 0, 0)

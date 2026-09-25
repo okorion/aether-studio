@@ -29,6 +29,13 @@ export function createPointerFlow(profile: 'water' | 'haze' = 'water') {
   texture.generateMipmaps = false
   texture.flipY = false
   texture.needsUpdate = true
+  // Refraction needs continuous height values: 8-bit quantization changes the
+  // slope in visible steps even when the simulated water is decaying smoothly.
+  const surfaceData = new Float32Array(cells * 4)
+  const surfaceTexture = new THREE.DataTexture(surfaceData, width, height, THREE.RGBAFormat, THREE.FloatType)
+  surfaceTexture.minFilter = surfaceTexture.magFilter = THREE.NearestFilter
+  surfaceTexture.generateMipmaps = false
+  surfaceTexture.name = `aether-${profile}-continuous-surface`
 
   let anchored = false
   let previousX = 0, previousY = 0, aspect = 1
@@ -45,6 +52,10 @@ export function createPointerFlow(profile: 'water' | 'haze' = 'water') {
       const blue = Math.round(clamp(density[i], 0, 1) * 255)
       const alpha = 255 - Math.round(clamp(contact[i], 0, 1) * 255)
       const offset = i * 4
+      surfaceData[offset] = (128 + clamp(response[i * 2], -1, 1) * 127) / 255
+      surfaceData[offset + 1] = (128 + clamp(response[i * 2 + 1], -1, 1) * 127) / 255
+      surfaceData[offset + 2] = clamp(density[i], 0, 1)
+      surfaceData[offset + 3] = 1 - clamp(contact[i], 0, 1)
       if (data[offset] !== red || data[offset + 1] !== green || data[offset + 2] !== blue || data[offset + 3] !== alpha) {
         data[offset] = red
         data[offset + 1] = green
@@ -54,7 +65,9 @@ export function createPointerFlow(profile: 'water' | 'haze' = 'water') {
       }
     }
     if (changed) texture.needsUpdate = true
+    surfaceTexture.needsUpdate = true
   }
+  publish()
   const clear = () => {
     if (disposed) return
     anchored = false
@@ -75,7 +88,7 @@ export function createPointerFlow(profile: 'water' | 'haze' = 'water') {
   }
 
   return {
-    texture,
+    texture, surfaceTexture,
     move(ndcX: number, ndcY: number, nextAspect: number) {
       if (disposed) return
       if (!Number.isFinite(ndcX) || !Number.isFinite(ndcY) || Math.abs(ndcX) > 1 || Math.abs(ndcY) > 1
@@ -140,6 +153,19 @@ export function createPointerFlow(profile: 'water' | 'haze' = 'water') {
       idleAge += delta
       if (!gas && idleAge >= 2.25) {
         clear()
+        return
+      }
+      // Once the pointer stops, every displacement follows one monotone decay.
+      // No residual pressure iterations, advection or contact-mask rebound can
+      // alternately bend the same text edge in opposite directions.
+      if (!gas && idleAge > .065) {
+        const fade = Math.exp(-4.5 * delta)
+        for (let i = 0; i < cells; i++) {
+          density[i] *= fade
+          velocity[i * 2] *= fade; velocity[i * 2 + 1] *= fade
+          response[i * 2] *= fade; response[i * 2 + 1] *= fade
+        }
+        publish()
         return
       }
       const steps = Math.max(1, Math.ceil(delta * 60))
@@ -259,6 +285,7 @@ export function createPointerFlow(profile: 'water' | 'haze' = 'water') {
       if (disposed) return
       clear()
       texture.dispose()
+      surfaceTexture.dispose()
       disposed = true
     },
   }

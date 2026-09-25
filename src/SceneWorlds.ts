@@ -197,7 +197,7 @@ export function createSceneWorlds(
 
   const wallColumns = software ? 24 : mobile ? 34 : 44
   const originalRows = software ? 14 : mobile ? 20 : 25
-  const wallRows = Math.round(originalRows * .60)
+  const wallRows = originalRows
   const count = wallColumns * wallRows
   const tileHeight = 5.4 / ((originalRows - 1) * .75 + 1)
   const tileWidth = tileHeight * Math.sqrt(3) / 2

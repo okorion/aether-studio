@@ -36,6 +36,8 @@ test('@interaction production water protects the contact centre while its rim re
   expect(result.contact.dryMax).toBeLessThan(.000001)
   expect(result.contact.rimMax).toBeGreaterThan(.025)
   expect(result.end.energy).toBe(0)
+  expect(result.reversals).toBe(0)
+  expect(result.increases).toBe(0)
   // After the initial moving wake, recovery cannot build repeated oscillations.
   for (let i = 5; i < result.recovery.length; i++) expect(result.recovery[i]).toBeLessThan(result.recovery[3] * .8)
   await test.info().attach('water-contact-recovery.json', { body: JSON.stringify(result), contentType: 'application/json' })
@@ -47,15 +49,21 @@ test('@interaction forest assembly has sparse arrivals, particle trunks and exac
   try {
     expect(particles.barkCount).toBeGreaterThan(2000)
     const positions = particles.geometry.getAttribute('position'), origins = particles.geometry.getAttribute('aOrigin')
-    let near = 0
+    let standingLeaves = 0, standingBark = 0
     for (let i = 0; i < positions.count; i++) {
-      expect(origins.getY(i)).toBeGreaterThan(positions.getY(i))
-      if (origins.getY(i) < 12) near++
+      expect(origins.getY(i)).toBeGreaterThanOrEqual(positions.getY(i))
+      if (origins.getY(i) === positions.getY(i)) {
+        expect(origins.getX(i)).toBe(positions.getX(i))
+        expect(origins.getZ(i)).toBe(positions.getZ(i))
+        if (i < 7000) standingLeaves++; else standingBark++
+      }
     }
     // A small foreground population is visible at arrival; the dense forest
     // remains above the frame until scroll brings it down.
-    expect(near / positions.count).toBeGreaterThan(.005)
-    expect(near / positions.count).toBeLessThan(.03)
+    expect(standingLeaves / 7000).toBeGreaterThan(.29)
+    expect(standingLeaves / 7000).toBeLessThan(.35)
+    expect(standingBark / particles.barkCount).toBeGreaterThan(.50)
+    expect(standingBark / particles.barkCount).toBeLessThan(.58)
     for (const lower of [false, true]) {
       const samples = Array.from({ length: 101 }, (_, i) => sampleForestAssembly(i / 100, lower))
       const reverse = Array.from({ length: 101 }, (_, i) => sampleForestAssembly((100 - i) / 100, lower)).reverse()

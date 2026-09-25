@@ -10,10 +10,10 @@ export function probeHazeLifecycle(software = false) {
   let elapsed = 0
   const state = (delta = 0, frameDelta = delta) => {
     const field = input.update(delta,elapsed+=delta,1,.4,frameDelta).field
-    const bytes = field.hazeTexture?.image.data as Uint8Array | undefined
+    const bytes = field.hazeTexture?.image.data as Float32Array | undefined
     if (!bytes) return 0
     let mass = 0
-    for(let i=2;i<bytes.length;i+=4)mass+=bytes[i]
+    for(let i=2;i<bytes.length;i+=4)mass+=bytes[i]*255
     return mass
   }
   const move = (target: Element,x: number) => target.dispatchEvent(new PointerEvent('pointermove',{

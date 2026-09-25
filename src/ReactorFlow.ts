@@ -56,13 +56,13 @@ const fragment = /* glsl */ `
     float distance=length(radial);
     // Each seed occupies a different shell inside the tube. Corrections act
     // normal to the O, leaving tangential travel and local wakes intact.
-    float shell=.19+rest.w*.34;
+    float shell=.16+rest.w*.30;
     float error=distance-shell;
     vec3 normal=radial/max(.0001,distance);
-    p-=normal*error*(1.-exp(-1.8*uDelta));
+    p-=normal*error*(1.-exp(-4.2*uDelta));
     // A hard outer bound is only a guard for unusually strong input.
     radial=p-centre;
-    p=centre+radial*min(1.,.69/max(.0001,length(radial)));
+    p=centre+radial*min(1.,.55/max(.0001,length(radial)));
     gl_FragColor=vec4(p,rest.w);
   }
 `
@@ -81,7 +81,7 @@ export function createReactorFlow(renderer: THREE.WebGLRenderer, mobile: boolean
     const angle = seeds[seed * 3] * Math.PI * 2
     const branch = (lanes[seed * 4] * 2) % 1
     const cross = seeds[seed * 3 + 1]
-    const shell = .19 + branch * .34
+    const shell = .16 + branch * .30
     data.set([Math.cos(angle) * (1.47 + Math.cos(cross) * shell),
       Math.sin(angle) * (1.68 + Math.cos(cross) * shell), Math.sin(cross) * shell, branch], i * 4)
   }

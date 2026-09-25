@@ -4,6 +4,7 @@ import SceneBoundary from './SceneBoundary'
 import { projects } from './projects'
 import type { Project } from './projects'
 import { sampleJourney } from './Journey'
+import { journeyHeightSvh, scrollToScene } from './ScrollTimeline'
 import { initialLoading, loadingState } from './loading'
 import type { LoadingStage } from './loading'
 
@@ -254,7 +255,7 @@ export default function App() {
     const update = () => {
       frame = 0
       const maximum = document.documentElement.scrollHeight - window.innerHeight
-      const progress = maximum > 0 ? Math.min(1, Math.max(0, window.scrollY / maximum)) : 0
+      const progress = maximum > 0 ? scrollToScene(window.scrollY / maximum) : 0
       const state = sampleJourney(progress)
       if (journey.current) {
         journey.current.dataset.stage = state.overlay
@@ -430,6 +431,7 @@ export default function App() {
         <section
           id="home"
           className="hero"
+          style={{ height: `${journeyHeightSvh}svh` }}
           aria-labelledby="hero-title"
           hidden={activeSection !== 'home'}
         >

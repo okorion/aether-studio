@@ -80,7 +80,10 @@ const currentField = /* glsl */ `
       + .13 * sin(petalAngle * 9. + branch * 7.)
       + .06 * sin(petalAngle * 23. + tier * 4.);
     // Unequal folded petal ridges leave creases through the dense volume.
-    float folded = branch + sin(branch * PI * 6. + petalAngle * 2.) * .045;
+    // Flower lanes occupy disjoint bands. Normalize WITHIN each band; using
+    // lane*2 as a radius left entire annuli empty regardless of particle count.
+    float petalRadius = clamp(fract(lane * 7.13) / .22, 0., 1.);
+    float folded = petalRadius + sin(petalRadius * PI * 6. + petalAngle * 2.) * .025;
     float radius = (.18 + sqrt(max(.001, folded)) * (1.58 + .35 * sin(tier * 4. + side))) * petal;
     float facing = side * .45 + (tier - 1.5) * .53;
     vec3 centre = vec3(side * (2.2 + .55 * sin(tier * 2.4)),
@@ -88,7 +91,7 @@ const currentField = /* glsl */ `
     vec3 spine = centre + vec3(
       cos(petalAngle) * radius,
       sin(petalAngle) * radius,
-      .85 * branch * branch + .52 * sin(petalAngle * 5. + branch * 8.)
+      .70 * petalRadius * petalRadius + .36 * sin(petalAngle * 5. + petalRadius * 8.)
     );
     spine.z += sin(facing) * (spine.x - centre.x);
     // Successive turns form two distant arcs behind the visible column.
@@ -106,7 +109,7 @@ const currentField = /* glsl */ `
     spine = mix(spine, ribbon, flowerRibbon(lane));
     spine.y += -12.0 * (1.0 - smoothstep(.205, .29, uScroll / 55.0));
     float progress = uScroll / 55.;
-    float formed = smoothstep(.668, .725, progress);
+    float formed = smoothstep(.658, .704, progress);
     float fluidTime = uTime * .18;
     // Bounded warp: accumulated time must never multiply formation progress.
     // Otherwise a small scroll after a long visit spins grains many revolutions.
@@ -115,7 +118,7 @@ const currentField = /* glsl */ `
     float cross = branch * PI * 2.0 + fluidTime * .65
       + .20 * sin(orbit * 3. - fluidTime);
     float lobe = .83 + .17 * sin(orbit * 3. + .8) + .10 * sin(orbit * 7.);
-    float tube = (.24 + .36 * sqrt(branch)) * lobe
+    float tube = (.19 + .27 * sqrt(branch)) * lobe
       * (1. + .12 * sin(orbit * 4. - fluidTime * 1.2));
     vec3 reactor = vec3(cos(orbit) * (1.47 + cos(cross) * tube),
       sin(orbit) * (1.68 + cos(cross) * tube), sin(cross) * tube * .95);
@@ -496,7 +499,7 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
   options?: { renderer: THREE.WebGLRenderer; reducedMotion?: boolean; reactorSnapshot?: Float32Array }) {
   const random = seededRandom()
   const baseCount = software ? 6000 : mobile ? 40000 : 144000
-  const flowerCount = software ? 5400 : mobile ? 60000 : 180000
+  const flowerCount = software ? 9000 : mobile ? 95000 : 300000
   const count = baseCount + flowerCount
   const bokehCount = software ? 12 : mobile ? 40 : 100
   const positions = new Float32Array(count * 3)
@@ -519,7 +522,7 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
     let lane: number
     do { lane = flowerRandom() } while ((lane * 7.13) % 1 >= .22)
     positions.set([flowerRandom(), flowerRandom() * Math.PI * 2, Math.pow(flowerRandom(), 1.6)], i * 3)
-    dust.set([lane, .60 + Math.pow(flowerRandom(), 3.4) * (mobile ? 2.7 : 3.3), flowerRandom() * 2 - 1, -1], i * 4)
+    dust.set([lane, .95 + Math.pow(flowerRandom(), 2.4) * (mobile ? 2.1 : 2.6), flowerRandom() * 2 - 1, -1], i * 4)
   }
 
   const reactorFlow = !software && options
@@ -715,7 +718,7 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
         reactorFlow.update(time, visible ? p : 0, _camera, pointer, !options?.reducedMotion, flowActive)
         // Scroll formation continues while GPU advancement is suspended.
         // A stale full-state weight must never keep the O at the aperture.
-        uniforms.uReactorStateWeight.value = reactorFlow.getStatus().initialized ? smooth(.668, .725, p) ** 2 : 0
+        uniforms.uReactorStateWeight.value = reactorFlow.getStatus().initialized ? smooth(.678, .704, p) : 0
       }
       particles.userData.scrollStep = signedStep
       particles.userData.morph = morph

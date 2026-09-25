@@ -83,7 +83,9 @@ export function sampleChainPath(progress: number, mobile = false) {
     - 36 * Math.min(0, progress - start) - 6 * Math.max(0, progress - end)
   // Feed changes the helix phase, while its height envelope stays anchored.
   // A turn appears to descend diagonally without lowering the whole strand.
-  return new ColumnChainCurve(4.4 * (mobile ? 1.38 : 1), (top - 4.4) * CHAIN_TURN_PER_HEIGHT)
+  // Positive Three.js Y rotation decreases atan2(z,x). Feed in that same
+  // direction, adding a visible local turn instead of cancelling column yaw.
+  return new ColumnChainCurve(4.4 * (mobile ? 1.38 : 1), -(top - 4.4) * CHAIN_TURN_PER_HEIGHT * 1.8)
 }
 
 export function createChainMaterial(software: boolean) {

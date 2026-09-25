@@ -288,8 +288,8 @@ export function createSceneForest(scene: THREE.Scene, software: boolean, mobile:
   const groves=[0,1].map(index=>{
     const grove=new THREE.Group()
     grove.name=index?'aether-forest-lower':'aether-forest-upper'
-    // Fixed anchors span the two forest clearings. They never copy camera
-    // orientation or follow its orbit; scrolling travels through these trees.
+    // Fixed heights span the two clearings. Their common parent turns the
+    // foreground on drag; the separate world-space video remains in place.
     // Translate soil, branches and foliage together, independently of the wrapper.
     grove.position.y=sampleJourney(index?1:0).height+(index?4.2:-1.2)
     grove.rotation.y=index?.83:0
@@ -323,6 +323,7 @@ export function createSceneForest(scene: THREE.Scene, software: boolean, mobile:
   group.userData.boundary= {clusters:boundary.clusters,motes:boundary.motes,clouds:boundary.clouds,count:boundary.count}
   let disposed=false
   return {
+    group,
     update(time:number,progress:number,camera:THREE.Camera,pointer?:ForestPointer,pixelRatio?:number) {
       if(disposed)return
       const p=Number.isFinite(progress)?THREE.MathUtils.clamp(progress,0,1):0

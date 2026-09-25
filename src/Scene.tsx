@@ -672,7 +672,7 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
         try {
           // Include simulation passes in the same frame's draw-call accounting.
           activeRenderer.info.reset()
-          atmosphere.update(elapsed, scroll, activeRenderer.getPixelRatio(), input.field, camera)
+          atmosphere.update(elapsed, scroll, activeRenderer.getPixelRatio(), input.field, camera, worlds.getMonitorObstacles())
         } catch {
           failScene()
           return

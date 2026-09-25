@@ -332,7 +332,9 @@ export function createSceneEmblem(options: SceneEmblemOptions) {
       tailTime.value = Number.isFinite(time) ? Math.max(0, time) : 0
       tailLift.value = p > .5 ? 1 : 0
       const fold = smooth(.205, .295, p) * (1 - state.end)
-      const opacity = (1 - smooth(.305, .32, p)) + smooth(.88, .955, p)
+      // The lower forest curtain reveals a fully formed ring. No second alpha
+      // ramp may make the revealed metal gradually turn solid.
+      const opacity = p > .5 ? 1 : 1 - smooth(.305, .32, p)
       const bounds = sampleEmblemCurtain(p)
       curtain.upper.value = bounds.upper
       curtain.lower.value = bounds.lower

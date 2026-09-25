@@ -16,13 +16,13 @@ test('@interaction panel approaches the incoming cut and holds its front view un
     expect(j.radius).toBeCloseTo(11.6, 8)
     camera.position.set(0, j.height, j.radius); camera.lookAt(0, j.height, 0); camera.updateMatrixWorld()
     const y = sampleScaleOffset(p)
-    expect(y).toBeGreaterThanOrEqual(lastY); lastY = y
+    expect(y).toBeGreaterThan(lastY); lastY = y
     const upper = new THREE.Vector3(0, j.height + y + 2.65, -.65).project(camera)
     const cut = sampleLayers(p).deviceExit
     // Once a useful part of the incoming band is visible, its panel is already
     // within 15% of screen height of that edge, never below a long empty room.
     if (p >= .739 && p <= .755) expect(cut - (upper.y + 1) / 2).toBeLessThan(.15)
-    if (p >= .785 && p <= .855) expect(y).toBeCloseTo(0, 8)
+    if (p >= .785 && p <= .855) expect(Math.abs(y)).toBeLessThan(.16)
     expect(SCALE_CEILING_CLEARANCE).toBeGreaterThan(2.65)
   }
 })

@@ -14,6 +14,6 @@ test('@interaction real forest ground keeps its projection when only the wrapper
     expect(p.wrapperMoved).toEqual(p.initial)
     expect(p.restored).toEqual(p.initial)
     expect(Math.abs(p.cameraMoved[0] - p.initial[0])).toBeGreaterThan(.01)
-    expect(p.initial[2]).toBeCloseTo(lower ? -48.6 : -9.9, 1)
+    expect(p.initial[2]).toBeCloseTo(lower ? -51.6 : -9.9, 1)
   }
 })

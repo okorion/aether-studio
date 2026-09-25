@@ -70,7 +70,7 @@ export function probeFlowerPaths() {
   const target = new THREE.WebGLRenderTarget(1, 1, { type: THREE.FloatType })
   const geometry = new THREE.BufferGeometry()
   geometry.setAttribute('position', new THREE.Float32BufferAttribute([.27, 1.43, .3], 3))
-  geometry.setAttribute('aDust', new THREE.Float32BufferAttribute([.3, 1, .2, 0], 4))
+  geometry.setAttribute('aDust', new THREE.Float32BufferAttribute([.3, 1, .2, -2], 4))
   geometry.setAttribute('aAdvected', new THREE.Float32BufferAttribute([0], 1))
   geometry.setAttribute('aFlowerPosition', new THREE.Float32BufferAttribute([4, -4.5, 1, -1], 4))
   geometry.setAttribute('aFlowerNormal', new THREE.Float32BufferAttribute([0, 1, 0], 3))

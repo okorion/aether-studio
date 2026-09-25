@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test'
 import { build } from 'vite'
 import * as THREE from 'three'
 import { createForestGeometry, FOREST_FLOOR_Y } from '../src/ForestGeometry'
-import { createForestParticles, sampleForestAssembly } from '../src/ForestAssembly'
+import { createForestParticles, sampleForestAssembly, sampleForestArrival } from '../src/ForestAssembly'
 import { createSceneForest } from '../src/SceneForest'
 import type { probeDryContact, probeStatementHandoff } from './fixtures/reference-corrections-harness'
 
@@ -57,33 +57,34 @@ test('@interaction forest assembly has sparse arrivals, particle trunks and exac
       const lift = origins.getY(i) - positions.getY(i)
       const drift = Math.hypot(origins.getX(i) - positions.getX(i), origins.getZ(i) - positions.getZ(i))
       minLift = Math.min(minLift, lift); maxLift = Math.max(maxLift, lift); maxDrift = Math.max(maxDrift, drift)
-      const formerHeight = FOREST_FLOOR_Y + (positions.getY(i) - FOREST_FLOOR_Y) * 2
-      const seedLift = origins.getY(i) - Math.max(positions.getY(i), formerHeight)
-      if(lift>0) { arrivals++; if(seedLift<1.41) localArrivals++ }
+      if(lift>0) { arrivals++; if(lift<.91) localArrivals++ }
       if (i < 7000) expect(positions.getY(i)).toBeCloseTo(
-        FOREST_FLOOR_Y + (assets.leafMatrices[i * 16 + 13] - FOREST_FLOOR_Y) * .5, 4)
+        FOREST_FLOOR_Y + (assets.leafMatrices[i * 16 + 13] - FOREST_FLOOR_Y) * .25, 4)
       if (origins.getY(i) === positions.getY(i)) {
         standingDrift = Math.max(standingDrift, drift)
         if (i < 7000) standingLeaves++; else standingBark++
       }
     }
     expect(minLift).toBeGreaterThanOrEqual(0)
-    expect(maxLift).toBeGreaterThan(8)
-    expect(maxLift).toBeLessThan(18)
+    expect(maxLift).toBeGreaterThan(1.3)
+    expect(maxLift).toBeLessThan(1.36)
     expect(maxDrift).toBeLessThan(.82)
     expect(localArrivals/arrivals).toBeGreaterThan(.79)
     expect(standingDrift).toBe(0)
     // The standing silhouette stays intact while nearby seeds reinforce it.
-    expect(standingLeaves / 7000).toBeGreaterThan(.29)
-    expect(standingLeaves / 7000).toBeLessThan(.35)
-    expect(standingBark / particles.barkCount).toBeGreaterThan(.50)
-    expect(standingBark / particles.barkCount).toBeLessThan(.58)
+    expect(standingLeaves / 7000).toBeGreaterThan(.63)
+    expect(standingLeaves / 7000).toBeLessThan(.69)
+    expect(standingBark / particles.barkCount).toBeGreaterThan(.74)
+    expect(standingBark / particles.barkCount).toBeLessThan(.80)
     for (const lower of [false, true]) {
       const samples = Array.from({ length: 101 }, (_, i) => sampleForestAssembly(i / 100, lower))
       const reverse = Array.from({ length: 101 }, (_, i) => sampleForestAssembly((100 - i) / 100, lower)).reverse()
       expect(reverse).toEqual(samples)
       expect(samples.every(v => v >= 0 && v <= 1)).toBe(true)
     }
+    // A height front reaches upper branches before lower branches.
+    expect(sampleForestArrival(.45, .15)).toBe(1)
+    expect(sampleForestArrival(.45, .85)).toBe(0)
     expect(sampleForestAssembly(0, false)).toBe(0)
     expect(sampleForestAssembly(.14, false)).toBe(1)
     expect(sampleForestAssembly(.89, true)).toBe(1)

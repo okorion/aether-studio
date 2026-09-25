@@ -5,5 +5,5 @@ Author: Bill Lorensen
 Source: NIH 3D, 3DPX-000307 — https://3d.nih.gov/entries/3DPX-000307
 License: Creative Commons Attribution 4.0 International
 https://creativecommons.org/licenses/by/4.0/
-Modified for Aether: mesh decimation, coordinate, proportion and endplate adjustments,
+Modified for Aether: mesh decimation, coordinate, proportion and endplate adjustments and trimming,
 repeated articulation and original metallic surface treatment.

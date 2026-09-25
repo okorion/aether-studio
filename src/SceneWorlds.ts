@@ -705,6 +705,7 @@ export function createSceneWorlds(
     getVideoStatus() {
       return monitorAssembly.getVideoStatus()
     },
+    getMonitorObstacles: () => monitorAssembly.getParticleObstacles(),
     getHoveredPanel() {
       return monitorAssembly.getHoveredPanel()
     },

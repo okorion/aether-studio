@@ -128,9 +128,12 @@ test('@interaction particle flow keeps anchors separate and stops its scroll dri
     expect(movingFraction).toBeGreaterThan(.18)
     expect(movingFraction).toBeLessThanOrEqual(.2)
     expect(roles.length).toBeGreaterThan(baseCount)
+    const flowerCount = particles.userData.flowerCount as number
+    expect(particles.userData.reinforcementCount).toBe(Math.floor(flowerCount * .4))
+    expect(roles.length).toBe(baseCount + flowerCount + particles.userData.reinforcementCount)
     for (let i = baseCount; i < roles.length; i++) {
       expect(roles[i]).toBe(0)
-      expect(bokeh.getW(i)).toBe(-1)
+      expect(bokeh.getW(i)).toBe(i < baseCount + flowerCount ? -1 : -2)
       expect((bokeh.getX(i) * 7.13) % 1).toBeLessThan(.22)
     }
     for (let i = 0; i < roles.length; i++) if (bokeh.getW(i) > .5) expect(roles[i]).toBe(0)

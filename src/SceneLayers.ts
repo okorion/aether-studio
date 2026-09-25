@@ -117,6 +117,28 @@ export function createSceneLayers(scene: THREE.Scene) {
         const size = w * (narrow ? .145 : .088)
         c.font = `400 ${size}px "IBM Plex Mono", monospace`
         const x = w * .1, y = h * (narrow ? .27 : .25)
+        // A directional bloom belongs to the ink, so the same liquid
+        // displacement and scene curtain also bend and clip the light streak.
+        const ink = document.createElement('canvas'), glow = document.createElement('canvas')
+        ink.width = glow.width = Math.ceil(w / 2)
+        ink.height = glow.height = Math.ceil(h / 2)
+        const inkContext = ink.getContext('2d')!, glowContext = glow.getContext('2d')!
+        inkContext.scale(.5, .5)
+        inkContext.font = c.font
+        inkContext.textBaseline = c.textBaseline
+        inkContext.fillStyle = '#b8d8e4'
+        for (const [j, text] of ['WORLDS', 'IN HUMAN', 'MOTION.'].entries())
+          inkContext.fillText(text, x, y + j * size * 1.04)
+        // Blur once at half resolution, then accumulate inexpensive image taps.
+        glowContext.filter = `blur(${size * .035}px)`
+        glowContext.drawImage(ink, 0, 0)
+        c.save()
+        for (let tap = 64; tap >= 1; tap--) {
+          const t = tap / 64, distance = t * w * .19
+          c.globalAlpha = .014 * (1 - t) ** 1.6
+          c.drawImage(glow, -distance, distance * .32, w, h)
+        }
+        c.restore()
         c.shadowColor = 'rgba(211, 225, 255, .48)'
         c.shadowBlur = size * .10
         for (const [j, text] of ['WORLDS', 'IN HUMAN', 'MOTION.'].entries()) c.fillText(text, x, y + j * size * 1.04)

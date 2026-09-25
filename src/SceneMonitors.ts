@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { createMonitorObstacle, MAX_MONITOR_OBSTACLES, type MonitorObstacle } from './MonitorClearance'
 import { smooth, windowWeight } from './Journey'
 import { sampleLayers } from './SceneLayers'
 import { createSceneVideo } from './SceneVideo'
@@ -268,6 +269,8 @@ export function createSceneMonitors(software: boolean, mobile: boolean, external
   group.name = 'aether-monitors'
   group.visible = false
   const models = definitions.map(definition => createMonitorGeometry(definition.model, software || mobile))
+  const obstaclePool = Array.from({ length: MAX_MONITOR_OBSTACLES }, createMonitorObstacle)
+  const particleObstacles: MonitorObstacle[] = []
   const layoutWidth = Math.max(6.1, ...models.map(asset => asset.model.width))
   const layoutHeight = Math.max(3.8, ...models.map(asset => asset.model.height))
   const mediaIndices = definitions.map(definition => monitorMedia.findIndex(source => source.id === definition.mediaId))
@@ -432,6 +435,21 @@ export function createSceneMonitors(software: boolean, mobile: boolean, external
       media.update(active && group.visible, reduce)
     },
     getVideoStatus: () => media.status(),
+    getParticleObstacles() {
+      particleObstacles.length = 0
+      if (!group.visible || disposed) return particleObstacles
+      group.updateWorldMatrix(true, true)
+      for (let i = 0; i < panels.length && particleObstacles.length < MAX_MONITOR_OBSTACLES; i++) {
+        if (!panels[i].visible) continue
+        const obstacle = obstaclePool[particleObstacles.length]
+        const model = models[i].model
+        obstacle.inverse.copy(panels[i].matrixWorld).invert()
+        obstacle.normal.setFromMatrixColumn(panels[i].matrixWorld, 2)
+        obstacle.half.set(model.width / 2 + .06, model.height / 2 + .06, model.curvature * 1.2 + model.depth + .18)
+        particleObstacles.push(obstacle)
+      }
+      return particleObstacles
+    },
     getHoveredPanel: () => hoveredPanel,
     pickProject(ndc: THREE.Vector2, camera: THREE.Camera) {
       const selected = hit(ndc, camera)

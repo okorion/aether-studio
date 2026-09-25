@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 
 export const FOREST_FLOOR_Y = -8.7
-export const FOREST_GROVE_OFFSETS = [-1.2, 4.2] as const
+export const FOREST_GROVE_OFFSETS = [-1.2, 1.2] as const
 
 /** Seeded branching trees and pinnate ferns, never spherical crowns. */
 export function createForestGeometry(leafCount: number, software: boolean, mobile: boolean) {

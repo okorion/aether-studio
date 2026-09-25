@@ -432,7 +432,7 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
       const distantParticles = new THREE.Points(distantGeometry, particlesMaterial)
       scene.add(distantParticles)
 
-      const jellyfish = createSceneJellyfish(scene, softwareRenderer, smallScreen, chrome)
+      const jellyfish = createSceneJellyfish(scene, softwareRenderer, smallScreen)
       const creatureRoot = jellyfish.group
       effectDisposers.push(() => jellyfish.dispose())
 

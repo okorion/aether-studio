@@ -258,7 +258,9 @@ const dustVertex = /* glsl */ `
     p = mix(p, texture2D(uReactorPositions, aReactorUv).xyz, uReactorStateWeight * uWeights.y);
     // Scale the complete ring, including its diffuse rim, about its own centre.
     p.xy *= mix(1.0, uReactorScale, uWeights.y);
-    if (flowerWeight > .99 && uMonitorCount > 0) {
+    // Entry/exit morphs can already cross a visible card before the flower is
+    // fully formed. Resolve the final mixed position throughout that interval.
+    if (flowerWeight > 0. && uMonitorCount > 0) {
       vec3 world = (modelMatrix * vec4(p, 1.)).xyz;
       // Both flower draws have translation-only roots.
       p += clearMonitors(world) - world;

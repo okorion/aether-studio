@@ -21,6 +21,9 @@ test('@interaction flowers reinforce by camera height, preserve baseline, revers
   expect(r.local[2]).toBeLessThanOrEqual(-r.clearance + .00001)
   for (const depth of r.approach) expect(depth).toBeLessThan(-r.clearance)
   for (let i = 1; i < r.approach.length; i++) expect(Math.abs(r.approach[i] - r.approach[i-1])).toBeLessThan(.095)
+  expect(r.entry.some(p => p.weight > 0 && p.weight < .99)).toBe(true)
+  for (const pose of r.entry) expect(pose.local[2]).toBeLessThan(-r.clearance)
+  expect(r.entry.slice(0, 5)).toEqual(r.entry.slice(5).reverse())
   expect(r.count).toBe(9000); expect(r.extra).toBe(3600)
   // Lower ring material alpha stays constant through both directions of the cut.
   for (const values of r.opacities) expect(values.slice(0, 2)).toEqual([1, 1])

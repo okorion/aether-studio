@@ -16,4 +16,6 @@ test('@interaction haze survives UI crossing, touch pointerdown and a visible fr
   expect(r.touchStart).toBe(r.stalled)
   expect(r.inactive).toBe(0)
   expect(r.resumed).toBe(0)
+  const software=await page.evaluate(()=>(window as unknown as {HazeLifecycle:{probeHazeLifecycle:typeof probeHazeLifecycle}}).HazeLifecycle.probeHazeLifecycle(true))
+  expect(Object.values(software).every(value=>value===0)).toBe(true)
 })

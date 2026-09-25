@@ -1,16 +1,17 @@
 import * as THREE from 'three'
 import { createSceneInteraction } from '../../src/SceneInteraction'
 
-export function probeHazeLifecycle() {
+export function probeHazeLifecycle(software = false) {
   const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(42,1.6,.1,90)
   camera.position.z = 10; camera.updateMatrixWorld()
   const canvas = document.createElement('canvas'), link = document.createElement('a')
   link.href = '#work'; document.body.append(canvas,link)
-  const input = createSceneInteraction(scene,camera,canvas,false,true)
+  const input = createSceneInteraction(scene,camera,canvas,false,software)
   let elapsed = 0
   const state = (delta = 0, frameDelta = delta) => {
     const field = input.update(delta,elapsed+=delta,1,.4,frameDelta).field
-    const bytes = field.hazeTexture.image.data as Uint8Array
+    const bytes = field.hazeTexture?.image.data as Uint8Array | undefined
+    if (!bytes) return 0
     let mass = 0
     for(let i=2;i<bytes.length;i+=4)mass+=bytes[i]
     return mass

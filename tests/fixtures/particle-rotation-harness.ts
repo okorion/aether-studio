@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { createAtmosphere } from '../../src/Atmosphere'
 import { createSceneWorlds } from '../../src/SceneWorlds'
+import { createFlowerAttributes } from '../../src/FlowerGeometry'
 
 export function sampleRotation(progress = .4, mobile = false, lane = .3, heightSeed = .27) {
   const scene = new THREE.Scene()
@@ -17,6 +18,10 @@ export function sampleRotation(progress = .4, mobile = false, lane = .3, heightS
   geometry.setAttribute('position', new THREE.Float32BufferAttribute([heightSeed, 1.43, .3], 3))
   geometry.setAttribute('aDust', new THREE.Float32BufferAttribute([lane, 1, .2, 0], 4))
   geometry.setAttribute('aAdvected', new THREE.Float32BufferAttribute([0], 1))
+  const flowers = createFlowerAttributes(new Float32Array([heightSeed, 1.43, .3]), new Float32Array([lane, 1, .2, 0]), new Float32Array([0]))
+  geometry.setAttribute('aFlowerPosition', new THREE.BufferAttribute(flowers.positions, 4))
+  geometry.setAttribute('aFlowerNormal', new THREE.BufferAttribute(flowers.normals, 3))
+  geometry.setAttribute('aFlowerColor', new THREE.BufferAttribute(flowers.colors, 3))
   // Execute the production vertex shader, then read its local position from
   // a float pixel. No duplicated CPU field equations stand in for the shader.
   const vertex = grains.material.vertexShader.replace(/}\s*$/, 'probePosition = p; gl_Position = vec4(0., 0., 0., 1.); gl_PointSize = 1.; }')
@@ -32,6 +37,9 @@ export function sampleRotation(progress = .4, mobile = false, lane = .3, heightS
   probe.add(point)
   const read = (progress: number, moving = false, time = 10, bokeh = false, phase = 1.43) => {
     atmosphere.update(time, progress, 1)
+    const flower = lane === .3 && !moving && !bokeh && progress < .6
+    material.defines = flower ? { FLOWER_SURFACE: 1 } : {}
+    material.needsUpdate = true
     geometry.getAttribute('position').setY(0, phase)
     geometry.getAttribute('position').needsUpdate = true
     geometry.getAttribute('aDust').setW(0, bokeh ? 1 : 0)

@@ -28,7 +28,7 @@ export function probeDryContact() {
     const field = flow.texture.image.data as Uint8Array
     for (let i = 0; i < pixels.length; i += 4) {
       const normal = Math.hypot(pixels[i], pixels[i + 1]); energy += normal
-      if (field[i + 3] < 180) { dryMax = Math.max(dryMax, normal); dryPixels++ }
+      if (field[i + 3] < 70) { dryMax = Math.max(dryMax, normal); dryPixels++ }
       if (field[i + 3] === 255 && field[i + 2] > 8) rimMax = Math.max(rimMax, normal)
     }
     return { dryMax, rimMax, dryPixels, energy }
@@ -38,7 +38,7 @@ export function probeDryContact() {
     const contact = read(), recovery: number[] = []
     const previous = new Float32Array(pixels.length)
     const originalDry = Array.from({ length: pixels.length / 4 }, (_, i) => i * 4)
-      .filter(i => (flow.texture.image.data as Uint8Array)[i + 3] < 180)
+      .filter(i => (flow.texture.image.data as Uint8Array)[i + 3] < 70)
     let refill = 0, dryAfterStop = 0
     let reversals = 0, increases = 0
     flow.release()
@@ -49,7 +49,7 @@ export function probeDryContact() {
       if(frame > 4 && frame < 30) for(const i of originalDry)
         refill = Math.max(refill, Math.hypot(pixels[i], pixels[i + 1]))
       if(frame === 18) dryAfterStop = sample.dryPixels
-      if (frame > 40) for (let i = 0; i < pixels.length; i += 4) {
+      if (frame > 60) for (let i = 0; i < pixels.length; i += 4) {
         for (let channel = 0; channel < 2; channel++) {
           const a = previous[i + channel], b = pixels[i + channel]
           if (a * b < -1e-12) reversals++

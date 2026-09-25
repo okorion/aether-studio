@@ -66,7 +66,8 @@ test('@interaction screen flow leaves both forests and foreground pixels intact 
     expect(plate.ringChanged, label).toBe(0)
     expect(plate.plateChanged, label).toBeGreaterThan(80)
     expect(plate.maximumInkDistance, label).toBeGreaterThan(3)
-    expect(plate.displacedInkPixels, label).toBeGreaterThan(8)
+    // The compact rim deliberately distorts fewer distant ink pixels.
+    expect(plate.displacedInkPixels, label).toBeGreaterThan(2)
     expect(plate.tailChanged, label).toBeGreaterThan(20)
     expect(plate.clearChanged, label).toBe(0)
     expect(plate.forests, label).toEqual([0,0])

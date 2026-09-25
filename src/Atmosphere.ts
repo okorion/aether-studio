@@ -5,6 +5,7 @@ import { sampleLayers } from './SceneLayers'
 import { curtainHasCoverage } from './SceneVisibility'
 import { lightChoreographyGLSL, type LightFilmUniforms } from './SceneLighting'
 import { createReactorFlow } from './ReactorFlow'
+import { createFlowerAttributes } from './FlowerGeometry'
 
 // The intro's tiny ambient field remains visible before the incoming spine.
 // All later particles and lights enter below the monitor's shared diagonal.
@@ -73,42 +74,9 @@ const currentField = /* glsl */ `
       -6.6 + t * 6.9,
       -1.4 + sin(t * 8.0 + branch * 6.0) * 1.15
     );
-    // Four large layered blooms and eight satellites per side. Separate
-    // folded petals share a recessed centre instead of filling a noisy ball.
-    float bloomId = min(11., floor(t * 12.));
-    float tier = floor(bloomId / 3.);
-    float satellite = mod(bloomId, 3.);
-    float smallBloom = step(.5, satellite);
-    float petalAngle = fract(t * 12.) * PI * 2.;
-    float petalRadius = clamp(fract(lane * 7.13) / .22, 0., 1.);
-    float ring = floor(petalRadius * 3.);
-    float withinPetal = fract(petalRadius * 3.);
-    float petals = 5. + ring * 2.;
-    float petalLobe = .5 + .5 * cos(petalAngle * petals + ring * 2.4 + tier);
-    float scallop = .38 + .62 * pow(petalLobe, .26);
-    float size = mix(1.24 + .15 * sin(tier * 2.7 + side), .38 + satellite * .095, smallBloom);
-    float radius = (.12 + (ring + sqrt(withinPetal)) / 3. * .88) * size * scallop;
-    float facing = side * .32 + (tier - 1.5) * .42;
-    vec3 centre = vec3(side * (3.65 + .3 * sin(tier * 2.4) + smallBloom * .55),
-      (tier - 1.5) * 3.0 + side * .45 + smallBloom * (satellite - 1.5) * 2.1,
-      sin(tier * 2.1 + side) * 1.25 + smallBloom * .65);
-    vec3 spine = centre + vec3(cos(petalAngle) * radius, sin(petalAngle) * radius,
-      size * (.22 * ring + .34 * sin(withinPetal * PI) + .30 * pow(petalLobe, 2.)));
-    spine.z += sin(facing) * (spine.x - centre.x);
-    // Each end bloom's outer half joins from above/below. Per-seed feathering
-    // prevents a visible hemispheric cut; the central and small blooms stay put.
-    float endTier = 1. - step(.1, min(tier, 3. - tier));
-    float endSign = tier < 1.5 ? -1. : 1.;
-    float seed = fract(sin(t * 173.1 + lane * 791.7) * 43758.5453);
-    float edgeHalf = smoothstep(-.22, .42, endSign * sin(petalAngle) + (seed - .5) * .36);
-    float joining = endTier * (1. - smallBloom) * edgeHalf;
-    float entry = smoothstep(.238 + seed * .012, .315 + seed * .012, uScroll / 55.);
-    float exit = smoothstep(.573 + seed * .017, .655 + seed * .012, uScroll / 55.);
-    spine.y += endSign * joining * ((1. - entry) + exit) * (4.5 + seed * 2.);
-    spine.x += side * joining * sin((1. - entry + exit) * PI) * .5;
-    // A clear cylindrical channel surrounds the helix, even during rotation.
-    float corridor = length(spine.xz);
-    spine.xz *= max(1., 2.5 / max(.01, corridor));
+    // A neutral column anchor is used only while the scene weights blend.
+    // Visible flowers get their sampled petal positions in dustVertex.
+    vec3 spine = vec3(side * 3.78, (t - .5) * 11.4, 0.);
     // Successive turns form two distant arcs behind the visible column.
     // Its near half is outside the view; the far half crosses the background.
     // Do not flatten it into paired curves close behind the column.
@@ -194,6 +162,9 @@ const dustVertex = /* glsl */ `
   attribute vec4 aDust;
   attribute float aAdvected;
   attribute vec2 aReactorUv;
+  attribute vec4 aFlowerPosition;
+  attribute vec3 aFlowerNormal;
+  attribute vec3 aFlowerColor;
   uniform sampler2D uReactorPositions;
   uniform float uReactorStateWeight;
   uniform float uPixelRatio;
@@ -201,6 +172,7 @@ const dustVertex = /* glsl */ `
   varying float vAlpha;
   varying float vBokeh;
   varying float vMachine;
+  varying float vFlower;
   varying float vGrainSeed;
   void main() {
     float lane = aDust.x;
@@ -212,6 +184,7 @@ const dustVertex = /* glsl */ `
     float phaseScroll = aAdvected * mix(motionTime(), max(0., uScroll - .715 * 55.), uWeights.y);
     float spineWeight = uWeights.x * (1.0 - uWeights.y) * (1.0 - uWeights.z) * (1.0 - uWeights.w);
     float ribbonWeight = flowerRibbon(lane) * spineWeight * (1. - aAdvected);
+    float flowerWeight = spineWeight * (1. - flowerRibbon(lane)) * (1. - aAdvected) * (1. - max(0., aDust.w));
     float t = mix(fract(position.x + phaseScroll * speed * (0.76 + lane * 0.48)), position.x, max(spineWeight, uWeights.y));
     vec3 p = current(t, lane, phaseScroll);
     // Independent column flow spans its visible height. Absolute travel
@@ -238,6 +211,17 @@ const dustVertex = /* glsl */ `
       sin(beltPhase)*scatter.x+cos(beltPhase)*scatter.z);
     columnScatter = mix(columnScatter,beltScatter,flowerRibbon(lane)*(1.-aAdvected));
     p += mix(scatter, columnScatter, spineWeight);
+    // Surface-sampled, deeply cupped petals retain their folds at side/back views.
+    // Only the feathered outer half of the end heads joins through the curtain.
+    vec3 blossom = aFlowerPosition.xyz;
+    float joinSeed = fract(phase * 13.71 + lane * 93.17);
+    float entry = smoothstep(.238 + joinSeed * .012, .315 + joinSeed * .012, uScroll / 55.);
+    float exit = smoothstep(.573 + joinSeed * .017, .655 + joinSeed * .012, uScroll / 55.);
+    blossom.y += aFlowerPosition.w * ((1. - entry) + exit) * (4.5 + joinSeed * 2.);
+    blossom = rotateFlowerField(blossom);
+    blossom.xz *= uSpineSpread;
+    blossom.y -= 12. * (1. - smoothstep(.205, .29, uScroll / 55.));
+    p = mix(p, blossom, flowerWeight);
     // Most device grains spread across a fine radial cloud, with a few smaller
     // strays. This is still the same field, without a second opaque ring.
     float stray = step(.94, position.z);
@@ -313,10 +297,9 @@ const dustVertex = /* glsl */ `
     vec3 ribbonColor = mix(vec3(.30,.12,.72), vec3(.91,.23,.56), ribbonHue);
     ribbonColor = mix(ribbonColor, vec3(.08,.72,.79), smoothstep(.76,.98, ribbonHue));
     vColor = mix(vColor, ribbonColor, ribbonWeight);
-    // Broad folds have shaded recesses and lit crests. Keeping this attached
-    // to the flower coordinates gives volume without whitening every grain.
-    float flowerFold = .5 + .5 * sin(fract(lane * 2.) * 23. + t * 79. + sin(t * 29.) * 3.);
-    vColor *= mix(1., .26 + .74 * pow(flowerFold, 1.8), spineWeight * (1. - aAdvected) * (1. - ribbonWeight));
+    vec3 petalNormal = rotateFlowerField(aFlowerNormal);
+    float petalLight = .16 + .84 * pow(.5 + .5 * dot(petalNormal, normalize(vec3(-.5,.75,1.))), 1.7);
+    vColor = mix(vColor, aFlowerColor * petalLight * 2.2, flowerWeight);
     vec3 litWorld = (modelMatrix * vec4(p, 1.)).xyz;
     vColor += aetherLightCloud(litWorld, vec3(0., .5, .866), uTime, uDarkness)
       * (.07 + uWeights.y * .10);
@@ -348,10 +331,10 @@ const dustVertex = /* glsl */ `
       * touch * 1.8 * mix(1., .45, uWeights.y) * (1. - spineWeight);
     vBokeh = bokeh;
     vMachine = uWeights.y;
+    vFlower = flowerWeight;
     float shimmer = 0.73 + sin(uTime * 1.7 + phase * 7.0) * 0.2;
     float seam = smoothstep(0.0, 0.045, t) * (1.0 - smoothstep(0.94, 1.0, t));
-    float petalPhase = fract(t * 12.);
-    seam *= mix(1., smoothstep(0., .015, petalPhase) * (1. - smoothstep(.985, 1., petalPhase)), spineWeight * (1. - aAdvected) * (1. - ribbonWeight));
+    seam = mix(seam, 1., flowerWeight);
     float distanceFade = exp(-max(0.0, -mv.z - 13.0) * mix(.043, .032, ribbonWeight));
     vAlpha = shimmer * mix(seam, 1.0, uWeights.y) * distanceFade * mix(0.72, 0.19, bokeh);
     vAlpha *= mix(1.0, .62 * mix(1., .22, bokeh), uWeights.y);
@@ -369,6 +352,11 @@ const dustVertex = /* glsl */ `
     vAlpha *= 1. - spineWeight * max(aAdvected, bokeh);
     // Negative W marks extra flower seeds; never grow the reactor/forest field.
     vAlpha *= aDust.w < 0. ? spineWeight : 1.;
+    #ifdef FLOWER_SURFACE
+      vAlpha *= flowerWeight;
+    #else
+      vAlpha *= 1. - flowerWeight;
+    #endif
     vAlpha *= uFieldOpacity;
   }
 `
@@ -380,6 +368,7 @@ const dustFragment = /* glsl */ `
   varying float vAlpha;
   varying float vBokeh;
   varying float vMachine;
+  varying float vFlower;
   varying float vGrainSeed;
   void main() {
     float entry = fieldEntry();
@@ -400,9 +389,9 @@ const dustFragment = /* glsl */ `
     vec3 color = vColor * (.65 + facet * .45 + rim * .32);
     color += mix(vColor, vec3(.70,.64,.85), .3) * glint * .34;
     shape *= .61 + rim * .25 + facet * .12;
-    if (vMachine > .5) {
+    if (max(vMachine, vFlower) > .5) {
       // Rounded grains have a shaded core and a compact specular highlight.
-      // The flower scene keeps its existing thin mineral flakes.
+      // Fine rounded pollen grains also preserve the curved petal surfaces.
       float z = sqrt(max(0., 1. - rr));
       vec3 normal = normalize(vec3(uv, z));
       vec3 light = normalize(vec3(-.42, .62, .9));
@@ -417,6 +406,11 @@ const dustFragment = /* glsl */ `
       shape = exp(-rr * 6.0) * 0.36 + (1.0 - smoothstep(0.06, 0.22, abs(rr - 0.52))) * 0.18;
       color = vColor;
     }
+    #ifdef FLOWER_SURFACE
+      // A depth-writing grain surface preserves overlapping petal folds.
+      // Reject the soft fringe so invisible points never cover monitors behind.
+      if (shape * vAlpha * entry < .22) discard;
+    #endif
     gl_FragColor = vec4(color, shape * vAlpha * entry);
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
@@ -584,10 +578,14 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
   }
 
   const dustGeometry = new THREE.BufferGeometry()
+  const flowers = createFlowerAttributes(positions, dust, advected)
   dustGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
   dustGeometry.setAttribute('aDust', new THREE.BufferAttribute(dust, 4))
   dustGeometry.setAttribute('aAdvected', new THREE.BufferAttribute(advected, 1))
   dustGeometry.setAttribute('aReactorUv', new THREE.BufferAttribute(reactorUv, 2))
+  dustGeometry.setAttribute('aFlowerPosition', new THREE.BufferAttribute(flowers.positions, 4))
+  dustGeometry.setAttribute('aFlowerNormal', new THREE.BufferAttribute(flowers.normals, 3))
+  dustGeometry.setAttribute('aFlowerColor', new THREE.BufferAttribute(flowers.colors, 3))
   const dustMaterial = new THREE.ShaderMaterial({
     uniforms,
     defines: { ...(software ? { SOFTWARE_RENDERER: 1 } : {}), ...(lightFilm ? { AETHER_LIGHT_FILM: 1 } : {}) },
@@ -598,6 +596,20 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
     blending: THREE.NormalBlending,
   })
   const particles = new THREE.Points(dustGeometry, dustMaterial)
+  dustGeometry.setDrawRange(0, baseCount)
+  const flowerGeometry = new THREE.BufferGeometry()
+  for (const [name, attribute] of Object.entries(dustGeometry.attributes)) flowerGeometry.setAttribute(name, attribute)
+  const flowerIndices: number[] = []
+  for (let i = 0; i < count; i++) if (flowers.normals[i * 3] || flowers.normals[i * 3 + 1] || flowers.normals[i * 3 + 2]) flowerIndices.push(i)
+  flowerGeometry.setIndex(flowerIndices)
+  const flowerMaterial = dustMaterial.clone()
+  flowerMaterial.uniforms = uniforms
+  flowerMaterial.defines = { ...dustMaterial.defines, FLOWER_SURFACE: 1 }
+  flowerMaterial.depthWrite = true
+  const flowerParticles = new THREE.Points(flowerGeometry, flowerMaterial)
+  flowerParticles.name = 'aether-flower-petal-surfaces'
+  flowerParticles.frustumCulled = false
+  particles.add(flowerParticles)
   particles.name = 'aether-current-particles'
   particles.frustumCulled = false
   particles.userData.motion = reactorFlow
@@ -668,6 +680,11 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
   outgoing.name = 'aether-outgoing-bone-current'
   outgoing.frustumCulled = false
   outgoing.visible = false
+  const outgoingFlowerMaterial = flowerMaterial.clone()
+  outgoingFlowerMaterial.uniforms = outgoingUniforms
+  const outgoingFlowers = new THREE.Points(flowerGeometry, outgoingFlowerMaterial)
+  outgoingFlowers.frustumCulled = false
+  outgoing.add(outgoingFlowers)
   scene.add(particles, filaments, shafts, outgoing)
 
   let disposed = false
@@ -709,7 +726,7 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
       outgoingUniforms.uExitEdge.value = layers.monitorExit
       outgoing.position.y = columnY
       outgoing.visible = p >= .60 && curtainHasCoverage(layers.monitorEntry, layers.monitorExit)
-      dustGeometry.setDrawRange(0, (p > .205 && p < .60) || outgoing.visible ? count : baseCount)
+      flowerParticles.visible = p > .205 && p < .60
       uniforms.uEntryWipe.value = p >= .20 ? 1 : 0
       uniforms.uDeviceEntryEdge.value = layers.monitorExit
       uniforms.uDeviceEntryWipe.value = p >= .60 ? 1 : 0
@@ -748,6 +765,9 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
       disposed = true
       scene.remove(particles, filaments, shafts, outgoing)
       outgoingMaterial.dispose()
+      outgoingFlowerMaterial.dispose()
+      flowerGeometry.dispose()
+      flowerMaterial.dispose()
       reactorFlow?.dispose()
       neutralState.dispose()
       dustGeometry.dispose()

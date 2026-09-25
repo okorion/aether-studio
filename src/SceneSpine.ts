@@ -268,14 +268,14 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
         const scale = edge * form
         dummy.position.set(Math.sin(bend) * .29 * form, y * form, Math.cos(bend * .8) * .18)
         // The authored twist follows height, independently of the parent's
-        // scroll rotation. Each adjacent body turns about 15 degrees, so the
+        // scroll rotation. Each adjacent body turns about 26 degrees, so the
         // neural arches form a continuous spiral instead of a straight seam.
         dummy.rotation.set(Math.sin(bend * .8) * .07,
-          y * .24 + Math.sin(bend * .72) * .035,
+          y * .42 + Math.sin(bend * .72) * .035,
           -Math.cos(bend) * .13)
         // Fewer, taller bodies retain narrow joints instead of widely spaced rings.
         dummy.scale.set((.97 + Math.sin(i * 1.37) * .045) * scale,
-          spacing / .76 * scale, (.96 + Math.cos(i * .87) * .065) * scale)
+          spacing / .61 * scale, (.96 + Math.cos(i * .87) * .065) * scale)
         dummy.updateMatrix()
         bones.setMatrixAt(i, dummy.matrix)
         dummy.position.y -= spacing * .47 * form

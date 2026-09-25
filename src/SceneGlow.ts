@@ -6,6 +6,7 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js'
 import { windowWeight } from './Journey'
 import { createSurfaceFlowUniforms, surfaceFlowGLSL, type SurfaceFlowInput } from './SceneSurfaceFlow'
+import { columnHazeGLSL } from './SceneHaze'
 
 /** Screen pixels never refract: only the statement plate owns fluid distortion. */
 export function sampleSurfaceFlow(progress: number) {
@@ -35,34 +36,23 @@ export function createSceneGlow(renderer: THREE.WebGLRenderer, scene: THREE.Scen
       uniform float uTime; uniform float uMist;
       uniform vec2 uResolution;
       ${surfaceFlowGLSL}
-      float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
-      float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
-        return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);}
+      ${columnHazeGLSL}
       void main(){
-        vec2 flow=surfaceDisplacement(vUv);
         vec2 margin=.5/uResolution;
         vec2 uv=clamp(vUv,margin,vec2(1.)-margin);
         vec4 color=texture2D(tDiffuse,uv);
-        // Work mist advects independently; panel pixels and DOM hit areas stay aligned.
-        vec2 p=(vUv-flow*3.2)*vec2(uFlowAspect,1.);
-        vec2 drift=vec2(uTime*.018,-uTime*.013);
-        float cloud=noise(p*4.+drift);
-        cloud=.65*cloud+.35*noise(p*8.3-drift*1.3+cloud);
-        float veil=exp(-pow((vUv.x-.13)*2.65,2.)-pow((vUv.y-.24)*3.8,2.));
-        veil*=1.-smoothstep(.46,.78,vUv.x);
-        float dye=texture2D(uSurfaceFlow,vUv).b;
-        float mist=uMist*veil*smoothstep(.23,.82,cloud)*(.043+dye*.058);
-        vec3 tint=mix(vec3(.13,.09,.22),vec3(.10,.20,.23),cloud);
-        color.rgb+=tint*mist;
+        color.rgb=columnHaze(color.rgb,vUv,uResolution.x/uResolution.y,uTime,uMist);
         gl_FragColor=color;
       }`,
   }))
   const bloom = enableBloom ? new UnrealBloomPass(new THREE.Vector2(1, 1), .22, .58, 1.3) : undefined
   const output = new OutputPass()
   composer.addPass(render)
-  composer.addPass(surface)
   if (bloom) composer.addPass(bloom)
   composer.addPass(output)
+  // Haze belongs over the finished image. Bloom/exposure must not turn the
+  // low-opacity colored veil into emissive fog when the scene gets brighter.
+  composer.addPass(surface)
   let width = 1, height = 1, disposed = false
   return {
     resize(nextWidth: number, nextHeight: number, ratio: number) {

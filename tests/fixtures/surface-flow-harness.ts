@@ -2,6 +2,35 @@ import * as THREE from 'three'
 import { createSceneGlow } from '../../src/SceneGlow'
 import { createPointerFlow } from '../../src/PointerFlow'
 import { createSceneLayers } from '../../src/SceneLayers'
+import { createAtmosphere } from '../../src/Atmosphere'
+
+/** Clearing the screen veil must reveal the flowers' existing color. */
+export function probeColumnParticleColor() {
+  const renderer = new THREE.WebGLRenderer({preserveDrawingBuffer:true})
+  renderer.setSize(160,100)
+  const scene = new THREE.Scene()
+  const atmosphere = createAtmosphere(scene,false,false)
+  const camera = new THREE.PerspectiveCamera(42,1.6,.1,100)
+  camera.position.set(0,-29.8,15);camera.lookAt(0,-29.8,0)
+  const gl = renderer.getContext()
+  const capture = (active: boolean) => {
+    atmosphere.update(10,.4,1,{ndc:new THREE.Vector2(-.3,0),strength:active?1:0,aspect:1.6,active},camera)
+    for(const name of ['aether-current-filaments','aether-volume-shafts'])scene.getObjectByName(name)!.visible=false
+    renderer.render(scene,camera)
+    const bytes = new Uint8Array(160*100*4)
+    gl.readPixels(0,0,160,100,gl.RGBA,gl.UNSIGNED_BYTE,bytes)
+    return bytes
+  }
+  try {
+    const rest = capture(false), moving = capture(true)
+    let changed = 0, visible = 0
+    for(let i=0;i<rest.length;i+=4){
+      if(rest[i]+rest[i+1]+rest[i+2]>0)visible++
+      if(rest.slice(i,i+3).some((v,c)=>v!==moving[i+c]))changed++
+    }
+    return {visible,changed}
+  } finally {atmosphere.dispose();renderer.dispose();renderer.forceContextLoss()}
+}
 
 type PixelDifference = {
   maxError: number
@@ -13,7 +42,7 @@ type PixelDifference = {
 
 /** Same local text/grid image in both paths; no copy of the production stage/UV formulas. */
 export function probeSurfaceFlow(mobile: boolean) {
-  const width = mobile ? 96 : 128, height = mobile ? 128 : 96
+  const width = mobile ? 117 : 160, height = mobile ? 253 : 100
   const aspect = width / height
   const renderer = new THREE.WebGLRenderer({ antialias: false, preserveDrawingBuffer: true })
   renderer.setPixelRatio(1)
@@ -105,12 +134,12 @@ export function probeSurfaceFlow(mobile: boolean) {
     return { maxError, meanError: sum / Math.max(1, pixels * 3), differentComponents,
       changedPixels, meanLumaShift: luma / Math.max(1, pixels) }
   }
-  const stroke = (lowerLeft = false) => {
+  const stroke = (lowerLeft = false, right = false) => {
     // Production brush/advection/pressure is advanced using ordinary frame deltas.
     // Events stay close enough that its resume/teleport gate never bridges a gap.
     const samples = 13
     for (let i = 0; i < samples; i++) {
-      const x = lowerLeft ? -.91 + i * .035 : -.6 + i * .1
+      const x = right ? .60 + i * .022 : lowerLeft ? -.91 + i * .035 : -.6 + i * .1
       const y = lowerLeft ? -.52 + Math.sin(i * .35) * .04 : Math.sin(i * .35) * .06
       flow.move(x, y, aspect)
       flow.update(1 / 60)
@@ -147,29 +176,35 @@ export function probeSurfaceFlow(mobile: boolean) {
     flow.update(1 / 60)
     const gapReentry = composed(0)
 
-    // Test the gallery on a linear output, below clipping. Any additive veil
-    // must produce the same color delta over the grid and a black surface.
-    // A displaced grid changes that residual at its edges, independently of
-    // how the production shader computes its stage weights or flow offsets.
+    // Recover the veil's transmission from black/gray probes. The grid must
+    // obey that same per-pixel blend; a displaced grid violates it at edges.
+    // This does not duplicate the production mask or clearing equations.
     renderer.toneMapping = THREE.NoToneMapping
     renderer.outputColorSpace = THREE.LinearSRGBColorSpace
     material.color.setRGB(.4, .4, .4)
     flow.clear()
-    stroke(true)
     const directGrid = direct()
+    const restingGrid = composed(.4).pixels
+    stroke(true)
     const mistGrid = composed(.4).pixels
     material.color.setRGB(0, 0, 0)
     const directBlack = direct()
     const mistBlack = composed(.4).pixels
+    material.map = null
+    material.color.setRGB(.6,.6,.6)
+    material.needsUpdate = true
+    const directGray = direct()
+    const mistGray = composed(.4).pixels
     let residualMax = 0, residualSum = 0, residualBeyondTwo = 0
     let leftMistPixels = 0, outsideMistPixels = 0
     for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
       const offset = (y * width + x) * 4
       let added = false
       for (let channel = 0; channel < 3; channel++) {
-        const gridDelta = mistGrid[offset + channel] - directGrid[offset + channel]
         const blackDelta = mistBlack[offset + channel] - directBlack[offset + channel]
-        const error = Math.abs(gridDelta - blackDelta)
+        const transmission = (mistGray[offset + channel] - mistBlack[offset + channel]) / directGray[offset + channel]
+        const expected = mistBlack[offset + channel] + directGrid[offset + channel] * transmission
+        const error = Math.abs(mistGrid[offset + channel] - expected)
         residualMax = Math.max(residualMax, error)
         residualSum += error
         if (error > 2) residualBeyondTwo++
@@ -178,7 +213,18 @@ export function probeSurfaceFlow(mobile: boolean) {
       if (added && (x + .5) / width < .45 && (y + .5) / height < .6) leftMistPixels++
       if (added && (x + .5) / width >= .8) outsideMistPixels++
     }
-    flow.clear()
+    material.map = texture
+    material.color.setRGB(.4,.4,.4)
+    material.needsUpdate = true
+    const strokeRegion = (x: number,y: number) => x < .30 && y > .17 && y < .33
+    const restingError = difference(directGrid,restingGrid,strokeRegion).meanError
+    const clearedError = difference(directGrid,mistGrid,strokeRegion).meanError
+    for(let i=0;i<150;i++)flow.update(1/60)
+    const recoveredGrid = composed(.4).pixels
+    const screenAnchor = difference(composed(.35).pixels,composed(.55).pixels)
+    stroke(true,true)
+    const rightInput = difference(recoveredGrid,composed(.4).pixels,x=>x>.8)
+    flow.clear();material.color.setRGB(0,0,0)
     const stillMistBlack = composed(.4).pixels
     const debug = gl.getExtension('WEBGL_debug_renderer_info')
     return {
@@ -196,8 +242,9 @@ export function probeSurfaceFlow(mobile: boolean) {
       mist: {
         residualMax, residualMean: residualSum / (width * height * 3), residualBeyondTwo,
         leftMistPixels, outsideMistPixels,
-        protectedRegion: difference(directGrid, mistGrid, x => x >= .8),
+        protectedRegion: rightInput,
         response: difference(stillMistBlack, mistBlack, (x, y) => x < .45 && y < .6),
+        restingError, clearedError, recovery: difference(restingGrid,recoveredGrid), screenAnchor,
       },
       renderer: debug ? String(gl.getParameter(debug.UNMASKED_RENDERER_WEBGL)) : String(gl.getParameter(gl.RENDERER)),
     }

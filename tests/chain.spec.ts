@@ -125,21 +125,28 @@ test('@interaction one finite chain stays connected, descends continuously and r
 })
 
 
-test('@interaction winding retains a fixed height envelope and reverses exactly', () => {
+test('@interaction each link feeds down its helix tangent instead of translating vertically', () => {
   for(const mobile of [false,true]) {
     let lastAngle=0,travel=0;
     const initial=sampleChainPath(.29,mobile).getPointAt(0);
+    let previous = initial.clone();
     for(let step=0;step<=360;step++) {
       const p=.29+step/1000,path=sampleChainPath(p,mobile),top=path.getPointAt(0);
-      expect(top.y).toBe(initial.y);
+      if (step) {
+        expect(top.y).toBeLessThan(previous.y);
+        const displacement = top.clone().sub(previous).normalize();
+        expect(displacement.dot(path.getTangentAt(0))).toBeGreaterThan(.999);
+        expect(Math.hypot(displacement.x, displacement.z)).toBeGreaterThan(.60);
+      }
       expect(Math.hypot(top.x,top.z)).toBeCloseTo(1.85,8);
       const angle=Math.atan2(top.z,top.x);
-      if(step) {const delta=Math.atan2(Math.sin(angle-lastAngle),Math.cos(angle-lastAngle));expect(delta).toBeLessThan(0);expect(delta).toBeGreaterThan(-.028);travel-=delta;}
+      if(step) {const delta=Math.atan2(Math.sin(angle-lastAngle),Math.cos(angle-lastAngle));expect(delta).toBeGreaterThan(0);expect(delta).toBeLessThan(.028);travel+=delta;}
       lastAngle=angle;
+      previous = top;
       const tangent=path.getTangentAt(.2);
       expect(Math.atan2(-tangent.y,Math.hypot(tangent.x,tangent.z))*180/Math.PI).toBeGreaterThan(50);
     }
-    expect(travel).toBeGreaterThan(4.5);
+    expect(travel).toBeGreaterThan(2.5);
     expect(sampleChainPath(.29,mobile).getPointAt(0)).toEqual(initial);
   }
 });

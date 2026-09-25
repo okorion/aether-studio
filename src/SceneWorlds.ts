@@ -14,6 +14,7 @@ import { bindGroupCurtain, createCurtainBounds } from './SceneCurtains'
 import { curtainHasCoverage } from './SceneVisibility'
 import { lightChoreographyGLSL, sampleLightChoreography, type LightFilmUniforms } from './SceneLighting'
 import { REACTOR } from './Reactor'
+import { sampleScaleOffset, SCALE_CEILING_CLEARANCE } from './ScaleStage'
 import { createChamberLight, excludeChamberSpotlight } from './SceneChamberLight'
 
 const TAU = Math.PI * 2
@@ -591,7 +592,6 @@ export function createSceneWorlds(
   const chamberHeight = REACTOR.worldY
   const floorHeight = chamberHeight - 3.7 * REACTOR.heightScale
   monitorAssembly.setOccluders([matter, chamber])
-  const scaleHeight = -48.0
   // Whole assemblies share a viewport edge. The surfaces remain real 3D,
   // while the outgoing scene reads as a single flat, frayed wrapper.
   const deviceCurtain = createCurtainBounds(-.25)
@@ -727,11 +727,12 @@ export function createSceneWorlds(
       const deviceCoverage = curtainHasCoverage(layers.monitorExit, layers.deviceExit)
       lightDepth.value = journey.darkness
       root.position.y = journey.height
-      // Root follows the travelling spine; both mechanical layers stay in world
-      // space. Their separation is real even while both are visible together.
-      space.position.y = lowerSpace.position.y = chamberHeight - journey.height
+      // The outgoing room retains its water and world anchor. The incoming
+      // room is composed independently through the same diagonal curtain.
+      space.position.y = chamberHeight - journey.height
+      lowerSpace.position.y = SCALE_CEILING_CLEARANCE + 3.755 * REACTOR.heightScale
       chamber.position.y = chamberHeight - journey.height
-      scaleWall.position.y = scaleHeight - journey.height
+      scaleWall.position.y = sampleScaleOffset(progress)
       matter.position.y = 0
       matter.rotation.y = journey.structureYaw
       scaleWall.rotation.y = 0
@@ -742,7 +743,7 @@ export function createSceneWorlds(
       matter.visible = spineWeight > .001 && curtainHasCoverage(layers.monitorEntry, layers.monitorExit)
       spineAssembly.update(progress, journey.core * spineWeight, emergence, mobileView, camera)
       const deviceWeight = smooth(.59, .615, progress) * (1 - smooth(.79, .88, progress))
-      const scaleWeight = smooth(.705, .735, progress) * (1 - smooth(.93, .95, progress))
+      const scaleWeight = smooth(.69, .715, progress) * (1 - smooth(.93, .95, progress))
       chamber.visible = deviceWeight > .001
       scaleWall.visible = scaleWeight > .001
       metal.opacity = scaleWeight
@@ -811,7 +812,7 @@ export function createSceneWorlds(
       // and projected light survive independently after that band closes.
       ruins.update(deviceCoverage ? architectureWeight : 0)
       architectureBars.visible = deviceCoverage
-      underside.visible = scaleWeight > .001 && eyeHeight < floorHeight
+      underside.visible = lowerSpace.visible
       const slabDistance = Math.abs(eyeHeight - (floorHeight - .17 * REACTOR.heightScale))
       slabMaterial.opacity = floorMaterial.opacity * smooth(.55, 1.10, slabDistance)
       slab.visible = aboveFloor && floor.visible && slabMaterial.opacity > .015

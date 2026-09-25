@@ -293,6 +293,7 @@ const dustVertex = /* glsl */ `
     // Pearlescent grains fill both flower volumes and the thicker reactor rim;
     // sparse strays retain a finer silhouette around the dense core.
     float grainScale = 1.0 + spineWeight * (.32 + .20 * cluster);
+    grainScale *= mix(1., .82, flowerWeight);
     grainScale *= mix(1., 1.5, ribbonWeight);
     grainScale *= mix(1., .72, aAdvected * spineWeight);
     grainScale *= mix(1.18, 1.66 * mix(1., .72, stray), uWeights.y);
@@ -360,7 +361,7 @@ const dustVertex = /* glsl */ `
     // mask (no temporal flicker), and remove the close falling/bokeh grains
     // only in the column. The shared reactor/forest populations remain intact.
     float beltSeed = fract(phase * 17.17 + position.x * 31.13);
-    vAlpha *= mix(1., step(.92, beltSeed), ribbonWeight);
+    vAlpha *= mix(1., step(.70, beltSeed), ribbonWeight);
     vAlpha *= 1. - spineWeight * max(aAdvected, bokeh);
     // Negative W marks extra flower seeds; never grow the reactor/forest field.
     vAlpha *= aDust.w < 0. ? spineWeight : 1.;

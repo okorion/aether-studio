@@ -1,10 +1,11 @@
 import * as THREE from 'three'
 import { smooth } from './Journey'
 import type { createForestGeometry } from './ForestGeometry'
+import { FOREST_FLOOR_Y } from './ForestGeometry'
 
 /** Absolute scroll poses, shared by both directions of travel. */
 export function sampleForestAssembly(progress: number, lower: boolean) {
-  return lower ? 1 - smooth(.975, 1.025, progress) : smooth(.008, .073, progress)
+  return lower ? 1 - smooth(.935, 1, progress) : smooth(.008, .073, progress)
 }
 
 export function createForestParticles(assets: ReturnType<typeof createForestGeometry>, count: number) {
@@ -42,16 +43,18 @@ export function createForestParticles(assets: ReturnType<typeof createForestGeom
       sizes[i] = .032 + random() * .024
       seeds.set([.32 + random() * .45, random(), .64 + random() * .36], i * 3)
     }
+    const originalHeight = point.y
+    point.y = FOREST_FLOOR_Y + (point.y - FOREST_FLOOR_Y) * .5
     point.toArray(positions, i * 3)
     const seed = random(), angle = random() * Math.PI * 2
-    // Most seeds wait just above their own branch/canopy surface. A smaller
-    // outer population bridges neighbouring crowns without a distant rain.
+    // Seeds retain their former crown height while the assembled trees are
+    // shorter. Local horizontal anchors avoid one remote rain source.
     const local = seed < .82
     const radius = .06 + random() ** 1.7 * (local ? .38 : .75)
     const lift = local ? .22 + (seed / .82) ** 1.6 * 1.18 : 1.4 + ((seed - .82) / .18) ** 1.6 * 1.8
     // Broad, staggered arrival windows do not inherit the leaf's colour seed.
     assemblyPhases[i] = .5 + .5 * Math.sin(point.x * .31 + point.z * .27 + point.y * .13 + seed * 2)
-    origins.set([point.x + Math.cos(angle) * radius, point.y + lift,
+    origins.set([point.x + Math.cos(angle) * radius, Math.max(point.y, originalHeight) + lift,
       point.z + Math.sin(angle) * radius], i * 3)
     // A standing forest is already legible on entry. The remaining population
     // descends into these same branches; reversing scroll removes only that fill.

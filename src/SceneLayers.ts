@@ -1,5 +1,6 @@
 import * as THREE from 'three'
-import { smooth, windowWeight } from './Journey'
+import { sampleJourney, smooth, windowWeight } from './Journey'
+import { sampleScaleOffset } from './ScaleStage'
 import { createSurfaceFlowUniforms, surfaceFlowGLSL, type SurfaceFlowInput } from './SceneSurfaceFlow'
 
 /** All boundaries use viewport UVs, independent of render-target resolution. */
@@ -13,7 +14,7 @@ export function sampleLayers(progress: number) {
     deviceExit: -0.25 + 1.5 * smooth(.715, .785, p),
     statement: windowWeight(p, .095, .12, .31, .32),
     statementY: -1.15 * (1 - smooth(.10, .175, p)) + 1.5 * smooth(.22, .305, p),
-    scaleCopy: windowWeight(p, .765, .805, .89, .93),
+    scaleCopy: windowWeight(p, .69, .715, .925, .95),
   }
 }
 
@@ -153,7 +154,7 @@ export function createSceneLayers(scene: THREE.Scene) {
         const halfHeight = Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2) * depth
         const panel = panels[i]
         panel.position.copy(camera.position).addScaledVector(forward, depth)
-        scaleAnchor.set(0, -48, 0).project(camera)
+        scaleAnchor.set(0, sampleJourney(progress).height + sampleScaleOffset(progress), 0).project(camera)
         // Keep the dark plate covering the viewport until the shared diagonal
         // curtain removes it. Only its printed content travels upward.
         if (i) panel.position.addScaledVector(up, scaleAnchor.y * halfHeight)

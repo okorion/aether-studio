@@ -16,19 +16,19 @@ export function createFlowerSurface() {
     area += size; areas.push(area)
   }
   // Inner petals stand upright; successive whorls open and roll over at the lip.
-  for (let ring = 0; ring < 6; ring++) {
-    const petals = 5 + ring * 2
+  for (let ring = 0; ring < 5; ring++) {
+    const petals = 5 + ring
     for (let petal = 0; petal < petals; petal++) {
       const angle = petal / petals * Math.PI * 2 + ring * 2.399
       const surface = (u: number, v: number, out: THREE.Vector3) => {
-        const opening = .25 + ring * .175
-        const radius = (.045 + ring * .028 + opening * Math.sin(v * Math.PI * .5))
+        const opening = .18 + ring * .23
+        const radius = (.035 + ring * .018 + opening * Math.sin(v * Math.PI * .5))
           * (1 - .22 * u * u * v ** 3) * (1 + .055 * Math.sin(petal * 2.17 + ring))
-        const theta = angle + u * Math.PI / petals * 1.28 * (.16 + Math.sin(v * Math.PI * .82) ** .65)
+        const theta = angle + u * Math.PI / petals * 1.06 * (.16 + Math.sin(v * Math.PI * .82) ** .65)
           + v * .18 * (1 - ring / 7)
         const scallop = .025 * Math.cos(u * Math.PI * 3 + petal * .7) * v ** 7
-        const z = -.10 - ring * .085 + (.70 - ring * .055) * Math.sin(v * 1.5)
-          - (.035 + ring * .025) * v ** 8 + u * u * (.13 + ring * .026) * Math.sin(v * Math.PI)
+        const z = -.16 - ring * .07 + (.95 - ring * .11) * Math.sin(v * 1.7)
+          - (.08 + ring * .045) * v ** 6 + u * u * (.20 + ring * .036) * Math.sin(v * Math.PI)
           + scallop
         return out.set(Math.cos(theta) * radius, Math.sin(theta) * radius, z)
       }
@@ -77,11 +77,11 @@ export function createFlowerAttributes(seeds: Float32Array, dust: Float32Array, 
     const joining = satellite === 0 && (tier === 0 || tier === 3)
       ? THREE.MathUtils.smoothstep(endSign * point.y / size + (random() - .5) * .30, -.22, .38) * endSign : 0
     const around = satellite * 2.399 + tier
-    point.x += side * (3.78 + .22 * Math.sin(tier * 2.4)) + (satellite ? Math.cos(around) * .92 : 0)
+    point.x += side * (3.35 + .22 * Math.sin(tier * 2.4)) + (satellite ? Math.cos(around) * .80 : 0)
     point.y += (tier - 1.5) * 2.85 + side * .4 + (satellite ? Math.sin(around) * 1.0 : 0)
     point.z += Math.sin(tier * 2.1 + side) * .9 + (satellite ? Math.cos(around * .8) * .85 : 0)
     const radius = Math.hypot(point.x, point.z)
-    if (radius < 2.55) { point.x *= 2.55 / radius; point.z *= 2.55 / radius }
+    if (radius < 2.30) { point.x *= 2.30 / radius; point.z *= 2.30 / radius }
     positions.set([point.x, point.y, point.z, joining], i * 4)
     normal.toArray(normals, i * 3)
     color.set(palette[(tier * 2 + (side > 0 ? 1 : 0) + satellite) % palette.length])

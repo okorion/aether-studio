@@ -29,7 +29,7 @@ test('@interaction petals have real depth and flower samples preserve normals, c
   expect(maxNormalError).toBeLessThan(.00001)
   expect(octants.size).toBe(8)
   expect(hues.size).toBeGreaterThan(5)
-  expect(minRadius).toBeGreaterThan(2.549)
+  expect(minRadius).toBeGreaterThan(2.299)
   expect(joins / count).toBeGreaterThan(.08)
   expect(joins / count).toBeLessThan(.26)
   expect(createFlowerAttributes(seeds, dust, advected)).toEqual(flowers)

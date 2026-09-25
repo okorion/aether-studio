@@ -12,16 +12,16 @@ test('@interaction lower descent restores orbit continuously after the locked ga
     expect(sampleJourney(p).orbitEnabled).toBe(false)
     expect(sampleJourney(p).orbitWeight).toBe(0)
   }
-  let previous = sampleJourney(.86)
-  for (let i = 1; i <= 20; i++) {
-    const current = sampleJourney(.86 + i * .001)
+  let previous = sampleJourney(.925)
+  for (let i = 1; i <= 25; i++) {
+    const current = sampleJourney(.925 + i * .001)
     expect(current.orbitEnabled).toBe(true)
     expect(current.orbitWeight).toBeGreaterThan(previous.orbitWeight)
     expect(current.orbitWeight - previous.orbitWeight).toBeLessThan(.08)
     expect(current.height).toBeLessThan(previous.height)
     previous = current
   }
-  expect(sampleJourney(.88).orbitWeight).toBe(1)
+  expect(sampleJourney(.95).orbitWeight).toBe(1)
   expect(sampleJourney(1).orbitWeight).toBe(1)
 })
 

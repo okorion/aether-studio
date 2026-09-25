@@ -235,7 +235,9 @@ test('@interaction production scene accepts background drag and excludes navigat
   expect(held.equals(before)).toBe(false)
   await test.info().attach('camera-before', { body: before, contentType: 'image/png' })
   await test.info().attach('camera-held', { body: held, contentType: 'image/png' })
-  await page.mouse.move(950, 440, { steps: 8 })
+  // Continue in the same direction so release momentum cannot cancel the
+  // selected orbit before the pause/rebuild preservation assertions below.
+  await page.mouse.move(850, 440, { steps: 8 })
   await page.mouse.up()
   await expect(canvas).toHaveAttribute('data-camera-mode', 'idle')
   await expect(page.locator('html')).not.toHaveClass(/scene-dragging/)

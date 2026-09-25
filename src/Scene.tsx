@@ -7,8 +7,9 @@ import { sampleJourney, sampleViewAzimuth } from './Journey'
 import { scrollToScene } from './ScrollTimeline'
 import { createSceneGlow } from './SceneGlow'
 import { createSceneForest } from './SceneForest'
+import { createSceneJellyfish } from './SceneJellyfish'
 import { createSceneLayers, sampleLayers } from './SceneLayers'
-import { bindCurtain, bindGroupCurtain, createCurtainBounds } from './SceneCurtains'
+import { bindCurtain, createCurtainBounds } from './SceneCurtains'
 import { createSceneVideo } from './SceneVideo'
 import { prepareSceneShaders } from './ScenePreparation'
 import type { LoadingStage } from './loading'
@@ -431,93 +432,9 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
       const distantParticles = new THREE.Points(distantGeometry, particlesMaterial)
       scene.add(distantParticles)
 
-      // Tiny translucent bell creatures lend scale to the surrounding space.
-      const creatures: { group: THREE.Group; anchor: THREE.Vector3; phase: number }[] = []
-      const creatureRoot = new THREE.Group()
-      creatureRoot.name = 'aether-forest-creatures'
-      scene.add(creatureRoot)
-      const creatureCurtain = createCurtainBounds()
-      const creatureLipMaterial = material(chrome.clone())
-      const bellMaterial = material(
-        new THREE.MeshPhysicalMaterial({
-          color: 0x6b9b9e,
-          metalness: 0.65,
-          roughness: 0.18,
-          transparent: true,
-          opacity: 0.42,
-          side: THREE.DoubleSide,
-          depthWrite: false,
-          envMapIntensity: 1.7,
-        }),
-      )
-      if (softwareRenderer) {
-        bellMaterial.metalness = 0.1
-        bellMaterial.roughness = 0.6
-        bellMaterial.emissive.set(0x152927)
-      }
-      const threadMaterial = material(
-        new THREE.LineBasicMaterial({
-          color: 0x58968c,
-          transparent: true,
-          opacity: 0.2,
-          blending: THREE.AdditiveBlending,
-          depthWrite: false,
-        }),
-      )
-      for (
-        let creatureIndex = 0;
-        creatureIndex < (softwareRenderer ? 2 : smallScreen ? 4 : 8);
-        creatureIndex += 1
-      ) {
-        const group = new THREE.Group()
-        const bell = new THREE.Mesh(
-          geometry(new THREE.SphereGeometry(0.23, 20, 10, 0, Math.PI * 2, 0, Math.PI * 0.5)),
-          bellMaterial,
-        )
-        bell.scale.y = 0.5
-        group.add(bell)
-        const lip = new THREE.Mesh(geometry(new THREE.TorusGeometry(0.23, 0.006, 5, 40)), creatureLipMaterial)
-        lip.rotation.x = Math.PI * 0.5
-        group.add(lip)
-        const strandCount = softwareRenderer ? 4 : 8
-        for (let strand = 0; strand < strandCount; strand += 1) {
-          const theta = (strand / strandCount) * Math.PI * 2
-          const points: THREE.Vector3[] = []
-          for (let p = 0; p <= 20; p += 1) {
-            const t = p / 20
-            points.push(
-              new THREE.Vector3(
-                Math.cos(theta) * 0.16 + Math.sin(t * 7 + theta) * 0.04 * t,
-                -t * (0.7 + random() * 0.2),
-                Math.sin(theta) * 0.16 + Math.cos(t * 5 + theta) * 0.06 * t,
-              ),
-            )
-          }
-          group.add(
-            new THREE.Line(
-              geometry(new THREE.BufferGeometry().setFromPoints(points)),
-              threadMaterial,
-            ),
-          )
-        }
-        const anchors = [
-          [3.2, 1.3, -3],
-          [-3.5, -2, -2],
-          [5.5, -3.8, -5],
-          [-4.4, 3.1, -8],
-        ]
-        const anchor = new THREE.Vector3(...(anchors[creatureIndex % 4] as [number, number, number]))
-        const perForest = softwareRenderer ? 1 : smallScreen ? 2 : 4
-        anchor.y -= creatureIndex >= perForest ? 61.5 : 0
-        group.position.copy(anchor)
-        const scale = creatureIndex === 0 ? 1 : 0.6 + random() * 0.5
-        group.scale.setScalar(scale)
-        creatureRoot.add(group)
-        creatures.push({ group, anchor, phase: random() * Math.PI * 2 })
-      }
-      // Bell, rim and every tentacle share one boundary. Dedicated lip material
-      // prevents this curtain from leaking onto the other chrome objects.
-      bindGroupCurtain(creatureRoot, creatureCurtain)
+      const jellyfish = createSceneJellyfish(scene, softwareRenderer, smallScreen)
+      const creatureRoot = jellyfish.group
+      effectDisposers.push(() => jellyfish.dispose())
 
       const lightShafts = createSceneLightShafts(scene, softwareRenderer, smallScreen, lightFilm, forestFilm)
       effectDisposers.push(() => lightShafts.dispose())
@@ -731,19 +648,9 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
         warmLight.position.y = state.height - 3
         scene.fog!.color.set(0x03090d)
         particlesMaterial.uniforms.uOpacity.value = .35 * (1-state.darkness*.6)
-        const creatureLayers = sampleLayers(scroll)
-        creatureCurtain.upper.value = scroll < .5 ? 1.5 : creatureLayers.forestEntry
-        creatureCurtain.lower.value = scroll < .5 ? creatureLayers.forestExit : -.5
-        ambientCurtain.upper.value = creatureCurtain.upper.value
-        ambientCurtain.lower.value = creatureCurtain.lower.value
-        creatureRoot.visible = scroll < .20 || scroll > .855
-        for (const creature of creatures) {
-          creature.group.position.y =
-            creature.anchor.y + Math.sin(elapsed * 0.24 + creature.phase) * 0.28
-          creature.group.position.x =
-            creature.anchor.x + Math.sin(elapsed * 0.1 + creature.phase) * 0.18
-          creature.group.rotation.z = Math.sin(elapsed * 0.17 + creature.phase) * 0.13
-        }
+        jellyfish.update(elapsed, scroll)
+        ambientCurtain.upper.value = jellyfish.curtain.upper.value
+        ambientCurtain.lower.value = jellyfish.curtain.lower.value
         camera.lookAt(centre)
         camera.updateMatrixWorld()
         lightFilm.map.value = lightVideo.texture

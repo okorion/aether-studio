@@ -10,7 +10,7 @@
 | 지하실, 장치 주변 공간 | **리액터 챔버(Reactor Chamber)** | 리액터가 놓인 방의 천장·바닥·주변 설비·수면. [SceneWorlds.ts](../src/SceneWorlds.ts), [SceneRuins.ts](../src/SceneRuins.ts), [SceneWater.ts](../src/SceneWater.ts) |
 | 비늘, 금속 비늘 벽 | **스케일 패널(Scale Panel)** | 챔버 바닥 아래 독립 층의 육각 금속 타일 표면. [SceneWorlds.ts](../src/SceneWorlds.ts) |
 | 원형 링의 꼬리 | **리본 트레일(Ribbon Trail)** | 링과 같은 부모에 연결된 금속 리본 형상. [Scene.tsx](../src/Scene.tsx) |
-| 해파리, 떠다니는 해파리 테두리·다리 | **벨 크리처(Bell Creature)** | 상단·하단 포레스트의 종 모양 부유체. 몸통·테두리·촉수가 같은 장면 경계를 공유. [Scene.tsx](../src/Scene.tsx) |
+| 해파리, 떠다니는 해파리 테두리·다리 | **벨 크리처(Bell Creature)** | 상단·하단 포레스트에서 몸통 수축에 맞춰 유영하는 종 모양 부유체. 테두리에 붙은 촉수가 뒤늦게 휘며, 몸통·테두리·촉수가 같은 장면 경계를 공유. [SceneJellyfish.ts](../src/SceneJellyfish.ts) |
 | 상단 숲, 하단 숲 | **상단·하단 포레스트(Forest)** | 고정된 월드 위치의 가지·잎·미세 입자. [ForestGeometry.ts](../src/ForestGeometry.ts), [SceneForest.ts](../src/SceneForest.ts) |
 | 마우스 섬광의 꼬리, 느린 유도탄 같은 빛 | **포인터 스트릭(Pointer Streak)과 잔광 궤적** | 입력 후에도 전진하는 선두 광점과 그 이전 경로를 따르는 잔광. 링의 리본 트레일과 별도 효과. [SceneInteraction.ts](../src/SceneInteraction.ts) |
 

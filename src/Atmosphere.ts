@@ -297,7 +297,10 @@ const dustVertex = /* glsl */ `
     vec3 ribbonColor = mix(vec3(.30,.12,.72), vec3(.91,.23,.56), ribbonHue);
     ribbonColor = mix(ribbonColor, vec3(.08,.72,.79), smoothstep(.76,.98, ribbonHue));
     vColor = mix(vColor, ribbonColor, ribbonWeight);
-    vec3 petalNormal = rotateFlowerField(aFlowerNormal);
+    // Positions use a non-uniform X/Z squeeze on mobile. Apply its inverse
+    // transpose to normals; non-flower grains keep their zero normal finite.
+    vec3 petalNormal = rotateFlowerField(aFlowerNormal) / vec3(uSpineSpread, 1., uSpineSpread);
+    petalNormal *= inversesqrt(max(dot(petalNormal, petalNormal), 1e-8));
     float petalLight = .16 + .84 * pow(.5 + .5 * dot(petalNormal, normalize(vec3(-.5,.75,1.))), 1.7);
     vColor = mix(vColor, aFlowerColor * petalLight * 2.2, flowerWeight);
     vec3 litWorld = (modelMatrix * vec4(p, 1.)).xyz;

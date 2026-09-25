@@ -24,11 +24,11 @@ export function sampleRotation(progress = .4, mobile = false, lane = .3, heightS
   geometry.setAttribute('aFlowerColor', new THREE.BufferAttribute(flowers.colors, 3))
   // Execute the production vertex shader, then read its local position from
   // a float pixel. No duplicated CPU field equations stand in for the shader.
-  const vertex = grains.material.vertexShader.replace(/}\s*$/, 'probePosition = p; gl_Position = vec4(0., 0., 0., 1.); gl_PointSize = 1.; }')
+  const vertex = grains.material.vertexShader.replace(/}\s*$/, 'probePosition = p; probeNormal = petalNormal; gl_Position = vec4(0., 0., 0., 1.); gl_PointSize = 1.; }')
   const material = new THREE.ShaderMaterial({
-    uniforms: grains.material.uniforms,
-    vertexShader: 'varying vec3 probePosition;\n' + vertex,
-    fragmentShader: 'varying vec3 probePosition; varying float vAlpha; void main() { gl_FragColor = vec4(probePosition, vAlpha); }',
+    uniforms: { ...grains.material.uniforms, uProbeNormal: { value: 0 } },
+    vertexShader: 'varying vec3 probePosition; varying vec3 probeNormal;\n' + vertex,
+    fragmentShader: 'uniform float uProbeNormal; varying vec3 probePosition; varying vec3 probeNormal; varying float vAlpha; void main() { gl_FragColor = vec4(mix(probePosition, probeNormal, uProbeNormal), vAlpha); }',
     depthTest: false, depthWrite: false,
   })
   const probe = new THREE.Scene()
@@ -66,7 +66,7 @@ export function sampleRotation(progress = .4, mobile = false, lane = .3, heightS
     const anchorEnd = grains.position.y
     atmosphere.update(10, .64, 1)
     const outgoingY = scene.getObjectByName('aether-outgoing-bone-current')!.position.y
-    return { start, expected, end, anchors: [anchorStart, anchorEnd, outgoingY],
+    const samples = { start, expected, end, anchors: [anchorStart, anchorEnd, outgoingY],
       movingStart: read(progress, true), moving: read(progress + .015, true),
       movingReverse: read(progress, true), reverse: read(progress),
       idle: read(progress, false, 18), idleReverse: read(progress, false, 10),
@@ -74,6 +74,14 @@ export function sampleRotation(progress = .4, mobile = false, lane = .3, heightS
       thinned: read(progress, false, 10, false, 1.2),
       reactorMoving: read(.71, true), reactorBokeh: read(.71, false, 10, true),
       forestMoving: read(.065, true), forestBokeh: read(.065, false, 10, true) }
+    material.uniforms.uProbeNormal.value = 1
+    const normal = read(progress).slice(0, 3)
+    const spread = material.uniforms.uSpineSpread.value
+    const transform = new THREE.Matrix4().makeScale(spread, 1, spread)
+      .multiply(new THREE.Matrix4().makeRotationY(material.uniforms.uSpineYaw.value))
+    const expectedNormal = new THREE.Vector3().fromArray(flowers.normals)
+      .applyNormalMatrix(new THREE.Matrix3().getNormalMatrix(transform)).toArray()
+    return { ...samples, normal, expectedNormal }
   } finally {
     worlds.dispose(); atmosphere.dispose(); geometry.dispose(); material.dispose(); target.dispose(); renderer.dispose()
   }

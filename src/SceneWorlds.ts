@@ -315,9 +315,28 @@ export function createSceneWorlds(
   // the same screen edge that clips every upper-room object.
   const undersideMaterial = mat(new THREE.MeshStandardMaterial({
     color: 0x090d12, metalness: .43, roughness: .57, envMapIntensity: .42,
-    depthWrite: true,
+    transparent: true, depthWrite: true,
   }))
-  const underside = mesh(lowerSpace, geo(new THREE.PlaneGeometry(64, 64)), undersideMaterial, 0, -3.755, platformZ)
+  // A finite ceiling edge previously crossed the scale room as a hard screen
+  // line. Extend beyond the useful view distance, then fade before either the
+  // geometry boundary or camera far clip. Nearby ceiling still occludes fully.
+  undersideMaterial.onBeforeCompile = shader => {
+    shader.fragmentShader = shader.fragmentShader.replace('#include <opaque_fragment>', `
+      float ceilingCoverage = 1. - smoothstep(48., 76., length(vViewPosition));
+      if (ceilingCoverage < .001) discard;
+      diffuseColor.a *= ceilingCoverage;
+      #include <opaque_fragment>
+    `)
+  }
+  undersideMaterial.customProgramCacheKey = () => 'aether-ceiling-distance-coverage-v1'
+  const undersideGeometry = geo(new THREE.PlaneGeometry(192, 192))
+  // Keep the shared relief's world-space scale and centre phase unchanged.
+  const undersideUv = undersideGeometry.getAttribute('uv')
+  for (let i = 0; i < undersideUv.count; i++) {
+    undersideUv.setXY(i, (undersideUv.getX(i) - .5) * 3 + .5,
+      (undersideUv.getY(i) - .5) * 3 + .5)
+  }
+  const underside = mesh(lowerSpace, undersideGeometry, undersideMaterial, 0, -3.755, platformZ)
   underside.name = 'aether-floor-underside'
   underside.rotation.x = Math.PI / 2
   underside.renderOrder = -2

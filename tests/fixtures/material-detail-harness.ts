@@ -118,7 +118,7 @@ export function probeMaterialDetail() {
   const artworkMaterial = createScaleSurface(false, {
     pointerNdc: { value: new THREE.Vector2() }, pointerStrength: { value: 0 },
     pointerAspect: { value: 1 }, pointerFlow: { value: neutralFlow }, surfaceTime: { value: 6.5 },
-    surfaceExtent: { value: 6 }, pointerWaves: { value: Array.from({ length: 8 }, () => new THREE.Vector4()) },
+    surfaceExtent: { value: 6 }, pointerWaves: { value: Array.from({ length: 8 }, () => new THREE.Vector4(0, 0, 0, 0)) },
     lightDepth: { value: 0 },
   }, undefined, { map: { value: artworkTexture }, ready: artworkReady })
   try {

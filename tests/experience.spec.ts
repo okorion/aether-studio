@@ -37,13 +37,15 @@ test('work navigation, project sequence, Escape, and focus restoration', async (
   await expect(card).toBeFocused()
   await expect(page.locator('body')).not.toHaveCSS('overflow', 'hidden')
 
-  await page.getByRole('button', { name: 'Explore Solstice', exact: true }).click()
+  const secondCard = page.getByRole('button', { name: 'Explore Solstice', exact: true })
+  await secondCard.click()
   await dialog.getByRole('button', { name: 'Next project' }).click()
   await expect(dialog.getByRole('heading', { level: 2 })).toHaveText(
     'Somewhere between the real and the imagined.',
   )
   await dialog.getByRole('button', { name: 'Close project' }).click()
   await expect(dialog).not.toBeVisible()
+  await expect(secondCard).toBeFocused()
   expect(errors).toEqual([])
 })
 

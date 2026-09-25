@@ -6,7 +6,7 @@
 
 | 대상 | 구현 | 그래픽스 용어 |
 | --- | --- | --- |
-| 본 컬럼 | 넓은 반사색과 박막 두께, 중간 주름, 미세 표면을 분리한다. 밝은 반사는 색 비율을 유지하며 압축한다. | PBR, iridescence / thin-film interference, microfacet roughness, surface-gradient bump mapping, highlight roll-off |
+| 본 컬럼 | 넓은 반사색과 박막 두께, 중간 주름, 미세 표면을 분리한다. 밝은 반사는 압축하되 원래 PBR 반사의 흰 하이라이트를 남긴다. | PBR, iridescence / thin-film interference, microfacet roughness, surface-gradient bump mapping, highlight roll-off |
 | 큰 글자 | 포인터 속도·밀도장에서 높이 기울기를 읽고 글자 텍스처의 UV를 국소적으로 접는다. 변형 상한은 화면 높이의 5.5%다. | fluid-driven UV distortion, refraction, density gradient, advection, vorticity confinement |
 | 본 컬럼 좌하단 안개 | 이전 작업의 독립된 속도·밀도장과 잔류·복원 동작을 유지한다. 배경 형상을 비틀지 않고 안개 투과를 바꾼다. | advected density field, opacity mask, dissipation |
 | 리액터 입자 | 입자마다 GPU 위치를 저장하고 curl·접선 방향으로 이동시킨다. O형 영역으로 복원하는 힘과 외곽 제한을 적용한다. | GPGPU, ping-pong render targets, position history, curl field, confinement, sphere impostor |
@@ -23,6 +23,8 @@ GPU 리액터는 PC 144,000개, 모바일 40,000개 입자에 고유 위치 texe
 
 리액터 받침의 과노출은 실제 장면에서 발견했다. 방에 필요한 영상 조명의 큰 배율이 금속에도 적용되면서 하얗게 번졌다. 받침·rod·cap의 반사 기여와 보조 발광만 낮추고 방과 바닥의 조명을 유지했다.
 
+하부 장면의 배경 수평선은 천장 평면의 먼 경계였다. 천장을 넓히고 카메라에서 멀어질수록 투명하게 해 경계가 드러나지 않도록 했다. 가까운 천장의 차폐와 문양 크기는 유지한다.
+
 ## 스케일 이미지 출처
 
 [`scale-alloy.jpg`](../public/media/scale-alloy.jpg)는 이 프로젝트용으로 OpenAI `image_gen`에서 생성한 원본 이미지다. Active Theory의 사진·모델·텍스처는 입력하거나 복사하지 않았다. 생성 PNG를 1536×768 JPEG로 내보냈으며 크기는 451,945바이트다. 규격·색 공간·SHA-256은 [manifest](../public/media/scale-alloy-manifest.json)에 있다.
@@ -34,6 +36,10 @@ GPU 리액터는 PC 144,000개, 모바일 40,000개 입자에 고유 위치 texe
 실제 production 셰이더를 사용하는 GPU fixture에서 글자 이동 거리·복원·전경 보존, 입자 입력 방향·잔류·O 경계·정지·고유 상태, 금속 환경 반사·시점·거칠기 변화·타일 법선, 물 반사 위치·색·경계 누수를 검사한다.
 
 레드팀에서 비활성 상태의 역스크롤 중 입자 혼합 비중이 갱신되지 않는 문제를 발견했다. GPU 적분만 정지하고 진행도·장면 이탈은 계속 반영하도록 고쳤으며 회귀 검사를 추가했다.
+
+로컬 전체 검사는 128개 통과, 2개 실패, 기존 조건부 제외 1개였다. 실패를 확인해 본 컬럼의 흰 반사를 복원했고, 스케일 fixture에는 실제 면 회전에 따른 명암을 읽을 수 있는 고정 사광을 추가했다. Artwork fixture의 포인터 파동도 명시적으로 비활성화했다. 검사 기준은 유지했으며 실패한 두 검사는 수정 후 모두 통과했다. 최종 커밋 전체 검사는 PR의 CI 결과로 확인한다.
+
+추가 WebKit 검사에서는 프로젝트 창을 닫은 뒤 카드로 포커스가 돌아오지 않는 문제를 찾았다. 카드 클릭 시 포커스를 명시해 모달이 실제 열기 버튼을 복귀 대상으로 저장하도록 고쳤다. 다른 프로젝트로 넘긴 뒤 닫기·수동 모션 정지와 재개·시스템 모션 축소 경로의 3개 검사가 수정 후 통과했다. Playwright WebKit의 iPhone 13 프로필 결과이며 실제 iPhone Safari 검증과 구분한다.
 
 로컬 Windows의 Chromium/ANGLE D3D11, 1440×900, DPR 1에서 구간마다 안정화 후 RAF 100개를 수집했다. 상단 포레스트·글자·본 컬럼·리액터·수면 통과·스케일 패널·하단 포레스트 모두 중앙값 16.7ms, p95 16.8ms였고 품질 배율은 1.00이었다. 독립 GPU 실행 중의 관찰이며 GPU 연산 시간이나 다른 기기의 FPS를 뜻하지 않는다. 브라우저 오류는 없었다. 390×844 화면도 별도로 확인했다.
 

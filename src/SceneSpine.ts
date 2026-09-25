@@ -221,6 +221,7 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
         // Broad reflected color coats the midtones; only the brightest metal
         // highlights approach silver. Grain never controls the coating hue.
         float spineLightPeak = max(outgoingLight.r, max(outgoingLight.g, outgoingLight.b));
+        float spineSilverPeak = min(outgoingLight.r, min(outgoingLight.g, outgoingLight.b));
         float spineWhiteHighlight = smoothstep(1.4, 4., spineLightPeak);
         float spineColorPeak = max(spineReflectionColor.r, max(spineReflectionColor.g, spineReflectionColor.b));
         vec3 spineCoatTint = mix(vec3(.58,.39,.76),
@@ -230,10 +231,17 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
         outgoingLight = spineRadiance * spineCoatTint * (.52 + spineCoating * .16)
           + spineReflectionColor * (.34 + spineFresnel * .35)
             * (.84 + spineCoating * .16);
+        // The common RGB component of a bright PBR reflection is its neutral
+        // silver glint. Keep that narrow peak above the colored coating; tinting
+        // every peak as well as the midtones removes the metal's white sparkle.
+        float spineSilverGlint = smoothstep(.45, 1.4, spineSilverPeak);
+        spineSilverGlint *= spineSilverGlint;
+        vec3 spineSilverRadiance = vec3(spineSilverPeak * .90 / (1. + spineSilverPeak * .32));
+        outgoingLight = mix(outgoingLight, spineSilverRadiance, spineSilverGlint * .88);
         #include <opaque_fragment>
       `)
     }
-    boneMaterial.customProgramCacheKey = () => 'aether-spine-layered-silver-v4'
+    boneMaterial.customProgramCacheKey = () => 'aether-spine-layered-silver-v5'
   }
   const discMaterial = new THREE.MeshPhysicalMaterial({
     color: 0x26364a, metalness: software ? .45 : .86, roughness: .44,

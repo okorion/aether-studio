@@ -762,6 +762,13 @@ function probeScalePointer() {
   // time. Ambient particle animation cannot masquerade as pointer response.
   probeScene.attach(tiles)
   probeScene.add(new THREE.AmbientLight(0xffffff, 2))
+  // Uniform ambient light cannot reveal a rigid face's changing normal. A
+  // fixed oblique key observes the actual hinge shading, without depending
+  // on the removed pointer-driven albedo boost or an artificial normal bend.
+  const key = new THREE.DirectionalLight(0xffffff, 4)
+  key.position.set(-4, -43, 6)
+  key.target.position.set(0, -48, 0)
+  probeScene.add(key, key.target)
   const target = new THREE.WebGLRenderTarget(160, 120)
   const previousTarget = renderer.getRenderTarget()
   const previousAutoClear = renderer.autoClear

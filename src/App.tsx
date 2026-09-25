@@ -557,6 +557,9 @@ export default function App() {
                 key={item.id}
                 className={`project-card card-${item.theme}`}
                 onClick={(event) => {
+                  // Safari need not focus a button on pointer activation. Set
+                  // the opener before the dialog captures its return target.
+                  event.currentTarget.focus({ preventScroll: true })
                   document.documentElement.style.setProperty('--project-origin-x', `${event.detail ? event.clientX / innerWidth * 100 : 50}%`)
                   document.documentElement.style.setProperty('--project-origin-y', `${event.detail ? event.clientY / innerHeight * 100 : 50}%`)
                   setProject(item)

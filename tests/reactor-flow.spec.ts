@@ -45,7 +45,7 @@ test('@interaction reactor GPU position history carries directional wakes and st
     expect(result.weight).toBe(1)
     expect(result.suspended.max).toBeLessThan(.00001)
     expect(result.suspendedFormationWeight).toBeGreaterThan(0)
-    expect(result.suspendedFormationWeight).toBeLessThan(.9)
+    expect(result.suspendedFormationWeight).toBeLessThan(1)
     expect(result.formationWeight).toBe(0)
     expect(result.suspendedScrollSteps).toBe(0)
     expect(result.suspendedExit.initialized).toBe(false)

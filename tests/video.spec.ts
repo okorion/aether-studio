@@ -1,3 +1,4 @@
+import { scrollToProgress } from './scroll'
 import { expect, test, type Page } from '@playwright/test'
 import { build } from 'vite'
 import type { SceneVideoStatus } from '../src/SceneVideo'
@@ -133,10 +134,7 @@ test('@interaction production monitor videos load on entry and retain playback a
   expect(mediaRequests).toEqual([])
 
   const enterMonitors = async () => {
-    await page.evaluate(() => scrollTo({
-      top: (document.documentElement.scrollHeight - innerHeight) * .4,
-      behavior: 'instant',
-    }))
+    await scrollToProgress(page, .4)
     await expect(page.locator('.hero-stage')).toHaveAttribute('data-stage', 'work')
     const playing = await playingVideos(page)
     await expect.poll(async () => (await productionStatus(page))?.ready,
@@ -209,11 +207,7 @@ test('@interaction monitor hover persists at rest and clicks exclude drags while
   const canvas = page.locator('.scene-canvas')
   await expect(canvas).toHaveAttribute('data-render-state', 'ready')
   await page.addStyleTag({ content: '*,*::before,*::after{animation:none!important;transition:none!important}' })
-  const expectedProgress = await page.evaluate(() => {
-    const maximum = document.documentElement.scrollHeight - innerHeight
-    scrollTo({ top: maximum * .4, behavior: 'instant' })
-    return (scrollY / maximum).toFixed(6)
-  })
+  const expectedProgress = await scrollToProgress(page, .4)
   await expect(canvas).toHaveAttribute('data-render-progress', expectedProgress, {
     timeout: slowRenderer() ? 20_000 : 10_000,
   })

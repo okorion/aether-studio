@@ -17,19 +17,39 @@ export const columnHazeGLSL = /* glsl */ `
     float envelope=1.-smoothstep(.20,.65,length(optical));
 
     vec2 drift=vec2(time*.018,-time*.012);
-    vec2 cloudUV=(uv-displacement*1.8)*vec2(aspect,1.);
+    vec2 cloudUV=(uv-displacement*3.8)*vec2(aspect,1.);
     float cloud=hazeNoise(cloudUV*3.6+drift);
     cloud=.7*cloud+.3*hazeNoise(cloudUV*7.1-drift+cloud*.4);
     // Fine folds follow the transported gas instead of a circular reveal mask.
     vec2 folds=vec2(hazeNoise(cloudUV*31.+drift)-.5,
       hazeNoise(cloudUV*37.-drift+7.3)-.5);
-    vec3 field=texture2D(uSurfaceFlow,uv+folds*.008/vec2(aspect,1.)).rgb;
+    vec2 wakeUv=uv+folds*.017/vec2(aspect,1.);
+    vec3 field=surfaceSample(wakeUv).rgb;
     vec2 velocity=(field.rg-vec2(128./255.))*(255./127.);
     // The existing advected field opens a soft wake through the veil. It does
     // not brighten the fog or pull the rendered scene/DOM along with the cursor.
-    float clearing=smoothstep(.025,.68,field.b*2.8+length(velocity)*.9);
-    float coverage=envelope*.95*(.94+cloud*.06)*(1.-clearing)*visibility;
-    vec3 tint=mix(vec3(.15,.108,.245),vec3(.168,.125,.275),cloud);
+    // A moving pressure front folds and compresses the veil at the wake's edge.
+    // It follows transported density, so it is an uneven energy sheet rather
+    // than a circle stamped at the cursor position.
+    vec2 gradient=vec2(
+      surfaceSample(wakeUv+vec2(uFlowTexel.x,0.)).b-surfaceSample(wakeUv-vec2(uFlowTexel.x,0.)).b,
+      surfaceSample(wakeUv+vec2(0.,uFlowTexel.y)).b-surfaceSample(wakeUv-vec2(0.,uFlowTexel.y)).b);
+    float front=length(gradient)*3.5;
+    vec2 warp=vec2(hazeNoise(cloudUV*8.+cloud),hazeNoise(cloudUV*9.-cloud+4.));
+    float wisps=hazeNoise(cloudUV*vec2(19.,48.)+warp*3.5+displacement*35.);
+    float filament=pow(1.-abs(wisps*2.-1.),5.);
+    float edgeBand=1.-smoothstep(.08,.46,abs(field.b-.34));
+    float pressure=min(.72,pow(length(velocity)*2.8,2.)+front*.38)*edgeBand;
+    // Displace the corner's optical boundary instead of erasing a Gaussian
+    // disk from its opacity. The moving edge leaves a compressed, folded sheet.
+    optical+=vec2(pressure*(.75+wisps*.25),pressure*.35)
+      +gradient*vec2(.18,.10);
+    envelope=1.-smoothstep(.20,.65,length(optical));
+    float compression=pressure*(.22+filament*.78);
+    float coverage=envelope*(.69+cloud*.22+wisps*.09)*visibility;
+    vec3 tint=mix(vec3(.11,.067,.205),vec3(.18,.13,.285),cloud*.65+wisps*.35);
+    sceneColor+=mix(vec3(.13,.08,.30),vec3(.16,.29,.38),wisps)
+      *compression*envelope*visibility*.75;
 
     // A much weaker edge glow is separate from the interactive lower-left veil.
     // It stays in place when touched and cannot create another clearing circle.

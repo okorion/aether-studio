@@ -3,7 +3,8 @@ import * as THREE from 'three'
 import { createAtmosphere } from './Atmosphere'
 import { createSceneInteraction } from './SceneInteraction'
 import { createSceneWorlds } from './SceneWorlds'
-import { sampleJourney } from './Journey'
+import { sampleJourney, sampleViewAzimuth } from './Journey'
+import { scrollToScene } from './ScrollTimeline'
 import { createSceneGlow } from './SceneGlow'
 import { createSceneForest } from './SceneForest'
 import { createSceneLayers, sampleLayers } from './SceneLayers'
@@ -558,11 +559,7 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
       effectDisposers.push(() => interaction.dispose())
       const readProgress = () => {
         if (location.hash && location.hash !== '#home') return 0
-        return THREE.MathUtils.clamp(
-          window.scrollY / Math.max(1, document.documentElement.scrollHeight - innerHeight),
-          0,
-          1,
-        )
+        return scrollToScene(window.scrollY / Math.max(1, document.documentElement.scrollHeight - innerHeight))
       }
       const emblemCaptureExclusions: THREE.Object3D[] = []
       scene.traverse(object => {
@@ -706,7 +703,12 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
         emblemView.update(elapsed, scroll)
         const mobileView = innerWidth < 768
         const orbitRadius = state.radius + (mobileView ? 4.8 : 0)
-        const azimuth = state.azimuth + (input.yaw + input.field.ndc.x * .012 * input.field.strength) * state.orbitWeight
+        const requestedAzimuth = state.azimuth + (input.yaw + input.field.ndc.x * .012 * input.field.strength) * state.orbitWeight
+        // Forest drag rotates its foreground, while the camera keeps facing
+        // the world-space film. Mechanical scenes retain their existing camera.
+        const azimuth = sampleViewAzimuth(scroll, requestedAzimuth)
+        const foregroundYaw = azimuth - requestedAzimuth
+        world.rotation.y = forest.group.rotation.y = creatureRoot.rotation.y = distantParticles.rotation.y = foregroundYaw
         const elevation = THREE.MathUtils.clamp(state.elevation + input.pitch * state.orbitWeight, -.72, .72)
         camera.position.set(
           Math.sin(azimuth) * Math.cos(elevation) * orbitRadius,
@@ -795,6 +797,7 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
             canvas.dataset.targetY = centre.y.toFixed(4)
             canvas.dataset.modelY = emblem.getWorldPosition(modelCentre).y.toFixed(4)
             canvas.dataset.viewAzimuth = azimuth.toFixed(4)
+            canvas.dataset.forestYaw = foregroundYaw.toFixed(4)
             canvas.dataset.structureYaw = state.structureYaw.toFixed(4)
             canvas.dataset.ringRoll = emblem.rotation.z.toFixed(4)
             canvas.dataset.chainPhase = state.chainPhase.toFixed(6)

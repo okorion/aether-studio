@@ -1,3 +1,4 @@
+import { scrollToProgress } from './scroll'
 import { expect, test, type Page } from '@playwright/test'
 import type { createSceneLightVideo } from '../src/SceneLightVideo'
 
@@ -64,11 +65,7 @@ async function status(page: Page, film: FilmCase): Promise<LightStatus | null> {
 }
 
 async function stage(page: Page, progress: number) {
-  const expected = await page.evaluate((p) => {
-    const maximum = document.documentElement.scrollHeight - innerHeight
-    scrollTo({ top: maximum * p, behavior: 'instant' })
-    return (scrollY / maximum).toFixed(6)
-  }, progress)
+  const expected = await scrollToProgress(page, progress)
   await expect(page.locator('.scene-canvas')).toHaveAttribute('data-render-progress', expected, {
     timeout: softwareLaunch() ? 30_000 : 15_000,
   })

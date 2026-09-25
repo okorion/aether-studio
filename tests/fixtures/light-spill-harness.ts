@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { sampleJourney } from '../../src/Journey'
+import { sampleJourney, sampleViewAzimuth } from '../../src/Journey'
 import { createLightFilmUniforms } from '../../src/SceneLighting'
 import { createSceneLightShafts } from '../../src/SceneLightShafts'
 
@@ -64,9 +64,9 @@ function changedBytes(a: Uint8Array, b: Uint8Array) {
 function probe(progress: number, source: 'shared' | 'forest' | 'chamber' = 'shared') {
   const journey = sampleJourney(progress)
   camera.position.set(
-    Math.sin(journey.azimuth) * Math.cos(journey.elevation) * journey.radius,
+    Math.sin(sampleViewAzimuth(progress, journey.azimuth)) * Math.cos(journey.elevation) * journey.radius,
     journey.height + Math.sin(journey.elevation) * journey.radius,
-    Math.cos(journey.azimuth) * Math.cos(journey.elevation) * journey.radius,
+    Math.cos(sampleViewAzimuth(progress, journey.azimuth)) * Math.cos(journey.elevation) * journey.radius,
   )
   camera.lookAt(0, journey.height, 0)
   camera.updateMatrixWorld()

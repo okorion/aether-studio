@@ -1,12 +1,11 @@
+import { scrollToProgress } from './scroll'
 import { expect, test } from '@playwright/test'
 
 test('scale wave clock follows wall seconds and pauses for hidden or reduced motion', async ({ page }) => {
   await page.goto('/')
   const canvas = page.locator('canvas[data-render-state="ready"]')
   await canvas.waitFor()
-  await page.evaluate(() => scrollTo({
-    top: (document.documentElement.scrollHeight - innerHeight) * .83, behavior: 'instant',
-  }))
+  await scrollToProgress(page, .83)
   await expect.poll(async () => Number(await canvas.getAttribute('data-render-progress')))
     .toBeGreaterThan(.829)
 

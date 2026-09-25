@@ -2,6 +2,8 @@ import { expect, test, type Page } from '@playwright/test'
 import { build } from 'vite'
 import { SCALE_WAVE_INTERVAL_SECONDS, SCALE_WAVE_TRAVEL_SECONDS } from '../src/SceneScaleSurface'
 import type {} from './fixtures/interaction-harness'
+import { scrollToProgress } from './scroll'
+import { scrollToScene } from '../src/ScrollTimeline'
 
 declare global {
   interface Window {
@@ -18,9 +20,9 @@ async function readyScene(page: Page) {
 }
 
 async function settledScene(page: Page) {
-  const expectedProgress = await page.evaluate(() =>
+  const expectedProgress = scrollToScene(await page.evaluate(() =>
     scrollY / Math.max(1, document.documentElement.scrollHeight - innerHeight),
-  )
+  ))
   await expect.poll(async () => {
     const rendered = await page.locator('.scene-canvas').getAttribute('data-render-progress')
     return rendered === null ? Infinity : Math.abs(Number(rendered) - expectedProgress)
@@ -32,6 +34,7 @@ async function settledScene(page: Page) {
       targetY: Number(data.targetY),
       modelY: Number(data.modelY),
       viewAzimuth: Number(data.viewAzimuth),
+      forestYaw: Number(data.forestYaw),
       structureYaw: Number(data.structureYaw),
       ringRoll: Number(data.ringRoll),
       chainPhase: Number(data.chainPhase),
@@ -58,7 +61,7 @@ test('wheel input descends and reverses before 24 settled scroll checkpoints', a
     expect(Math.abs(next.modelY - next.targetY)).toBeLessThan(.001)
     previous = next
   }
-  expect(Math.abs(previous.viewAzimuth - startingView.viewAzimuth)).toBeGreaterThan(.01)
+  expect(Math.abs(previous.forestYaw - startingView.forestYaw)).toBeGreaterThan(.01)
   await page.mouse.wheel(0, -2700)
   await expect.poll(() => page.evaluate(() => scrollY)).toBeLessThan(1)
   const restored = await settledScene(page)
@@ -79,14 +82,7 @@ test('wheel input descends and reverses before 24 settled scroll checkpoints', a
   let fixedChamberY: number | undefined
   for (let index = 0; index < 24; index++) {
     const fraction = index / 23
-    await page.evaluate(
-      (progress) =>
-        window.scrollTo({
-          top: (document.documentElement.scrollHeight - innerHeight) * progress,
-          behavior: 'instant',
-        }),
-      fraction,
-    )
+    await scrollToProgress(page, fraction)
     await expect(page.locator('.hero-stage')).toHaveAttribute('data-stage', expectedStages[index])
     await expect(page.locator('.hero-stage')).toHaveAttribute('data-step', String(index + 1))
     await expect(page.locator('.scene-canvas')).toBeInViewport()
@@ -303,11 +299,7 @@ test('@interaction device and late scales reject pointer camera input until the 
   await readyScene(page)
   const canvas = page.locator('.scene-canvas')
   const moveToProgress = async (progress: number) => {
-    const expected = await page.evaluate((fraction) => {
-      const maximum = document.documentElement.scrollHeight - innerHeight
-      window.scrollTo({ top: maximum * fraction, behavior: 'instant' })
-      return (scrollY / maximum).toFixed(6)
-    }, progress)
+    const expected = await scrollToProgress(page, progress)
     // The stricter camera comparison needs the exact settled render position,
     // not just the same chapter or the previous .0005 progress tolerance.
     await expect(canvas).toHaveAttribute('data-render-progress', expected, {
@@ -355,7 +347,7 @@ test('@interaction device and late scales reject pointer camera input until the 
   await page.mouse.move(650, 370, { steps: 4 })
   await expect(canvas).toHaveAttribute('data-camera-mode', 'orbit')
   const turned = await freshCamera()
-  expect(Math.abs(turned.viewAzimuth - lowerRing.viewAzimuth)).toBeGreaterThan(.2)
+  expect(Math.abs(turned.forestYaw - lowerRing.forestYaw)).toBeGreaterThan(.2)
 
   // Returning into the visible scale curtain cancels an already-held drag.
   const lockedAgain = await moveToProgress(.85)

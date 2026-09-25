@@ -1,3 +1,4 @@
+import { scrollToProgress } from './scroll'
 import { expect, test } from '@playwright/test'
 
 test('project film pauses for hidden tabs and reduced motion, then returns focus', async ({ page }) => {
@@ -47,7 +48,7 @@ test('monitor tap preserves scroll and returns focus to the exploration', async 
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/')
   await expect(page.locator('.scene-canvas')).toHaveAttribute('data-render-state', 'ready')
-  await page.evaluate(() => scrollTo(0, (document.documentElement.scrollHeight - innerHeight) * .367))
+  await scrollToProgress(page, .367)
   await expect.poll(() => page.locator('.scene-canvas').getAttribute('data-render-progress')).toMatch(/^0\.36/)
   await page.waitForTimeout(300)
   const y = await page.evaluate(() => scrollY)

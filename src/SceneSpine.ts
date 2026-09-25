@@ -13,27 +13,39 @@ export function sampleSpineExposure(progress: number) {
   return .22 + .78 * ease((p - .275) / .11) * ease((.665 - p) / .11)
 }
 
-/** Tapered, flattened processes share one surface with the vertebral body. */
+/** Thin laminae taper along their entire length, with broad planar roots. */
 function processGeometry(points: THREE.Vector3[], segments: number, radial: number,
   radius: number, flatten = 1, arch = false) {
   const curve = new THREE.CatmullRomCurve3(points)
-  const geometry = new THREE.TubeGeometry(curve, segments, 1, radial, false)
-  const positions = geometry.getAttribute('position')
-  const centre = new THREE.Vector3()
+  const vertices: number[] = [], uv: number[] = [], indices: number[] = []
+  const centre = new THREE.Vector3(), tangent = new THREE.Vector3()
+  const across = new THREE.Vector3(), thickness = new THREE.Vector3()
   for (let i = 0; i <= segments; i++) {
     const t = i / segments
     curve.getPointAt(t, centre)
-    // Broad roots, a small knuckle, and a closed tip avoid a tube-like silhouette.
-    const width = radius * (arch ? .86 + .14 * Math.sin(t * Math.PI)
-      : (.98 - t * .50 + Math.sin(t * Math.PI) * .18) * (1 - ease((t - .88) / .12)))
+    curve.getTangentAt(t, tangent)
+    across.set(tangent.z, 0, -tangent.x).normalize()
+    thickness.crossVectors(tangent, across).normalize()
+    const taper = arch ? .92 : (1 - .68 * t) * (1 - ease((t - .94) / .06))
+    const width = radius * taper
     for (let j = 0; j <= radial; j++) {
-      const k = i * (radial + 1) + j
-      positions.setXYZ(k,
-        centre.x + (positions.getX(k) - centre.x) * width,
-        centre.y + (positions.getY(k) - centre.y) * width * flatten,
-        centre.z + (positions.getZ(k) - centre.z) * width)
+      const angle = j / radial * Math.PI * 2, c = Math.cos(angle), s = Math.sin(angle)
+      const u = Math.sign(c) * Math.pow(Math.abs(c), .72) * width
+      const v = s * width * flatten * (.82 + .18 * Math.abs(c))
+      vertices.push(centre.x + across.x * u + thickness.x * v,
+        centre.y + across.y * u + thickness.y * v,
+        centre.z + across.z * u + thickness.z * v)
+      uv.push(j / radial, t)
+      if (i < segments && j < radial) {
+        const a = i * (radial + 1) + j, b = a + radial + 1
+        indices.push(a, a + 1, b, a + 1, b + 1, b)
+      }
     }
   }
+  const geometry = new THREE.BufferGeometry()
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3))
+  geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2))
+  geometry.setIndex(indices)
   geometry.computeVertexNormals()
   return geometry
 }
@@ -42,11 +54,11 @@ function vertebraGeometry(software: boolean) {
   const radial = software ? 20 : 64
   const body = new THREE.LatheGeometry([
     new THREE.Vector2(0, -.43), new THREE.Vector2(.57, -.43),
-    new THREE.Vector2(.78, -.41), new THREE.Vector2(.85, -.36),
-    new THREE.Vector2(.86, -.30), new THREE.Vector2(.79, -.22),
-    new THREE.Vector2(.77, -.10), new THREE.Vector2(.77, .12),
-    new THREE.Vector2(.81, .24), new THREE.Vector2(.87, .31),
-    new THREE.Vector2(.85, .38), new THREE.Vector2(.75, .43),
+    new THREE.Vector2(.88, -.42), new THREE.Vector2(.89, -.39),
+    new THREE.Vector2(.84, -.34), new THREE.Vector2(.81, -.22),
+    new THREE.Vector2(.79, -.10), new THREE.Vector2(.80, .12),
+    new THREE.Vector2(.80, .28), new THREE.Vector2(.89, .38),
+    new THREE.Vector2(.89, .41), new THREE.Vector2(.75, .43),
     new THREE.Vector2(.52, .44), new THREE.Vector2(0, .44),
   ], radial)
   const positions = body.getAttribute('position')
@@ -59,7 +71,9 @@ function vertebraGeometry(software: boolean) {
       * Math.min(1, Math.hypot(x, z) / .4)
     // A kidney-shaped body leaves space behind it for the neural arch.
     const back = Math.max(0, -Math.cos(angle))
-    positions.setXYZ(i, x * bulge * 1.02 + Math.sin(y * 5) * .038,
+    const radius = Math.hypot(x, z)
+    const broadX = Math.sign(x) * Math.pow(Math.abs(x) / Math.max(radius, .00001), .80) * radius
+    positions.setXYZ(i, broadX * bulge * 1.02 + Math.sin(y * 5) * .038,
       y + rimWarp,
       z * bulge * .78 + .22 + back * back * .09)
   }
@@ -67,32 +81,32 @@ function vertebraGeometry(software: boolean) {
   const segments = software ? 10 : 24
   const sides = software ? 6 : 14
   const arch = processGeometry([
-    new THREE.Vector3(-.50, .05, -.12), new THREE.Vector3(-.70, .10, -.57),
-    new THREE.Vector3(-.40, .16, -.99), new THREE.Vector3(0, .18, -1.13),
-    new THREE.Vector3(.43, .13, -1.01), new THREE.Vector3(.71, .05, -.59),
-    new THREE.Vector3(.49, .02, -.09),
-  ], segments + 4, sides, .24, .78, true)
+    new THREE.Vector3(-.50, .15, -.12), new THREE.Vector3(-.60, .04, -.55),
+    new THREE.Vector3(-.35, -.02, -.88), new THREE.Vector3(0, -.04, -1.02),
+    new THREE.Vector3(.35, -.02, -.88), new THREE.Vector3(.60, .04, -.55),
+    new THREE.Vector3(.50, .15, -.12),
+  ], segments + 4, sides, .23, 1.05, true)
   const parts: THREE.BufferGeometry[] = [body, arch]
   for (const side of [-1, 1]) {
     parts.push(processGeometry([
       new THREE.Vector3(side * .50, -.01, -.05),
       new THREE.Vector3(side * .80, .11, -.26),
-      new THREE.Vector3(side * 1.10, .14, -.56),
-      new THREE.Vector3(side * (side > 0 ? 1.43 : 1.35), .25, -.62),
-    ], segments, sides, .30, .48))
+      new THREE.Vector3(side * 1.10, .08, -.56),
+      new THREE.Vector3(side * (side > 0 ? 1.52 : 1.46), .15, -.72),
+    ], segments, sides, .43, .29))
     // Paired articular processes grow out of the neural arch, with broad
     // flattened facets rather than disconnected round knobs.
     for (const direction of [-1, 1]) parts.push(processGeometry([
       new THREE.Vector3(side * .52, direction * .04, -.48),
-      new THREE.Vector3(side * .59, direction * .27, -.67),
-      new THREE.Vector3(side * .46, direction * .49, -.76),
-      new THREE.Vector3(side * .34, direction * .52, -.65),
-    ], segments, sides, .27, .74))
+      new THREE.Vector3(side * .57, direction * .22, -.65),
+      new THREE.Vector3(side * .49, direction * .44, -.78),
+      new THREE.Vector3(side * .43, direction * .48, -.83),
+    ], segments, sides, .30, .44))
   }
   parts.push(processGeometry([
-    new THREE.Vector3(0, .12, -.92), new THREE.Vector3(.02, .02, -1.37),
-    new THREE.Vector3(.01, -.22, -1.74), new THREE.Vector3(-.04, -.45, -1.84),
-  ], segments, sides, .34, .60))
+    new THREE.Vector3(0, .14, -.90), new THREE.Vector3(.01, .00, -1.27),
+    new THREE.Vector3(.01, -.30, -1.56), new THREE.Vector3(-.02, -.59, -1.65),
+  ], segments, sides, .33, .70))
 
   const tint = new THREE.Color()
   const silver = new THREE.Color(.76, .77, .82)
@@ -373,7 +387,7 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
         // Consecutive bodies turn together along the column rather than
         // jittering independently around one straight, front-facing axis.
         dummy.rotation.set(Math.sin(bend * .8) * .07,
-          y * .25 + Math.sin(bend * .72) * .22,
+          y * .045 + Math.sin(bend * .72) * .075,
           -Math.cos(bend) * .13)
         // Fewer, taller bodies retain narrow joints instead of widely spaced rings.
         dummy.scale.set((.97 + Math.sin(i * 1.37) * .045) * scale,

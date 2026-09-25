@@ -211,7 +211,8 @@ export function createSceneInteraction(
     ndc: new THREE.Vector2(), strength: 0, aspect: innerWidth / innerHeight, active: false,
     rawNdc: pointer,
     flowTexture: flow.texture,
-    hazeTexture: haze?.texture,
+    waterTexture: flow.surfaceTexture,
+    hazeTexture: haze?.surfaceTexture,
   }
   let fieldTarget = 0
   const clearField = (clearHaze = true) => {

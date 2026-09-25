@@ -20,6 +20,12 @@ export const windowWeight = (p: number, a: number, b: number, c: number, d: numb
 /** Positive pitch looks down. Keep the lower clearing near eye level. */
 export const forestPitchLimit = (progress: number) => progress >= .855 ? .04 : .6
 
+/** Forests rotate in front of a fixed film; mechanical rooms retain orbit. */
+export function sampleViewAzimuth(progress: number, requested: number) {
+  const forest = progress < .5 ? 1 - smooth(.16, .20, progress) : smooth(.855, .885, progress)
+  return requested + ((progress < .5 ? 0 : Math.PI * 2) - requested) * forest
+}
+
 // [radius, unwrapped azimuth, elevation, exposure, world height]. The camera
 // follows one descending focus through a fixed environment, never a room swap.
 const cameraScore = [

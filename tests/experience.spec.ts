@@ -1,3 +1,4 @@
+import { scrollToProgress } from './scroll'
 import { expect, test, type Page } from '@playwright/test'
 
 async function expectNoHorizontalOverflow(page: Page) {
@@ -196,7 +197,7 @@ test('@fallback WebGL unavailability preserves the hero and project navigation',
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
   await expect(page.locator('.scene-fallback')).toBeVisible()
   await expect(page.locator('.experience')).toHaveClass(/is-ready/)
-  await page.evaluate(() => scrollTo({ top: (document.documentElement.scrollHeight - innerHeight) * .83, behavior: 'instant' }))
+  await scrollToProgress(page, .83)
   await expect(page.locator('.journey-scales')).toHaveCSS('opacity', '1')
   expect(await page.locator('.journey-scales').ariaSnapshot()).toContain('MATTER / IN CONSTANT CHANGE')
   await page

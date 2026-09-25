@@ -47,6 +47,9 @@ export function createForestParticles(assets: ReturnType<typeof createForestGeom
     const lift = random() < .025 ? 5 + seed * 18 : 18 + seed ** 1.4 * 82
     origins.set([Math.cos(angle) * radius, point.y + lift,
       Math.sin(angle) * radius - 1.4], i * 3)
+    // A standing forest is already legible on entry. The remaining population
+    // descends into these same branches; reversing scroll removes only that fill.
+    if (random() < (i < count ? .32 : .54)) point.toArray(origins, i * 3)
   }
   const geometry = new THREE.BufferGeometry()
   geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))

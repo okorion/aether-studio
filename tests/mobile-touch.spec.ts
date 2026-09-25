@@ -1,3 +1,4 @@
+import { scrollToProgress } from './scroll'
 import { expect, test } from '@playwright/test'
 
 test('native touch pans retain forest and scale response without orbiting or blocking scroll', async ({ page, isMobile }) => {
@@ -13,7 +14,7 @@ test('native touch pans retain forest and scale response without orbiting or blo
     type, touchPoints: type === 'touchEnd' ? [] : [{ x: 125, y, id: 1 }],
   })
   for (const progress of [.03, .84, .97]) {
-    await page.evaluate(p => scrollTo({ top: (document.documentElement.scrollHeight - innerHeight) * p, behavior: 'instant' }), progress)
+    await scrollToProgress(page, progress)
     await expect.poll(async () => Math.abs(Number(await canvas.getAttribute('data-render-progress')) - progress)).toBeLessThan(.002)
     const before = await page.evaluate(() => scrollY)
     const yaw = Number(await canvas.getAttribute('data-orbit-yaw'))

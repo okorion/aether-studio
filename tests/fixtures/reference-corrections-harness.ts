@@ -9,7 +9,7 @@ import { sampleJourney } from '../../src/Journey'
 export function probeDryContact() {
   const flow = createPointerFlow()
   const surface = createSurfaceFlowUniforms()
-  surface.update({ flowTexture: flow.texture, aspect: 1.6 })
+  surface.update({ flowTexture: flow.texture, waterTexture: flow.surfaceTexture, aspect: 1.6 })
   const renderer = new THREE.WebGLRenderer()
   renderer.setSize(64, 40)
   const target = new THREE.WebGLRenderTarget(64, 40, { type: THREE.FloatType })
@@ -36,12 +36,23 @@ export function probeDryContact() {
   try {
     for (let i = 0; i <= 12; i++) { flow.move(-.32 + i * .04, 0, 1.6); flow.update(1 / 60) }
     const contact = read(), recovery: number[] = []
+    const previous = new Float32Array(pixels.length)
+    let reversals = 0, increases = 0
     flow.release()
     for (let frame = 0; frame < 145; frame++) {
       flow.update(1 / 60)
-      if (frame % 6 === 0) recovery.push(read().energy)
+      const sample = read()
+      if (frame % 6 === 0) recovery.push(sample.energy)
+      if (frame > 5) for (let i = 0; i < pixels.length; i += 4) {
+        for (let channel = 0; channel < 2; channel++) {
+          const a = previous[i + channel], b = pixels[i + channel]
+          if (a * b < -1e-12) reversals++
+          if (Math.abs(b) > Math.abs(a) + 1e-6) increases++
+        }
+      }
+      previous.set(pixels)
     }
-    return { contact, recovery, end: read(), error: renderer.getContext().getError() }
+    return { contact, recovery, reversals, increases, end: read(), error: renderer.getContext().getError() }
   } finally {
     flow.dispose(); surface.dispose(); target.dispose(); geometry.dispose(); material.dispose()
     renderer.dispose(); renderer.forceContextLoss()

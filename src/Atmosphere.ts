@@ -4,6 +4,7 @@ import { sampleJourney, smooth } from './Journey'
 import { sampleLayers } from './SceneLayers'
 import { curtainHasCoverage } from './SceneVisibility'
 import { lightChoreographyGLSL, type LightFilmUniforms } from './SceneLighting'
+import { createReactorFlow } from './ReactorFlow'
 
 // The intro's tiny ambient field remains visible before the incoming spine.
 // All later particles and lights enter below the monitor's shared diagonal.
@@ -174,6 +175,9 @@ const dustVertex = /* glsl */ `
   ${currentField}
   attribute vec4 aDust;
   attribute float aAdvected;
+  attribute vec2 aReactorUv;
+  uniform sampler2D uReactorPositions;
+  uniform float uReactorStateWeight;
   uniform float uPixelRatio;
   varying vec3 vColor;
   varying float vAlpha;
@@ -230,6 +234,9 @@ const dustVertex = /* glsl */ `
       anchored = mix(anchored, rotateFlowerField(anchored), uWeights.x);
       p = mix(anchored, p, uWeights.y);
     }
+    // The falling silhouette still follows absolute scroll. Once the O forms,
+    // each grain acquires its own persistent GPU position inside that volume.
+    p = mix(p, texture2D(uReactorPositions, aReactorUv).xyz, uReactorStateWeight * uWeights.y);
     // Scale the complete ring, including its diffuse rim, about its own centre.
     p.xy *= mix(1.0, uReactorScale, uWeights.y);
     vec4 mv = modelViewMatrix * vec4(p, 1.0);
@@ -258,7 +265,7 @@ const dustVertex = /* glsl */ `
       float depthLayer = clamp(.5 + p.z * .65, 0., 1.);
       vec2 fieldDelta = pointerDelta * vec2(mix(.90, 1.10, grainSeed), mix(1.08, .92, depthLayer));
       float spread = mix(4.0, 6.6, grainSeed) * mix(.82, 1.08, depthLayer);
-      float influence = exp(-dot(fieldDelta, fieldDelta) * spread) * uDevicePointerStrength;
+      float influence = exp(-dot(fieldDelta, fieldDelta) * spread) * uDevicePointerStrength * (1. - uReactorStateWeight);
       vec2 away = pointerDelta * inversesqrt(distanceSquared + .16);
       vec2 tangent = vec2(-away.y, away.x);
       vec2 drift = vec2(aDust.z, lane * 2. - 1.) * .016;
@@ -314,7 +321,9 @@ const dustVertex = /* glsl */ `
       }
     #endif
     float mineral = .20 + .80 * pow(.5 + .5 * sin(phase * 17. + lane * 53.), 2.);
-    float arcLight = .24 + .76 * pow(.5 + .5 * sin(t * 8. + .8), 3.);
+    // Illumination follows the grain's current height below the aperture,
+    // including GPU advection, rather than its original angular seed.
+    float arcLight = .20 + .80 * smoothstep(-.95, .95, p.y);
     vColor *= mix(.62 + mineral * .45, mineral * arcLight, uWeights.y);
     // Clearing the column veil reveals the existing flower color without a white flash.
     vColor += mix(vec3(.28, .72, .29), vec3(.58, .53, .85), uWeights.x)
@@ -370,6 +379,19 @@ const dustFragment = /* glsl */ `
     vec3 color = vColor * (.65 + facet * .45 + rim * .32);
     color += mix(vColor, vec3(.70,.64,.85), .3) * glint * .34;
     shape *= .61 + rim * .25 + facet * .12;
+    if (vMachine > .5) {
+      // Rounded grains have a shaded core and a compact specular highlight.
+      // The flower scene keeps its existing thin mineral flakes.
+      float z = sqrt(max(0., 1. - rr));
+      vec3 normal = normalize(vec3(uv, z));
+      vec3 light = normalize(vec3(-.42, .62, .9));
+      float diffuse = max(0., dot(normal, light));
+      float specular = pow(max(0., dot(normal, normalize(light + vec3(0.,0.,1.)))), 34.);
+      float fresnel = pow(1. - z, 3.);
+      color = vColor * (.30 + diffuse * .85 + fresnel * .25)
+        + mix(vColor, vec3(.65,.76,.88), .42) * specular * .48;
+      shape = (1. - smoothstep(.82, 1., rr)) * (.73 + diffuse * .18);
+    }
     if (vBokeh > 0.5) {
       shape = exp(-rr * 6.0) * 0.36 + (1.0 - smoothstep(0.06, 0.22, abs(rr - 0.52))) * 0.18;
       color = vColor;
@@ -469,8 +491,9 @@ function seededRandom(seed = 146237) {
   }
 }
 
-/** Three draws plus the outgoing overlap; no per-particle CPU updates or targets. */
-export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: boolean, lightFilm?: LightFilmUniforms) {
+/** Shared scene grains; the visible GPU reactor adds bounded position-history passes. */
+export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: boolean, lightFilm?: LightFilmUniforms,
+  options?: { renderer: THREE.WebGLRenderer; reducedMotion?: boolean; reactorSnapshot?: Float32Array }) {
   const random = seededRandom()
   const baseCount = software ? 6000 : mobile ? 40000 : 144000
   const flowerCount = software ? 1800 : mobile ? 16000 : 44000
@@ -499,6 +522,18 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
     dust.set([lane, .60 + Math.pow(flowerRandom(), 3.4) * (mobile ? 2.7 : 3.3), flowerRandom() * 2 - 1, -1], i * 4)
   }
 
+  const reactorFlow = !software && options
+    ? createReactorFlow(options.renderer, mobile, positions.subarray(0, baseCount * 3), dust.subarray(0, baseCount * 4), options.reactorSnapshot)
+    : undefined
+  const neutralState = new THREE.DataTexture(new Float32Array([0, 0, 0, 1]), 1, 1, THREE.RGBAFormat, THREE.FloatType)
+  neutralState.needsUpdate = true
+  const reactorUv = new Float32Array(count * 2)
+  const side = reactorFlow?.side ?? 1
+  for (let i = 0; i < baseCount; i++) {
+    reactorUv[i * 2] = (i % side + .5) / side
+    reactorUv[i * 2 + 1] = (Math.floor(i / side) + .5) / side
+  }
+
   const uniforms = {
     ...(lightFilm ? { uLightFilm: lightFilm.map, uLightFilmReady: lightFilm.ready } : {}),
     uTime: { value: 0 },
@@ -512,6 +547,8 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
     uPixelRatio: { value: 1 },
     uPointer: { value: new THREE.Vector2() },
     uPointerStrength: { value: 0 },
+    uReactorPositions: reactorFlow?.state ?? { value: neutralState as THREE.Texture },
+    uReactorStateWeight: { value: 0 },
     uDevicePointerStrength: { value: 0 },
     uReactorScale: { value: REACTOR.ringScale },
     uAperture: { value: new THREE.Vector2(REACTOR.apertureY * REACTOR.heightScale, REACTOR.apertureRadius) },
@@ -529,6 +566,7 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
   dustGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
   dustGeometry.setAttribute('aDust', new THREE.BufferAttribute(dust, 4))
   dustGeometry.setAttribute('aAdvected', new THREE.BufferAttribute(advected, 1))
+  dustGeometry.setAttribute('aReactorUv', new THREE.BufferAttribute(reactorUv, 2))
   const dustMaterial = new THREE.ShaderMaterial({
     uniforms,
     defines: { ...(software ? { SOFTWARE_RENDERER: 1 } : {}), ...(lightFilm ? { AETHER_LIGHT_FILM: 1 } : {}) },
@@ -541,11 +579,14 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
   const particles = new THREE.Points(dustGeometry, dustMaterial)
   particles.name = 'aether-current-particles'
   particles.frustumCulled = false
-  particles.userData.motion = 'scroll-only flowers; distant slow orbital belt; slow internal reactor current'
+  particles.userData.motion = reactorFlow
+    ? 'scroll-only flowers; distant slow orbital belt; persistent reactor volume flow'
+    : 'scroll-only flowers; distant slow orbital belt; analytic reactor current'
   particles.userData.fixedCount = count - advectedCount
   particles.userData.advectedCount = advectedCount
   particles.userData.baseCount = baseCount
   particles.userData.flowerCount = flowerCount
+  particles.userData.reactorSimulation = reactorFlow ? 'gpu-position-history' : 'analytic'
 
   const lanes = software ? 6 : mobile ? 16 : 28
   const segments = software ? 52 : mobile ? 112 : 160
@@ -609,12 +650,17 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
   scene.add(particles, filaments, shafts, outgoing)
 
   let disposed = false
+  let flowActive = true
   let previousProgress = Number.NaN
   return {
+    prepare: () => reactorFlow?.prepare(),
+    setFlowActive(active: boolean) { flowActive = active; if (!active) reactorFlow?.suspend() },
+    resetFlow: () => { reactorFlow?.reset(); uniforms.uReactorStateWeight.value = 0 },
+    snapshotFlow: () => reactorFlow?.snapshot(),
+    getFlowStatus: () => reactorFlow?.getStatus() ?? { enabled: false, active: false, initialized: false, count: 0, steps: 0 },
     update(time: number, progress: number, pixelRatio?: number,
-      pointer?: { ndc: THREE.Vector2; strength: number; aspect: number; active?: boolean }, _camera?: THREE.Camera) {
+      pointer?: { ndc: THREE.Vector2; strength: number; aspect: number; active?: boolean; flowTexture?: THREE.Texture }, _camera?: THREE.Camera) {
       if (disposed) return
-      void _camera // Compatibility: visibility now follows the wrapper, not eye height.
       const journey = sampleJourney(progress)
       const p = journey.progress
       const layers = sampleLayers(p)
@@ -665,6 +711,12 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
       const visible = uniforms.uFieldOpacity.value > .001
         && (p < .60 || curtainHasCoverage(layers.monitorExit, layers.deviceExit))
       particles.visible = filaments.visible = shafts.visible = visible
+      if (reactorFlow && _camera) {
+        reactorFlow.update(time, visible ? p : 0, _camera, pointer, !options?.reducedMotion, flowActive)
+        // Scroll formation continues while GPU advancement is suspended.
+        // A stale full-state weight must never keep the O at the aperture.
+        uniforms.uReactorStateWeight.value = reactorFlow.getStatus().initialized ? smooth(.668, .725, p) ** 2 : 0
+      }
       particles.userData.scrollStep = signedStep
       particles.userData.morph = morph
       particles.userData.fieldY = fieldY
@@ -675,6 +727,8 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
       disposed = true
       scene.remove(particles, filaments, shafts, outgoing)
       outgoingMaterial.dispose()
+      reactorFlow?.dispose()
+      neutralState.dispose()
       dustGeometry.dispose()
       dustMaterial.dispose()
       filamentGeometry.dispose()

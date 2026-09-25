@@ -53,8 +53,11 @@ export function createSceneLayers(scene: THREE.Scene) {
         float y=screen.y-edge+(noise-.5)*.006;
         float mask=(1.-smoothstep(uTop-.005,uTop+.005,y))*smoothstep(uBottom-.005,uBottom+.005,y);
         vec3 water=surfaceWater(screen)*uFluidWeight;
-        vec2 displacement=water.xy*.014;
-        displacement*=min(1.,.0027/max(length(displacement),.00001));
+        // The density edge folds the ink into a local wake. A screen-height
+        // bound keeps portrait/landscape strokes comparable without reducing
+        // the deformation to a subpixel shimmer on the text.
+        vec2 displacement=water.xy*.20;
+        displacement*=min(1.,.055/max(length(displacement),.00001));
         displacement.x/=max(uFlowAspect,.25);
         vec2 inkUv=vUv-displacement;
         vec4 ink=texture2D(uMap,clamp(inkUv,vec2(0.),vec2(1.)));
@@ -65,8 +68,8 @@ export function createSceneLayers(scene: THREE.Scene) {
         float reflection=pow(max(0.,dot(normalize(vec3(water.xy*7.,1.)),normalize(vec3(-.5,.6,1.)))),12.);
         ink.rgb+=vec3(.032,.055,.064)*filmEdge*reflection;
         // Narrow chromatic refraction belongs to the moving liquid surface.
-        ink.r=mix(ink.r,texture2D(uMap,clamp(inkUv-displacement*.08,0.,1.)).r,filmEdge*.4);
-        ink.b=mix(ink.b,texture2D(uMap,clamp(inkUv+displacement*.08,0.,1.)).b,filmEdge*.4);
+        ink.r=mix(ink.r,texture2D(uMap,clamp(inkUv-displacement*.025,0.,1.)).r,filmEdge*.25);
+        ink.b=mix(ink.b,texture2D(uMap,clamp(inkUv+displacement*.025,0.,1.)).b,filmEdge*.25);
         gl_FragColor=vec4(ink.rgb,ink.a*uOpacity*mask);
         #include <tonemapping_fragment>
         #include <colorspace_fragment>

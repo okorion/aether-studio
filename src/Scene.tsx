@@ -100,7 +100,7 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
   const forestVideoRef = useRef<ReturnType<typeof createSceneLightVideo> | null>(null)
   // Motion preference changes rebuild the render budget, preserving the view
   // and time so pausing cannot snap a user's chosen angle back to the front.
-  const preserved = useRef({ yaw: 0, pitch: 0, elapsed: 0, scaleElapsed: 0 })
+  const preserved = useRef({ yaw: 0, pitch: 0, elapsed: 0, scaleElapsed: 0, reactor: undefined as Float32Array | undefined })
 
   useEffect(() => {
     loadingRef.current = onLoading
@@ -519,10 +519,25 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
 
       const lightShafts = createSceneLightShafts(scene, softwareRenderer, smallScreen, lightFilm, forestFilm)
       effectDisposers.push(() => lightShafts.dispose())
-      const atmosphere = createAtmosphere(scene, softwareRenderer, smallScreen, particleFilm)
+      const atmosphere = createAtmosphere(scene, softwareRenderer, smallScreen, particleFilm,
+        { renderer: activeRenderer, reducedMotion, reactorSnapshot: preserved.current.reactor })
       effectDisposers.push(() => atmosphere.dispose())
       const video = videoRef.current ??= createSceneVideo()
-      const worlds = createSceneWorlds(scene, softwareRenderer, smallScreen, video, lightFilm)
+      const artworkReady = { value: 0 }
+      const artworkTexture = new THREE.TextureLoader().load('/media/scale-alloy.jpg', () => {
+        if (disposed || !renderer) return
+        artworkReady.value = 1
+        requestRender()
+      }, undefined, () => {
+        // The procedural alloy is a complete fallback if this optional image
+        // cannot load. A missing finish must never disable the 3D journey.
+        artworkReady.value = 0
+      })
+      artworkTexture.colorSpace = THREE.SRGBColorSpace
+      artworkTexture.anisotropy = Math.min(4, activeRenderer.capabilities.getMaxAnisotropy())
+      effectDisposers.push(() => artworkTexture.dispose())
+      const worlds = createSceneWorlds(scene, softwareRenderer, smallScreen, video, lightFilm,
+        { map: { value: artworkTexture }, ready: artworkReady })
       effectDisposers.push(() => worlds.dispose())
       const forest = createSceneForest(scene, softwareRenderer, smallScreen, forestFilm)
       effectDisposers.push(() => forest.dispose())
@@ -583,6 +598,7 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
       const cancelMonitorPress = () => { monitorPress = null }
       const syncMedia = () => {
         const enabled = sceneAvailable()
+        atmosphere.setFlowActive(enabled)
         // A hidden scene retains its previous panel visibility. On returning
         // home, the layout resets scroll before that GPU frame is replaced;
         // consult the actual destination so stale panels cannot resume media.
@@ -746,14 +762,21 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
         canvas.dataset.monitorHover = String(monitorHover)
         document.documentElement.classList.toggle('scene-monitor-hover', monitorHover >= 0)
         canvas.dataset.videoState = JSON.stringify(worlds.getVideoStatus())
-        atmosphere.update(elapsed, scroll, activeRenderer.getPixelRatio(), input.field, camera)
+        try {
+          // Include simulation passes in the same frame's draw-call accounting.
+          activeRenderer.info.reset()
+          atmosphere.update(elapsed, scroll, activeRenderer.getPixelRatio(), input.field, camera)
+        } catch {
+          failScene()
+          return
+        }
+        canvas.dataset.reactorFlow = JSON.stringify(atmosphere.getFlowStatus())
         lightShafts.update(elapsed, scroll, camera)
         forest.update(elapsed, scroll, camera, input.field, activeRenderer.getPixelRatio())
         layers.update(scroll, camera, input.field)
         glow?.update(elapsed, scroll, input.field)
 
         try {
-          activeRenderer.info.reset()
           // All glass screens share one bounded background capture. Refresh it
           // at half the display cadence; paused/reduced-motion frames stay exact.
           emblemView.capture(activeRenderer, scene, camera, renderedFrames % 2 === 0 || reducedMotion, emblemCaptureExclusions)
@@ -840,6 +863,7 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
           layers.update(readProgress(), camera)
           worlds.prepare(activeRenderer)
           emblemView.prepare(activeRenderer)
+          await atmosphere.prepare()
           report('resources')
           // Exercise the film sampling branch with the black placeholder too.
           // No media request is needed to prime an otherwise dormant GPU path.
@@ -915,6 +939,7 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
         if (disposed) return
         try {
           refreshEnvironment()
+          atmosphere.resetFlow()
           contextLost = false
           ready = false
           report('module')
@@ -953,6 +978,7 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
       canvas.addEventListener('webglcontextlost', lost)
       canvas.addEventListener('webglcontextrestored', restored)
       cleanup = () => {
+        preserved.current.reactor = contextLost ? undefined : atmosphere.snapshotFlow()
         worlds.setMediaActive(false, true)
         lightVideo.setActive(false, true)
         forestVideo.setActive(false, true)

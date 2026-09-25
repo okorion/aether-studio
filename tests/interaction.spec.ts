@@ -555,7 +555,7 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
     expect(contact.scaleCorePresent).toBe(false)
     expect(contact.ceilingWidth).toBeCloseTo(64, 5)
     expect(contact.undersideY).toBeLessThan(contact.floorMin)
-    expect(contact.undersideWidth).toBeCloseTo(64, 5)
+    expect(contact.undersideWidth).toBeCloseTo(192, 5)
     expect(surfaces.visibility[0]).toMatchObject({ machine: true, ruins: true, upperStructure: true, underside: false })
     // The partial wrapper overlap retains the upper room after the eye has
     // crossed its floor; only the shared screen edge decides its coverage.

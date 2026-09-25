@@ -1,0 +1,13 @@
+{
+  "file": "scale-alloy.jpg",
+  "created": "2026-09-25",
+  "source": "Original image generated with OpenAI image_gen for Aether Studio; no Active Theory image input",
+  "purpose": "Continuous aged-alloy color and roughness modulation across the scale panel",
+  "width": 1536,
+  "height": 768,
+  "bytes": 451945,
+  "color_space": "sRGB",
+  "export": "JPEG quality 88; resized from generated PNG with bicubic resampling",
+  "sha256": "f94a11c747c4295b4b58dbaba9ea73ea6cdb7802e952c00fca7d7fbac933e13e",
+  "prompt_summary": "Orthographic continuous aged alloy sheet, bronze left, verdigris and teal center, blue-black steel right; multiscale oxidation, pits and scratches; soft neutral lighting, no tiles, logos, text or baked directional highlights"
+}

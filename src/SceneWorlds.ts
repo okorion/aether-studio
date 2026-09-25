@@ -43,6 +43,7 @@ function scaleGeometry(software: boolean) {
 export function createSceneWorlds(
   scene: THREE.Scene, software: boolean, mobile = false,
   externalMedia?: ReturnType<typeof createSceneVideo>, lightFilm?: LightFilmUniforms,
+  scaleArtwork?: LightFilmUniforms,
 ) {
   const geometries: THREE.BufferGeometry[] = []
   const materials: THREE.Material[] = []
@@ -90,15 +91,15 @@ export function createSceneWorlds(
   const pointerFlow = { value: neutralFlow as THREE.Texture }
   const metal = mat(createScaleSurface(software,
     { pointerNdc, pointerStrength, pointerAspect, pointerFlow, surfaceTime, surfaceExtent,
-      pointerWaves, lightDepth }, lightFilm))
+      pointerWaves, lightDepth }, lightFilm, scaleArtwork))
   const silver = mat(new THREE.MeshStandardMaterial({
-    color: 0x929197, metalness: software ? .45 : .96, roughness: .24, envMapIntensity: 1.25, transparent: true,
+    color: 0x72777f, metalness: software ? .45 : .96, roughness: .28, envMapIntensity: .68, transparent: true,
   }))
   const dark = mat(new THREE.MeshStandardMaterial({
-    color: 0x19191d, metalness: software ? .35 : .86, roughness: .38, envMapIntensity: .95, transparent: true,
+    color: 0x19191d, metalness: software ? .35 : .86, roughness: .38, envMapIntensity: .60, transparent: true,
   }))
   const machineMetal = mat(new THREE.MeshStandardMaterial({
-    color: 0x56535a, metalness: software ? .4 : .94, roughness: .32, envMapIntensity: 1.05, transparent: true,
+    color: 0x454b55, metalness: software ? .4 : .94, roughness: .33, envMapIntensity: .60, transparent: true,
   }))
   const cableMaterial = mat(new THREE.MeshStandardMaterial({
     color: 0x242326, metalness: software ? .3 : .76, roughness: .43, envMapIntensity: .9, transparent: true,
@@ -141,7 +142,9 @@ export function createSceneWorlds(
         float coneRadius = ${REACTOR.apertureRadius} + max(0., belowAperture) * .20;
         float aperturePool = (1. - smoothstep(coneRadius * .6, coneRadius, length(vMachinePoint.xz)))
           * step(0., belowAperture);
-        totalEmissiveRadiance += projectedLight * aperturePool * .28;
+        // A faint local bounce only. Metal must retain dark intervals rather
+        // than becoming an emissive light source across the whole socket.
+        totalEmissiveRadiance += projectedLight * aperturePool * .018;
       `)
       shader.fragmentShader = shader.fragmentShader.replace('#include <color_fragment>', `
         #include <color_fragment>
@@ -168,7 +171,7 @@ export function createSceneWorlds(
         normal = normalize(max(abs(machineDet), .00000001) * normal - machineGradient);
       `)
     }
-    surface.customProgramCacheKey = () => `aether-machined-steel-${software ? 'lite' : 'detailed'}-v1`
+    surface.customProgramCacheKey = () => `aether-machined-steel-${software ? 'lite' : 'detailed'}-v2`
   }
   const glow = mat(new THREE.MeshBasicMaterial({
     color: 0x537b8a, transparent: true, opacity: .3,
@@ -310,11 +313,43 @@ export function createSceneWorlds(
   const chamberLight = createChamberLight(space, scene, lightFilm)
   // The scale room owns its ceiling and light, on the incoming side of
   // the same screen edge that clips every upper-room object.
+  const ceilingCoverageGLSL = /* glsl */ `
+    float ceilingHorizonCoverage(vec3 viewPosition, vec3 viewNormal) {
+      vec3 normal = normalize(viewNormal);
+      float distanceCoverage = 1. - smoothstep(48., 76., length(viewPosition));
+      float facing = abs(dot(normal, normalize(viewPosition)));
+      float nearby = 1. - smoothstep(1., 3., abs(dot(normal, viewPosition)));
+      return distanceCoverage * mix(1., smoothstep(.015, .12, facing), nearby);
+    }
+  `
   const undersideMaterial = mat(new THREE.MeshStandardMaterial({
     color: 0x090d12, metalness: .43, roughness: .57, envMapIntensity: .42,
-    depthWrite: true,
+    transparent: true, depthWrite: true,
   }))
-  const underside = mesh(lowerSpace, geo(new THREE.PlaneGeometry(64, 64)), undersideMaterial, 0, -3.755, platformZ)
+  // A finite ceiling edge previously crossed the scale room as a hard screen
+  // line. Extend beyond the useful view distance, then fade before either the
+  // geometry boundary or camera far clip. Nearby ceiling still occludes fully.
+  // Immediately below the floor, distance alone collapses into a few screen
+  // pixels. An angular fade softens that horizon without changing the ceiling
+  // once the camera has descended three world units into the scale room.
+  undersideMaterial.onBeforeCompile = shader => {
+    shader.fragmentShader = ceilingCoverageGLSL + shader.fragmentShader
+    shader.fragmentShader = shader.fragmentShader.replace('#include <opaque_fragment>', `
+      float ceilingCoverage = ceilingHorizonCoverage(vViewPosition, vNormal);
+      if (ceilingCoverage < .001) discard;
+      diffuseColor.a *= ceilingCoverage;
+      #include <opaque_fragment>
+    `)
+  }
+  undersideMaterial.customProgramCacheKey = () => 'aether-ceiling-distance-coverage-v2'
+  const undersideGeometry = geo(new THREE.PlaneGeometry(192, 192))
+  // Keep the shared relief's world-space scale and centre phase unchanged.
+  const undersideUv = undersideGeometry.getAttribute('uv')
+  for (let i = 0; i < undersideUv.count; i++) {
+    undersideUv.setXY(i, (undersideUv.getX(i) - .5) * 3 + .5,
+      (undersideUv.getY(i) - .5) * 3 + .5)
+  }
+  const underside = mesh(lowerSpace, undersideGeometry, undersideMaterial, 0, -3.755, platformZ)
   underside.name = 'aether-floor-underside'
   underside.rotation.x = Math.PI / 2
   underside.renderOrder = -2
@@ -326,11 +361,16 @@ export function createSceneWorlds(
     defines: lightFilm ? { AETHER_LIGHT_FILM: 1 } : {},
     vertexShader: /* glsl */ `
       varying vec3 vCeilingWorld;
+      varying vec3 vCeilingView;
+      varying vec3 vCeilingNormal;
       varying vec2 vCeilingUv;
       void main() {
         vCeilingWorld = (modelMatrix * vec4(position, 1.)).xyz;
+        vec4 viewPosition = modelViewMatrix * vec4(position, 1.);
+        vCeilingView = -viewPosition.xyz;
+        vCeilingNormal = normalMatrix * normal;
         vCeilingUv = uv;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.);
+        gl_Position = projectionMatrix * viewPosition;
       }
     `,
     fragmentShader: /* glsl */ `
@@ -338,8 +378,11 @@ export function createSceneWorlds(
       uniform float uOpacity;
       uniform float uLightDepth;
       varying vec3 vCeilingWorld;
+      varying vec3 vCeilingView;
+      varying vec3 vCeilingNormal;
       varying vec2 vCeilingUv;
       ${lightChoreographyGLSL}
+      ${ceilingCoverageGLSL}
       vec2 causticSeed(vec2 p) {
         vec3 h = fract(vec3(p.xyx) * vec3(.1031, .1030, .0973));
         h += dot(h, h.yzx + 33.33);
@@ -383,7 +426,8 @@ export function createSceneWorlds(
         float filmLuma = dot(film, vec3(.2126, .7152, .0722));
         color += film * .30;
         float coverage = light + smoothstep(.05, .45, filmLuma) * .48;
-        gl_FragColor = vec4(color, min(1., coverage) * edge * uOpacity);
+        float horizon = ceilingHorizonCoverage(vCeilingView, vCeilingNormal);
+        gl_FragColor = vec4(color, min(1., coverage) * edge * horizon * uOpacity);
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
       }
@@ -569,6 +613,8 @@ export function createSceneWorlds(
     }
   })
   for (const material of chamberMaterials) {
+    const fixtureMetal = material === silver || material === dark
+      || material === machineMetal || material === capMaterial
     material.emissiveIntensity = 0
     const previous = material.onBeforeCompile
     const previousKey = material.customProgramCacheKey()
@@ -612,7 +658,12 @@ export function createSceneWorlds(
         direct = direct.replace(actual, `${actual} directLight.color = vec3(0.);`)
       }
       direct = direct.replace('getSpotLightInfo( spotLight, geometryPosition, directLight );',
-        'getSpotLightInfo( spotLight, geometryPosition, directLight ); directLight.color *= apertureRadiance();')
+        // The broad room projection has a high radiance gain to reach stone.
+        // Applying it unchanged to nearly metallic horizontal collars clips
+        // them to white and blooms across the rods. Keep the room light while
+        // calibrating its reflected contribution only on the reactor hardware.
+        `getSpotLightInfo( spotLight, geometryPosition, directLight );
+          directLight.color *= apertureRadiance() * ${fixtureMetal ? '.085' : '1.'};`)
       shader.fragmentShader = shader.fragmentShader.replace('#include <lights_fragment_begin>', direct)
       shader.fragmentShader = shader.fragmentShader.replace('#include <opaque_fragment>',
         `outgoingLight = reflectedLight.directDiffuse + reflectedLight.directSpecular
@@ -621,7 +672,7 @@ export function createSceneWorlds(
           + totalEmissiveRadiance;
         #include <opaque_fragment>`)
     }
-    material.customProgramCacheKey = () => `${previousKey}-aperture-${lightFilm ? 'film' : 'static'}-v4`
+    material.customProgramCacheKey = () => `${previousKey}-aperture-${lightFilm ? 'film' : 'static'}-${fixtureMetal ? 'steel' : 'room'}-v5`
   }
   bindGroupCurtain(chamber, deviceCurtain)
   bindGroupCurtain(space, deviceCurtain)

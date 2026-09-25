@@ -11,7 +11,7 @@ export function sampleLayers(progress: number) {
     monitorEntry: -0.25 + 1.5 * smooth(.23, .31, p),
     monitorExit: -0.25 + 1.5 * smooth(.61, .69, p),
     deviceExit: -0.25 + 1.5 * smooth(.715, .785, p),
-    statement: windowWeight(p, .095, .12, .265, .305),
+    statement: windowWeight(p, .095, .12, .31, .32),
     statementY: -1.15 * (1 - smooth(.10, .175, p)) + 1.5 * smooth(.22, .305, p),
     scaleCopy: windowWeight(p, .765, .805, .89, .93),
   }
@@ -39,11 +39,12 @@ export function createSceneLayers(scene: THREE.Scene) {
       uMap: { value: texture }, uOpacity: { value: 0 },
       ...flow.uniforms, uFluidWeight: { value: texture === textures[0] ? 1 : 0 },
       uTop: { value: 1.5 }, uBottom: { value: -.5 },
+      uInkOffset: { value: 0 },
     },
     vertexShader: `varying vec2 vUv; varying vec4 vClip;
       void main(){vUv=uv; vClip=projectionMatrix*modelViewMatrix*vec4(position,1.); gl_Position=vClip;}`,
     fragmentShader: `uniform sampler2D uMap; uniform float uOpacity; uniform float uTop; uniform float uBottom;
-      uniform float uFluidWeight;
+      uniform float uFluidWeight; uniform float uInkOffset;
       ${surfaceFlowGLSL}
       varying vec2 vUv; varying vec4 vClip;
       void main(){
@@ -59,7 +60,7 @@ export function createSceneLayers(scene: THREE.Scene) {
         vec2 displacement=water.xy*.20;
         displacement*=min(1.,.055/max(length(displacement),.00001));
         displacement.x/=max(uFlowAspect,.25);
-        vec2 inkUv=vUv-displacement;
+        vec2 inkUv=vUv-vec2(0.,uInkOffset)-displacement;
         vec4 ink=texture2D(uMap,clamp(inkUv,vec2(0.),vec2(1.)));
         if(mask*ink.a*uOpacity<.003)discard;
         // A faint sheen belongs to this black plate, below the solid glass emblem.
@@ -153,10 +154,13 @@ export function createSceneLayers(scene: THREE.Scene) {
         const panel = panels[i]
         panel.position.copy(camera.position).addScaledVector(forward, depth)
         scaleAnchor.set(0, -48, 0).project(camera)
-        panel.position.addScaledVector(up, i ? scaleAnchor.y * halfHeight : state.statementY * halfHeight)
+        // Keep the dark plate covering the viewport until the shared diagonal
+        // curtain removes it. Only its printed content travels upward.
+        if (i) panel.position.addScaledVector(up, scaleAnchor.y * halfHeight)
         panel.quaternion.copy(camera.quaternion)
         panel.scale.set(halfHeight * aspect, halfHeight, 1)
         materials[i].uniforms.uOpacity.value = i ? state.scaleCopy : state.statement
+        materials[i].uniforms.uInkOffset.value = i ? 0 : state.statementY * .5
         materials[i].uniforms.uTop.value = i ? state.deviceExit : state.forestExit
         materials[i].uniforms.uBottom.value = i ? state.forestEntry : state.monitorEntry
         panel.visible = materials[i].uniforms.uOpacity.value > .001

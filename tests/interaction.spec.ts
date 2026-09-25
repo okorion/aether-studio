@@ -522,7 +522,8 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
     for (const invalid of result.invalid) expect(invalid).toEqual(result.states[0])
     expect(result.end).toEqual(result.states.at(-1))
     expect(result.same).toEqual(result.first)
-    expect(result.forward[0].matrix).not.toEqual(result.first[0].matrix)
+    expect(result.forward[0].matrix).toEqual(result.first[0].matrix)
+    expect(result.forward[0].inkOffset).not.toEqual(result.first[0].inkOffset)
     expect(result.reverse).toEqual(result.first)
     expect(result.first[0].visible).toBe(true)
     for (const state of result.fixed) {

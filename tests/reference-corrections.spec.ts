@@ -4,7 +4,25 @@ import * as THREE from 'three'
 import { createForestGeometry } from '../src/ForestGeometry'
 import { createForestParticles, sampleForestAssembly } from '../src/ForestAssembly'
 import { createSceneForest } from '../src/SceneForest'
-import type { probeDryContact } from './fixtures/reference-corrections-harness'
+import type { probeDryContact, probeStatementHandoff } from './fixtures/reference-corrections-harness'
+
+test('@interaction statement keeps full coverage until the diagonal reveals the front monitor and reverses', async ({page}) => {
+  const output=await build({configFile:false,logLevel:'silent',build:{write:false,minify:false,
+    lib:{entry:'tests/fixtures/reference-corrections-harness.ts',formats:['iife'],name:'CorrectionProbe'}}})
+  const chunk=(Array.isArray(output)?output:[output]).flatMap(r=>'output' in r?r.output:[]).find(r=>r.type==='chunk')
+  if(!chunk||chunk.type!=='chunk')throw Error('Correction fixture failed')
+  await page.goto('about:blank');await page.addScriptTag({content:chunk.code})
+  for(const mobile of [false,true]){
+    const result=await page.evaluate(mobile=>(window as unknown as {CorrectionProbe:{probeStatementHandoff:typeof probeStatementHandoff}}).CorrectionProbe.probeStatementHandoff(mobile),mobile)
+    for(const sample of result){
+      expect(sample.protectedPixels,`${mobile} ${sample.progress}`).toBeGreaterThan(100)
+      expect(sample.leaked,`${mobile} ${sample.progress}`).toBe(0)
+      expect(sample.reverseChanged,`${mobile} ${sample.progress}`).toBe(0)
+      if(sample.progress>=.255)expect(sample.monitorPixels,`${mobile} ${sample.progress}`).toBeGreaterThan(100)
+    }
+    await test.info().attach(`statement-handoff-${mobile?'mobile':'desktop'}.json`,{body:JSON.stringify(result),contentType:'application/json'})
+  }
+})
 
 test('@interaction production water protects the contact centre while its rim refracts and settles', async ({ page }) => {
   const output = await build({ configFile: false, logLevel: 'silent', build: { write: false, minify: false,

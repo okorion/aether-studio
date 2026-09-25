@@ -1,6 +1,9 @@
 import * as THREE from 'three'
 import { createPointerFlow } from '../../src/PointerFlow'
 import { createSurfaceFlowUniforms, surfaceFlowGLSL } from '../../src/SceneSurfaceFlow'
+import { createSceneLayers, sampleLayers } from '../../src/SceneLayers'
+import { createSceneMonitors } from '../../src/SceneMonitors'
+import { sampleJourney } from '../../src/Journey'
 
 /** Read the production water normal, including the dry-contact mask, on GPU. */
 export function probeDryContact() {
@@ -43,4 +46,40 @@ export function probeDryContact() {
     flow.dispose(); surface.dispose(); target.dispose(); geometry.dispose(); material.dispose()
     renderer.dispose(); renderer.forceContextLoss()
   }
+}
+
+/** A bright background reveals any hole above the production diagonal wipe. */
+export function probeStatementHandoff(mobile: boolean) {
+  const width=mobile?117:240,height=mobile?253:150,aspect=width/height
+  const renderer=new THREE.WebGLRenderer({preserveDrawingBuffer:true})
+  renderer.setSize(width,height)
+  const scene=new THREE.Scene();scene.background=new THREE.Color(0xff00ff)
+  const layers=createSceneLayers(scene),monitors=createSceneMonitors(true,mobile)
+  scene.add(monitors.group)
+  const camera=new THREE.PerspectiveCamera(42,aspect,.1,100)
+  const gl=renderer.getContext()
+  const read=()=>{renderer.render(scene,camera);const bytes=new Uint8Array(width*height*4);gl.readPixels(0,0,width,height,gl.RGBA,gl.UNSIGNED_BYTE,bytes);return bytes}
+  const sample=(progress:number)=>{
+    const j=sampleJourney(progress),radius=j.radius+(mobile?4.8:0)
+    camera.position.set(Math.sin(j.azimuth)*Math.cos(j.elevation)*radius,Math.sin(j.elevation)*radius,Math.cos(j.azimuth)*Math.cos(j.elevation)*radius)
+    camera.lookAt(0,0,0);camera.updateMatrixWorld()
+    layers.update(progress,camera)
+    monitors.group.visible=false
+    const background=read()
+    monitors.update(0,progress,undefined,camera)
+    const withMonitors=read(),edge=sampleLayers(progress).monitorEntry
+    let leaked=0,protectedPixels=0,monitorPixels=0
+    for(let y=1;y<height-1;y++)for(let x=1;x<width-1;x++){
+      const i=(y*width+x)*4,slant=(y+.5)/height-((x+.5)/width-.5)*.20
+      if(slant>edge+.025){protectedPixels++;if(background[i]>64&&background[i+2]>64&&background[i+1]<background[i]*.45)leaked++}
+      if(slant<edge-.015&&Math.abs(withMonitors[i+1]-background[i+1])>12)monitorPixels++
+    }
+    return{progress,leaked,protectedPixels,monitorPixels,pixels:withMonitors}
+  }
+  try{
+    const progress=[.235,.25,.255,.265,.275,.29]
+    const forward=progress.map(sample),reverse=[...progress].reverse().map(sample).reverse()
+    return forward.map((s,i)=>({progress:s.progress,leaked:s.leaked,protectedPixels:s.protectedPixels,monitorPixels:s.monitorPixels,
+      reverseChanged:s.pixels.reduce((count,value,index)=>count+Number(value!==reverse[i].pixels[index]),0)}))
+  }finally{layers.dispose();monitors.dispose();renderer.dispose();renderer.forceContextLoss()}
 }

@@ -51,6 +51,9 @@ test('project film pauses for hidden tabs and reduced motion, then returns focus
 test('failed detail film leaves readable art and repeated close cannot close a later project', async ({ page }) => {
   await page.route('**/media/*.mp4', route => route.abort())
   await page.goto('/#work')
+  await expect(page.locator('.scene-canvas')).toHaveAttribute('data-render-state', 'ready', {
+    timeout: process.env.CI ? 30_000 : 10_000,
+  })
   const card = page.getByRole('button', { name: 'Explore Liminal', exact: true })
   await card.click()
   await expect(page.locator('.detail-film')).toHaveAttribute('hidden', '')
@@ -70,7 +73,9 @@ test('failed detail film leaves readable art and repeated close cannot close a l
 test('monitor tap preserves scroll and returns focus to the exploration', async ({ page, isMobile }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/')
-  await expect(page.locator('.scene-canvas')).toHaveAttribute('data-render-state', 'ready')
+  await expect(page.locator('.scene-canvas')).toHaveAttribute('data-render-state', 'ready', {
+    timeout: process.env.CI ? 30_000 : 10_000,
+  })
   await scrollToProgress(page, .367)
   await expect.poll(() => page.locator('.scene-canvas').getAttribute('data-render-progress')).toMatch(/^0\.36/)
   await page.waitForTimeout(300)

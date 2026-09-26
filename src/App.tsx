@@ -54,7 +54,9 @@ function ProjectDialog({
   const isOpen = project !== null
   const filmIndex = project ? projects.indexOf(project) % 2 : 0
   const filmName = filmIndex === 0 ? 'forest-memory' : 'aurora-bloom'
-  useEffect(() => {
+  // Pause media during commit, before rebuilding the scene in passive effects.
+  // Software shader compilation can otherwise delay the reduced-motion pause.
+  useLayoutEffect(() => {
     const video = film.current
     if (!video || !isOpen) return
     if (failedFilm === filmName) { video.pause(); return }

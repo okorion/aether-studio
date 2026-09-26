@@ -292,7 +292,7 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
       bones.instanceMatrix.needsUpdate = true
       // Roll about the link tangent while the chain feeds around the column.
       // Absolute scroll phase gives the exact inverse pose when scrolling up.
-      chainRoll.setFromAxisAngle(up, Math.PI / 2 + (progress - .29) * Math.PI * 3)
+      chainRoll.setFromAxisAngle(up, Math.PI / 2 + THREE.MathUtils.clamp((progress - .235) / .43, 0, 1) * Math.PI * 8)
       const chainLength = chainPath.getLength()
       for (let i = 0; i < chains.count; i++) {
         const t = i * CHAIN_LINK_PITCH / chainLength

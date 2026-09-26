@@ -45,8 +45,10 @@ export function createForestGeometry(leafCount: number, software: boolean, mobil
     targetFronds.push({ origin, forward: forward.normalize(), side,
       length, width: length * (fern ? .33 : .23), droop: fern ? .6 : .35, hue: random() })
   }
-  const treeCount = Math.round((software ? 7 : mobile ? 11 : 14) * 2 / 3)
-  for (let i = 0; i < treeCount; i++) {
+  const sourceTreeCount = Math.round((software ? 7 : mobile ? 11 : 14) * 2 / 3)
+  const trees: Array<{ base: THREE.Vector3; branchStart: number; branchEnd: number; frondStart: number; frondEnd: number }> = []
+  for (let i = 0; i < sourceTreeCount; i++) {
+    const branchStart = branches.length, frondStart = fronds.length
     const angle = i * 2.399963 + (random() - .5) * .35
     // Wood stays outside the inner clearing; near-camera fragments also fade
     // in the material so a full orbit never enters an opaque trunk wall.
@@ -105,7 +107,31 @@ export function createForestGeometry(leafCount: number, software: boolean, mobil
       const origin = clearance(base.clone().add(new THREE.Vector3(Math.cos(a) * 1.2, random() * 3, Math.sin(a) * 1.2)))
       addFrond(origin, new THREE.Vector3(Math.cos(a), .4, Math.sin(a)), 1.4 + random() * 1.5, true)
     }
+    trees.push({ base, branchStart, branchEnd: branches.length, frondStart, frondEnd: fronds.length })
   }
+  // Remove the two most crowded trunks, retaining every other seeded tree.
+  // Re-score after each removal so both cuts do not open one oversized gap.
+  const retained = new Set(trees.map((_, i) => i))
+  const removedTrees: number[] = []
+  for (let cut = 0; cut < 2; cut++) {
+    let crowded = -1, highest = -Infinity
+    for (const i of retained) {
+      const score = [...retained].reduce((sum, j) => j === i ? sum : sum +
+        Math.exp(-((trees[i].base.x - trees[j].base.x) ** 2 + (trees[i].base.z - trees[j].base.z) ** 2) / 64), 0)
+      if (score > highest) { highest = score; crowded = i }
+    }
+    retained.delete(crowded); removedTrees.push(crowded)
+  }
+  for (const i of [...removedTrees].sort((a, b) => b - a)) {
+    const tree = trees[i]
+    branches.splice(tree.branchStart, tree.branchEnd - tree.branchStart)
+    barkColors.splice(tree.branchStart / 16 * 3, (tree.branchEnd - tree.branchStart) / 16 * 3)
+    fronds.splice(tree.frondStart, tree.frondEnd - tree.frondStart)
+    canopySupports.splice(i, 1)
+  }
+  const treeCount = retained.size
+  const sourceLeafCount = leafCount
+  leafCount = Math.floor(leafCount * treeCount / sourceTreeCount)
   // Short crown fans grow from the actual trunk tips at different heights.
   // No cross-grove arch or hanging bare vine creates a flat roof above them.
   for (const support of canopySupports) {
@@ -181,6 +207,7 @@ export function createForestGeometry(leafCount: number, software: boolean, mobil
   leafGeometry.setIndex([0, 1, 6, 1, 2, 6, 2, 3, 6, 3, 4, 6, 4, 5, 6, 5, 0, 6])
   leafGeometry.computeVertexNormals()
   return { barkGeometry, leafGeometry, barkMatrices: new Float32Array(branches),
-    barkColors: new Float32Array(barkColors), leafMatrices, leafColors, treeCount,
+    barkColors: new Float32Array(barkColors), leafMatrices, leafColors, treeCount, sourceLeafCount,
+    treeBases: trees.map(tree => tree.base.toArray()), removedTrees,
     foliageClusterCount: foliageFronds.length + canopyFronds.length, canopyLeafCount }
 }

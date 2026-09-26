@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { smooth, windowWeight, sampleJourney } from './Journey'
+import { smooth, windowWeight, sampleJourney, FOREST_ENTRY_START, FOREST_ENTRY_END } from './Journey'
 import { sampleLayers } from './SceneLayers'
 import { FOREST_FLOOR_Y, FOREST_GROVE_OFFSETS } from './ForestGeometry'
 import { lightChoreographyGLSL, type LightFilmUniforms } from './SceneLighting'
@@ -272,7 +272,7 @@ export function createSceneLightShafts(
       shared.uForestExit.value = layers.forestExit
       shared.uForestEntry.value = layers.forestEntry
       shared.uDeviceEntry.value = layers.monitorExit
-      shared.uWeights.value.set(1 - smooth(.18, .235, p), smooth(.855, .925, p),
+      shared.uWeights.value.set(1 - smooth(.18, .235, p), smooth(FOREST_ENTRY_START, FOREST_ENTRY_END, p),
         0, 0)
       shared.uBoundaryMist.value.set(windowWeight(p,.055,.12,.175,.205),
         windowWeight(p,.845,.895,.955,.985))

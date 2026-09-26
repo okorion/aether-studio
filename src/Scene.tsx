@@ -3,7 +3,7 @@ import * as THREE from 'three'
 import { createAtmosphere } from './Atmosphere'
 import { createSceneInteraction } from './SceneInteraction'
 import { createSceneWorlds } from './SceneWorlds'
-import { sampleJourney, sampleViewAzimuth, sampleForestAzimuth } from './Journey'
+import { sampleJourney, sampleViewAzimuth, sampleForestAzimuth, FOREST_ENTRY_START } from './Journey'
 import { scrollToScene } from './ScrollTimeline'
 import { createSceneGlow } from './SceneGlow'
 import { createSceneForest } from './SceneForest'
@@ -619,7 +619,7 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
         preserved.current.scaleElapsed = scaleElapsed
         world.rotation.set(0, 0, 0)
         world.position.copy(centre)
-        particles.visible = distantParticles.visible = scroll < .20 || scroll > .855
+        particles.visible = distantParticles.visible = scroll < .20 || scroll > FOREST_ENTRY_START
         emblemView.update(elapsed, scroll)
         const mobileView = innerWidth < 768
         const orbitRadius = state.radius + (mobileView ? 4.8 : 0)
@@ -665,7 +665,7 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
         canvas.dataset.lightVideoState = JSON.stringify(lightVideo.getStatus())
         forestFilm.map.value = forestVideo.texture
         forestFilm.ready.value = forestVideo.getReady() ? 1 : 0
-        const activeFilm = scroll < .235 || scroll > .855 ? forestFilm : lightFilm
+        const activeFilm = scroll < .235 || scroll > FOREST_ENTRY_START ? forestFilm : lightFilm
         particleFilm.map.value = activeFilm.map.value
         particleFilm.ready.value = activeFilm.ready.value
         canvas.dataset.forestVideoState = JSON.stringify(forestVideo.getStatus())

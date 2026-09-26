@@ -1,4 +1,4 @@
-import { sampleJourney } from './Journey'
+import { sampleJourney, FOREST_ENTRY_START, FOREST_ENTRY_END } from './Journey'
 import { REACTOR } from './Reactor'
 
 export const SCALE_CEILING_Y = REACTOR.worldY - 3.7 * REACTOR.heightScale
@@ -15,8 +15,9 @@ export function sampleScaleCurtain(progress: number, lower: boolean) {
   // must cover that half (including the diagonal fringe) before water fades
   // within 0.30 world units of the eye. The upper room can finish sliding out.
   if (!lower) return Math.max(-.25, Math.min(1.25, .8 + (SCALE_CEILING_Y - sampleJourney(progress).height) * .4))
-  const start = sampleJourney(.855).height
-  const end = sampleJourney(.925).height
+  // Begin while the panel is still in view, not after an empty screen below it.
+  const start = sampleJourney(FOREST_ENTRY_START).height
+  const end = sampleJourney(FOREST_ENTRY_END).height
   const travel = Math.max(0, Math.min(1, (sampleJourney(progress).height - start) / (end - start)))
   return -.35 + travel * 1.7
 }

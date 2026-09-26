@@ -17,6 +17,9 @@ export const smooth = (a: number, b: number, value: number) => {
 export const windowWeight = (p: number, a: number, b: number, c: number, d: number) =>
   smooth(a, b, p) * (1 - smooth(c, d, p))
 
+export const FOREST_ENTRY_START = .825
+export const FOREST_ENTRY_END = .895
+
 /** Positive pitch looks down. Keep the lower clearing near eye level. */
 export const forestPitchLimit = (progress: number) => progress >= .855 ? .04 : .6
 
@@ -43,7 +46,9 @@ const cameraScore = [
   [11.1, Math.PI * 2, 0, 1.24, -38.5], [10.2, Math.PI * 2, 0, 1.28, -40.5], [10, Math.PI * 2, 0, 1.3, -42.5],
   // Continue descending through the shared floor/ceiling without a height hold.
   [10.8, Math.PI * 2, 0, 1.45, -45.0], [11.6, Math.PI * 2, 0, 1.2, -47.5], [12, Math.PI * 2, 0, .94, -50.5],
-  [12, 7.7, .09, .8, -54], [11.6, 10.0, .11, .86, -57.5], [11.4, 12.25, .1, .94, -61.5],
+  // Keep the lower forest level: releasing scale framing must not pitch the
+  // camera upward against its descent. User drag still restores separately.
+  [12, 7.7, 0, .8, -54], [11.6, 10.0, 0, .86, -57.5], [11.4, 12.25, 0, .94, -61.5],
 ]
 
 // Monotone cubic slopes preserve continuous travel through the authored stops.

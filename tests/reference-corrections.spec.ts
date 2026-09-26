@@ -5,6 +5,51 @@ import { createForestGeometry, FOREST_FLOOR_Y } from '../src/ForestGeometry'
 import { createForestParticles, sampleForestAssembly, sampleForestArrival } from '../src/ForestAssembly'
 import { createSceneForest } from '../src/SceneForest'
 import type { probeDryContact, probeStatementHandoff } from './fixtures/reference-corrections-harness'
+import type { probeForestLightStability } from './fixtures/scene-flow-harness'
+
+test('@interaction forest foliage does not glitter at rest as time and projected video advance', async ({ page }) => {
+  const output = await build({ configFile: false, logLevel: 'silent', build: { write: false, minify: false,
+    lib: { entry: 'tests/fixtures/scene-flow-harness.ts', formats: ['iife'], name: 'ForestProbe' } } })
+  const chunk = (Array.isArray(output) ? output : [output]).flatMap(r => 'output' in r ? r.output : []).find(r => r.type === 'chunk')
+  if (!chunk || chunk.type !== 'chunk') throw Error('Forest fixture failed')
+  await page.goto('about:blank'); await page.addScriptTag({ content: chunk.code })
+  const result = await page.evaluate(() => (window as unknown as { ForestProbe: { probeForestLightStability: typeof probeForestLightStability } }).ForestProbe.probeForestLightStability())
+  expect(result.error).toBe(0)
+  expect(result.litPixels).toBeGreaterThan(100)
+  expect(result.changedPixels).toBe(0)
+})
+
+test('@interaction each grove removes two crowded trees and spreads nearby particle arrivals', () => {
+  for (const [software, mobile, originalCount] of [[true, false, 5], [false, true, 7], [false, false, 9]] as const) {
+    const assets = createForestGeometry(7000, software, mobile)
+    const particles = createForestParticles(assets, 7000)
+    try {
+      expect(assets.treeCount).toBe(originalCount - 2)
+      expect(new Set(assets.removedTrees).size).toBe(2)
+      const crowding = (ids: number[]) => ids.reduce((sum, i) => sum + Math.min(...ids.filter(j => j !== i).map(j =>
+        Math.hypot(assets.treeBases[i][0] - assets.treeBases[j][0], assets.treeBases[i][2] - assets.treeBases[j][2]))), 0) / ids.length
+      const all = assets.treeBases.map((_, i) => i)
+      expect(crowding(all.filter(i => !assets.removedTrees.includes(i)))).toBeGreaterThan(crowding(all))
+      const p = particles.geometry.getAttribute('position'), o = particles.geometry.getAttribute('aOrigin')
+      const phase = particles.geometry.getAttribute('aAssemblyPhase'), span = particles.geometry.getAttribute('aAssemblySpan')
+      const bands = new Map<number, number[]>()
+      for (let i = 0; i < p.count; i++) {
+        if (o.getY(i) === p.getY(i)) continue
+        const band = Math.floor(p.getY(i) * 5), starts = bands.get(band) ?? []
+        starts.push(phase.getX(i) * (1 - span.getX(i))); bands.set(band, starts)
+        expect(sampleForestArrival(0, phase.getX(i), span.getX(i))).toBe(0)
+        expect(sampleForestArrival(1, phase.getX(i), span.getX(i))).toBe(1)
+      }
+      // Particles only 0.2 units apart in height still start throughout a
+      // substantial interval instead of sharing one sharp horizontal edge.
+      for (const starts of bands.values()) if (starts.length > 30) {
+        const mean = starts.reduce((s, v) => s + v, 0) / starts.length
+        const deviation = Math.sqrt(starts.reduce((s, v) => s + (v - mean) ** 2, 0) / starts.length)
+        expect(deviation).toBeGreaterThan(.06)
+      }
+    } finally { particles.geometry.dispose(); assets.barkGeometry.dispose(); assets.leafGeometry.dispose() }
+  }
+})
 
 test('@interaction statement keeps full coverage until the diagonal reveals the front monitor and reverses', async ({page}) => {
   const output=await build({configFile:false,logLevel:'silent',build:{write:false,minify:false,
@@ -49,7 +94,7 @@ test('@interaction forest assembly has local arrivals, particle trunks and exact
   const assets = createForestGeometry(7000, true, false)
   const particles = createForestParticles(assets, 7000)
   try {
-    expect(particles.barkCount).toBeGreaterThan(2000)
+    expect(particles.barkCount).toBe(Math.floor(particles.leafCount * .34))
     const positions = particles.geometry.getAttribute('position'), origins = particles.geometry.getAttribute('aOrigin')
     let standingLeaves = 0, standingBark = 0, arrivals = 0, localArrivals = 0
     let minLift = Infinity, maxLift = 0, maxDrift = 0, standingDrift = 0
@@ -58,11 +103,11 @@ test('@interaction forest assembly has local arrivals, particle trunks and exact
       const drift = Math.hypot(origins.getX(i) - positions.getX(i), origins.getZ(i) - positions.getZ(i))
       minLift = Math.min(minLift, lift); maxLift = Math.max(maxLift, lift); maxDrift = Math.max(maxDrift, drift)
       if(lift>0) { arrivals++; if(lift<1.82) localArrivals++ }
-      if (i < 7000) expect(positions.getY(i)).toBeCloseTo(
+      if (i < particles.leafCount) expect(positions.getY(i)).toBeCloseTo(
         FOREST_FLOOR_Y + (assets.leafMatrices[i * 16 + 13] - FOREST_FLOOR_Y) * .25, 4)
       if (origins.getY(i) === positions.getY(i)) {
         standingDrift = Math.max(standingDrift, drift)
-        if (i < 7000) standingLeaves++; else standingBark++
+        if (i < particles.leafCount) standingLeaves++; else standingBark++
       }
     }
     expect(minLift).toBeGreaterThanOrEqual(0)
@@ -71,11 +116,10 @@ test('@interaction forest assembly has local arrivals, particle trunks and exact
     expect(maxDrift).toBeLessThan(3)
     expect(localArrivals/arrivals).toBeGreaterThan(.79)
     expect(standingDrift).toBe(0)
-    // Moving leaves and bark are 2.5 times the former 34% / 23% fill.
-    expect(standingLeaves / 7000).toBeGreaterThan(.12)
-    expect(standingLeaves / 7000).toBeLessThan(.18)
-    expect(standingBark / particles.barkCount).toBeGreaterThan(.395)
-    expect(standingBark / particles.barkCount).toBeLessThan(.455)
+    // Absolute moving counts are a third of the unpruned baseline, not a
+    // third of a smaller tree count and then accidentally reduced twice.
+    expect((particles.leafCount - standingLeaves) / (7000 * .85)).toBeCloseTo(1 / 3, 1)
+    expect((particles.barkCount - standingBark) / (2380 * .575)).toBeCloseTo(1 / 3, 1)
     for (const lower of [false, true]) {
       const samples = Array.from({ length: 101 }, (_, i) => sampleForestAssembly(i / 100, lower))
       const reverse = Array.from({ length: 101 }, (_, i) => sampleForestAssembly((100 - i) / 100, lower)).reverse()

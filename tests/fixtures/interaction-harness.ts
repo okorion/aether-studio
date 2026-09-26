@@ -351,7 +351,7 @@ function probeEmblemCurtainPixels() {
     renderer.autoClear = true
     renderer.setClearColor(0x00ff00, 1)
     const baseline = draw()
-    return [.89, .90, .915].map(progress => {
+    return [.86, .87, .895].map(progress => {
       const state = sampleEmblemCurtain(progress)
       bounds.upper.value = state.upper
       bounds.lower.value = state.lower
@@ -568,7 +568,7 @@ function probeProductionBoundaryPixels() {
   const cases = [
     { name: 'aether-spine-vertebrae', region: 'bone', progress: [.635, .65, .665] },
     { name: 'aether-machine-aperture', region: 'device', progress: [.735, .745, .755, .82] },
-    { name: 'aether-scale-tiles', region: 'scales', progress: [.735, .745, .755, .90] },
+    { name: 'aether-scale-tiles', region: 'scales', progress: [.735, .745, .755, .87] },
     { name: 'aether-floor-underside', region: 'scales', progress: [.745, .755] },
   ] as const
   const results = []

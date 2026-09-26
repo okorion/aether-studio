@@ -89,7 +89,7 @@ export function sampleJourney(value: number) {
     radius: mix(0) + (11.6 - mix(0)) * scaleFraming,
     azimuth: mix(1), elevation: mix(2) * (1 - scaleFraming), exposure: mix(3),
     height: mix(4),
-    structureYaw: Math.PI * 4 * smooth(.235, .665, progress),
+    structureYaw: -Math.PI * 4 * smooth(.235, .665, progress),
     // An absolute scroll phase is reversible and exactly still at rest.
     chainPhase: progress * 10,
     orbitWeight, orbitEnabled: orbitWeight > 0,

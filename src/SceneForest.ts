@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { sampleJourney } from './Journey'
+import { sampleJourney, FOREST_ENTRY_START } from './Journey'
 import { createForestParticles, sampleForestAssembly } from './ForestAssembly'
 import { sampleLayers } from './SceneLayers'
 import { createForestGeometry, FOREST_FLOOR_Y, FOREST_GROVE_OFFSETS } from './ForestGeometry'
@@ -48,6 +48,12 @@ const sharedShader = /* glsl */ `
     float fog=1.-exp(-max(0.,vDepth-6.)*.035);
     return mix(color*(1.-uDarkness*.2),vec3(.002,.006,.005),fog*.72);
   }
+  // Broad diffuse illumination has no video highlights or moving specular
+  // lobes. Sub-pixel leaves must not flash as their raster footprint changes.
+  vec3 forestDiffuseLight() {
+    float pool=.5+.5*sin(vWorld.x*.18+vWorld.z*.13);
+    return mix(vec3(.018,.042,.03),vec3(.04,.068,.054),pool);
+  }
 `
 
 // Screen-space flow is projected back onto the camera plane, so the lower
@@ -81,13 +87,15 @@ const microVertex = /* glsl */ `
   attribute float aSize;
   attribute vec3 aOrigin;
   attribute float aAssemblyPhase;
+  attribute float aAssemblySpan;
   uniform float uAssembly;
   uniform float uViewportHeight;
   uniform float uPixelRatio;
+  varying float vPointDiameter;
   void main() {
-    float arrival=smoothstep(aAssemblyPhase*.68,aAssemblyPhase*.68+.32,uAssembly);
+    float start=aAssemblyPhase*(1.-aAssemblySpan);
+    float arrival=smoothstep(start,start+aAssemblySpan,uAssembly);
     vec3 p=mix(aOrigin,position,arrival);
-    p.y+=sin(uTime*.62+aSeed.y*29.)*.008;
     vec4 world=modelMatrix*vec4(p,1.);
     vec4 view=viewMatrix*world;
     world.xyz+=forestFlow(view,aSeed);
@@ -99,13 +107,15 @@ const microVertex = /* glsl */ `
     vNormal=vec3(0.,1.,0.);
     vUv=vec2(.5);
     gl_Position=vClip;
-    gl_PointSize=clamp(aSize*uViewportHeight*projectionMatrix[1][1]*.5/max(.1,vDepth),.8,6.*uPixelRatio);
+    vPointDiameter=clamp(aSize*uViewportHeight*projectionMatrix[1][1]*.5/max(.1,vDepth),1.25,6.*uPixelRatio);
+    gl_PointSize=vPointDiameter;
   }
 `
 
 const microFragment = /* glsl */ `
   ${sharedShader}
   ${lightChoreographyGLSL}
+  varying float vPointDiameter;
   void main() {
     vec2 p=gl_PointCoord*2.-1.;
     float r=dot(p,p);
@@ -116,13 +126,13 @@ const microFragment = /* glsl */ `
     // A zero hash must not survive a completely closed curtain.
     if(edge<.12||coverage<.003||coverage<hash(vSeed.xy))discard;
     vec3 n=vec3(p,sqrt(max(0.,1.-r)));
-    float light=max(0.,dot(n,normalize(vec3(-.4,.65,.65))));
+    float diffuse=max(0.,dot(n,normalize(vec3(-.4,.65,.65))));
+    float light=mix(.55+vSeed.y*.18,diffuse,smoothstep(2.,4.,vPointDiameter));
     vec3 olive=mix(vec3(.014,.028,.003),vec3(.17,.22,.026),vSeed.x);
     vec3 green=mix(vec3(.006,.026,.009),vec3(.036,.13,.046),vSeed.x);
     vec3 color=mix(olive,green,smoothstep(.27,.75,vSeed.z))*(.3+light*.65);
     color*=.52+vSeed.y*.65;
-    color+=vec3(.22,.26,.15)*pow(light,4.)*.12;
-    color+=aetherLightCloud(vWorld,vNormal,uTime,uLightDepth)*uLightStrength*(.13+light*.08);
+    color+=forestDiffuseLight();
     color+=vec3(.14,.35,.23)*pointerLight()*(.3+light*.4);
     gl_FragColor=vec4(finishForest(color),1.);
     #include <tonemapping_fragment>
@@ -147,9 +157,6 @@ const boundaryVertex = /* glsl */ `
     vSeed=aSeed;
     vKind=aKind;
     vec3 p=position;
-    float sway=sin(uTime*.45+aSeed.y*19.+p.x*.6)*.035;
-    p.x+=sway*step(.5,aKind);
-    p.y+=sin(uTime*.37+aSeed.z*23.)*.025;
     vec4 world=modelMatrix*vec4(p,1.);
     vec4 view=viewMatrix*world;
     world.xyz+=forestFlow(view,aSeed)*(.65+.35*step(.5,aKind));
@@ -181,11 +188,10 @@ const boundaryFragment = /* glsl */ `
     float core=1.-smoothstep(mix(.32,.05,mist),1.,r);
     float coverage=wipe()*smoothstep(1.2,3.,vDepth)*uBoundaryStrength*core;
     if(coverage<.003||coverage<hash(vSeed.xy))discard;
-    vec3 n=normalize(vec3(q,sqrt(max(.01,1.-r))));
-    float facing=.25+.75*max(0.,dot(n,normalize(vec3(-.4,.7,.6))));
+    float facing=.55+vSeed.y*.18;
     vec3 green=mix(vec3(.025,.085,.035),vec3(.22,.32,.075),vSeed.x);
     vec3 color=green*facing*(plant>.5?1.15:.75);
-    vec3 cloud=aetherLightCloud(vWorld,n,uTime,uLightDepth);
+    vec3 cloud=forestDiffuseLight();
     color+=cloud*uLightStrength*(mist>.5?.38:.22);
     color+=vec3(.16,.42,.29)*pointerLight()*(.35+plant*.45);
     if(mist>.5) color=mix(color,cloud*.9,.7);
@@ -334,9 +340,9 @@ export function createSceneForest(scene: THREE.Scene, software: boolean, mobile:
       const p=Number.isFinite(progress)?THREE.MathUtils.clamp(progress,0,1):0
       currentProgress=p
       group.userData.assembly=sampleForestAssembly(p,p>.5)
-      group.visible=p<.201||p>.854
+      group.visible=p<.201||p>FOREST_ENTRY_START
       groves[0].visible=p<.201
-      groves[1].visible=p>.854
+      groves[1].visible=p>FOREST_ENTRY_START
       if(!group.visible)return
       const layers=sampleLayers(p)
       shared.uExit.value=layers.forestExit

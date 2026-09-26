@@ -20,6 +20,13 @@ test('@interaction chain rolls around its own tangent and reverses without losin
     const start = sample(.34), end = sample(.50)
     expect(start.localRoll.angleTo(end.localRoll)).toBeGreaterThan(1)
     expect(sample(.34).matrices).toEqual(start.matrices)
+    let previous = sample(.235).localRoll, accumulated = 0
+    for (let i = 1; i <= 80; i++) {
+      const current = sample(.235 + .43 * i / 80).localRoll
+      accumulated += previous.angleTo(current)
+      previous = current
+    }
+    expect(accumulated / (Math.PI * 2)).toBeCloseTo(4, 4)
   } finally { assembly.dispose() }
 })
 

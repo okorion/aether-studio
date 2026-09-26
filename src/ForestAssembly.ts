@@ -10,16 +10,19 @@ export function sampleForestAssembly(progress: number, lower: boolean) {
   return THREE.MathUtils.clamp((sampleJourney(progress).height - start) / (2 * (end - start)), 0, 1)
 }
 
-export function sampleForestArrival(assembly: number, heightPhase: number) {
-  return THREE.MathUtils.smoothstep(assembly, heightPhase * .68, heightPhase * .68 + .32)
+export function sampleForestArrival(assembly: number, heightPhase: number, span = .32) {
+  return THREE.MathUtils.smoothstep(assembly, heightPhase * (1 - span), heightPhase * (1 - span) + span)
 }
 
 export function createForestParticles(assets: ReturnType<typeof createForestGeometry>, count: number) {
+  const sourceCount = Math.min(count, assets.sourceLeafCount)
+  count = Math.min(count, assets.leafMatrices.length / 16)
   const barkCount = Math.floor(count * .34)
   const total = count + barkCount
   const positions = new Float32Array(total * 3), origins = new Float32Array(total * 3)
   const seeds = new Float32Array(total * 3), sizes = new Float32Array(total)
   const assemblyPhases = new Float32Array(total)
+  const assemblySpans = new Float32Array(total)
   let state = 0x51a745
   const random = () => ((state = Math.imul(state, 1664525) + 1013904223 >>> 0) / 4294967296)
   const matrix = new THREE.Matrix4(), point = new THREE.Vector3()
@@ -56,14 +59,17 @@ export function createForestParticles(assets: ReturnType<typeof createForestGeom
     const local = seed < .82
     const radius = .06 + random() ** 1.7 * (local ? .38 : .75)
     const lift = 2 * (local ? .18 + (seed / .82) ** 1.6 * .70 : .9 + ((seed - .82) / .18) * .45)
-    // Higher branches settle first as the camera descends; narrow overlapping
-    // height bands replace a scene-wide simultaneous interpolation.
-    assemblyPhases[i] = THREE.MathUtils.clamp(1 - (point.y - FOREST_FLOOR_Y) / 7 + (seed - .5) * .12, 0, 1)
+    // Broad overlapping height bands retain the descending front without a
+    // planar cap. Independent seeds decouple trigger, duration and lift.
+    const heightPhase = THREE.MathUtils.clamp(1 - (point.y - FOREST_FLOOR_Y) / 7, 0, 1)
+    assemblyPhases[i] = heightPhase * .55 + random() * .45
+    assemblySpans[i] = .24 + random() * .30
     origins.set([point.x * .88 + Math.cos(angle) * radius, point.y + lift,
       point.z * .88 + Math.sin(angle) * radius], i * 3)
-    // Keep a sparse rooted silhouette and 2.5 times the previous moving fill.
-    // Nearby seeds settle in height order and retrace their paths on reverse.
-    if (random() < (i < count ? .15 : .425)) point.toArray(origins, i * 3)
+    // One third of the previous absolute moving budget, even after pruning.
+    const movingShare = i < count ? .85 * sourceCount / (3 * count)
+      : .575 * Math.floor(sourceCount * .34) / (3 * barkCount)
+    if (random() >= movingShare) point.toArray(origins, i * 3)
   }
   const geometry = new THREE.BufferGeometry()
   geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
@@ -71,5 +77,6 @@ export function createForestParticles(assets: ReturnType<typeof createForestGeom
   geometry.setAttribute('aSeed', new THREE.BufferAttribute(seeds, 3))
   geometry.setAttribute('aSize', new THREE.BufferAttribute(sizes, 1))
   geometry.setAttribute('aAssemblyPhase', new THREE.BufferAttribute(assemblyPhases, 1))
-  return { geometry, barkCount, total }
+  geometry.setAttribute('aAssemblySpan', new THREE.BufferAttribute(assemblySpans, 1))
+  return { geometry, leafCount: count, barkCount, total }
 }

@@ -691,7 +691,7 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
       }
     }
     const emblem = await page.evaluate(() => window.interactionHarness.probeEmblemCurtainPixels())
-    expect(emblem.map(result => result.progress)).toEqual([.89, .90, .915])
+    expect(emblem.map(result => result.progress)).toEqual([.86, .87, .895])
     for (const result of emblem) {
       const label = `end emblem at ${result.progress}`
       expect(result.baselineRingPixels, label).toBeGreaterThan(1000)
@@ -700,13 +700,13 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
       expect(result.depthHoles, label).toBe(0)
       expect(result.missingBelow, label).toBe(0)
       expect(result.changedBackground, label).toBe(0)
-      if (result.progress < .915) {
+      if (result.progress < .895) {
         // Non-vacuous: both stages would expose red geometry above the seam
         // without the real emblem mask, while some red remains below it.
         expect(result.checkedAbove, label).toBeGreaterThan(1000)
         expect(result.hiddenRingPixels, label).toBeGreaterThan(100)
       } else {
-        // By .915 forestEntry has left the viewport (maximum slanted UV 1.1).
+        // By .895 forestEntry has left the viewport (maximum slanted UV 1.1).
         // There is no remaining scale region to invent a hidden-pixel sample.
         expect(result.upper, label).toBeGreaterThan(1.1)
         expect(result.checkedAbove, label).toBe(0)

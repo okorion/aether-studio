@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
 import { bindGroupCurtain, createCurtainBounds } from './SceneCurtains'
 import { sampleLayers } from './SceneLayers'
+import { FOREST_ENTRY_START } from './Journey'
 
 const TAU = Math.PI * 2
 const RADIUS = .23
@@ -143,7 +144,7 @@ export function createSceneJellyfish(
     const layers = sampleLayers(p)
     curtain.upper.value = p < .5 ? 1.5 : layers.forestEntry
     curtain.lower.value = p < .5 ? layers.forestExit : -.5
-    group.visible = p < .20 || p > .855
+    group.visible = p < .20 || p > FOREST_ENTRY_START
     for (const [index, creature] of creatures.entries()) {
       const { root, anchor, phase, period, bell, rim, organs, threads, arms } = creature
       root.visible = (index < perForest) === (p < .5)

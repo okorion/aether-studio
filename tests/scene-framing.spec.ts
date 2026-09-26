@@ -37,6 +37,20 @@ test('@interaction both forests halve scroll rotation across their full visible 
   }
 })
 
+test('@interaction lower forest replaces the panel before it leaves an empty screen and descends level', () => {
+  expect(sampleLayers(.825).forestEntry).toBeCloseTo(-.35, 8)
+  expect(sampleLayers(.855).forestEntry).toBeGreaterThan(.2)
+  expect(sampleLayers(.89).forestEntry).toBeGreaterThan(1.1)
+  let previous = Infinity
+  for (let i = 0; i <= 175; i++) {
+    const p = .825 + i / 1000, pose = sampleJourney(p)
+    expect(pose.elevation).toBe(0)
+    const eyeY = pose.height + Math.sin(pose.elevation) * (pose.radius + 4.8)
+    expect(eyeY).toBeLessThan(previous)
+    previous = eyeY
+  }
+})
+
 test('@interaction vertebral bodies keep level joints and an open arch while retaining progressive yaw', () => {
   const assembly = createSpineAssembly(false, false)
   try {

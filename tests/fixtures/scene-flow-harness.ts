@@ -5,6 +5,33 @@ import { createSceneForest } from '../../src/SceneForest'
 import { createAtmosphere } from '../../src/Atmosphere'
 import { createSceneVideo } from '../../src/SceneVideo'
 
+export function probeForestLightStability() {
+  const renderer = new THREE.WebGLRenderer({ preserveDrawingBuffer: true })
+  renderer.setSize(320, 240)
+  const scene = new THREE.Scene(); scene.background = new THREE.Color(0)
+  const film = new THREE.DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1); film.needsUpdate = true
+  const forest = createSceneForest(scene, true, false, { map: { value: film }, ready: { value: 1 } })
+  const camera = new THREE.PerspectiveCamera(42, 4 / 3, .1, 100)
+  camera.position.set(0, -5, 14); camera.lookAt(0, -5, 0); camera.updateMatrixWorld()
+  const pixels = () => {
+    renderer.render(scene, camera)
+    const result = new Uint8Array(320 * 240 * 4), gl = renderer.getContext()
+    gl.readPixels(0, 0, 320, 240, gl.RGBA, gl.UNSIGNED_BYTE, result)
+    return result
+  }
+  try {
+    forest.update(0, .1, camera); const initial = pixels()
+    film.image.data.set([0, 0, 0, 255]); film.needsUpdate = true
+    forest.update(60, .1, camera); const later = pixels()
+    let litPixels = 0, changedPixels = 0
+    for (let i = 0; i < initial.length; i += 4) {
+      if (initial[i] + initial[i + 1] + initial[i + 2] > 0) litPixels++
+      if (initial[i] !== later[i] || initial[i + 1] !== later[i + 1] || initial[i + 2] !== later[i + 2]) changedPixels++
+    }
+    return { litPixels, changedPixels, error: renderer.getContext().getError() }
+  } finally { forest.dispose(); film.dispose(); renderer.dispose(); renderer.forceContextLoss() }
+}
+
 export function probeMonitorCatalogue() {
   const camera = new THREE.PerspectiveCamera(42, 1.6, .1, 100)
   camera.position.set(0, 0, 12); camera.lookAt(0, 0, 0); camera.updateMatrixWorld()
@@ -46,6 +73,7 @@ export function probeClosedForest() {
   geometry.setAttribute('aSeed', new THREE.Float32BufferAttribute(new Float32Array(9), 3))
   geometry.setAttribute('aSize', new THREE.Float32BufferAttribute([1,1,1], 1))
   geometry.setAttribute('aAssemblyPhase', new THREE.Float32BufferAttribute([0,0,0], 1))
+  geometry.setAttribute('aAssemblySpan', new THREE.Float32BufferAttribute([.32,.32,.32], 1))
   micro.geometry = geometry
   const camera = new THREE.PerspectiveCamera(42, 80/60, .1, 100)
   camera.position.z = 12; camera.updateMatrixWorld()

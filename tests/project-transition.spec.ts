@@ -3,6 +3,11 @@ import { expect, test } from '@playwright/test'
 
 test('project film pauses for hidden tabs and reduced motion, then returns focus', async ({ page }) => {
   await page.goto('/#work')
+  // This test exercises project media, after the software renderer's first
+  // shader preparation has finished; startup interactions are covered apart.
+  await expect(page.locator('.scene-canvas')).toHaveAttribute('data-render-state', 'ready', {
+    timeout: process.env.CI ? 30_000 : 10_000,
+  })
   const card = page.getByRole('button', { name: 'Explore Liminal', exact: true })
   await card.click()
   const film = page.locator('.detail-film')

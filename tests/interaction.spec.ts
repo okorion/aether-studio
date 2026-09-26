@@ -18,7 +18,11 @@ declare global {
 
 async function readyScene(page: Page) {
   await page.goto('/')
-  await expect(page.locator('.scene-canvas')).toHaveAttribute('data-render-state', 'ready')
+  // CI compiles all warm-up shader variants with software WebGL before the
+  // first frame. Give that one-time preparation its own bounded wait.
+  await expect(page.locator('.scene-canvas')).toHaveAttribute('data-render-state', 'ready', {
+    timeout: process.env.CI ? 30_000 : 10_000,
+  })
 }
 
 async function settledScene(page: Page) {

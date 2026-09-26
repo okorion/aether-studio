@@ -2,7 +2,7 @@ import { sampleJourney } from './Journey'
 import { REACTOR } from './Reactor'
 
 export const SCALE_CEILING_Y = REACTOR.worldY - 3.7 * REACTOR.heightScale
-export const SCALE_PANEL_Y = SCALE_CEILING_Y - 3.6
+export const SCALE_PANEL_Y = SCALE_CEILING_Y - 2.65
 
 /** A fixed panel and ceiling share the same descending camera. */
 export function sampleScaleOffset(progress: number) {
@@ -11,8 +11,12 @@ export function sampleScaleOffset(progress: number) {
 
 /** Linear camera-height passage, without a second ease at each curtain. */
 export function sampleScaleCurtain(progress: number, lower: boolean) {
-  const start = sampleJourney(lower ? .855 : .715).height
-  const end = sampleJourney(lower ? .925 : .785).height
+  // The water is entirely below the horizontal horizon. Its outgoing band
+  // must cover that half (including the diagonal fringe) before water fades
+  // within 0.30 world units of the eye. The upper room can finish sliding out.
+  if (!lower) return Math.max(-.25, Math.min(1.25, .8 + (SCALE_CEILING_Y - sampleJourney(progress).height) * .4))
+  const start = sampleJourney(.855).height
+  const end = sampleJourney(.925).height
   const travel = Math.max(0, Math.min(1, (sampleJourney(progress).height - start) / (end - start)))
-  return lower ? -.35 + travel * 1.7 : -.25 + travel * 1.5
+  return -.35 + travel * 1.7
 }

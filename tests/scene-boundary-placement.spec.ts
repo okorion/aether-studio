@@ -34,14 +34,20 @@ test('@interaction upright curved films clear the actual forest floor and ceilin
   } finally {forest.dispose();shafts.dispose();texture.dispose()}
 })
 
-test('@interaction the outgoing chamber camera stays above water until its entire curtain is closed', () => {
-  const surfaceY=REACTOR.worldY-3.7*REACTOR.heightScale
+test('@interaction the water is fully masked before its camera crossing without stopping the chamber descent', () => {
+  const surfaceY=REACTOR.worldY-3.635*REACTOR.heightScale
   for(let i=0;i<=800;i++) {
     const p=.70+i*.0001,j=sampleJourney(p),layers=sampleLayers(p)
     if(!curtainHasCoverage(layers.monitorExit,layers.deviceExit))continue
     for(const mobile of [false,true]) {
       const cameraY=j.height+Math.sin(j.elevation)*(j.radius+(mobile?4.8:0))
-      expect(cameraY-surfaceY,`water crossing at ${p}`).toBeGreaterThan(.30)
+      if(cameraY-surfaceY<=.30) {
+        // A level camera projects all water below the horizon; include the
+        // full screen width so the slanted edge and its conservative margin
+        // must clear every water pixel before its near-eye fade starts.
+        expect(j.elevation).toBe(0)
+        expect(curtainHasCoverage(layers.monitorExit,layers.deviceExit,0,1,0,.5),`water crossing at ${p}`).toBe(false)
+      }
     }
   }
 })

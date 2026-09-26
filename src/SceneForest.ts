@@ -114,7 +114,7 @@ const microFragment = /* glsl */ `
 
     float coverage=groveCoverage();
     // A zero hash must not survive a completely closed curtain.
-    if(edge<.01||coverage<.003||coverage<hash(vSeed.xy))discard;
+    if(edge<.12||coverage<.003||coverage<hash(vSeed.xy))discard;
     vec3 n=vec3(p,sqrt(max(0.,1.-r)));
     float light=max(0.,dot(n,normalize(vec3(-.4,.65,.65))));
     vec3 olive=mix(vec3(.014,.028,.003),vec3(.17,.22,.026),vSeed.x);
@@ -124,7 +124,7 @@ const microFragment = /* glsl */ `
     color+=vec3(.22,.26,.15)*pow(light,4.)*.12;
     color+=aetherLightCloud(vWorld,vNormal,uTime,uLightDepth)*uLightStrength*(.13+light*.08);
     color+=vec3(.14,.35,.23)*pointerLight()*(.3+light*.4);
-    gl_FragColor=vec4(finishForest(color),edge);
+    gl_FragColor=vec4(finishForest(color),1.);
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
   }
@@ -277,7 +277,7 @@ export function createSceneForest(scene: THREE.Scene, software: boolean, mobile:
   const particleAssets=createForestParticles(assets,budget)
   const microGeometry=particleAssets.geometry
   const microMaterial=new THREE.ShaderMaterial({
-    uniforms:shared,vertexShader:microVertex,fragmentShader:microFragment,depthWrite:true,depthTest:true,transparent:true,
+    uniforms:shared,vertexShader:microVertex,fragmentShader:microFragment,depthWrite:true,depthTest:true,
     defines:{AETHER_LIGHT_FILM:1},
   })
   materials.push(microMaterial)

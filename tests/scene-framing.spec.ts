@@ -1,14 +1,14 @@
 import { test, expect } from '@playwright/test'
 import * as THREE from 'three'
-import { sampleJourney, sampleViewAzimuth, sampleForestAzimuth } from '../src/Journey'
-import { sampleScaleOffset, SCALE_CEILING_Y, SCALE_PANEL_Y } from '../src/ScaleStage'
+import { sampleJourney, sampleViewAzimuth, sampleForestAzimuth, FOREST_ENTRY_START, FOREST_ENTRY_END } from '../src/Journey'
+import { sampleScaleOffset, SCALE_CEILING_Y, SCALE_ROOM_CEILING_Y, SCALE_PANEL_Y } from '../src/ScaleStage'
 import { sampleLayers } from '../src/SceneLayers'
 import { createSpineAssembly } from '../src/SceneSpine'
 
 test('@interaction panel approaches the incoming cut and holds its front view until the next cut', () => {
   const camera = new THREE.PerspectiveCamera(42, 16 / 9, .1, 100)
   let lastY = -Infinity
-  for (let i = 0; i <= 210; i++) {
+  for (let i = 0; i <= 155; i++) {
     const p = .715 + i / 1000, j = sampleJourney(p)
     expect(j.orbitWeight).toBe(0)
     expect(j.elevation).toBeCloseTo(0, 8)
@@ -27,6 +27,7 @@ test('@interaction panel approaches the incoming cut and holds its front view un
     if (p >= .785 && p <= .815) expect(Math.abs(y)).toBeLessThan(1.2)
     expect(j.height + y).toBeCloseTo(SCALE_PANEL_Y, 8)
     expect(SCALE_CEILING_Y).toBeCloseTo(-43.212, 8)
+    expect(SCALE_ROOM_CEILING_Y - SCALE_PANEL_Y).toBeGreaterThan(6)
   }
 })
 
@@ -38,9 +39,17 @@ test('@interaction both forests halve scroll rotation across their full visible 
 })
 
 test('@interaction lower forest replaces the panel before it leaves an empty screen and descends level', () => {
-  expect(sampleLayers(.825).forestEntry).toBeCloseTo(-.35, 8)
-  expect(sampleLayers(.855).forestEntry).toBeGreaterThan(.2)
-  expect(sampleLayers(.89).forestEntry).toBeGreaterThan(1.1)
+  expect(sampleLayers(FOREST_ENTRY_START).forestEntry).toBeCloseTo(-.35, 8)
+  expect(sampleLayers(.825).forestEntry).toBeGreaterThan(.2)
+  expect(sampleLayers(FOREST_ENTRY_END).forestEntry).toBeGreaterThan(1.1)
+  // At the first visible lower edge the panel still occupies two thirds of
+  // the frame, rather than leaving a long empty descent below it.
+  const camera = new THREE.PerspectiveCamera(42, 16 / 9, .1, 100)
+  const firstCut = .815, pose = sampleJourney(firstCut)
+  camera.position.set(0, pose.height, pose.radius)
+  camera.lookAt(0, pose.height, 0); camera.updateMatrixWorld()
+  const bottom = new THREE.Vector3(0, SCALE_PANEL_Y - 2.65, -.65).project(camera)
+  expect((bottom.y + 1) / 2).toBeLessThan(.34)
   let previous = Infinity
   for (let i = 0; i <= 175; i++) {
     const p = .825 + i / 1000, pose = sampleJourney(p)
@@ -48,6 +57,20 @@ test('@interaction lower forest replaces the panel before it leaves an empty scr
     const eyeY = pose.height + Math.sin(pose.elevation) * (pose.radius + 4.8)
     expect(eyeY).toBeLessThan(previous)
     previous = eyeY
+  }
+})
+
+test('@interaction lower forest rotation has no late catch-up and restores the same pose on reverse', () => {
+  let previousAngle = sampleForestAzimuth(.8, sampleJourney(.8).azimuth)
+  let previousStep = 0
+  for (let i = 1; i <= 200; i++) {
+    const p = .8 + i / 1000, j = sampleJourney(p)
+    const angle = sampleForestAzimuth(p, j.azimuth), step = angle - previousAngle
+    expect(step).toBeGreaterThanOrEqual(0)
+    expect(step).toBeLessThan(.0136)
+    expect(Math.abs(step - previousStep)).toBeLessThan(.00028)
+    expect(sampleJourney(p - .001).azimuth).toBeLessThan(j.azimuth)
+    previousAngle = angle; previousStep = step
   }
 })
 

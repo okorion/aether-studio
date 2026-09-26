@@ -14,7 +14,7 @@ import { bindGroupCurtain, createCurtainBounds } from './SceneCurtains'
 import { curtainHasCoverage } from './SceneVisibility'
 import { lightChoreographyGLSL, sampleLightChoreography, type LightFilmUniforms } from './SceneLighting'
 import { REACTOR } from './Reactor'
-import { sampleScaleOffset, SCALE_CEILING_Y } from './ScaleStage'
+import { sampleScaleOffset, SCALE_ROOM_CEILING_Y } from './ScaleStage'
 import { createChamberLight, excludeChamberSpotlight } from './SceneChamberLight'
 
 const TAU = Math.PI * 2
@@ -326,6 +326,14 @@ export function createSceneWorlds(
       return distanceCoverage * mix(1., smoothstep(.015, .12, facing), nearby);
     }
   `
+  // Compose the incoming ceiling with the panel's vertical screen travel.
+  // A perspective horizon cannot enter the lower wrapper: without this shared
+  // slide the ceiling appears only after the cut has crossed the camera's eye.
+  const ceilingSlide = { value: 0 }, ceilingRadius = { value: 11.6 }
+  const ceilingProjection = /* glsl */ `
+    gl_Position.y += uCeilingSlide * projectionMatrix[1][1]
+      * (gl_Position.w / uCeilingRadius - 1.);
+  `
   const undersideMaterial = mat(new THREE.MeshStandardMaterial({
     color: 0x090d12, metalness: .43, roughness: .57, envMapIntensity: .42,
     transparent: true, depthWrite: true,
@@ -337,6 +345,11 @@ export function createSceneWorlds(
   // pixels. An angular fade softens that horizon without changing the ceiling
   // once the camera has descended three world units into the scale room.
   undersideMaterial.onBeforeCompile = shader => {
+    shader.uniforms.uCeilingSlide = ceilingSlide
+    shader.uniforms.uCeilingRadius = ceilingRadius
+    shader.vertexShader = 'uniform float uCeilingSlide; uniform float uCeilingRadius;\n' + shader.vertexShader
+    shader.vertexShader = shader.vertexShader.replace('#include <project_vertex>',
+      '#include <project_vertex>\n' + ceilingProjection)
     shader.fragmentShader = ceilingCoverageGLSL + shader.fragmentShader
     shader.fragmentShader = shader.fragmentShader.replace('#include <opaque_fragment>', `
       float ceilingCoverage = ceilingHorizonCoverage(vViewPosition, vNormal);
@@ -345,7 +358,7 @@ export function createSceneWorlds(
       #include <opaque_fragment>
     `)
   }
-  undersideMaterial.customProgramCacheKey = () => 'aether-ceiling-distance-coverage-v2'
+  undersideMaterial.customProgramCacheKey = () => 'aether-ceiling-panel-slide-v3'
   const undersideGeometry = geo(new THREE.PlaneGeometry(192, 192))
   // Keep the shared relief's world-space scale and centre phase unchanged.
   const undersideUv = undersideGeometry.getAttribute('uv')
@@ -360,10 +373,13 @@ export function createSceneWorlds(
   const causticMaterial = mat(new THREE.ShaderMaterial({
     uniforms: {
       uTime: { value: 0 }, uOpacity: { value: 0 }, uLightDepth: { value: 0 },
+      uCeilingSlide: ceilingSlide, uCeilingRadius: ceilingRadius,
       ...(lightFilm ? { uLightFilm: lightFilm.map, uLightFilmReady: lightFilm.ready } : {}),
     },
     defines: lightFilm ? { AETHER_LIGHT_FILM: 1 } : {},
     vertexShader: /* glsl */ `
+      uniform float uCeilingSlide;
+      uniform float uCeilingRadius;
       varying vec3 vCeilingWorld;
       varying vec3 vCeilingView;
       varying vec3 vCeilingNormal;
@@ -375,6 +391,7 @@ export function createSceneWorlds(
         vCeilingNormal = normalMatrix * normal;
         vCeilingUv = uv;
         gl_Position = projectionMatrix * viewPosition;
+        ${ceilingProjection}
       }
     `,
     fragmentShader: /* glsl */ `
@@ -733,9 +750,11 @@ export function createSceneWorlds(
       // The outgoing room retains its water and world anchor. The incoming
       // room is composed independently through the same diagonal curtain.
       space.position.y = chamberHeight - journey.height
-      lowerSpace.position.y = SCALE_CEILING_Y - journey.height + 3.755 * REACTOR.heightScale
+      lowerSpace.position.y = SCALE_ROOM_CEILING_Y - journey.height + 3.755 * REACTOR.heightScale
       chamber.position.y = chamberHeight - journey.height
       scaleWall.position.y = sampleScaleOffset(progress)
+      ceilingSlide.value = scaleWall.position.y
+      ceilingRadius.value = journey.radius + (mobileView ? 4.8 : 0)
       matter.position.y = 0
       matter.rotation.y = sampleJourney(columnProgress).structureYaw
       scaleWall.rotation.y = 0

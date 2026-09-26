@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { createSceneForest } from '../../src/SceneForest'
+import { sampleJourney } from '../../src/Journey'
 
 /** Read projected soil positions from the actual production vertex shader. */
 export function probeForestGround(lower: boolean) {
@@ -8,7 +9,7 @@ export function probeForestGround(lower: boolean) {
   const grove = scene.getObjectByName(lower ? 'aether-forest-lower' : 'aether-forest-upper')!
   const ground = grove.getObjectByName('aether-forest-boundary-plants-motes-mist') as THREE.Points<THREE.BufferGeometry, THREE.ShaderMaterial>
   const camera = new THREE.PerspectiveCamera(42, 1.6, .1, 100)
-  const height = lower ? -54 : -7.5
+  const height = lower ? sampleJourney(.9).height : -7.5
   camera.position.set(0, height, 12); camera.lookAt(0, height, 0); camera.updateMatrixWorld()
   forest.update(10, lower ? .9 : .14, camera)
   scene.updateMatrixWorld(true)

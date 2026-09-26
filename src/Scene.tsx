@@ -456,13 +456,13 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
       artworkTexture.colorSpace = THREE.SRGBColorSpace
       artworkTexture.anisotropy = Math.min(4, activeRenderer.capabilities.getMaxAnisotropy())
       effectDisposers.push(() => artworkTexture.dispose())
+      const layers = createSceneLayers(scene)
+      effectDisposers.push(() => layers.dispose())
       const worlds = createSceneWorlds(scene, softwareRenderer, smallScreen, video, lightFilm,
-        { map: { value: artworkTexture }, ready: artworkReady })
+        { map: { value: artworkTexture }, ready: artworkReady }, layers.reflectionExclusions)
       effectDisposers.push(() => worlds.dispose())
       const forest = createSceneForest(scene, softwareRenderer, smallScreen, forestFilm)
       effectDisposers.push(() => forest.dispose())
-      const layers = createSceneLayers(scene)
-      effectDisposers.push(() => layers.dispose())
       const glow = softwareRenderer ? undefined : createSceneGlow(activeRenderer, scene, camera, !smallScreen)
       glow?.resize(innerWidth, innerHeight, activeRenderer.getPixelRatio())
       if (glow) effectDisposers.push(() => glow.dispose())

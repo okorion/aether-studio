@@ -4,7 +4,8 @@ import { expect, test } from '@playwright/test'
 test('scale wave clock follows wall seconds and pauses for hidden or reduced motion', async ({ page }) => {
   await page.goto('/')
   const canvas = page.locator('canvas[data-render-state="ready"]')
-  await canvas.waitFor()
+  const preparationTimeout = process.env.CI ? 30_000 : 10_000
+  await canvas.waitFor({ timeout: preparationTimeout })
   await scrollToProgress(page, .83)
   await expect.poll(async () => Number(await canvas.getAttribute('data-render-progress')))
     .toBeGreaterThan(.829)
@@ -49,7 +50,10 @@ test('scale wave clock follows wall seconds and pauses for hidden or reduced mot
   expect(resumed.time - hidden, `First resumed frame observed after ${resumed.wallSeconds}s`)
     .toBeLessThan(.3)
 
-  await page.getByRole('button', { name: 'Pause motion' }).click()
+  // Motion preference changes rebuild shaders; clock assertions start only
+  // after that preparation and retain their original timing tolerances.
+  await page.getByRole('button', { name: 'Pause motion' }).click({ timeout: preparationTimeout })
+  await canvas.waitFor({ timeout: preparationTimeout })
   const paused = Number(await canvas.getAttribute('data-scale-time'))
   await page.waitForTimeout(500)
   expect(Number(await canvas.getAttribute('data-scale-time'))).toBe(paused)

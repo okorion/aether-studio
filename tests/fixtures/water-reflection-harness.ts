@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { Reflector } from 'three/addons/objects/Reflector.js'
 import { createWaterSurface } from '../../src/SceneWater'
+import { createSceneLayers } from '../../src/SceneLayers'
 
 const width = 384, height = 256
 
@@ -46,6 +47,15 @@ export function probeAdjacentRoomExclusion() {
   const panel = new THREE.Mesh(new THREE.BoxGeometry(3, 2, .2), new THREE.MeshBasicMaterial({ color: 0xff00ff }))
   panel.position.set(0, 2, 0)
   scene.add(panel, water.surface)
+  const layers = createSceneLayers(scene)
+  const wrapper = scene.getObjectByName('aether-scale-wrapper') as THREE.Mesh
+  const wrapperMaterial = wrapper.material
+  const markerMaterial = new THREE.MeshBasicMaterial({ color: 0xff00ff })
+  wrapper.material = markerMaterial
+  wrapper.position.set(-2, 2.5, 0)
+  wrapper.scale.set(1, .5, 1)
+  wrapper.visible = true
+  scene.getObjectByName('aether-statement-wrapper')!.visible = false
   const count = (pixels: Uint8Array) => {
     let n = 0
     for (let i = 0; i < pixels.length; i += 4) if (pixels[i] > 120 && pixels[i + 1] < 15 && pixels[i + 2] > 120) n++
@@ -60,12 +70,15 @@ export function probeAdjacentRoomExclusion() {
   }
   try {
     const before = render()
-    exclusions.push(panel)
-    const after = render(), direct = count(read()), restored = panel.visible
+    exclusions.push(panel, ...layers.reflectionExclusions)
+    const after = render(), direct = count(read()), restored = panel.visible && layers.reflectionExclusions.every(group => group.visible)
     panel.visible = false
     render()
     return { before, after, direct, restored, hiddenPreserved: !panel.visible }
   } finally {
+    wrapper.material = wrapperMaterial
+    markerMaterial.dispose()
+    layers.dispose()
     water.dispose(); reflector.dispose(); reflector.geometry.dispose()
     panel.geometry.dispose(); panel.material.dispose(); renderer.dispose(); renderer.forceContextLoss()
   }

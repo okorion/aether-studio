@@ -168,6 +168,7 @@ export function createSceneLayers(scene: THREE.Scene) {
   }
   void document.fonts.ready.then(() => { if (!disposed && aspect) draw(aspect) })
   return {
+    reflectionExclusions: [group],
     update(progress: number, camera: THREE.PerspectiveCamera, pointer?: SurfaceFlowInput) {
       if (disposed) return
       flow.update(pointer)

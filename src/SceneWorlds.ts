@@ -45,6 +45,7 @@ export function createSceneWorlds(
   scene: THREE.Scene, software: boolean, mobile = false,
   externalMedia?: ReturnType<typeof createSceneVideo>, lightFilm?: LightFilmUniforms,
   scaleArtwork?: LightFilmUniforms,
+  reflectionExclusions: THREE.Object3D[] = [],
 ) {
   const geometries: THREE.BufferGeometry[] = []
   const materials: THREE.Material[] = []
@@ -286,7 +287,8 @@ export function createSceneWorlds(
   const floorReflection = !software && !mobile ? new Reflector(geo(new THREE.PlaneGeometry(platformWidth, platformDepth)), {
     textureWidth: 512, textureHeight: 512, multisample: 0, clipBias: .004, color: 0x52676d,
   }) : null
-  const water = createWaterSurface(floorReflection, platformWidth, platformDepth, lightFilm, [scaleWall, lowerSpace])
+  const water = createWaterSurface(floorReflection, platformWidth, platformDepth, lightFilm,
+    [scaleWall, lowerSpace, ...reflectionExclusions])
   water.surface.position.set(0, -3.635, platformZ)
   water.surface.rotation.x = -Math.PI / 2
   space.add(water.surface)

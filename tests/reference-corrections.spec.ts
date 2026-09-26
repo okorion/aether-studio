@@ -45,7 +45,7 @@ test('@interaction production water refracts at the rim, refills the released co
   await test.info().attach('water-contact-recovery.json', { body: JSON.stringify(result), contentType: 'application/json' })
 })
 
-test('@interaction forest assembly has sparse arrivals, particle trunks and exact reverse poses', () => {
+test('@interaction forest assembly has local arrivals, particle trunks and exact reverse poses', () => {
   const assets = createForestGeometry(7000, true, false)
   const particles = createForestParticles(assets, 7000)
   try {
@@ -71,11 +71,11 @@ test('@interaction forest assembly has sparse arrivals, particle trunks and exac
     expect(maxDrift).toBeLessThan(.82)
     expect(localArrivals/arrivals).toBeGreaterThan(.79)
     expect(standingDrift).toBe(0)
-    // The standing silhouette stays intact while nearby seeds reinforce it.
-    expect(standingLeaves / 7000).toBeGreaterThan(.63)
-    expect(standingLeaves / 7000).toBeLessThan(.69)
-    expect(standingBark / particles.barkCount).toBeGreaterThan(.74)
-    expect(standingBark / particles.barkCount).toBeLessThan(.80)
+    // Moving leaves and bark are 2.5 times the former 34% / 23% fill.
+    expect(standingLeaves / 7000).toBeGreaterThan(.12)
+    expect(standingLeaves / 7000).toBeLessThan(.18)
+    expect(standingBark / particles.barkCount).toBeGreaterThan(.395)
+    expect(standingBark / particles.barkCount).toBeLessThan(.455)
     for (const lower of [false, true]) {
       const samples = Array.from({ length: 101 }, (_, i) => sampleForestAssembly(i / 100, lower))
       const reverse = Array.from({ length: 101 }, (_, i) => sampleForestAssembly((100 - i) / 100, lower)).reverse()

@@ -61,9 +61,9 @@ export function createForestParticles(assets: ReturnType<typeof createForestGeom
     assemblyPhases[i] = THREE.MathUtils.clamp(1 - (point.y - FOREST_FLOOR_Y) / 7 + (seed - .5) * .12, 0, 1)
     origins.set([point.x + Math.cos(angle) * radius, point.y + lift,
       point.z + Math.sin(angle) * radius], i * 3)
-    // A standing forest is already legible on entry. The remaining population
-    // descends into these same branches; reversing scroll removes only that fill.
-    if (random() < (i < count ? .66 : .77)) point.toArray(origins, i * 3)
+    // Keep a sparse rooted silhouette and 2.5 times the previous moving fill.
+    // Nearby seeds settle in height order and retrace their paths on reverse.
+    if (random() < (i < count ? .15 : .425)) point.toArray(origins, i * 3)
   }
   const geometry = new THREE.BufferGeometry()
   geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))

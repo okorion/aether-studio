@@ -126,19 +126,24 @@ export function createSceneLayers(scene: THREE.Scene) {
         inkContext.scale(.5, .5)
         inkContext.font = c.font
         inkContext.textBaseline = c.textBaseline
-        inkContext.fillStyle = '#b8d8e4'
+        inkContext.strokeStyle = '#bdd7df'
+        inkContext.lineWidth = size * .008
         for (const [j, text] of ['WORLDS', 'IN HUMAN', 'MOTION.'].entries())
-          inkContext.fillText(text, x, y + j * size * 1.04)
-        // Blur once at half resolution, then accumulate inexpensive image taps.
-        glowContext.filter = `blur(${size * .035}px)`
+          inkContext.strokeText(text, x, y + j * size * 1.04)
+        // Thin glyph edges emit long straight rays. Integrate at half resolution
+        // so increasing their reach does not repeat full-size blur operations.
+        glowContext.filter = 'blur(.45px)'
         glowContext.drawImage(ink, 0, 0)
-        c.save()
-        for (let tap = 64; tap >= 1; tap--) {
-          const t = tap / 64, distance = t * w * .19
-          c.globalAlpha = .014 * (1 - t) ** 1.6
-          c.drawImage(glow, -distance, distance * .32, w, h)
+        const trail = document.createElement('canvas')
+        trail.width = ink.width; trail.height = ink.height
+        const trailContext = trail.getContext('2d')!
+        trailContext.globalCompositeOperation = 'lighter'
+        for (let tap = 192; tap >= 1; tap--) {
+          const t = tap / 192, distance = t * w * .42 / 2
+          trailContext.globalAlpha = .012 * (1 - t) ** 1.3
+          trailContext.drawImage(glow, -distance, distance * .24)
         }
-        c.restore()
+        c.drawImage(trail, 0, 0, w, h)
         c.shadowColor = 'rgba(211, 225, 255, .48)'
         c.shadowBlur = size * .10
         for (const [j, text] of ['WORLDS', 'IN HUMAN', 'MOTION.'].entries()) c.fillText(text, x, y + j * size * 1.04)

@@ -751,7 +751,7 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
     getFlowStatus: () => reactorFlow?.getStatus() ?? { enabled: false, active: false, initialized: false, count: 0, steps: 0 },
     update(time: number, progress: number, pixelRatio?: number,
       pointer?: { ndc: THREE.Vector2; strength: number; aspect: number; active?: boolean; flowTexture?: THREE.Texture }, _camera?: THREE.Camera,
-      monitorObstacles: readonly MonitorObstacle[] = []) {
+      monitorObstacles: readonly MonitorObstacle[] = [], columnProgress = progress) {
       if (disposed) return
       const journey = sampleJourney(progress)
       const p = journey.progress
@@ -771,7 +771,7 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
         obstacles[i].normal.copy(monitorObstacles[i].normal)
         obstacles[i].half.copy(monitorObstacles[i].half)
       }
-      uniforms.uSpineYaw.value = journey.structureYaw
+      uniforms.uSpineYaw.value = sampleJourney(columnProgress).structureYaw
       uniforms.uScrollStep.value = signedStep
       // The incoming field uses the device anchor throughout its visible descent.
       const columnY = FLOWER_WORLD_Y

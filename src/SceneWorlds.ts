@@ -714,7 +714,7 @@ export function createSceneWorlds(
     },
     update(time: number, progress: number,
       pointer?: { ndc: THREE.Vector2; rawNdc?: THREE.Vector2; strength: number; aspect: number; active?: boolean; flowTexture?: THREE.Texture }, camera?: THREE.Camera,
-      scaleTime = time, mobileView = mobile) {
+      scaleTime = time, mobileView = mobile, columnProgress = progress) {
       const journey = sampleJourney(progress)
       const layers = sampleLayers(progress)
       deviceCurtain.upper.value = layers.monitorExit
@@ -735,14 +735,14 @@ export function createSceneWorlds(
       chamber.position.y = chamberHeight - journey.height
       scaleWall.position.y = sampleScaleOffset(progress)
       matter.position.y = 0
-      matter.rotation.y = journey.structureYaw
+      matter.rotation.y = sampleJourney(columnProgress).structureYaw
       scaleWall.rotation.y = 0
       const emergence = smooth(.205, .29, progress)
       const spineWeight = smooth(.20, .29, progress) * (1 - smooth(.685, .705, progress))
       const spineOffset = -12 * (1 - emergence)
       spineAssembly.group.position.y = spineOffset
       matter.visible = spineWeight > .001 && curtainHasCoverage(layers.monitorEntry, layers.monitorExit)
-      spineAssembly.update(progress, journey.core * spineWeight, emergence, mobileView, camera)
+      spineAssembly.update(progress, journey.core * spineWeight, emergence, mobileView, camera, columnProgress)
       const deviceWeight = smooth(.59, .615, progress) * (1 - smooth(.79, .88, progress))
       const scaleWeight = smooth(.69, .715, progress) * (1 - smooth(.93, .95, progress))
       chamber.visible = deviceWeight > .001
@@ -832,7 +832,7 @@ export function createSceneWorlds(
       const light = sampleLightChoreography(time, progress)
       reactorLight.color.setHSL(light.rimHue, .34, .73)
       reactorLight.intensity = 0
-      monitorAssembly.update(time, progress, pointer, camera)
+      monitorAssembly.update(time, progress, pointer, camera, columnProgress)
     },
     dispose() {
       chamberLight.dispose()

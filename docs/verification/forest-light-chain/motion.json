@@ -1,0 +1,51 @@
+{
+  "errors": [],
+  "reports": [
+    {
+      "name": "desktop",
+      "movement": [
+        {
+          "direction": 1,
+          "frames": 10,
+          "leading": 9,
+          "maxLag": 0.0006449999999999512
+        },
+        {
+          "direction": -1,
+          "frames": 9,
+          "leading": 9,
+          "maxLag": 0.0006430000000000047
+        }
+      ],
+      "settled": {
+        "time": 18334.39999985695,
+        "p": 0.399991,
+        "column": 0.399991,
+        "yaw": 4.1305
+      }
+    },
+    {
+      "name": "mobile",
+      "movement": [
+        {
+          "direction": 1,
+          "frames": 10,
+          "leading": 9,
+          "maxLag": 0.0006410000000000027
+        },
+        {
+          "direction": -1,
+          "frames": 9,
+          "leading": 9,
+          "maxLag": 0.0006419999999999759
+        }
+      ],
+      "settled": {
+        "time": 14754.299999952316,
+        "p": 0.400006,
+        "column": 0.400006,
+        "yaw": 4.1312
+      }
+    }
+  ]
+}

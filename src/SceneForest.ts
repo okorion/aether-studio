@@ -121,7 +121,7 @@ const microFragment = /* glsl */ `
     vec3 green=mix(vec3(.006,.026,.009),vec3(.036,.13,.046),vSeed.x);
     vec3 color=mix(olive,green,smoothstep(.27,.75,vSeed.z))*(.3+light*.65);
     color*=.52+vSeed.y*.65;
-    color+=vec3(.44,.51,.30)*pow(light,24.)*(.10+vSeed.y*.45);
+    color+=vec3(.22,.26,.15)*pow(light,4.)*.12;
     color+=aetherLightCloud(vWorld,vNormal,uTime,uLightDepth)*uLightStrength*(.13+light*.08);
     color+=vec3(.14,.35,.23)*pointerLight()*(.3+light*.4);
     gl_FragColor=vec4(finishForest(color),1.);
@@ -180,7 +180,7 @@ const boundaryFragment = /* glsl */ `
     float mist=step(1.5,vKind);
     float core=1.-smoothstep(mix(.32,.05,mist),1.,r);
     float coverage=wipe()*smoothstep(1.2,3.,vDepth)*uBoundaryStrength*core;
-    if(coverage<.003||coverage<hash(gl_FragCoord.xy))discard;
+    if(coverage<.003||coverage<hash(vSeed.xy))discard;
     vec3 n=normalize(vec3(q,sqrt(max(.01,1.-r))));
     float facing=.25+.75*max(0.,dot(n,normalize(vec3(-.4,.7,.6))));
     vec3 green=mix(vec3(.025,.085,.035),vec3(.22,.32,.075),vSeed.x);

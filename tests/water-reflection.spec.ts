@@ -48,4 +48,11 @@ test('@interaction water preserves reflected object positions and colors through
   }
   expect(pageErrors).toEqual([])
   expect(consoleErrors).toEqual([])
+  const exclusion = await page.evaluate(() =>
+    (window as unknown as { WaterReflectionProbe: typeof Probe }).WaterReflectionProbe.probeAdjacentRoomExclusion())
+  expect(exclusion.before).toBeGreaterThan(100)
+  expect(exclusion.after).toBe(0)
+  expect(exclusion.direct).toBeGreaterThan(100)
+  expect(exclusion.restored).toBe(true)
+  expect(exclusion.hiddenPreserved).toBe(true)
 })

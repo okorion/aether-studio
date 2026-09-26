@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { sampleJourney, smooth, windowWeight } from './Journey'
-import { sampleScaleOffset } from './ScaleStage'
+import { sampleScaleOffset, sampleScaleCurtain } from './ScaleStage'
 import { createSurfaceFlowUniforms, surfaceFlowGLSL, type SurfaceFlowInput } from './SceneSurfaceFlow'
 
 /** All boundaries use viewport UVs, independent of render-target resolution. */
@@ -8,10 +8,10 @@ export function sampleLayers(progress: number) {
   const p = Number.isFinite(progress) ? THREE.MathUtils.clamp(progress, 0, 1) : 0
   return {
     forestExit: -0.35 + 1.7 * smooth(.10, .20, p),
-    forestEntry: -0.35 + 1.7 * smooth(.855, .925, p),
+    forestEntry: sampleScaleCurtain(p, true),
     monitorEntry: -0.25 + 1.5 * smooth(.23, .31, p),
     monitorExit: -0.25 + 1.5 * smooth(.61, .69, p),
-    deviceExit: -0.25 + 1.5 * smooth(.715, .785, p),
+    deviceExit: sampleScaleCurtain(p, false),
     statement: windowWeight(p, .095, .12, .31, .32),
     statementY: -1.15 * (1 - smooth(.10, .175, p)) + 1.5 * smooth(.22, .305, p),
     scaleCopy: windowWeight(p, .69, .715, .925, .95),
@@ -138,9 +138,10 @@ export function createSceneLayers(scene: THREE.Scene) {
         trail.width = ink.width; trail.height = ink.height
         const trailContext = trail.getContext('2d')!
         trailContext.globalCompositeOperation = 'lighter'
-        for (let tap = 192; tap >= 1; tap--) {
-          const t = tap / 192, distance = t * w * .42 / 2
-          trailContext.globalAlpha = .012 * (1 - t) ** 1.3
+        const rayLength = c.measureText('WW').width * 2.5
+        for (let tap = 320; tap >= 1; tap--) {
+          const t = tap / 320, distance = t * rayLength / 2
+          trailContext.globalAlpha = .012 * (1 - t) ** 1.1
           trailContext.drawImage(glow, -distance, distance * .24)
         }
         c.drawImage(trail, 0, 0, w, h)
@@ -167,6 +168,7 @@ export function createSceneLayers(scene: THREE.Scene) {
   }
   void document.fonts.ready.then(() => { if (!disposed && aspect) draw(aspect) })
   return {
+    reflectionExclusions: [group],
     update(progress: number, camera: THREE.PerspectiveCamera, pointer?: SurfaceFlowInput) {
       if (disposed) return
       flow.update(pointer)

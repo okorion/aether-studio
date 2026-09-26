@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 import * as THREE from 'three'
-import { sampleJourney, sampleViewAzimuth } from '../src/Journey'
-import { sampleScaleOffset, SCALE_CEILING_CLEARANCE } from '../src/ScaleStage'
+import { sampleJourney, sampleViewAzimuth, sampleForestAzimuth } from '../src/Journey'
+import { sampleScaleOffset, SCALE_CEILING_Y, SCALE_PANEL_Y } from '../src/ScaleStage'
 import { sampleLayers } from '../src/SceneLayers'
 import { createSpineAssembly } from '../src/SceneSpine'
 
@@ -19,11 +19,21 @@ test('@interaction panel approaches the incoming cut and holds its front view un
     expect(y).toBeGreaterThan(lastY); lastY = y
     const upper = new THREE.Vector3(0, j.height + y + 2.65, -.65).project(camera)
     const cut = sampleLayers(p).deviceExit
-    // Once a useful part of the incoming band is visible, its panel is already
-    // within 15% of screen height of that edge, never below a long empty room.
-    if (p >= .739 && p <= .755) expect(cut - (upper.y + 1) / 2).toBeLessThan(.15)
-    if (p >= .785 && p <= .855) expect(Math.abs(y)).toBeLessThan(.16)
-    expect(SCALE_CEILING_CLEARANCE).toBeGreaterThan(2.65)
+    // The panel reaches the initial incoming band. Before the water crossing
+    // the wrapper must cover the entire lower half, including its slanted rim;
+    // at that point the panel already fills at least the lower half as well.
+    if (cut > .1 && cut < .55) expect(cut - (upper.y + 1) / 2).toBeLessThan(.15)
+    if (cut >= .55) expect((upper.y + 1) / 2).toBeGreaterThan(.40)
+    if (p >= .785 && p <= .815) expect(Math.abs(y)).toBeLessThan(1.2)
+    expect(j.height + y).toBeCloseTo(SCALE_PANEL_Y, 8)
+    expect(SCALE_CEILING_Y).toBeCloseTo(-43.212, 8)
+  }
+})
+
+test('@interaction both forests halve scroll rotation across their full visible range', () => {
+  for (const [a, b] of [[0, .075], [.12, .19], [.855, .925], [.935, 1]]) {
+    const angle = (p: number) => sampleForestAzimuth(p, sampleJourney(p).azimuth)
+    expect(angle(b) - angle(a)).toBeCloseTo((sampleJourney(b).azimuth - sampleJourney(a).azimuth) / 2, 8)
   }
 })
 

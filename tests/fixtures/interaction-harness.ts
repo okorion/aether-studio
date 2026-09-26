@@ -567,9 +567,9 @@ function probeProductionBoundaryPixels() {
     color: renderer.getClearColor(new THREE.Color()), alpha: renderer.getClearAlpha() }
   const cases = [
     { name: 'aether-spine-vertebrae', region: 'bone', progress: [.635, .65, .665] },
-    { name: 'aether-machine-aperture', region: 'device', progress: [.745, .755, .765, .82] },
-    { name: 'aether-scale-tiles', region: 'scales', progress: [.74, .75, .76, .90] },
-    { name: 'aether-floor-underside', region: 'scales', progress: [.75, .76] },
+    { name: 'aether-machine-aperture', region: 'device', progress: [.735, .745, .755, .82] },
+    { name: 'aether-scale-tiles', region: 'scales', progress: [.735, .745, .755, .90] },
+    { name: 'aether-floor-underside', region: 'scales', progress: [.745, .755] },
   ] as const
   const results = []
   try {
@@ -768,7 +768,7 @@ function probeScalePointer() {
   const probeScene = new THREE.Scene()
   const probeCamera = new THREE.PerspectiveCamera(42, 4 / 3, .1, 60)
   // Follow the panel's scroll offset to isolate pointer shading from framing.
-  const panelY = -48 + sampleScaleOffset(.83)
+  const panelY = sampleJourney(.83).height + sampleScaleOffset(.83)
   probeCamera.position.set(0, panelY, 10)
   probeCamera.lookAt(0, panelY, 0)
   probeCamera.updateMatrixWorld()

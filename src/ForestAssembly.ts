@@ -3,11 +3,11 @@ import { sampleJourney } from './Journey'
 import type { createForestGeometry } from './ForestGeometry'
 import { FOREST_FLOOR_Y } from './ForestGeometry'
 
-/** Absolute scroll poses, shared by both directions of travel. */
+/** Double the prior camera-height range; absolute poses reverse exactly. */
 export function sampleForestAssembly(progress: number, lower: boolean) {
   const start = sampleJourney(lower ? 1 : .008).height
   const end = sampleJourney(lower ? .935 : .073).height
-  return THREE.MathUtils.clamp((sampleJourney(progress).height - start) / (end - start), 0, 1)
+  return THREE.MathUtils.clamp((sampleJourney(progress).height - start) / (2 * (end - start)), 0, 1)
 }
 
 export function sampleForestArrival(assembly: number, heightPhase: number) {
@@ -52,15 +52,15 @@ export function createForestParticles(assets: ReturnType<typeof createForestGeom
     point.y = FOREST_FLOOR_Y + (point.y - FOREST_FLOOR_Y) * .25
     point.toArray(positions, i * 3)
     const seed = random(), angle = random() * Math.PI * 2
-    // Each moving seed waits close to its own shortened branch.
+    // Wait above each branch, slightly nearer the central clearing.
     const local = seed < .82
     const radius = .06 + random() ** 1.7 * (local ? .38 : .75)
-    const lift = local ? .18 + (seed / .82) ** 1.6 * .70 : .9 + ((seed - .82) / .18) * .45
+    const lift = 2 * (local ? .18 + (seed / .82) ** 1.6 * .70 : .9 + ((seed - .82) / .18) * .45)
     // Higher branches settle first as the camera descends; narrow overlapping
     // height bands replace a scene-wide simultaneous interpolation.
     assemblyPhases[i] = THREE.MathUtils.clamp(1 - (point.y - FOREST_FLOOR_Y) / 7 + (seed - .5) * .12, 0, 1)
-    origins.set([point.x + Math.cos(angle) * radius, point.y + lift,
-      point.z + Math.sin(angle) * radius], i * 3)
+    origins.set([point.x * .88 + Math.cos(angle) * radius, point.y + lift,
+      point.z * .88 + Math.sin(angle) * radius], i * 3)
     // Keep a sparse rooted silhouette and 2.5 times the previous moving fill.
     // Nearby seeds settle in height order and retrace their paths on reverse.
     if (random() < (i < count ? .15 : .425)) point.toArray(origins, i * 3)

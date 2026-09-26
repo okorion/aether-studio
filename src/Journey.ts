@@ -26,6 +26,12 @@ export function sampleViewAzimuth(progress: number, requested: number) {
   return requested + ((progress < .5 ? 0 : Math.PI * 2) - requested) * front
 }
 
+/** Halve only the authored forest orbit, keeping drag/parallax unchanged. */
+export function sampleForestAzimuth(progress: number, scrollAzimuth: number) {
+  const anchor = progress < .5 ? 0 : Math.PI * 2
+  return anchor + (scrollAzimuth - anchor) * .5
+}
+
 // [radius, unwrapped azimuth, elevation, exposure, world height]. The camera
 // follows the descending focus. ScaleStage composes its incoming room at the cut.
 const cameraScore = [
@@ -35,8 +41,8 @@ const cameraScore = [
   [11.6, 6.28, .02, 1.5, -23.5], [11, 6.28, 0, 1.48, -26], [10.6, 6.28, .02, 1.4, -28.5],
   [11.6, 6.28, .04, 1.2, -31], [12.5, 6.28, .07, 1.15, -33.5], [11.8, Math.PI * 2, .04, 1.15, -36],
   [11.1, Math.PI * 2, 0, 1.24, -38.5], [10.2, Math.PI * 2, 0, 1.28, -40.5], [10, Math.PI * 2, 0, 1.3, -42.5],
-  // Stay above the pool until the outgoing chamber curtain has fully closed.
-  [10.8, Math.PI * 2, 0, 1.45, -42.80], [11.6, Math.PI * 2, 0, 1.2, -47.5], [12, Math.PI * 2, 0, .94, -50.5],
+  // Continue descending through the shared floor/ceiling without a height hold.
+  [10.8, Math.PI * 2, 0, 1.45, -45.0], [11.6, Math.PI * 2, 0, 1.2, -47.5], [12, Math.PI * 2, 0, .94, -50.5],
   [12, 7.7, .09, .8, -54], [11.6, 10.0, .11, .86, -57.5], [11.4, 12.25, .1, .94, -61.5],
 ]
 

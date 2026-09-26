@@ -3,7 +3,7 @@ import * as THREE from 'three'
 import { createAtmosphere } from './Atmosphere'
 import { createSceneInteraction } from './SceneInteraction'
 import { createSceneWorlds } from './SceneWorlds'
-import { sampleJourney, sampleViewAzimuth } from './Journey'
+import { sampleJourney, sampleViewAzimuth, sampleForestAzimuth } from './Journey'
 import { scrollToScene } from './ScrollTimeline'
 import { createSceneGlow } from './SceneGlow'
 import { createSceneForest } from './SceneForest'
@@ -456,13 +456,13 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
       artworkTexture.colorSpace = THREE.SRGBColorSpace
       artworkTexture.anisotropy = Math.min(4, activeRenderer.capabilities.getMaxAnisotropy())
       effectDisposers.push(() => artworkTexture.dispose())
+      const layers = createSceneLayers(scene)
+      effectDisposers.push(() => layers.dispose())
       const worlds = createSceneWorlds(scene, softwareRenderer, smallScreen, video, lightFilm,
-        { map: { value: artworkTexture }, ready: artworkReady })
+        { map: { value: artworkTexture }, ready: artworkReady }, layers.reflectionExclusions)
       effectDisposers.push(() => worlds.dispose())
       const forest = createSceneForest(scene, softwareRenderer, smallScreen, forestFilm)
       effectDisposers.push(() => forest.dispose())
-      const layers = createSceneLayers(scene)
-      effectDisposers.push(() => layers.dispose())
       const glow = softwareRenderer ? undefined : createSceneGlow(activeRenderer, scene, camera, !smallScreen)
       glow?.resize(innerWidth, innerHeight, activeRenderer.getPixelRatio())
       if (glow) effectDisposers.push(() => glow.dispose())
@@ -623,12 +623,16 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
         emblemView.update(elapsed, scroll)
         const mobileView = innerWidth < 768
         const orbitRadius = state.radius + (mobileView ? 4.8 : 0)
-        const requestedAzimuth = state.azimuth + (input.yaw + input.field.ndc.x * .012 * input.field.strength) * state.orbitWeight
+        const pointerAzimuth = (input.yaw + input.field.ndc.x * .012 * input.field.strength) * state.orbitWeight
+        const requestedAzimuth = state.azimuth + pointerAzimuth
         // Forest drag rotates its foreground, while the camera keeps facing
         // the world-space film. Mechanical scenes retain their existing camera.
         const azimuth = sampleViewAzimuth(scroll, requestedAzimuth)
         const foregroundYaw = azimuth - requestedAzimuth
-        world.rotation.y = forest.group.rotation.y = creatureRoot.rotation.y = distantParticles.rotation.y = foregroundYaw
+        world.rotation.y = creatureRoot.rotation.y = distantParticles.rotation.y = foregroundYaw
+        // Compensate the actual camera angle, including the curtain crossing.
+        // Halving only a blend weight would speed up again at its endpoints.
+        forest.group.rotation.y = azimuth - sampleForestAzimuth(scroll, state.azimuth) - pointerAzimuth
         const elevation = THREE.MathUtils.clamp(state.elevation + input.pitch * state.orbitWeight, -.72, .72)
         camera.position.set(
           Math.sin(azimuth) * Math.cos(elevation) * orbitRadius,
@@ -707,7 +711,7 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
             canvas.dataset.targetY = centre.y.toFixed(4)
             canvas.dataset.modelY = emblem.getWorldPosition(modelCentre).y.toFixed(4)
             canvas.dataset.viewAzimuth = azimuth.toFixed(4)
-            canvas.dataset.forestYaw = foregroundYaw.toFixed(4)
+            canvas.dataset.forestYaw = forest.group.rotation.y.toFixed(4)
             canvas.dataset.columnProgress = columnProgress.toFixed(6)
             canvas.dataset.structureYaw = sampleJourney(columnProgress).structureYaw.toFixed(4)
             canvas.dataset.ringRoll = emblem.rotation.z.toFixed(4)

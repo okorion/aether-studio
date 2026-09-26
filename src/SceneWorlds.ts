@@ -14,7 +14,7 @@ import { bindGroupCurtain, createCurtainBounds } from './SceneCurtains'
 import { curtainHasCoverage } from './SceneVisibility'
 import { lightChoreographyGLSL, sampleLightChoreography, type LightFilmUniforms } from './SceneLighting'
 import { REACTOR } from './Reactor'
-import { sampleScaleOffset, SCALE_CEILING_CLEARANCE } from './ScaleStage'
+import { sampleScaleOffset, SCALE_CEILING_Y } from './ScaleStage'
 import { createChamberLight, excludeChamberSpotlight } from './SceneChamberLight'
 
 const TAU = Math.PI * 2
@@ -286,7 +286,7 @@ export function createSceneWorlds(
   const floorReflection = !software && !mobile ? new Reflector(geo(new THREE.PlaneGeometry(platformWidth, platformDepth)), {
     textureWidth: 512, textureHeight: 512, multisample: 0, clipBias: .004, color: 0x52676d,
   }) : null
-  const water = createWaterSurface(floorReflection, platformWidth, platformDepth, lightFilm)
+  const water = createWaterSurface(floorReflection, platformWidth, platformDepth, lightFilm, [scaleWall, lowerSpace])
   water.surface.position.set(0, -3.635, platformZ)
   water.surface.rotation.x = -Math.PI / 2
   space.add(water.surface)
@@ -731,7 +731,7 @@ export function createSceneWorlds(
       // The outgoing room retains its water and world anchor. The incoming
       // room is composed independently through the same diagonal curtain.
       space.position.y = chamberHeight - journey.height
-      lowerSpace.position.y = SCALE_CEILING_CLEARANCE + 3.755 * REACTOR.heightScale
+      lowerSpace.position.y = SCALE_CEILING_Y - journey.height + 3.755 * REACTOR.heightScale
       chamber.position.y = chamberHeight - journey.height
       scaleWall.position.y = sampleScaleOffset(progress)
       matter.position.y = 0

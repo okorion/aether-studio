@@ -1,15 +1,18 @@
-import { smooth } from './Journey'
+import { sampleJourney } from './Journey'
+import { REACTOR } from './Reactor'
 
-/** The panel travels with its curtain instead of crossing a second tall room. */
+export const SCALE_CEILING_Y = REACTOR.worldY - 3.7 * REACTOR.heightScale
+export const SCALE_PANEL_Y = SCALE_CEILING_Y - 3.6
+
+/** A fixed panel and ceiling share the same descending camera. */
 export function sampleScaleOffset(progress: number) {
-  const p = Number.isFinite(progress) ? Math.max(0, Math.min(1, progress)) : 0
-  // Keep a small, nonzero ascent through the frontal interval. A flat middle
-  // segment made wheel input look ignored even though scroll kept advancing.
-  const travel = Math.max(0, Math.min(1, (p - .715) / .21))
-  return -3.75 * (1 - smooth(.715, .785, p))
-    + 3.15 * smooth(.855, .925, p) + (travel - .5) * .9
+  return SCALE_PANEL_Y - sampleJourney(progress).height
 }
 
-// The outgoing floor and incoming ceiling meet at the same screen-space cut.
-// The incoming ceiling stays above the eye throughout the entire visible band.
-export const SCALE_CEILING_CLEARANCE = 4.0
+/** Linear camera-height passage, without a second ease at each curtain. */
+export function sampleScaleCurtain(progress: number, lower: boolean) {
+  const start = sampleJourney(lower ? .855 : .715).height
+  const end = sampleJourney(lower ? .925 : .785).height
+  const travel = Math.max(0, Math.min(1, (sampleJourney(progress).height - start) / (end - start)))
+  return lower ? -.35 + travel * 1.7 : -.25 + travel * 1.5
+}

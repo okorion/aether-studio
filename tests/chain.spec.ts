@@ -4,6 +4,25 @@ import { createSpineAssembly } from '../src/SceneSpine'
 import { sampleJourney, smooth } from '../src/Journey'
 import { sampleChainPath } from '../src/SceneChain'
 
+test('@interaction chain rolls around its own tangent and reverses without losing the interlock', () => {
+  const assembly = createSpineAssembly(false, false)
+  const chain = assembly.group.getObjectByName('aether-spine-chain') as THREE.InstancedMesh
+  const matrix = new THREE.Matrix4(), up = new THREE.Vector3(0, 1, 0)
+  const sample = (p: number) => {
+    assembly.update(p, 1, 1)
+    chain.getMatrixAt(0, matrix)
+    const rotation = new THREE.Quaternion().setFromRotationMatrix(matrix)
+    const tangent = up.clone().applyQuaternion(rotation)
+    const localRoll = new THREE.Quaternion().setFromUnitVectors(up, tangent).invert().multiply(rotation)
+    return { localRoll, matrices: Array.from(chain.instanceMatrix.array) }
+  }
+  try {
+    const start = sample(.34), end = sample(.50)
+    expect(start.localRoll.angleTo(end.localRoll)).toBeGreaterThan(1)
+    expect(sample(.34).matrices).toEqual(start.matrices)
+  } finally { assembly.dispose() }
+})
+
 test('@interaction resizing at rest synchronizes strand count and travel with the camera mode', () => {
   for (const initialMobile of [false, true]) {
     const assembly = createSpineAssembly(false, initialMobile)

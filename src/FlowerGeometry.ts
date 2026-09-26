@@ -59,9 +59,11 @@ export function createFlowerAttributes(seeds: Float32Array, dust: Float32Array, 
     const lane = dust[i * 4]
     if (advected[i] || dust[i * 4 + 3] > .5 || (lane * 7.13) % 1 >= .22) continue
     const side = lane < .5 ? -1 : 1, tier = Math.min(3, Math.floor(seeds[i * 3] * 4))
-    // Large heads retain most samples; smaller blossoms fill every azimuth.
+    // Give the large heads 15% more samples within the same GPU budget.
+    // Smaller blossoms still cover every azimuth.
     const selector = random()
-    const satellite = selector < .40 ? 0 : 1 + Math.min(3, Math.floor((selector - .40) / .60 * 4))
+    const mainHeadShare = .46
+    const satellite = selector < mainHeadShare ? 0 : 1 + Math.min(3, Math.floor((selector - mainHeadShare) / (1 - mainHeadShare) * 4))
     const size = satellite === 1 ? .66 : satellite ? .36 + (satellite % 3) * .09 : 1.12 + .10 * Math.sin(tier * 2.7 + side)
     const target = random() * surface.area
     let low = 0, high = surface.areas.length - 1

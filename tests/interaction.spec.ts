@@ -5,7 +5,7 @@ import type {} from './fixtures/interaction-harness'
 import { scrollToProgress } from './scroll'
 import { scrollToScene } from '../src/ScrollTimeline'
 import { sampleJourney } from '../src/Journey'
-import { sampleScaleOffset, SCALE_CEILING_CLEARANCE } from '../src/ScaleStage'
+import { sampleScaleOffset, SCALE_CEILING_Y } from '../src/ScaleStage'
 
 declare global {
   interface Window {
@@ -559,7 +559,7 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
     expect(contact.ceilingVisible).toBe(false)
     expect(contact.scaleCorePresent).toBe(false)
     expect(contact.ceilingWidth).toBeCloseTo(64, 5)
-    expect(contact.undersideY).toBeCloseTo(sampleJourney(.70).height + SCALE_CEILING_CLEARANCE, 5)
+    expect(contact.undersideY).toBeCloseTo(SCALE_CEILING_Y, 5)
     expect(contact.undersideWidth).toBeCloseTo(192, 5)
     expect(surfaces.visibility[0]).toMatchObject({ machine: true, ruins: true, upperStructure: true, underside: false })
     // The partial wrapper overlap retains the upper room after the eye has

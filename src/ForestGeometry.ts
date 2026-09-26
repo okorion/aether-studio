@@ -45,7 +45,7 @@ export function createForestGeometry(leafCount: number, software: boolean, mobil
     targetFronds.push({ origin, forward: forward.normalize(), side,
       length, width: length * (fern ? .33 : .23), droop: fern ? .6 : .35, hue: random() })
   }
-  const treeCount = software ? 7 : mobile ? 11 : 14
+  const treeCount = Math.round((software ? 7 : mobile ? 11 : 14) * 2 / 3)
   for (let i = 0; i < treeCount; i++) {
     const angle = i * 2.399963 + (random() - .5) * .35
     // Wood stays outside the inner clearing; near-camera fragments also fade
@@ -76,7 +76,7 @@ export function createForestGeometry(leafCount: number, software: boolean, mobil
         clearance(origin.clone().addScaledVector(axis, reach).addScaledVector(up, -.5)),
       ])
       appendBranch(limb, trunkRadius * .45 * (1 - t * .6), software ? 4 : 6, random())
-      addFrond(origin.clone(), axis.clone(), reach * 1.35)
+      addFrond(origin.clone(), axis.clone(), reach * 1.10)
       for (let k = 0; k < 3; k++) {
         const start = limb.getPoint(.46 + k * .23)
         const forkAngle = azimuth + (k % 2 ? -1 : 1) * (.55 + random() * .45)
@@ -106,51 +106,21 @@ export function createForestGeometry(leafCount: number, software: boolean, mobil
       addFrond(origin, new THREE.Vector3(Math.cos(a), .4, Math.sin(a)), 1.4 + random() * 1.5, true)
     }
   }
-  // Connected arches span the upper grove at unequal heights, not as
-  // disconnected spherical crowns. The lower grove meets this same canopy
-  // while the camera descends out of the scale ceiling.
-  const canopyCount = software ? 4 : mobile ? 5 : 6
-  const polar = (angle: number, radius: number, y: number) =>
-    new THREE.Vector3(Math.cos(angle) * radius, y, Math.sin(angle) * radius)
-  for (let i = 0; i < canopyCount; i++) {
-    const support = canopySupports[Math.floor(i * treeCount / canopyCount)]
-    const handed = i % 3 === 0 ? -1 : 1
-    const angle = support.angle + (random() - .5) * .28
-    const height = 8.1 + random() * 1.65
-    const crown = polar(angle + handed * .14, 6.0 + random() * 2.5, height)
-    const start = support.curve.getPoint(.76 + random() * .20)
-    const shoulder = clearance(start.clone().lerp(crown, .53).addScaledVector(up, 1.25))
-    appendBranch(new THREE.CatmullRomCurve3([start, shoulder, crown]), support.radius * .60,
-      software ? 5 : 8, random())
-    const end = polar(angle + handed * (.58 + random() * .46), 5.0 + random() * 3.0, height - .2 + random() * .8)
-    const middle = clearance(crown.clone().lerp(end, .52).addScaledVector(up, .35 + random() * .55))
-    const arch = new THREE.CatmullRomCurve3([crown, middle, end])
-    appendBranch(arch, support.radius * .43, software ? 6 : 9, random())
-    for (let j = 0; j < 4; j++) {
-      const t = .10 + j * .25
-      const origin = arch.getPoint(t)
-      const axis = arch.getTangent(t)
-      for (const side of [-1, 1]) {
-        const forward = axis.clone().applyAxisAngle(up, side * (.60 + random() * .35))
-        forward.y = -.08 + random() * .13
-        addFrond(origin.clone(), forward, 2.7 + random() * 1.6, true, true)
-      }
+  // Short crown fans grow from the actual trunk tips at different heights.
+  // No cross-grove arch or hanging bare vine creates a flat roof above them.
+  for (const support of canopySupports) {
+    for (let j = 0; j < 7; j++) {
+      const origin = support.curve.getPoint(.72 + j / 6 * .28)
+      const angle = support.angle + j * 2.399963
+      const axis = new THREE.Vector3(Math.cos(angle), .25 + random() * .8, Math.sin(angle)).normalize()
+      const length = 1.5 + random() * 1.4
+      addFrond(origin, axis, length, true, true)
     }
-    // A few unequal hanging vines keep the roof open between its long ferns.
-    const vineStart = arch.getPoint(.35 + random() * .45)
-    const drop = 1.1 + random() * 2.1
-    const vineEnd = clearance(vineStart.clone().add(new THREE.Vector3(
-      Math.cos(angle + .9) * .9, -drop, Math.sin(angle + .9) * .9)))
-    const vineMiddle = clearance(vineStart.clone().lerp(vineEnd, .55)
-      .add(new THREE.Vector3(Math.sin(angle) * .38, -.2, Math.cos(angle) * .38)))
-    appendBranch(new THREE.CatmullRomCurve3([vineStart, vineMiddle, vineEnd]), .007 + random() * .008,
-      software ? 4 : 6, random())
   }
   const leafMatrices = new Float32Array(leafCount * 16), leafColors = new Float32Array(leafCount * 3)
-  // Keep the branching skeleton, but concentrate its foliage in selected
-  // connected fronds. The former even allocation left only a few tiny leaves
-  // on every twig, producing an empty grove instead of overlapping thickets.
-  const foliageFronds = fronds.filter(frond => frond.length > 2.2)
+  // Cover the short forks as well as the main fronds; excluding them left
+  // naked branch tips and holes between the larger foliage clusters.
+  const foliageFronds = fronds
   const canopyLeafCount = Math.floor(leafCount * .24)
   let canopyIndex = 0, lowerIndex = 0
   const zAxis = new THREE.Vector3(), side = new THREE.Vector3(), tangent = new THREE.Vector3()
@@ -166,10 +136,10 @@ export function createForestGeometry(leafCount: number, software: boolean, mobil
     center.copy(frond.origin).addScaledVector(frond.forward, t * frond.length)
       .addScaledVector(up, Math.sin(t * Math.PI) * frond.length * .3 - t * t * frond.droop)
     // Paired pinnae grow along a curved rachis, not an isotropic clump.
-    center.addScaledVector(frond.side, handed * spread * frond.width * (.2 + random() * .6))
+    center.addScaledVector(frond.side, handed * spread * frond.width * (random() * .8))
     // Leaves fill an irregular band around the bent rachis in all three
     // dimensions. This creates asymmetric fern volumes, never ball surfaces.
-    const thickness = (.2 + frond.hue * .4) * (.45 + spread * .55)
+    const thickness = (.35 + frond.hue * .55) * (.45 + spread * .55)
     center.addScaledVector(frond.side, (random() - .5) * thickness * 1.6)
       .addScaledVector(up, (random() - .5) * thickness)
       .addScaledVector(frond.forward, (random() - .5) * thickness * .7)

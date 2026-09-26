@@ -57,7 +57,7 @@ test('@interaction forest assembly has local arrivals, particle trunks and exact
       const lift = origins.getY(i) - positions.getY(i)
       const drift = Math.hypot(origins.getX(i) - positions.getX(i), origins.getZ(i) - positions.getZ(i))
       minLift = Math.min(minLift, lift); maxLift = Math.max(maxLift, lift); maxDrift = Math.max(maxDrift, drift)
-      if(lift>0) { arrivals++; if(lift<.91) localArrivals++ }
+      if(lift>0) { arrivals++; if(lift<1.82) localArrivals++ }
       if (i < 7000) expect(positions.getY(i)).toBeCloseTo(
         FOREST_FLOOR_Y + (assets.leafMatrices[i * 16 + 13] - FOREST_FLOOR_Y) * .25, 4)
       if (origins.getY(i) === positions.getY(i)) {
@@ -66,9 +66,9 @@ test('@interaction forest assembly has local arrivals, particle trunks and exact
       }
     }
     expect(minLift).toBeGreaterThanOrEqual(0)
-    expect(maxLift).toBeGreaterThan(1.3)
-    expect(maxLift).toBeLessThan(1.36)
-    expect(maxDrift).toBeLessThan(.82)
+    expect(maxLift).toBeGreaterThan(2.6)
+    expect(maxLift).toBeLessThan(2.72)
+    expect(maxDrift).toBeLessThan(3)
     expect(localArrivals/arrivals).toBeGreaterThan(.79)
     expect(standingDrift).toBe(0)
     // Moving leaves and bark are 2.5 times the former 34% / 23% fill.
@@ -87,7 +87,12 @@ test('@interaction forest assembly has local arrivals, particle trunks and exact
     expect(sampleForestArrival(.45, .85)).toBe(0)
     expect(sampleForestAssembly(0, false)).toBe(0)
     expect(sampleForestAssembly(.14, false)).toBe(1)
-    expect(sampleForestAssembly(.89, true)).toBe(1)
+    expect(sampleForestAssembly(.855, true)).toBe(1)
+    // Old endpoints are only halfway through the doubled height range.
+    expect(sampleForestAssembly(.073, false)).toBeCloseTo(.5, 8)
+    expect(sampleForestAssembly(.935, true)).toBeCloseTo(.5, 8)
+    expect(sampleForestArrival(sampleForestAssembly(.10, false), .9)).toBeLessThan(1)
+    expect(sampleForestArrival(sampleForestAssembly(.10, false), .9)).toBeGreaterThan(0)
     expect(sampleForestAssembly(1, true)).toBe(0)
   } finally { particles.geometry.dispose(); assets.barkGeometry.dispose(); assets.leafGeometry.dispose() }
   const scene = new THREE.Scene(), forest = createSceneForest(scene, true, false)

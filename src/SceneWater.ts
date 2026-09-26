@@ -10,6 +10,7 @@ export function createWaterSurface(
   width: number,
   depth: number,
   film?: LightFilmUniforms,
+  reflectionExclusions: THREE.Object3D[] = [],
 ) {
   const geometry = reflector ? null : new THREE.PlaneGeometry(width, depth)
   const material = reflector
@@ -188,7 +189,11 @@ export function createWaterSurface(
     // not decide which geometry can contribute indirectly to a reflection.
     visibility.begin(args[2])
     if (!visibility.intersects(surface, upper, lower)) return
-    reflect.apply(this, args)
+    // Adjacent rooms belong to the incoming curtain, never to the pool image.
+    const visible = reflectionExclusions.map(object => object.visible)
+    reflectionExclusions.forEach(object => { object.visible = false })
+    try { reflect.apply(this, args) }
+    finally { reflectionExclusions.forEach((object, i) => { object.visible = visible[i] }) }
   }
 
   return {

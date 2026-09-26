@@ -290,14 +290,16 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
         bones.setMatrixAt(i, dummy.matrix)
       }
       bones.instanceMatrix.needsUpdate = true
+      // Roll about the link tangent while the chain feeds around the column.
+      // Absolute scroll phase gives the exact inverse pose when scrolling up.
+      chainRoll.setFromAxisAngle(up, Math.PI / 2 + (progress - .29) * Math.PI * 3)
       const chainLength = chainPath.getLength()
       for (let i = 0; i < chains.count; i++) {
         const t = i * CHAIN_LINK_PITCH / chainLength
         chainPath.getPointAt(t, dummy.position).multiplyScalar(form)
         chainPath.getTangentAt(t, tangent)
         dummy.quaternion.setFromUnitVectors(up, tangent)
-        // A fixed roll opens the upper terminal toward the authored stage
-        // views. It stays in the column frame rather than facing the camera.
+        // Preserve the alternating interlock while the common axial roll turns.
         dummy.quaternion.multiply(chainRoll)
         if (i % 2) dummy.quaternion.multiply(alternating)
         // The free end is a full-size closed link, never faded or recycled.

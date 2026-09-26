@@ -768,7 +768,7 @@ function probeScalePointer() {
   const probeScene = new THREE.Scene()
   const probeCamera = new THREE.PerspectiveCamera(42, 4 / 3, .1, 60)
   // Follow the panel's scroll offset to isolate pointer shading from framing.
-  const panelY = -48 + sampleScaleOffset(.83)
+  const panelY = sampleJourney(.83).height + sampleScaleOffset(.83)
   probeCamera.position.set(0, panelY, 10)
   probeCamera.lookAt(0, panelY, 0)
   probeCamera.updateMatrixWorld()

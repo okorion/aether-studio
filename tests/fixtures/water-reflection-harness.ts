@@ -36,6 +36,41 @@ function fixture() {
   return { renderer, scene, camera, errors, read, gl }
 }
 
+/** An adjacent room is visible directly but cannot enter the reactor mirror. */
+export function probeAdjacentRoomExclusion() {
+  const { renderer, scene, camera, read } = fixture()
+  const reflector = new Reflector(new THREE.PlaneGeometry(20, 20), { textureWidth: 256, textureHeight: 256, multisample: 0 })
+  const exclusions: THREE.Object3D[] = []
+  const water = createWaterSurface(reflector, 20, 20, undefined, exclusions)
+  water.surface.rotation.x = -Math.PI / 2
+  const panel = new THREE.Mesh(new THREE.BoxGeometry(3, 2, .2), new THREE.MeshBasicMaterial({ color: 0xff00ff }))
+  panel.position.set(0, 2, 0)
+  scene.add(panel, water.surface)
+  const count = (pixels: Uint8Array) => {
+    let n = 0
+    for (let i = 0; i < pixels.length; i += 4) if (pixels[i] > 120 && pixels[i + 1] < 15 && pixels[i + 2] > 120) n++
+    return n
+  }
+  const render = () => {
+    water.update(4, .74, 1, true, camera)
+    renderer.render(scene, camera)
+    // The mirrored panel projects below the image centre; the direct panel
+    // projects above it. Read final pixels, including the water shader.
+    return count(read().subarray(0, width * height * 2))
+  }
+  try {
+    const before = render()
+    exclusions.push(panel)
+    const after = render(), direct = count(read()), restored = panel.visible
+    panel.visible = false
+    render()
+    return { before, after, direct, restored, hiddenPreserved: !panel.visible }
+  } finally {
+    water.dispose(); reflector.dispose(); reflector.geometry.dispose()
+    panel.geometry.dispose(); panel.material.dispose(); renderer.dispose(); renderer.forceContextLoss()
+  }
+}
+
 /** Actual mirror-camera pass, with distinct colors at independently known positions. */
 export function probeWaterReflection() {
   const { renderer, scene, camera, errors, read, gl } = fixture()

@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 import * as THREE from 'three'
-import { sampleJourney, sampleViewAzimuth } from '../src/Journey'
-import { sampleScaleOffset, SCALE_CEILING_CLEARANCE } from '../src/ScaleStage'
+import { sampleJourney, sampleViewAzimuth, sampleForestAzimuth } from '../src/Journey'
+import { sampleScaleOffset, SCALE_CEILING_Y, SCALE_PANEL_Y } from '../src/ScaleStage'
 import { sampleLayers } from '../src/SceneLayers'
 import { createSpineAssembly } from '../src/SceneSpine'
 
@@ -22,8 +22,16 @@ test('@interaction panel approaches the incoming cut and holds its front view un
     // Once a useful part of the incoming band is visible, its panel is already
     // within 15% of screen height of that edge, never below a long empty room.
     if (p >= .739 && p <= .755) expect(cut - (upper.y + 1) / 2).toBeLessThan(.15)
-    if (p >= .785 && p <= .855) expect(Math.abs(y)).toBeLessThan(.16)
-    expect(SCALE_CEILING_CLEARANCE).toBeGreaterThan(2.65)
+    if (p >= .795 && p <= .825) expect(Math.abs(y)).toBeLessThan(1.2)
+    expect(j.height + y).toBeCloseTo(SCALE_PANEL_Y, 8)
+    expect(SCALE_CEILING_Y).toBeCloseTo(-43.212, 8)
+  }
+})
+
+test('@interaction both forests halve scroll rotation across their full visible range', () => {
+  for (const [a, b] of [[0, .075], [.12, .19], [.855, .925], [.935, 1]]) {
+    const angle = (p: number) => sampleForestAzimuth(p, sampleJourney(p).azimuth)
+    expect(angle(b) - angle(a)).toBeCloseTo((sampleJourney(b).azimuth - sampleJourney(a).azimuth) / 2, 8)
   }
 })
 

@@ -17,6 +17,7 @@ import { createSceneLightVideo } from './SceneLightVideo'
 import { createLightFilmUniforms, lightChoreographyGLSL, sampleLightChoreography } from './SceneLighting'
 import { createSceneLightShafts } from './SceneLightShafts'
 import { createSceneEmblem } from './SceneEmblem'
+import { createColumnFollow } from './ColumnFollow'
 
 type SceneProps = {
   reducedMotion: boolean
@@ -487,6 +488,7 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
       const modelCentre = new THREE.Vector3()
       let targetProgress = readProgress()
       let progress = targetProgress
+      const columnFollow = createColumnFollow(progress)
       let elapsed = preserved.current.elapsed
       let scaleElapsed = preserved.current.scaleElapsed
       let previousTime = 0
@@ -604,6 +606,7 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
           : THREE.MathUtils.damp(progress, targetProgress, 7, Math.min(wallDelta, 0.4))
         if (Math.abs(progress - targetProgress) < .00001) progress = targetProgress
         const scroll = THREE.MathUtils.clamp(progress, 0, 1)
+        const columnProgress = columnFollow.update(scroll, wallDelta, reducedMotion)
         const state = sampleJourney(scroll)
         centre.set(0, state.height, 0)
         particlesMaterial.uniforms.uTime.value = elapsed
@@ -663,7 +666,7 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
         particleFilm.ready.value = activeFilm.ready.value
         canvas.dataset.forestVideoState = JSON.stringify(forestVideo.getStatus())
         // Projection-based surface interaction must use this frame's camera.
-        worlds.update(elapsed, scroll, input.field, camera, scaleElapsed, mobileView)
+        worlds.update(elapsed, scroll, input.field, camera, scaleElapsed, mobileView, columnProgress)
         canvas.dataset.scaleTime = scaleElapsed.toFixed(4)
         const monitorHover = sceneAvailable() && input.field.active ? worlds.getHoveredPanel() : -1
         canvas.dataset.monitorHover = String(monitorHover)
@@ -672,7 +675,7 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
         try {
           // Include simulation passes in the same frame's draw-call accounting.
           activeRenderer.info.reset()
-          atmosphere.update(elapsed, scroll, activeRenderer.getPixelRatio(), input.field, camera, worlds.getMonitorObstacles())
+          atmosphere.update(elapsed, scroll, activeRenderer.getPixelRatio(), input.field, camera, worlds.getMonitorObstacles(), columnProgress)
         } catch {
           failScene()
           return
@@ -705,7 +708,8 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
             canvas.dataset.modelY = emblem.getWorldPosition(modelCentre).y.toFixed(4)
             canvas.dataset.viewAzimuth = azimuth.toFixed(4)
             canvas.dataset.forestYaw = foregroundYaw.toFixed(4)
-            canvas.dataset.structureYaw = state.structureYaw.toFixed(4)
+            canvas.dataset.columnProgress = columnProgress.toFixed(6)
+            canvas.dataset.structureYaw = sampleJourney(columnProgress).structureYaw.toFixed(4)
             canvas.dataset.ringRoll = emblem.rotation.z.toFixed(4)
             canvas.dataset.chainPhase = state.chainPhase.toFixed(6)
             canvas.dataset.orbitEnabled = String(state.orbitEnabled)

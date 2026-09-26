@@ -45,7 +45,7 @@ export function createForestGeometry(leafCount: number, software: boolean, mobil
     targetFronds.push({ origin, forward: forward.normalize(), side,
       length, width: length * (fern ? .33 : .23), droop: fern ? .6 : .35, hue: random() })
   }
-  const treeCount = software ? 14 : mobile ? 22 : 28
+  const treeCount = software ? 7 : mobile ? 11 : 14
   for (let i = 0; i < treeCount; i++) {
     const angle = i * 2.399963 + (random() - .5) * .35
     // Wood stays outside the inner clearing; near-camera fragments also fade
@@ -109,7 +109,7 @@ export function createForestGeometry(leafCount: number, software: boolean, mobil
   // Connected arches span the upper grove at unequal heights, not as
   // disconnected spherical crowns. The lower grove meets this same canopy
   // while the camera descends out of the scale ceiling.
-  const canopyCount = software ? 7 : mobile ? 10 : 12
+  const canopyCount = software ? 4 : mobile ? 5 : 6
   const polar = (angle: number, radius: number, y: number) =>
     new THREE.Vector3(Math.cos(angle) * radius, y, Math.sin(angle) * radius)
   for (let i = 0; i < canopyCount; i++) {
@@ -188,6 +188,15 @@ export function createForestGeometry(leafCount: number, software: boolean, mobil
     scale.set(length * (1.2 + random() * .7), length, length)
     matrix.compose(center, rotation, scale).toArray(leafMatrices, i * 16)
     leafColors.set([frond.hue, random(), random()], i * 3)
+  }
+  // Compress only the horizontal footprint. Branch reach becomes two thirds;
+  // every retained tree keeps its authored height and the existing floor.
+  const horizontalScale = 2 / 3
+  for (const matrices of [branches, leafMatrices]) {
+    for (let i = 0; i < matrices.length; i += 16) {
+      for (const row of [0, 2]) for (const column of [0, 4, 8, 12])
+        matrices[i + column + row] *= horizontalScale
+    }
   }
   const barkGeometry = new THREE.CylinderGeometry(.74, 1, 1, software ? 5 : 7, 1, true)
   // Six triangles form a folded lanceolate leaf with a raised midrib.

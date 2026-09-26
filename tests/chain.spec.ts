@@ -156,12 +156,12 @@ test('@interaction chain terminal descends to the lower third at the outgoing cu
     const chain=assembly.group.getObjectByName('aether-spine-chain') as THREE.InstancedMesh;
     const camera=new THREE.PerspectiveCamera(42,mobile?390/844:1440/900,.1,100);
     const matrix=new THREE.Matrix4();
-    const sample=(p:number)=>{
+    const sample=(p:number,columnProgress=p)=>{
       const j=sampleJourney(p),r=j.radius+(mobile?4.8:0);
       camera.position.set(Math.sin(j.azimuth)*Math.cos(j.elevation)*r,j.height+Math.sin(j.elevation)*r,Math.cos(j.azimuth)*Math.cos(j.elevation)*r);
       camera.lookAt(0,j.height,0);camera.updateMatrixWorld();
-      assembly.group.position.y=j.height;assembly.group.rotation.y=j.structureYaw;
-      assembly.update(p,1,1,mobile,camera);assembly.group.updateMatrixWorld(true);
+      assembly.group.position.y=j.height;assembly.group.rotation.y=sampleJourney(columnProgress).structureYaw;
+      assembly.update(p,1,1,mobile,camera,columnProgress);assembly.group.updateMatrixWorld(true);
       chain.getMatrixAt(0,matrix);
       const top=chain.localToWorld(new THREE.Vector3().setFromMatrixPosition(matrix)).project(camera);
       const t = THREE.MathUtils.clamp((p - .40) / .215, 0, 1);
@@ -169,6 +169,6 @@ test('@interaction chain terminal descends to the lower third at the outgoing cu
       if(p >= .615) expect((top.y + 1) / 2).toBeCloseTo(.33,2);
       return Array.from(chain.instanceMatrix.array);
     };
-    try {const initial=sample(.31);for(let i=0;i<=34;i++)sample(.31+i*.01);for(let i=34;i>=0;i--)sample(.31+i*.01);expect(sample(.31)).toEqual(initial);}finally{assembly.dispose();}
+    try {const initial=sample(.31);for(let i=0;i<=34;i++){const p=.31+i*.01;sample(p);sample(p,p-.004);sample(p,p+.004);}for(let i=34;i>=0;i--)sample(.31+i*.01);expect(sample(.31)).toEqual(initial);}finally{assembly.dispose();}
   }
 });

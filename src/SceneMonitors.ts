@@ -456,7 +456,7 @@ export function createSceneMonitors(software: boolean, mobile: boolean, external
       return selected ? definitions[selected.index].projectIndex : null
     },
     pick: (ndc: THREE.Vector2, camera: THREE.Camera) => hit(ndc, camera)?.index ?? null,
-    update(time: number, progress: number, pointer?: MonitorPointer, camera?: THREE.Camera) {
+    update(time: number, progress: number, pointer?: MonitorPointer, camera?: THREE.Camera, columnProgress = progress) {
       if (disposed) return
       const p = Number.isFinite(progress) ? THREE.MathUtils.clamp(progress, 0, 1) : 0
       const weight = windowWeight(p, .23, .245, .675, .70)
@@ -479,7 +479,7 @@ export function createSceneMonitors(software: boolean, mobile: boolean, external
       const mobileScale = mobile ? .74 : 1
       for (let i = 0; i < panels.length; i++) {
         const panel = panels[i]
-        const { step, angle, y, radiusX, radiusZ } = sampleMonitorLayout(p, i, panels.length, layoutWidth, layoutHeight)
+        const { step, angle, y, radiusX, radiusZ } = sampleMonitorLayout(columnProgress, i, panels.length, layoutWidth, layoutHeight)
         hover[i] = THREE.MathUtils.lerp(hover[i], hoveredPanel === i && !reducedMotion ? 1 : 0, ease)
         if (hover[i] < .0001) hover[i] = 0
         // A diagonal helix: the central card faces forward, its neighbours

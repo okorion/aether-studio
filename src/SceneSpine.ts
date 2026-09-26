@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import lumbarMesh from './assets/lumbar-vertebra.json' with { type: 'json' }
 import { sampleLayers } from './SceneLayers'
+import { sampleJourney } from './Journey'
 import { getChainLinkCount, CHAIN_LINK_PITCH, createChainGeometry, createChainMaterial, sampleChainPath } from './SceneChain'
 
 const HEIGHT = 10.8
@@ -215,6 +216,7 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
   const chainRoll = new THREE.Quaternion().setFromAxisAngle(up, Math.PI / 2)
   let previousProgress = Number.NaN
   let previousEmergence = Number.NaN
+  let previousColumnProgress = Number.NaN
   let previousMobile = mobile
   let previousAnchor = Number.NaN
   let disposed = false
@@ -222,7 +224,7 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
 
   return {
     group,
-    update(value: number, opacity: number, emergence: number, mobileView = mobile, camera?: THREE.Camera) {
+    update(value: number, opacity: number, emergence: number, mobileView = mobile, camera?: THREE.Camera, columnProgress = value) {
       if (disposed) return
       const alpha = clamp(opacity)
       const form = ease(emergence)
@@ -236,13 +238,16 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
       boneMaterial.opacity = alpha
       linkMaterial.opacity = alpha
       if (!group.visible) return
+      // The strand leads both its helical feed and world yaw. Its radius stays
+      // attached to the column while the shared assembly catches up.
+      chains.rotation.y = sampleJourney(progress).structureYaw - sampleJourney(columnProgress).structureYaw
       const chainPath = sampleChainPath(progress, mobileView)
       let anchorOffset = chainPath.getPointAt(0, terminal).y
       if (camera) {
         // The free end descends across the frame with scroll. At the lower
         // curtain it occupies only the bottom third, including camera motion.
-        group.updateWorldMatrix(true, false)
-        projection.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse).multiply(group.matrixWorld)
+        chains.updateWorldMatrix(true, false)
+        projection.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse).multiply(chains.matrixWorld)
         chainPath.getPointAt(0, terminal).multiplyScalar(form)
         const startY = terminal.applyMatrix4(projection).y
         const screenY = THREE.MathUtils.lerp(startY,
@@ -260,13 +265,14 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
         anchorOffset = (low + high) * .5
         chainPath.setTopHeight(anchorOffset)
       }
-      if (progress === previousProgress && form === previousEmergence && mobileView === previousMobile && anchorOffset === previousAnchor) return
+      if (progress === previousProgress && columnProgress === previousColumnProgress && form === previousEmergence && mobileView === previousMobile && anchorOffset === previousAnchor) return
       previousProgress = progress
+      previousColumnProgress = columnProgress
       previousEmergence = form
       previousMobile = mobileView
       previousAnchor = anchorOffset
       chains.count = getChainLinkCount(mobileView)
-      const travel = progress * 1.4
+      const travel = columnProgress * 1.4
       for (let i = 0; i < rows; i++) {
         const y = (THREE.MathUtils.euclideanModulo(i / rows + travel, 1) - .5) * HEIGHT
         const edge = ease((HEIGHT * .5 - Math.abs(y)) / .55)

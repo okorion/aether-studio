@@ -147,6 +147,10 @@ export function createForestGeometry(leafCount: number, software: boolean, mobil
   // Cover the short forks as well as the main fronds; excluding them left
   // naked branch tips and holes between the larger foliage clusters.
   const foliageFronds = fronds
+  // A frond's axes do not change while distributing its leaves. Keep the
+  // per-leaf random rotation below, but calculate its starting normal once.
+  const frondNormals = new Map([...foliageFronds, ...canopyFronds].map(frond =>
+    [frond, new THREE.Vector3().crossVectors(frond.forward, frond.side).normalize()]))
   const canopyLeafCount = Math.floor(leafCount * .24)
   let canopyIndex = 0, lowerIndex = 0
   const zAxis = new THREE.Vector3(), side = new THREE.Vector3(), tangent = new THREE.Vector3()
@@ -172,7 +176,7 @@ export function createForestGeometry(leafCount: number, software: boolean, mobil
     clearance(center)
     tangent.copy(frond.side).multiplyScalar(handed).addScaledVector(frond.forward, .32 + t * .4)
       .addScaledVector(up, .15 + random() * .24).normalize()
-    zAxis.crossVectors(frond.forward, frond.side).normalize()
+    zAxis.copy(frondNormals.get(frond)!)
     zAxis.applyAxisAngle(tangent, (random() - .5) * .9)
     side.crossVectors(tangent, zAxis).normalize()
     zAxis.crossVectors(side, tangent).normalize()
@@ -183,15 +187,23 @@ export function createForestGeometry(leafCount: number, software: boolean, mobil
     const length = (.052 + spread * .12 + random() * .052) * (canopy ? 1.10 : 1)
     scale.set(length * (1.2 + random() * .7), length, length)
     matrix.compose(center, rotation, scale).toArray(leafMatrices, i * 16)
-    leafColors.set([frond.hue, random(), random()], i * 3)
+    leafColors[i * 3] = frond.hue
+    leafColors[i * 3 + 1] = random()
+    leafColors[i * 3 + 2] = random()
   }
   // Compress only the horizontal footprint. Branch reach becomes two thirds;
   // every retained tree keeps its authored height and the existing floor.
   const horizontalScale = 2 / 3
   for (const matrices of [branches, leafMatrices]) {
     for (let i = 0; i < matrices.length; i += 16) {
-      for (const row of [0, 2]) for (const column of [0, 4, 8, 12])
-        matrices[i + column + row] *= horizontalScale
+      matrices[i] *= horizontalScale
+      matrices[i + 4] *= horizontalScale
+      matrices[i + 8] *= horizontalScale
+      matrices[i + 12] *= horizontalScale
+      matrices[i + 2] *= horizontalScale
+      matrices[i + 6] *= horizontalScale
+      matrices[i + 10] *= horizontalScale
+      matrices[i + 14] *= horizontalScale
     }
   }
   const barkGeometry = new THREE.CylinderGeometry(.74, 1, 1, software ? 5 : 7, 1, true)

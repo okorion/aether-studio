@@ -39,7 +39,9 @@ export function createForestParticles(assets: ReturnType<typeof createForestGeom
       const start = i * 16
       point.fromArray(assets.leafMatrices, start + 12)
       sizes[i] = .038 + random() ** 3 * .055
-      seeds.set(assets.leafColors.subarray(i * 3, i * 3 + 3), i * 3)
+      seeds[i * 3] = assets.leafColors[i * 3]
+      seeds[i * 3 + 1] = assets.leafColors[i * 3 + 1]
+      seeds[i * 3 + 2] = assets.leafColors[i * 3 + 2]
     } else {
       // Stratified surface-area sampling keeps fine forks connected and fills
       // thick trunks without retaining an opaque cylinder underneath them.
@@ -50,7 +52,9 @@ export function createForestParticles(assets: ReturnType<typeof createForestGeom
       const radius = .87 - y * .26
       point.set(Math.cos(angle) * radius, y, Math.sin(angle) * radius).applyMatrix4(matrix)
       sizes[i] = .032 + random() * .024
-      seeds.set([.32 + random() * .45, random(), .64 + random() * .36], i * 3)
+      seeds[i * 3] = .32 + random() * .45
+      seeds[i * 3 + 1] = random()
+      seeds[i * 3 + 2] = .64 + random() * .36
     }
     point.y = FOREST_FLOOR_Y + (point.y - FOREST_FLOOR_Y) * .25
     point.toArray(positions, i * 3)
@@ -64,8 +68,9 @@ export function createForestParticles(assets: ReturnType<typeof createForestGeom
     const heightPhase = THREE.MathUtils.clamp(1 - (point.y - FOREST_FLOOR_Y) / 7, 0, 1)
     assemblyPhases[i] = heightPhase * .55 + random() * .45
     assemblySpans[i] = .24 + random() * .30
-    origins.set([point.x * .88 + Math.cos(angle) * radius, point.y + lift,
-      point.z * .88 + Math.sin(angle) * radius], i * 3)
+    origins[i * 3] = point.x * .88 + Math.cos(angle) * radius
+    origins[i * 3 + 1] = point.y + lift
+    origins[i * 3 + 2] = point.z * .88 + Math.sin(angle) * radius
     // One third of the previous absolute moving budget, even after pruning.
     const movingShare = i < count ? .85 * sourceCount / (3 * count)
       : .575 * Math.floor(sourceCount * .34) / (3 * barkCount)

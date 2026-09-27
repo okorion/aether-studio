@@ -1,0 +1,62 @@
+{
+  "source": "bdfda295b8e4917271f3416dd057ec2b30ac8d20",
+  "profiles": {
+    "desktop": {
+      "arrays": {
+        "barkMatrices": "b3d31e1da672e836df5bf5aef9a7dc197c9cec5d57288d0999411d95820d961c",
+        "barkColors": "53c64fc93f1de12bbd8118ce627f9f8856ad6a1ee7c6b3909d6440c6abef2bcf",
+        "leafMatrices": "25c4402b7aad60627f2fbe83e183b396af590f0059a9b1f5755a042f0175e4f0",
+        "leafColors": "d11e4c1f9a09b69b6aacdb99425f23c72eaaf5698bd68aba7f1deb8dab98c34e"
+      },
+      "attributes": {
+        "position": "9eb93dbe2ca43694867b1833ea03160b8cc93d8671a00ae6c86fd20aab910a31",
+        "aOrigin": "3925ceffddb3f692ed0eeb49f20ce600f204b4f8ae46d3fd4ac7ceba2145b967",
+        "aSeed": "e02f7d2249bd2e0655fbad2bb888354dd9fa7b38f2c39c0848dfadfd7396da42",
+        "aSize": "902e3153c8d32efcac3ec99b458431b54f1aeaeeb6fcf458c3112666c575c189",
+        "aAssemblyPhase": "9b0bc07f144747c03b1378be76482173755379d4ca217ebf1648407206752ae3",
+        "aAssemblySpan": "13ccdc6c26fb1036f26f21acc7b7ef439159402862e257f75af0cf38fe9229b9"
+      },
+      "leafCount": 140000,
+      "barkCount": 47600,
+      "total": 187600
+    },
+    "mobile": {
+      "arrays": {
+        "barkMatrices": "783a97812d4177f7163b02f74ddc3414abc01a4c0ff4166ba6e058c509d3e344",
+        "barkColors": "80f8646b3ed45925f8f3f7b2188b81e37c8d1e16dae6a41270ea5cf32c4920c5",
+        "leafMatrices": "abcb3d42e4067c678dea4806f58f6cc1a7c89ab270e62623940a63c7709def5b",
+        "leafColors": "69f237e84fefdb3ca25ba8c8a7a8265d1a2c2d43d82942bbbfca7ca0931090fc"
+      },
+      "attributes": {
+        "position": "bd1a0c17e565c95a88a3c562af4b166d4155b9908b90d31891b1e6eb7850495a",
+        "aOrigin": "053f2b554580d21e40365319dee8eae604e2050a18cabfda0bcc6c0814e3ea37",
+        "aSeed": "9e65cb2b811b71800e220b2abed8de19f476af1be48c1d52079133bb0b29208e",
+        "aSize": "f4938f7fcbc8a5a00e529bc6fe364f6025a5fedbb50091768fe1c1e1e42efce0",
+        "aAssemblyPhase": "b961e60c491355d7cf67c8cd29087ac3aaab3fdcc2f2afe777016872bb5aa165",
+        "aAssemblySpan": "0afaf57321af3ef4ac8981c9713d91db24fedf16570f967a3ce5dc58f1f14011"
+      },
+      "leafCount": 34285,
+      "barkCount": 11656,
+      "total": 45941
+    },
+    "software": {
+      "arrays": {
+        "barkMatrices": "043c6b13866c229d9900614527f04a15ee86fa8048911a07ff14427199f653fa",
+        "barkColors": "394cd3d10d6879126856808a57f24c36f80b77fadefbfc5fb25515ed1f35dd0b",
+        "leafMatrices": "4096aa804b072d52aed0932f102e4a525737d7fbf61059820ea4b43e99217e99",
+        "leafColors": "0c29b5f8e01b7297982d21f7475400e1bb0546eec39429810bb8421f71c177f4"
+      },
+      "attributes": {
+        "position": "3b7a676d4fa31fa9d91889af1cf41a8fea1b1d3d54bd25d4df228246a1835c77",
+        "aOrigin": "708a05e0dc0fda3200807eed1ba4fc9c00ab1b2a663527870a3b35905dc13eba",
+        "aSeed": "cd20a276a129b4911ab50f971b4b6b656e28882282c1613af0434230c82acd75",
+        "aSize": "8dd8bfeddfb70df6b585734ab2c582c1e73eeddb6a70a44b7ffbd2cfcd11ee0c",
+        "aAssemblyPhase": "ca85a384059fb5b03bb59c11f50aa41afc838b5a5e660b0931be0c6941aa2edf",
+        "aAssemblySpan": "d92714cc24921ff89cbbec2728666ff96e306c8b87762272061b0cc799ba23a4"
+      },
+      "leafCount": 4200,
+      "barkCount": 1428,
+      "total": 5628
+    }
+  }
+}

@@ -1,0 +1,1460 @@
+{
+  "baseline": "d3d66aefc3f689f8db85518d21a993bb64bd9f7d",
+  "sameStages": true,
+  "before": {
+    "url": "http://127.0.0.1:5174",
+    "errors": [],
+    "reports": [
+      {
+        "name": "desktop",
+        "width": 1600,
+        "height": 900,
+        "stages": [
+          {
+            "p": 0.139994,
+            "y": -8.383,
+            "azimuth": 0,
+            "forestYaw": -2.3849,
+            "structureYaw": 0
+          },
+          {
+            "p": 0.399991,
+            "y": -23.7935,
+            "azimuth": 6.28,
+            "forestYaw": 3.14,
+            "structureYaw": -4.1305
+          },
+          {
+            "p": 0.679991,
+            "y": -39.798,
+            "azimuth": 6.2832,
+            "forestYaw": 0,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 0.719991,
+            "y": -41.5889,
+            "azimuth": 6.2832,
+            "forestYaw": 0,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 0.735024,
+            "y": -42.2939,
+            "azimuth": 6.2832,
+            "forestYaw": 0,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 0.739991,
+            "y": -42.5443,
+            "azimuth": 6.2832,
+            "forestYaw": 0,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 0.749991,
+            "y": -43.0929,
+            "azimuth": 6.2832,
+            "forestYaw": 0,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 0.765024,
+            "y": -43.9847,
+            "azimuth": 6.2832,
+            "forestYaw": 0,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 0.779991,
+            "y": -44.857,
+            "azimuth": 6.2832,
+            "forestYaw": 0,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 0.799962,
+            "y": -45.9032,
+            "azimuth": 6.2832,
+            "forestYaw": 0,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 0.814973,
+            "y": -46.6517,
+            "azimuth": 6.2832,
+            "forestYaw": -0.0288,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 0.825007,
+            "y": -47.1466,
+            "azimuth": 6.2832,
+            "forestYaw": -0.0774,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 0.840018,
+            "y": -47.8801,
+            "azimuth": 6.2832,
+            "forestYaw": -0.1874,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 0.869992,
+            "y": -49.3206,
+            "azimuth": 6.2832,
+            "forestYaw": -0.507,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 0.93502,
+            "y": -52.468,
+            "azimuth": 6.2832,
+            "forestYaw": -1.3534,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 1,
+            "y": -55.5,
+            "azimuth": 6.2832,
+            "forestYaw": -1.8,
+            "structureYaw": -12.5664
+          }
+        ],
+        "motion": [
+          {
+            "start": 0.74,
+            "samples": [
+              {
+                "p": 0.739991,
+                "y": -42.5443,
+                "azimuth": 6.2832,
+                "forestYaw": 0,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": 1,
+                "p": 0.751756,
+                "y": -43.1949,
+                "azimuth": 6.2832,
+                "forestYaw": 0,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": 1,
+                "p": 0.763521,
+                "y": -43.8945,
+                "azimuth": 6.2832,
+                "forestYaw": 0,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": 1,
+                "p": 0.775286,
+                "y": -44.591,
+                "azimuth": 6.2832,
+                "forestYaw": 0,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": -1,
+                "p": 0.763521,
+                "y": -43.8945,
+                "azimuth": 6.2832,
+                "forestYaw": 0,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": -1,
+                "p": 0.751756,
+                "y": -43.1949,
+                "azimuth": 6.2832,
+                "forestYaw": 0,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": -1,
+                "p": 0.739991,
+                "y": -42.5443,
+                "azimuth": 6.2832,
+                "forestYaw": 0,
+                "structureYaw": -12.5664
+              }
+            ]
+          },
+          {
+            "start": 0.825,
+            "samples": [
+              {
+                "p": 0.825007,
+                "y": -47.1466,
+                "azimuth": 6.2832,
+                "forestYaw": -0.0774,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": 1,
+                "p": 0.839007,
+                "y": -47.8312,
+                "azimuth": 6.2832,
+                "forestYaw": -0.1787,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": 1,
+                "p": 0.853007,
+                "y": -48.5046,
+                "azimuth": 6.2832,
+                "forestYaw": -0.3123,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": 1,
+                "p": 0.86509,
+                "y": -49.0843,
+                "azimuth": 6.2832,
+                "forestYaw": -0.4479,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": -1,
+                "p": 0.853007,
+                "y": -48.5046,
+                "azimuth": 6.2832,
+                "forestYaw": -0.3123,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": -1,
+                "p": 0.839007,
+                "y": -47.8312,
+                "azimuth": 6.2832,
+                "forestYaw": -0.1787,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": -1,
+                "p": 0.825007,
+                "y": -47.1466,
+                "azimuth": 6.2832,
+                "forestYaw": -0.0774,
+                "structureYaw": -12.5664
+              }
+            ]
+          },
+          {
+            "start": 0.9,
+            "samples": [
+              {
+                "p": 0.899992,
+                "y": -50.7696,
+                "azimuth": 6.2832,
+                "forestYaw": -0.8999,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": 1,
+                "p": 0.911647,
+                "y": -51.3325,
+                "azimuth": 6.2832,
+                "forestYaw": -1.0565,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": 1,
+                "p": 0.921959,
+                "y": -51.8324,
+                "azimuth": 6.2832,
+                "forestYaw": -1.1917,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": 1,
+                "p": 0.930635,
+                "y": -52.2547,
+                "azimuth": 6.2832,
+                "forestYaw": -1.3006,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": -1,
+                "p": 0.921959,
+                "y": -51.8324,
+                "azimuth": 6.2832,
+                "forestYaw": -1.1917,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": -1,
+                "p": 0.911647,
+                "y": -51.3325,
+                "azimuth": 6.2832,
+                "forestYaw": -1.0565,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": -1,
+                "p": 0.899992,
+                "y": -50.7696,
+                "azimuth": 6.2832,
+                "forestYaw": -0.8999,
+                "structureYaw": -12.5664
+              }
+            ]
+          },
+          {
+            "start": 0.935,
+            "samples": [
+              {
+                "p": 0.93502,
+                "y": -52.468,
+                "azimuth": 6.2832,
+                "forestYaw": -1.3534,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": 1,
+                "p": 0.94236,
+                "y": -52.8236,
+                "azimuth": 6.2832,
+                "forestYaw": -1.4377,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": 1,
+                "p": 0.949495,
+                "y": -53.1664,
+                "azimuth": 6.2832,
+                "forestYaw": -1.5136,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": 1,
+                "p": 0.956625,
+                "y": -53.5049,
+                "azimuth": 6.2832,
+                "forestYaw": -1.5827,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": -1,
+                "p": 0.949495,
+                "y": -53.1664,
+                "azimuth": 6.2832,
+                "forestYaw": -1.5136,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": -1,
+                "p": 0.94236,
+                "y": -52.8236,
+                "azimuth": 6.2832,
+                "forestYaw": -1.4377,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": -1,
+                "p": 0.93502,
+                "y": -52.468,
+                "azimuth": 6.2832,
+                "forestYaw": -1.3534,
+                "structureYaw": -12.5664
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "mobile",
+        "width": 390,
+        "height": 844,
+        "stages": [
+          {
+            "p": 0.140033,
+            "y": -8.3536,
+            "azimuth": 0,
+            "forestYaw": -2.3859,
+            "structureYaw": 0
+          },
+          {
+            "p": 0.399997,
+            "y": -23.7079,
+            "azimuth": 6.28,
+            "forestYaw": 3.14,
+            "structureYaw": -4.1308
+          },
+          {
+            "p": 0.680035,
+            "y": -39.8,
+            "azimuth": 6.2832,
+            "forestYaw": 0,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 0.71997,
+            "y": -41.588,
+            "azimuth": 6.2832,
+            "forestYaw": 0,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 0.735025,
+            "y": -42.2939,
+            "azimuth": 6.2832,
+            "forestYaw": 0,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 0.739973,
+            "y": -42.5433,
+            "azimuth": 6.2832,
+            "forestYaw": 0,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 0.750009,
+            "y": -43.0939,
+            "azimuth": 6.2832,
+            "forestYaw": 0,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 0.764994,
+            "y": -43.9829,
+            "azimuth": 6.2832,
+            "forestYaw": 0,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 0.779978,
+            "y": -44.8563,
+            "azimuth": 6.2832,
+            "forestYaw": 0,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 0.800007,
+            "y": -45.9055,
+            "azimuth": 6.2832,
+            "forestYaw": 0,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 0.815019,
+            "y": -46.654,
+            "azimuth": 6.2832,
+            "forestYaw": -0.0289,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 0.824972,
+            "y": -47.1449,
+            "azimuth": 6.2832,
+            "forestYaw": -0.0772,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 0.839983,
+            "y": -47.8784,
+            "azimuth": 6.2832,
+            "forestYaw": -0.1871,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 0.869981,
+            "y": -49.3201,
+            "azimuth": 6.2832,
+            "forestYaw": -0.5069,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 0.934988,
+            "y": -52.4664,
+            "azimuth": 6.2832,
+            "forestYaw": -1.3531,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 1,
+            "y": -55.5,
+            "azimuth": 6.2832,
+            "forestYaw": -1.8,
+            "structureYaw": -12.5664
+          }
+        ],
+        "motion": [
+          {
+            "start": 0.74,
+            "samples": [
+              {
+                "p": 0.739973,
+                "y": -42.5433,
+                "azimuth": 6.2832,
+                "forestYaw": 0,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": 1,
+                "p": 0.751752,
+                "y": -43.1946,
+                "azimuth": 6.2832,
+                "forestYaw": 0,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": 1,
+                "p": 0.76353,
+                "y": -43.895,
+                "azimuth": 6.2832,
+                "forestYaw": 0,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": 1,
+                "p": 0.775239,
+                "y": -44.5883,
+                "azimuth": 6.2832,
+                "forestYaw": 0,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": -1,
+                "p": 0.76353,
+                "y": -43.895,
+                "azimuth": 6.2832,
+                "forestYaw": 0,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": -1,
+                "p": 0.751752,
+                "y": -43.1946,
+                "azimuth": 6.2832,
+                "forestYaw": 0,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": -1,
+                "p": 0.739973,
+                "y": -42.5433,
+                "azimuth": 6.2832,
+                "forestYaw": 0,
+                "structureYaw": -12.5664
+              }
+            ]
+          },
+          {
+            "start": 0.825,
+            "samples": [
+              {
+                "p": 0.824972,
+                "y": -47.1449,
+                "azimuth": 6.2832,
+                "forestYaw": -0.0772,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": 1,
+                "p": 0.838988,
+                "y": -47.8303,
+                "azimuth": 6.2832,
+                "forestYaw": -0.1785,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": 1,
+                "p": 0.853005,
+                "y": -48.5045,
+                "azimuth": 6.2832,
+                "forestYaw": -0.3123,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": 1,
+                "p": 0.865032,
+                "y": -49.0815,
+                "azimuth": 6.2832,
+                "forestYaw": -0.4472,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": -1,
+                "p": 0.853005,
+                "y": -48.5045,
+                "azimuth": 6.2832,
+                "forestYaw": -0.3123,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": -1,
+                "p": 0.838988,
+                "y": -47.8303,
+                "azimuth": 6.2832,
+                "forestYaw": -0.1785,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": -1,
+                "p": 0.824972,
+                "y": -47.1449,
+                "azimuth": 6.2832,
+                "forestYaw": -0.0772,
+                "structureYaw": -12.5664
+              }
+            ]
+          },
+          {
+            "start": 0.9,
+            "samples": [
+              {
+                "p": 0.900019,
+                "y": -50.7709,
+                "azimuth": 6.2832,
+                "forestYaw": -0.9003,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": 1,
+                "p": 0.911687,
+                "y": -51.3345,
+                "azimuth": 6.2832,
+                "forestYaw": -1.0571,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": 1,
+                "p": 0.922004,
+                "y": -51.8345,
+                "azimuth": 6.2832,
+                "forestYaw": -1.1923,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": 1,
+                "p": 0.930635,
+                "y": -52.2547,
+                "azimuth": 6.2832,
+                "forestYaw": -1.3006,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": -1,
+                "p": 0.922004,
+                "y": -51.8345,
+                "azimuth": 6.2832,
+                "forestYaw": -1.1923,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": -1,
+                "p": 0.911687,
+                "y": -51.3345,
+                "azimuth": 6.2832,
+                "forestYaw": -1.0571,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": -1,
+                "p": 0.900019,
+                "y": -50.7709,
+                "azimuth": 6.2832,
+                "forestYaw": -0.9003,
+                "structureYaw": -12.5664
+              }
+            ]
+          },
+          {
+            "start": 0.935,
+            "samples": [
+              {
+                "p": 0.934988,
+                "y": -52.4664,
+                "azimuth": 6.2832,
+                "forestYaw": -1.3531,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": 1,
+                "p": 0.942338,
+                "y": -52.8225,
+                "azimuth": 6.2832,
+                "forestYaw": -1.4374,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": 1,
+                "p": 0.949481,
+                "y": -53.1658,
+                "azimuth": 6.2832,
+                "forestYaw": -1.5135,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": 1,
+                "p": 0.956577,
+                "y": -53.5026,
+                "azimuth": 6.2832,
+                "forestYaw": -1.5823,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": -1,
+                "p": 0.949481,
+                "y": -53.1658,
+                "azimuth": 6.2832,
+                "forestYaw": -1.5135,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": -1,
+                "p": 0.942338,
+                "y": -52.8225,
+                "azimuth": 6.2832,
+                "forestYaw": -1.4374,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": -1,
+                "p": 0.934988,
+                "y": -52.4664,
+                "azimuth": 6.2832,
+                "forestYaw": -1.3531,
+                "structureYaw": -12.5664
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "after": {
+    "url": "http://127.0.0.1:5173",
+    "errors": [],
+    "reports": [
+      {
+        "name": "desktop",
+        "width": 1600,
+        "height": 900,
+        "stages": [
+          {
+            "p": 0.139994,
+            "y": -8.383,
+            "azimuth": 0,
+            "forestYaw": -2.3849,
+            "structureYaw": 0
+          },
+          {
+            "p": 0.399991,
+            "y": -23.7935,
+            "azimuth": 6.28,
+            "forestYaw": 3.14,
+            "structureYaw": -4.1305
+          },
+          {
+            "p": 0.679991,
+            "y": -39.798,
+            "azimuth": 6.2832,
+            "forestYaw": 0,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 0.719991,
+            "y": -41.5889,
+            "azimuth": 6.2832,
+            "forestYaw": 0,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 0.735024,
+            "y": -42.2939,
+            "azimuth": 6.2832,
+            "forestYaw": 0,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 0.739991,
+            "y": -42.5443,
+            "azimuth": 6.2832,
+            "forestYaw": 0,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 0.749991,
+            "y": -43.0929,
+            "azimuth": 6.2832,
+            "forestYaw": 0,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 0.765024,
+            "y": -43.9847,
+            "azimuth": 6.2832,
+            "forestYaw": 0,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 0.779991,
+            "y": -44.857,
+            "azimuth": 6.2832,
+            "forestYaw": 0,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 0.799962,
+            "y": -45.9032,
+            "azimuth": 6.2832,
+            "forestYaw": 0,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 0.814973,
+            "y": -46.6517,
+            "azimuth": 6.2832,
+            "forestYaw": -0.0288,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 0.825007,
+            "y": -47.1466,
+            "azimuth": 6.2832,
+            "forestYaw": -0.0774,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 0.840018,
+            "y": -47.8801,
+            "azimuth": 6.2832,
+            "forestYaw": -0.1874,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 0.869992,
+            "y": -49.3206,
+            "azimuth": 6.2832,
+            "forestYaw": -0.507,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 0.93502,
+            "y": -52.468,
+            "azimuth": 6.2832,
+            "forestYaw": -1.3534,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 1,
+            "y": -55.5,
+            "azimuth": 6.2832,
+            "forestYaw": -1.8,
+            "structureYaw": -12.5664
+          }
+        ],
+        "motion": [
+          {
+            "start": 0.74,
+            "samples": [
+              {
+                "p": 0.739991,
+                "y": -42.5443,
+                "azimuth": 6.2832,
+                "forestYaw": 0,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": 1,
+                "p": 0.751756,
+                "y": -43.1949,
+                "azimuth": 6.2832,
+                "forestYaw": 0,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": 1,
+                "p": 0.763521,
+                "y": -43.8945,
+                "azimuth": 6.2832,
+                "forestYaw": 0,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": 1,
+                "p": 0.775286,
+                "y": -44.591,
+                "azimuth": 6.2832,
+                "forestYaw": 0,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": -1,
+                "p": 0.763521,
+                "y": -43.8945,
+                "azimuth": 6.2832,
+                "forestYaw": 0,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": -1,
+                "p": 0.751756,
+                "y": -43.1949,
+                "azimuth": 6.2832,
+                "forestYaw": 0,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": -1,
+                "p": 0.739991,
+                "y": -42.5443,
+                "azimuth": 6.2832,
+                "forestYaw": 0,
+                "structureYaw": -12.5664
+              }
+            ]
+          },
+          {
+            "start": 0.825,
+            "samples": [
+              {
+                "p": 0.825007,
+                "y": -47.1466,
+                "azimuth": 6.2832,
+                "forestYaw": -0.0774,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": 1,
+                "p": 0.839007,
+                "y": -47.8312,
+                "azimuth": 6.2832,
+                "forestYaw": -0.1787,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": 1,
+                "p": 0.853007,
+                "y": -48.5046,
+                "azimuth": 6.2832,
+                "forestYaw": -0.3123,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": 1,
+                "p": 0.86509,
+                "y": -49.0843,
+                "azimuth": 6.2832,
+                "forestYaw": -0.4479,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": -1,
+                "p": 0.853007,
+                "y": -48.5046,
+                "azimuth": 6.2832,
+                "forestYaw": -0.3123,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": -1,
+                "p": 0.839007,
+                "y": -47.8312,
+                "azimuth": 6.2832,
+                "forestYaw": -0.1787,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": -1,
+                "p": 0.825007,
+                "y": -47.1466,
+                "azimuth": 6.2832,
+                "forestYaw": -0.0774,
+                "structureYaw": -12.5664
+              }
+            ]
+          },
+          {
+            "start": 0.9,
+            "samples": [
+              {
+                "p": 0.899992,
+                "y": -50.7696,
+                "azimuth": 6.2832,
+                "forestYaw": -0.8999,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": 1,
+                "p": 0.911647,
+                "y": -51.3325,
+                "azimuth": 6.2832,
+                "forestYaw": -1.0565,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": 1,
+                "p": 0.921959,
+                "y": -51.8324,
+                "azimuth": 6.2832,
+                "forestYaw": -1.1917,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": 1,
+                "p": 0.930635,
+                "y": -52.2547,
+                "azimuth": 6.2832,
+                "forestYaw": -1.3006,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": -1,
+                "p": 0.921959,
+                "y": -51.8324,
+                "azimuth": 6.2832,
+                "forestYaw": -1.1917,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": -1,
+                "p": 0.911647,
+                "y": -51.3325,
+                "azimuth": 6.2832,
+                "forestYaw": -1.0565,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": -1,
+                "p": 0.899992,
+                "y": -50.7696,
+                "azimuth": 6.2832,
+                "forestYaw": -0.8999,
+                "structureYaw": -12.5664
+              }
+            ]
+          },
+          {
+            "start": 0.935,
+            "samples": [
+              {
+                "p": 0.93502,
+                "y": -52.468,
+                "azimuth": 6.2832,
+                "forestYaw": -1.3534,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": 1,
+                "p": 0.94236,
+                "y": -52.8236,
+                "azimuth": 6.2832,
+                "forestYaw": -1.4377,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": 1,
+                "p": 0.949495,
+                "y": -53.1664,
+                "azimuth": 6.2832,
+                "forestYaw": -1.5136,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": 1,
+                "p": 0.956625,
+                "y": -53.5049,
+                "azimuth": 6.2832,
+                "forestYaw": -1.5827,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": -1,
+                "p": 0.949495,
+                "y": -53.1664,
+                "azimuth": 6.2832,
+                "forestYaw": -1.5136,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": -1,
+                "p": 0.94236,
+                "y": -52.8236,
+                "azimuth": 6.2832,
+                "forestYaw": -1.4377,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": -1,
+                "p": 0.93502,
+                "y": -52.468,
+                "azimuth": 6.2832,
+                "forestYaw": -1.3534,
+                "structureYaw": -12.5664
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "name": "mobile",
+        "width": 390,
+        "height": 844,
+        "stages": [
+          {
+            "p": 0.140033,
+            "y": -8.3536,
+            "azimuth": 0,
+            "forestYaw": -2.3859,
+            "structureYaw": 0
+          },
+          {
+            "p": 0.399997,
+            "y": -23.7079,
+            "azimuth": 6.28,
+            "forestYaw": 3.14,
+            "structureYaw": -4.1308
+          },
+          {
+            "p": 0.680035,
+            "y": -39.8,
+            "azimuth": 6.2832,
+            "forestYaw": 0,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 0.71997,
+            "y": -41.588,
+            "azimuth": 6.2832,
+            "forestYaw": 0,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 0.735025,
+            "y": -42.2939,
+            "azimuth": 6.2832,
+            "forestYaw": 0,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 0.739973,
+            "y": -42.5433,
+            "azimuth": 6.2832,
+            "forestYaw": 0,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 0.750009,
+            "y": -43.0939,
+            "azimuth": 6.2832,
+            "forestYaw": 0,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 0.764994,
+            "y": -43.9829,
+            "azimuth": 6.2832,
+            "forestYaw": 0,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 0.779978,
+            "y": -44.8563,
+            "azimuth": 6.2832,
+            "forestYaw": 0,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 0.800007,
+            "y": -45.9055,
+            "azimuth": 6.2832,
+            "forestYaw": 0,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 0.815019,
+            "y": -46.654,
+            "azimuth": 6.2832,
+            "forestYaw": -0.0289,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 0.824972,
+            "y": -47.1449,
+            "azimuth": 6.2832,
+            "forestYaw": -0.0772,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 0.839983,
+            "y": -47.8784,
+            "azimuth": 6.2832,
+            "forestYaw": -0.1871,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 0.869981,
+            "y": -49.3201,
+            "azimuth": 6.2832,
+            "forestYaw": -0.5069,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 0.934988,
+            "y": -52.4664,
+            "azimuth": 6.2832,
+            "forestYaw": -1.3531,
+            "structureYaw": -12.5664
+          },
+          {
+            "p": 1,
+            "y": -55.5,
+            "azimuth": 6.2832,
+            "forestYaw": -1.8,
+            "structureYaw": -12.5664
+          }
+        ],
+        "motion": [
+          {
+            "start": 0.74,
+            "samples": [
+              {
+                "p": 0.739973,
+                "y": -42.5433,
+                "azimuth": 6.2832,
+                "forestYaw": 0,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": 1,
+                "p": 0.751752,
+                "y": -43.1946,
+                "azimuth": 6.2832,
+                "forestYaw": 0,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": 1,
+                "p": 0.76353,
+                "y": -43.895,
+                "azimuth": 6.2832,
+                "forestYaw": 0,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": 1,
+                "p": 0.775239,
+                "y": -44.5883,
+                "azimuth": 6.2832,
+                "forestYaw": 0,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": -1,
+                "p": 0.76353,
+                "y": -43.895,
+                "azimuth": 6.2832,
+                "forestYaw": 0,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": -1,
+                "p": 0.751752,
+                "y": -43.1946,
+                "azimuth": 6.2832,
+                "forestYaw": 0,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": -1,
+                "p": 0.739973,
+                "y": -42.5433,
+                "azimuth": 6.2832,
+                "forestYaw": 0,
+                "structureYaw": -12.5664
+              }
+            ]
+          },
+          {
+            "start": 0.825,
+            "samples": [
+              {
+                "p": 0.824972,
+                "y": -47.1449,
+                "azimuth": 6.2832,
+                "forestYaw": -0.0772,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": 1,
+                "p": 0.838988,
+                "y": -47.8303,
+                "azimuth": 6.2832,
+                "forestYaw": -0.1785,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": 1,
+                "p": 0.853005,
+                "y": -48.5045,
+                "azimuth": 6.2832,
+                "forestYaw": -0.3123,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": 1,
+                "p": 0.865032,
+                "y": -49.0815,
+                "azimuth": 6.2832,
+                "forestYaw": -0.4472,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": -1,
+                "p": 0.853005,
+                "y": -48.5045,
+                "azimuth": 6.2832,
+                "forestYaw": -0.3123,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": -1,
+                "p": 0.838988,
+                "y": -47.8303,
+                "azimuth": 6.2832,
+                "forestYaw": -0.1785,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": -1,
+                "p": 0.824972,
+                "y": -47.1449,
+                "azimuth": 6.2832,
+                "forestYaw": -0.0772,
+                "structureYaw": -12.5664
+              }
+            ]
+          },
+          {
+            "start": 0.9,
+            "samples": [
+              {
+                "p": 0.900019,
+                "y": -50.7709,
+                "azimuth": 6.2832,
+                "forestYaw": -0.9003,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": 1,
+                "p": 0.911687,
+                "y": -51.3345,
+                "azimuth": 6.2832,
+                "forestYaw": -1.0571,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": 1,
+                "p": 0.922004,
+                "y": -51.8345,
+                "azimuth": 6.2832,
+                "forestYaw": -1.1923,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": 1,
+                "p": 0.930635,
+                "y": -52.2547,
+                "azimuth": 6.2832,
+                "forestYaw": -1.3006,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": -1,
+                "p": 0.922004,
+                "y": -51.8345,
+                "azimuth": 6.2832,
+                "forestYaw": -1.1923,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": -1,
+                "p": 0.911687,
+                "y": -51.3345,
+                "azimuth": 6.2832,
+                "forestYaw": -1.0571,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": -1,
+                "p": 0.900019,
+                "y": -50.7709,
+                "azimuth": 6.2832,
+                "forestYaw": -0.9003,
+                "structureYaw": -12.5664
+              }
+            ]
+          },
+          {
+            "start": 0.935,
+            "samples": [
+              {
+                "p": 0.934988,
+                "y": -52.4664,
+                "azimuth": 6.2832,
+                "forestYaw": -1.3531,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": 1,
+                "p": 0.942338,
+                "y": -52.8225,
+                "azimuth": 6.2832,
+                "forestYaw": -1.4374,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": 1,
+                "p": 0.949481,
+                "y": -53.1658,
+                "azimuth": 6.2832,
+                "forestYaw": -1.5135,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": 1,
+                "p": 0.956577,
+                "y": -53.5026,
+                "azimuth": 6.2832,
+                "forestYaw": -1.5823,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": -1,
+                "p": 0.949481,
+                "y": -53.1658,
+                "azimuth": 6.2832,
+                "forestYaw": -1.5135,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": -1,
+                "p": 0.942338,
+                "y": -52.8225,
+                "azimuth": 6.2832,
+                "forestYaw": -1.4374,
+                "structureYaw": -12.5664
+              },
+              {
+                "direction": -1,
+                "p": 0.934988,
+                "y": -52.4664,
+                "azimuth": 6.2832,
+                "forestYaw": -1.3531,
+                "structureYaw": -12.5664
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

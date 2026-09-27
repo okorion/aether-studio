@@ -1,16 +1,63 @@
 import { test, expect } from '@playwright/test'
 import * as THREE from 'three'
-import { sampleJourney, sampleViewAzimuth, sampleForestAzimuth, FOREST_ENTRY_START, FOREST_ENTRY_END } from '../src/Journey'
+import { sampleJourney, sampleViewAzimuth, sampleEmblemYaw, sampleForestAzimuth, smooth, FOREST_ENTRY_START, FOREST_ENTRY_END } from '../src/Journey'
 import { sampleScaleOffset, SCALE_CEILING_Y, SCALE_ROOM_CEILING_Y, SCALE_PANEL_Y } from '../src/ScaleStage'
 import { sampleLayers } from '../src/SceneLayers'
 import { createSpineAssembly } from '../src/SceneSpine'
+
+test('@interaction upper camera unlock avoids a redundant full orbit', () => {
+  let previous = 0, travel = 0
+  for (let i = 160; i <= 200; i++) {
+    const p = i / 1000, j = sampleJourney(p)
+    const angle = sampleViewAzimuth(p, j.azimuth)
+    expect(Math.abs(angle - previous)).toBeLessThan(.04)
+    travel += Math.abs(angle - previous)
+    previous = angle
+  }
+  expect(travel).toBeLessThan(.5)
+  for (const p of [.2, .235, .305, .4, .5, .69, .8, .94]) {
+    const j = sampleJourney(p)
+    const old = j.azimuth + ((p < .5 ? 0 : Math.PI * 2) - j.azimuth)
+      * (p < .5 ? 1 - smooth(.16, .20, p) : smooth(.69, .715, p))
+    expect(Math.sin(sampleViewAzimuth(p, j.azimuth))).toBeCloseTo(Math.sin(old), 10)
+    expect(Math.cos(sampleViewAzimuth(p, j.azimuth))).toBeCloseTo(Math.cos(old), 10)
+  }
+})
+
+test('@interaction emblem completes one clockwise turn then a gentle reversible counterturn', () => {
+  const visible = (p: number, pointer = 0) => {
+    const j = sampleJourney(p), requested = j.azimuth + pointer
+    const camera = sampleViewAzimuth(p, requested)
+    return sampleEmblemYaw(p, j.azimuth) + (camera - requested) - camera
+  }
+  let previous = visible(0)
+  for (let i = 1; i <= 235; i++) {
+    const angle = visible(i / 1000)
+    expect(angle).toBeLessThanOrEqual(previous)
+    expect(previous - angle).toBeLessThan(.041)
+    previous = angle
+  }
+  expect(visible(.235) - visible(0)).toBeCloseTo(-Math.PI * 2, 10)
+  for (let i = 236; i <= 305; i++) {
+    const angle = visible(i / 1000)
+    expect(angle).toBeGreaterThanOrEqual(previous)
+    expect(angle - previous).toBeLessThan(.007)
+    previous = angle
+  }
+  expect(visible(.305) - visible(.235)).toBeCloseTo(.28, 10)
+  for (const p of [.1, .17, .2, .27, .94].reverse()) {
+    expect(visible(p, .12) - visible(p)).toBeCloseTo(-.12, 10)
+    const j = sampleJourney(p)
+    if (p >= .5) expect(sampleEmblemYaw(p, j.azimuth)).toBeCloseTo(.7, 10)
+  }
+})
 
 test('@interaction panel approaches the incoming cut and holds its front view until the next cut', () => {
   const camera = new THREE.PerspectiveCamera(42, 16 / 9, .1, 100)
   let lastY = -Infinity
   for (let i = 0; i <= 155; i++) {
     const p = .715 + i / 1000, j = sampleJourney(p)
-    expect(j.orbitWeight).toBe(0)
+    if (p <= .8) expect(j.orbitWeight).toBe(0)
     expect(j.elevation).toBeCloseTo(0, 8)
     expect(sampleViewAzimuth(p, j.azimuth)).toBeCloseTo(Math.PI * 2, 8)
     expect(j.radius).toBeCloseTo(11.6, 8)

@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { createPointerFlow } from './PointerFlow'
-import { forestPitchLimit } from './Journey'
+import { forestPitchLimit, forestPitchMinimum } from './Journey'
 import { pointerStreakCanSpawn, pointerStreakScopeGLSL, samplePointerStreakScope } from './SceneInteractionScope'
 
 /** Bounded world-space ribbons and pointer-controlled camera input. */
@@ -189,6 +189,7 @@ export function createSceneInteraction(
   let held = false
   let pointerId = -1
   let orbitEnabled = true
+  let resetting = false
   let targetYaw = initialView.yaw
   let targetPitch = initialView.pitch
   let yaw = initialView.yaw
@@ -372,6 +373,7 @@ export function createSceneInteraction(
       return
     }
     if (!orbitEnabled || event.button !== 0) return
+    resetting = false
     pointerId = event.pointerId
     held = true
     anchor.set((event.clientX / innerWidth) * 2 - 1, 1 - (event.clientY / innerHeight) * 2)
@@ -422,6 +424,7 @@ export function createSceneInteraction(
     leaveViewport()
   }
   const reset = () => {
+    resetting = true
     leave()
     targetYaw = 0
     targetPitch = 0
@@ -519,8 +522,8 @@ export function createSceneInteraction(
       inColumn = nextColumn
       // Clamp both the target and eased value: no hidden overshoot accumulates
       // while dragging against the lower forest's downward limit.
-      targetPitch = Math.min(targetPitch, forestPitchLimit(progress))
-      pitch = Math.min(pitch, forestPitchLimit(progress))
+      targetPitch = THREE.MathUtils.clamp(targetPitch, forestPitchMinimum(progress), forestPitchLimit(progress))
+      pitch = THREE.MathUtils.clamp(pitch, forestPitchMinimum(progress), forestPitchLimit(progress))
       streakScope = samplePointerStreakScope(progress)
       ribbonMaterial.uniforms.uStreakForestExit.value = streakScope.exit
       ribbonMaterial.uniforms.uStreakForestEntry.value = streakScope.entry
@@ -567,7 +570,7 @@ export function createSceneInteraction(
       yaw = THREE.MathUtils.damp(yaw, targetYaw, held ? 5 : 3, delta)
       pitch = THREE.MathUtils.damp(pitch, targetPitch, held ? 5 : 3, delta)
       burst = Math.max(0, burst - delta * 1.5)
-      return { yaw, pitch, zoom: 0, burst, field }
+      return { yaw, pitch, resetting, zoom: 0, burst, field }
     },
     dispose() {
       if (disposed) return

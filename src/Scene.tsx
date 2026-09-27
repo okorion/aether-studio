@@ -18,6 +18,7 @@ import { createLightFilmUniforms, lightChoreographyGLSL, sampleLightChoreography
 import { createSceneLightShafts } from './SceneLightShafts'
 import { createSceneEmblem } from './SceneEmblem'
 import { createColumnFollow } from './ColumnFollow'
+import { createLowerForestOrbit } from './SceneOrbit'
 
 type SceneProps = {
   reducedMotion: boolean
@@ -103,7 +104,7 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
   const forestVideoRef = useRef<ReturnType<typeof createSceneLightVideo> | null>(null)
   // Motion preference changes rebuild the render budget, preserving the view
   // and time so pausing cannot snap a user's chosen angle back to the front.
-  const preserved = useRef({ yaw: 0, pitch: 0, elapsed: 0, scaleElapsed: 0, reactor: undefined as Float32Array | undefined })
+  const preserved = useRef({ yaw: 0, pitch: 0, lowerView: { yaw: 0, pitch: 0 }, elapsed: 0, scaleElapsed: 0, reactor: undefined as Float32Array | undefined })
 
   useEffect(() => {
     loadingRef.current = onLoading
@@ -489,6 +490,7 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
       let targetProgress = readProgress()
       let progress = targetProgress
       const columnFollow = createColumnFollow(progress)
+      const lowerOrbit = createLowerForestOrbit(preserved.current, preserved.current.lowerView)
       let elapsed = preserved.current.elapsed
       let scaleElapsed = preserved.current.scaleElapsed
       let previousTime = 0
@@ -623,7 +625,11 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
         emblemView.update(elapsed, scroll)
         const mobileView = innerWidth < 768
         const orbitRadius = state.radius + (mobileView ? 4.8 : 0)
-        const pointerAzimuth = (input.yaw + input.field.ndc.x * .012 * input.field.strength) * state.orbitWeight
+        const lowerView = lowerOrbit(scroll, input, state.orbitWeight, delta || .016)
+        preserved.current.lowerView = lowerView
+        const dragYaw = scroll > FOREST_ENTRY_START ? lowerView.yaw : input.yaw * state.orbitWeight
+        const dragPitch = scroll > FOREST_ENTRY_START ? lowerView.pitch : input.pitch * state.orbitWeight
+        const pointerAzimuth = dragYaw + input.field.ndc.x * .012 * input.field.strength * state.orbitWeight
         const requestedAzimuth = state.azimuth + pointerAzimuth
         // Forest drag rotates its foreground, while the camera keeps facing
         // the world-space film. Mechanical scenes retain their existing camera.
@@ -633,7 +639,7 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
         // Compensate the actual camera angle, including the curtain crossing.
         // Halving only a blend weight would speed up again at its endpoints.
         forest.group.rotation.y = azimuth - sampleForestAzimuth(scroll, state.azimuth) - pointerAzimuth
-        const elevation = THREE.MathUtils.clamp(state.elevation + input.pitch * state.orbitWeight, -.72, .72)
+        const elevation = THREE.MathUtils.clamp(state.elevation + dragPitch, -.72, .72)
         camera.position.set(
           Math.sin(azimuth) * Math.cos(elevation) * orbitRadius,
           state.height + Math.sin(elevation) * orbitRadius,

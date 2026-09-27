@@ -134,7 +134,7 @@ API 의미는 [Three.js WebGLRenderer](https://threejs.org/docs/pages/WebGLRende
 
 재생성 검사에서 활성 프로그램은 main 111개, 결합 107개로 유지됐다. 최초 준비의 누적 생성 114/110과는 PMREM 임시 프로그램 해제 때문에 다르다. 두 빌드의 활성 버퍼는 433개, framebuffer 20개, renderbuffer 6개였다. 텍스처는 최초·복원 직후 44개, 재생성 후 43개로 두 빌드가 같았다.
 
-GC 후 JS heap은 main 약 11.67~14.02MB, 결합 약 11.64~13.96MB 범위였고 단조 증가하지 않았다. backing storage는 각각 약 79.71MB로 유지됐다. 계측기가 이전 컨텍스트의 참조를 보존하고 컨텍스트 손실 시 자원 집계를 비우므로, 이 값을 개별 `delete*` 호출 완료나 장기 메모리 누수 부재의 증명으로 사용하지 않는다. [main 수명 검사](evidence/loading-2026-09-28/lifecycle-baseline.json), [결합 수명 검사](evidence/loading-2026-09-28/lifecycle.json)에 상태와 원자료가 있다.
+GC 후 JS heap은 main 약 11.67–14.02MB, 결합 약 11.64–13.96MB 범위였고 단조 증가하지 않았다. backing storage는 각각 약 79.71MB로 유지됐다. 계측기가 이전 컨텍스트의 참조를 보존하고 컨텍스트 손실 시 자원 집계를 비우므로, 이 값을 개별 `delete*` 호출 완료나 장기 메모리 누수 부재의 증명으로 사용하지 않는다. [main 수명 검사](evidence/loading-2026-09-28/lifecycle-baseline.json), [결합 수명 검사](evidence/loading-2026-09-28/lifecycle.json)에 상태와 원자료가 있다.
 
 로컬 `lint`, `typecheck`, production `build`가 통과했다. 전체 필수 CI는 저장소의 `Verify` 3개 job(desktop·no-webgl, mobile, interaction)으로 확인하고 최종 PR의 Checks에 결과를 남긴다. CI의 Linux SwiftShader와 모바일 크기 Chromium은 실제 GPU 성능·모바일 실기기 검증과 구분한다.
 

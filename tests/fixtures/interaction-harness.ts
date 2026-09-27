@@ -54,7 +54,7 @@ export type InteractionHarness = {
     boneLocalY: number
     boneWorldY: number
     boneVisible: boolean
-    fixed: { machineY: number; floorY: number; scaleY: number; machineVisible: boolean; scaleVisible: boolean }
+    fixed: { machineY: number; floorY: number; scaleY: number; ceilingAngle: number; machineVisible: boolean; scaleVisible: boolean }
     scaleTiles: number[]
   }
   dispose: () => void
@@ -1581,6 +1581,7 @@ window.interactionHarness = {
       boneWorldY: bone.getWorldPosition(worldPosition).y,
       boneVisible: matter.visible && bone.visible,
       fixed: {
+        ceilingAngle: worldScene.getObjectByName('aether-floor-underside')!.rotation.x,
         machineY: machine.getWorldPosition(worldPosition).y,
         floorY: floor.getWorldPosition(worldPosition).y,
         scaleY: scales.getWorldPosition(worldPosition).y,

@@ -536,6 +536,7 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
     for (const [index, state] of result.fixed.entries()) {
       expect(state.fixed.machineY).toBeCloseTo(-40.4, 8)
       expect(state.fixed.floorY).toBeCloseTo(-43.212, 8)
+      expect(state.fixed.ceilingAngle).toBeCloseTo(Math.PI / 2 + .24, 8)
       const p = [.70, .76, .82, .86, .93, .82][index]
       expect(state.fixed.scaleY).toBeCloseTo(sampleJourney(p).height + sampleScaleOffset(p), 8)
       expect(state.scaleTiles).toEqual(result.fixed[0].scaleTiles)

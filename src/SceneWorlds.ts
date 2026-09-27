@@ -787,10 +787,8 @@ export function createSceneWorlds(
       scaleWall.position.y = sampleScaleOffset(progress)
       ceilingSlide.value = scaleWall.position.y
       ceilingRadius.value = journey.radius + (mobileView ? 4.8 : 0)
-      // Open with the existing room boundary, then settle into a grazing view.
-      // This affects only the two ceiling surfaces, never the camera or cut.
-      underside.rotation.x = Math.PI / 2 + .06 + .18 * smooth(.735, .775, progress)
-      caustics.rotation.x = underside.rotation.x
+      // The ceiling keeps its settled grazing angle throughout entry. Only
+      // the shared vertical passage and screen curtain reveal this surface.
       matter.position.y = 0
       matter.rotation.y = sampleJourney(columnProgress).structureYaw
       scaleWall.rotation.y = 0

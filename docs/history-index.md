@@ -27,6 +27,7 @@
 - [개선 요구사항과 작업 순서 · 2026-09-23](improvement-plan-2026-09-23.md)
 - [포레스트·평면 소개·지하층 전환과 포인터 반응](layered-transitions.md)
 - [월드 공간 포레스트·본 컬럼·리액터 개선](living-worlds.md)
+- [초기 로딩 측정과 꽃 입자 생성 최적화](loading-performance-2026-09-27.md)
 - [초기 로딩 진행률 · 2026-09-23](loading-progress.md)
 - [리액터·금속 스케일 패널의 카메라 잠금 · 2026-09-22](mechanical-camera.md)
 - [문구 판·유리 링·본 컬럼의 모바일 광학 교정](mobile-optics-correction.md)

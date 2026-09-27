@@ -1,0 +1,37 @@
+[
+  {
+    "scene": "column",
+    "differentPixels": 0,
+    "totalPixels": 1296000,
+    "bbox": null
+  },
+  {
+    "scene": "forest",
+    "differentPixels": 0,
+    "totalPixels": 1296000,
+    "bbox": null
+  },
+  {
+    "scene": "lower-forest",
+    "differentPixels": 0,
+    "totalPixels": 1296000,
+    "bbox": null
+  },
+  {
+    "scene": "reactor",
+    "differentPixels": 1079,
+    "totalPixels": 1296000,
+    "bbox": [
+      0,
+      128,
+      1440,
+      898
+    ]
+  },
+  {
+    "scene": "scales",
+    "differentPixels": 0,
+    "totalPixels": 1296000,
+    "bbox": null
+  }
+]

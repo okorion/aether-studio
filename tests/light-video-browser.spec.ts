@@ -194,7 +194,6 @@ test(`@interaction reduced initial ${film.role} stays unloaded and a missing fil
   })
   expect(requests[film.role].length).toBeGreaterThan(0)
   const failed = await videos(page, film)
-  const requestCount = requests[film.role].length
   // A missing media response may log a browser network error. The contract is
   // no unhandled play rejection, no re-entry retry, and continued scene renders.
   const frameBefore = Number(await canvas.getAttribute('data-render-frame'))
@@ -207,7 +206,10 @@ test(`@interaction reduced initial ${film.role} stays unloaded and a missing fil
   expect(after.map((video) => [video.id, video.loads, video.playTimes.length]))
     .toEqual(failed.map((video) => [video.id, video.loads, video.playTimes.length]))
   expect(after.every((video) => video.src === null && video.paused)).toBe(true)
-  expect(requests[film.role]).toHaveLength(requestCount)
+  // The monitor's independent decoder now requests this same URL on entry.
+  // Its first load is valid; URL-wide request totals cannot identify a light
+  // decoder retry. The owner IDs, load calls and play calls above must remain
+  // identical, including after leaving and re-entering the failed region.
   expect(await page.evaluate(() => window.lightVideoProbe.rejections)).toEqual([])
 })
 }

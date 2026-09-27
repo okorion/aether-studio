@@ -19,6 +19,7 @@ import { createSceneLightShafts } from './SceneLightShafts'
 import { createSceneEmblem } from './SceneEmblem'
 import { createColumnFollow } from './ColumnFollow'
 import { createLowerForestOrbit } from './SceneOrbit'
+import { createLoadingTrace } from './LoadingTrace'
 
 type SceneProps = {
   reducedMotion: boolean
@@ -134,6 +135,7 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
   useEffect(() => {
     const host = hostRef.current
     if (!host) return
+    const loadingTrace = createLoadingTrace()
 
     let renderer: THREE.WebGLRenderer | undefined
     let frame = 0
@@ -153,6 +155,7 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
     const markReady = () => {
       if (!ready && !disposed) {
         ready = true
+        loadingTrace.step('first-frame')
         report('frame')
       }
     }
@@ -228,6 +231,7 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
       canvas.setAttribute('aria-hidden', 'true')
       canvas.style.cssText = 'display:block;width:100%;height:100%;transition:opacity 600ms ease;'
       host.appendChild(canvas)
+      loadingTrace.step('renderer')
 
       const scene = new THREE.Scene()
       scene.fog = new THREE.FogExp2(0x031011, 0.026)
@@ -282,6 +286,7 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
         }
       }
       refreshEnvironment()
+      loadingTrace.step('environment')
 
       const ambient = new THREE.AmbientLight(0x3d7072, 1.2)
       scene.add(ambient)
@@ -440,9 +445,11 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
 
       const lightShafts = createSceneLightShafts(scene, softwareRenderer, smallScreen, lightFilm, forestFilm)
       effectDisposers.push(() => lightShafts.dispose())
+      loadingTrace.step('foreground')
       const atmosphere = createAtmosphere(scene, softwareRenderer, smallScreen, particleFilm,
         { renderer: activeRenderer, reducedMotion, reactorSnapshot: preserved.current.reactor })
       effectDisposers.push(() => atmosphere.dispose())
+      loadingTrace.step('atmosphere')
       const video = videoRef.current ??= createSceneVideo()
       const artworkReady = { value: 0 }
       const artworkTexture = new THREE.TextureLoader().load('/media/scale-alloy.jpg', () => {
@@ -476,6 +483,7 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
         preserved.current,
       )
       effectDisposers.push(() => interaction.dispose())
+      loadingTrace.step('worlds-and-input')
       const readProgress = () => {
         if (location.hash && location.hash !== '#home') return 0
         return scrollToScene(window.scrollY / Math.max(1, document.documentElement.scrollHeight - innerHeight))
@@ -786,13 +794,18 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
           worlds.prepare(activeRenderer)
           emblemView.prepare(activeRenderer)
           await atmosphere.prepare()
+          if (cancelled()) return
+          loadingTrace.step('resources')
           report('resources')
           // Exercise the film sampling branch with the black placeholder too.
           // No media request is needed to prime an otherwise dormant GPU path.
           lightFilm.ready.value = forestFilm.ready.value = particleFilm.ready.value = 1
           try {
             await prepareSceneShaders(activeRenderer, scene, camera, cancelled, stage => {
-              if (!cancelled()) report(stage)
+              if (!cancelled()) {
+                loadingTrace.step(stage)
+                report(stage)
+              }
             })
           } finally {
             lightFilm.ready.value = lightVideo.getReady() ? 1 : 0
@@ -801,6 +814,7 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
           }
           if (cancelled()) return
           glow?.prepare()
+          loadingTrace.step('postprocess')
           canvas.dataset.preparation = 'ready'
           preparing = false
           previousTime = 0

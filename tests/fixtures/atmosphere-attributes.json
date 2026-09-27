@@ -1,0 +1,32 @@
+{
+  "baseline": "9bfe92e",
+  "profiles": {
+    "desktop": {
+      "position": "30ecd45b8f70ab9dd13dee73701e870fa8d15e5af351df1a4fd4d9720d689195",
+      "aDust": "7b07ac3fb5a69421a9cc05eaa5a2aa306687ef87eede7cda7d7359ff2b7cfe7b",
+      "aAdvected": "6a14343bdf7e512c449c46192ebc8b24263bd766cf49cafcd6494df111121ae5",
+      "aReactorUv": "f9284d105893c3d69747136ef48b67722beb344d20af51828c4032c0ab6134e0",
+      "aFlowerPosition": "c4e74f4f4749d2ec0c27eddd9a29c7587bd7244f3a9876aa4f78df674b76f3b7",
+      "aFlowerNormal": "fa85b37ccc2f57ddf19c96356a60284e0289419dc89ae1f5f014b38038634988",
+      "aFlowerColor": "731d559ba7c4cf2fb92edc3e986f79e9953e3aa192142b1f049668d17059eee7"
+    },
+    "mobile": {
+      "position": "21a41cf5c49c71463efc6b7964853c72e3b05508bb50d371337bdbc5a6b8f32c",
+      "aDust": "661a914d0689a24e71643133c55d7abd7bed940a23ebe8d887a155cd2891660d",
+      "aAdvected": "1ec8d85630f9ae71d8ac695a7e8ea7b50dc55f8793f9084b8cdfca694a0079a3",
+      "aReactorUv": "52338ea7b7319c6e6d8b77b47b22e2130254242e94478c2ee5c2b52028813816",
+      "aFlowerPosition": "3fa387542a52ca4c362ce286d0de1f435158a91ffcc249f85643e64a4e2dc42e",
+      "aFlowerNormal": "8b5b60afa2507dfc86f618476611728ca329d18c63b7aeb1b15ba4bb700acb69",
+      "aFlowerColor": "304dc1ebbc56150c3306411d3431650cd51ceccf33839b7903d0ea00cfd3d41e"
+    },
+    "software": {
+      "position": "782e5ad5f824d8f0c3da60bfbc3bd691595d1de8b3d3022a279b30f6c3c25b06",
+      "aDust": "568bc265b713c0fc3f6f6193dd3368b9503e9538d7b9d4d3205bdc0288bab44c",
+      "aAdvected": "841afc59fe364a5c172ad91f6827599816e58b9ca584d561c840da52cb7fe908",
+      "aReactorUv": "b00ba3bc05c544d28f6844c956a7f191d427c258058ac09c1060c203453427e9",
+      "aFlowerPosition": "758c795b28f4bbda4b5f4116780d208e84c157716b0c18c6db018b560d160567",
+      "aFlowerNormal": "a537695080b6e6d41b7bd7e35fb5a654371c506200b48b3b5790e56da98233f1",
+      "aFlowerColor": "11e0c90fde31314fb017393736b5d6a2a2402aa354ba211e97dd3014e49dbd54"
+    }
+  }
+}

@@ -50,9 +50,25 @@ export function createFlowerAttributes(seeds: Float32Array, dust: Float32Array, 
   const count = advected.length
   const positions = new Float32Array(count * 4), normals = new Float32Array(count * 3), colors = new Float32Array(count * 3)
   const surface = createFlowerSurface()
-  const point = new THREE.Vector3(), normal = new THREE.Vector3(), rotation = new THREE.Quaternion()
+  const point = new THREE.Vector3(), normal = new THREE.Vector3()
   const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3(), color = new THREE.Color()
   const palette = ['#e475ab', '#8662cc', '#c04379', '#59bdb5', '#ecae66', '#b8a7dc', '#d45c57', '#718bd8']
+    .map(value => new THREE.Color(value))
+  // Only 40 blossom poses exist. Keep the original arithmetic and random
+  // stream, but calculate each pose once rather than once per petal sample.
+  const poses = Array.from({ length: 40 }, (_, index) => {
+    const tier = Math.floor(index / 10), side = index % 10 < 5 ? -1 : 1, satellite = index % 5
+    const around = satellite * 2.399 + tier
+    return {
+      size: satellite === 1 ? .66 : satellite ? .36 + (satellite % 3) * .09 : 1.12 + .10 * Math.sin(tier * 2.7 + side),
+      rotation: new THREE.Quaternion().setFromEuler(new THREE.Euler(.30 * Math.sin(tier * 1.7 + satellite * 2.1),
+        side * .45 + tier * 1.65 + (satellite === 1 ? Math.PI : satellite * 2.399), .35 * Math.sin(tier + satellite))),
+      x: side * (3.35 + .22 * Math.sin(tier * 2.4)) + (satellite ? Math.cos(around) * .80 : 0),
+      y: (tier - 1.5) * 2.85 + side * .4 + (satellite ? Math.sin(around) * 1.0 : 0),
+      z: Math.sin(tier * 2.1 + side) * .9 + (satellite ? Math.cos(around * .8) * .85 : 0),
+      color: palette[(tier * 2 + (side > 0 ? 1 : 0) + satellite) % palette.length],
+    }
+  })
   let state = 0x6f10be
   const random = () => ((state = Math.imul(state, 1664525) + 1013904223 >>> 0) / 4294967296)
   for (let i = 0; i < count; i++) {
@@ -64,7 +80,8 @@ export function createFlowerAttributes(seeds: Float32Array, dust: Float32Array, 
     const selector = random()
     const mainHeadShare = .46
     const satellite = selector < mainHeadShare ? 0 : 1 + Math.min(3, Math.floor((selector - mainHeadShare) / (1 - mainHeadShare) * 4))
-    const size = satellite === 1 ? .66 : satellite ? .36 + (satellite % 3) * .09 : 1.12 + .10 * Math.sin(tier * 2.7 + side)
+    const pose = poses[tier * 10 + (side > 0 ? 5 : 0) + satellite]
+    const { size, rotation } = pose
     const target = random() * surface.area
     let low = 0, high = surface.areas.length - 1
     while (low < high) { const mid = (low + high) >>> 1; if (surface.areas[mid] < target) low = mid + 1; else high = mid }
@@ -72,21 +89,21 @@ export function createFlowerAttributes(seeds: Float32Array, dust: Float32Array, 
     const u = Math.sqrt(random()), v = random()
     point.copy(a).multiplyScalar(1 - u).addScaledVector(b, u * (1 - v)).addScaledVector(c, u * v)
     normal.fromArray(surface.normals, low * 3)
-    rotation.setFromEuler(new THREE.Euler(.30 * Math.sin(tier * 1.7 + satellite * 2.1),
-      side * .45 + tier * 1.65 + (satellite === 1 ? Math.PI : satellite * 2.399), .35 * Math.sin(tier + satellite)))
     point.multiplyScalar(size).applyQuaternion(rotation); normal.applyQuaternion(rotation)
     const endSign = tier < 1.5 ? -1 : 1
     const joining = satellite === 0 && (tier === 0 || tier === 3)
       ? THREE.MathUtils.smoothstep(endSign * point.y / size + (random() - .5) * .30, -.22, .38) * endSign : 0
-    const around = satellite * 2.399 + tier
-    point.x += side * (3.35 + .22 * Math.sin(tier * 2.4)) + (satellite ? Math.cos(around) * .80 : 0)
-    point.y += (tier - 1.5) * 2.85 + side * .4 + (satellite ? Math.sin(around) * 1.0 : 0)
-    point.z += Math.sin(tier * 2.1 + side) * .9 + (satellite ? Math.cos(around * .8) * .85 : 0)
+    point.x += pose.x
+    point.y += pose.y
+    point.z += pose.z
     const radius = Math.hypot(point.x, point.z)
     if (radius < 2.30) { point.x *= 2.30 / radius; point.z *= 2.30 / radius }
-    positions.set([point.x, point.y, point.z, joining], i * 4)
+    positions[i * 4] = point.x
+    positions[i * 4 + 1] = point.y
+    positions[i * 4 + 2] = point.z
+    positions[i * 4 + 3] = joining
     normal.toArray(normals, i * 3)
-    color.set(palette[(tier * 2 + (side > 0 ? 1 : 0) + satellite) % palette.length])
+    color.copy(pose.color)
     // Roots stay darker than rolled edges; modest grain variation preserves each petal.
     color.multiplyScalar(surface.tones[low] * (.82 + random() * .30))
     color.toArray(colors, i * 3)

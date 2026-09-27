@@ -566,8 +566,13 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
     const bokeh = i < bokehCount
     const size = bokeh ? 3.2 + random() * 7.0
       : (software ? 0.9 : 0.64) + Math.pow(random(), 3.4) * (mobile ? 3.1 : 3.7)
-    positions.set([random(), random() * Math.PI * 2, Math.pow(random(), 1.6)], i * 3)
-    dust.set([random(), size, random() * 2 - 1, bokeh ? 1 : 0], i * 4)
+    positions[i * 3] = random()
+    positions[i * 3 + 1] = random() * Math.PI * 2
+    positions[i * 3 + 2] = Math.pow(random(), 1.6)
+    dust[i * 4] = random()
+    dust[i * 4 + 1] = size
+    dust[i * 4 + 2] = random() * 2 - 1
+    dust[i * 4 + 3] = bokeh ? 1 : 0
     // Dense anchored clouds provide the silhouette; one fifth follows scroll.
     advected[i] = !bokeh && i % 10 >= 8 ? 1 : 0
     advectedCount += advected[i]
@@ -577,9 +582,13 @@ export function createAtmosphere(scene: THREE.Scene, software: boolean, mobile: 
   for (let i = baseCount; i < count; i++) {
     let lane: number
     do { lane = flowerRandom() } while ((lane * 7.13) % 1 >= .22)
-    positions.set([flowerRandom(), flowerRandom() * Math.PI * 2, Math.pow(flowerRandom(), 1.6)], i * 3)
-    dust.set([lane, .70 + Math.pow(flowerRandom(), 2.7) * (mobile ? 1.65 : 1.9), flowerRandom() * 2 - 1,
-      i < baseCount + flowerCount ? -1 : -2], i * 4)
+    positions[i * 3] = flowerRandom()
+    positions[i * 3 + 1] = flowerRandom() * Math.PI * 2
+    positions[i * 3 + 2] = Math.pow(flowerRandom(), 1.6)
+    dust[i * 4] = lane
+    dust[i * 4 + 1] = .70 + Math.pow(flowerRandom(), 2.7) * (mobile ? 1.65 : 1.9)
+    dust[i * 4 + 2] = flowerRandom() * 2 - 1
+    dust[i * 4 + 3] = i < baseCount + flowerCount ? -1 : -2
   }
 
   const reactorFlow = !software && options

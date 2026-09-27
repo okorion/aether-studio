@@ -1,0 +1,28 @@
+{
+  "baselineSource": "5e2454c395234d85b91ae1929cdb0e48445b7405",
+  "baselineNote": "Same runtime as 9bfe92e; both builds instrumented at identical phase boundaries before optimization. Baseline build retained in local .qa/baseline-dist.",
+  "baselineBundles": {
+    "audio-DTVot48Q.js": "b695a6e3feaae6feab56dc6c9a9e82266bb126aa8dbaf2d010ef786b2a3007d9",
+    "index-y7wIVhw_.js": "2ce756e32ed7a2f4b8ebcca1e5765fc32c5d451ba4ee7a92d59ba6feacfce807",
+    "Scene-CwdXYx0r.js": "789c57d7a3e642fb92144ddc2ed0952ffa76066aa82a7aaf1de9603806c12ff1",
+    "three-CjtGedH4.js": "128ec0d581f1ffa840b9efe9823e9f25ed56e91cbe9410d5a62c66cf6d7573af",
+    "three-effects-DJx7NKBm.js": "96c48cecc1ba7e33668fdf91eaf9cd8f6d7a8d269a14c0d1d607def9aac209ad"
+  },
+  "candidateBundles": {
+    "audio-DTVot48Q.js": "b695a6e3feaae6feab56dc6c9a9e82266bb126aa8dbaf2d010ef786b2a3007d9",
+    "index-BgT0__Lh.js": "2cd828d59e38bf4c07b548d9ce1b1572335552a0b034c9709e2abb6e967b5052",
+    "Scene-BUBWOMJ2.js": "d24f182e9874acd29799deb8e7f6d7c29378a126d856660cbbd3f888ef630179",
+    "three-CjtGedH4.js": "128ec0d581f1ffa840b9efe9823e9f25ed56e91cbe9410d5a62c66cf6d7573af",
+    "three-effects-DJx7NKBm.js": "96c48cecc1ba7e33668fdf91eaf9cd8f6d7a8d269a14c0d1d607def9aac209ad"
+  },
+  "optimizedSources": {
+    "Atmosphere": {
+      "before": "016a6a64717fc6255e10a297f1ac9e5c6bbcf92c1470fd16e6020dbf568e648d",
+      "after": "ca005cf9cd3221f8ce51202296a2030606a814d91cbeb3be06974e3aa98c8186"
+    },
+    "FlowerGeometry": {
+      "before": "68e8af1cc58e087fa28a3d83abb377349451476e27ad14446b35217715a98d44",
+      "after": "b4b81c7b90571f5f5f716d72075e6157a796cf06f513ed809dee1c8f77c690d0"
+    }
+  }
+}

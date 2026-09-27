@@ -7,10 +7,16 @@ import { sampleJourney } from './Journey'
 import { journeyHeightSvh, scrollToScene } from './ScrollTimeline'
 import { initialLoading, loadingState } from './loading'
 import type { LoadingStage } from './loading'
+import { markSceneModule } from './LoadingTrace'
 
 const tracks = ['01 — Blue hour', '02 — Slow current', '03 — Afterlight']
 
-const Scene = lazy(() => import('./Scene'))
+const Scene = lazy(async () => {
+  markSceneModule('request')
+  const scene = await import('./Scene')
+  markSceneModule('ready')
+  return scene
+})
 
 type View = 'home' | 'work' | 'contact'
 

@@ -25,8 +25,19 @@ export const forestPitchLimit = (progress: number) => progress >= .855 ? .04 : .
 
 /** Forests rotate in front of a fixed film; the compact scale stage stays frontal. */
 export function sampleViewAzimuth(progress: number, requested: number) {
-  const front = progress < .5 ? 1 - smooth(.16, .20, progress) : smooth(.69, .715, progress)
-  return requested + ((progress < .5 ? 0 : Math.PI * 2) - requested) * front
+  // The upper orbit has already accumulated one turn when its frontal lock
+  // releases. Blend the equivalent near-zero angle, not a fresh 0 -> 2π orbit.
+  if (progress < .5) return (requested - Math.PI * 2) * smooth(.16, .20, progress)
+  return requested + (Math.PI * 2 - requested) * smooth(.69, .715, progress)
+}
+
+/** One clockwise passage, followed by a small reverse turn into the column. */
+export function sampleEmblemYaw(progress: number, authoredAzimuth: number, end: number) {
+  if (progress >= .5) return smooth(.21, .30, progress) * .7 * (1 - end)
+  // Parent/camera compensation contributes -authoredAzimuth. Cancel only that
+  // authored part; pointer orbit continues to act on the visible ring.
+  return authoredAzimuth - Math.PI * 2 * smooth(0, .235, progress)
+    + .28 * smooth(.235, .305, progress)
 }
 
 /** Halve only the authored forest orbit, keeping drag/parallax unchanged. */

@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { sampleJourney, smooth } from './Journey'
+import { sampleJourney, sampleEmblemYaw, smooth } from './Journey'
 import { bindGroupCurtain, createCurtainBounds } from './SceneCurtains'
 import { sampleEmblemCurtain } from './SceneLayers'
 import { createCurtainVisibility } from './SceneVisibility'
@@ -344,7 +344,7 @@ export function createSceneEmblem(options: SceneEmblemOptions) {
       group.position.set(0, 0, 0)
       const statement = smooth(.10, .18, p) * (1 - smooth(.25, .31, p))
       group.scale.setScalar(1.15 + statement * .48)
-      group.rotation.set(0, smooth(.21, .30, p) * .7 * (1 - state.end), 0)
+      group.rotation.set(0, sampleEmblemYaw(p, state.azimuth, state.end), 0)
       ribbons.rotation.x = 0
       const tailPresence = p < .5 ? 1 - smooth(.10, .18, p) : 1
       ribbons.visible = tailPresence > .001

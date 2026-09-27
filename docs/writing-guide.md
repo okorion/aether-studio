@@ -25,6 +25,21 @@ README는 사이트를 소개하고 실행할 수 있게 안내한다. GitHub Ab
 
 ## 참고한 README
 
+### 2026-09-27 정리 기준
+
+README는 초급 개발 경험이 있는 독자가 화면을 먼저 탐색하고 코드로 이동하도록 구성한다. 상위 제목에만 소량의 이모지를 쓰고, 장면별 이미지·짧은 설명·직접 할 조작을 묶는다. 조작 표와 보조 정보는 접고, 구조 설명은 Mermaid와 쉬운 용어로 연결한다.
+
+| 확인한 공개 저장소 | 적용한 문서 방식 |
+| --- | --- |
+| [Three.js](https://github.com/mrdoob/three.js/blob/dev/README.md) | 짧은 소개에서 실행·예제·상세 문서로 이어지는 경로 |
+| [React Three Fiber](https://github.com/pmndrs/react-three-fiber) | 역할을 먼저 설명하고 작은 수정 예제로 연결 |
+| [Drei](https://github.com/pmndrs/drei) | 현재 문서와 오래된 안내를 구분하고 보관 링크 유지 |
+| [Lenis](https://github.com/darkroomengineering/lenis) | 설치·설정·제약·트러블슈팅을 독자의 작업 순서로 구분 |
+
+구조만 참고했으며 문장·브랜드·성능 주장·라이선스는 가져오지 않았다. Aether의 의존성에 React Three Fiber·Drei·Lenis를 추가했다는 뜻도 아니다. 새 README 이미지에는 촬영 커밋과 렌더러 조건을 남긴다.
+
+### 이전 참고 기록
+
 2026-09-22에 [GitHub README 안내](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-readmes), [Three.js README](https://github.com/mrdoob/three.js/blob/dev/README.md), [React Three Fiber README](https://github.com/pmndrs/react-three-fiber)를 확인했다. 짧은 역할 설명, 바로 실행할 수 있는 예, 상세 문서로 이어지는 링크 구성을 참고했다. 문장·기능 주장·라이선스·브랜딩은 복사하지 않았다.
 
 이번 README는 실제 화면·조작법·로컬 실행을 앞에 두었다. 라이브러리의 API 예제나 후원 영역처럼 이 웹 데모에 필요하지 않은 구성은 가져오지 않았다.

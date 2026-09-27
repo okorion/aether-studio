@@ -23,6 +23,12 @@ Playwright 설정은 [playwright.config.ts](../playwright.config.ts), CI 설정�
 
 ## 최근 확인 결과
 
+2026-09-27의 최근 구현은 [천장 진입 자세](verification/ceiling-entry-2026-09-27.md), [하단 포레스트 조작](verification/lower-forest-controls-2026-09-27.md), [천장 깊이](verification/scale-ceiling-depth-2026-09-27.md)에 검사 조건을 기록했다. 각 기록의 검사 범위를 합쳐 현재 전체 검사가 통과했다고 해석하지 않는다. 최신 커밋의 CI는 [Actions](https://github.com/okorion/aether-studio/actions)에서 확인한다.
+
+문서·메타데이터 정리의 검수는 [2026-09-27 문서 검증](verification/docs-2026-09-27.md)에 별도로 기록한다.
+
+### 이전 구현의 검증 기록
+
 2026-09-25 재질·유체 변경의 검사 범위와 실제 GPU 관찰은 [재질·유체 표현과 검증](graphics-detail-fidelity.md)에 있다. 아래 PR #20 측정은 당시 상태를 보존한 기록이다.
 
 [PR #20 최종 CI](https://github.com/okorion/aether-studio/actions/runs/35721404162)는 2026-09-22의 `b8da2eb` 기준이다. 인터랙션 57개, PC·WebGL 미지원 9개, 모바일 8개가 재시도 없이 통과했고 lint·typecheck·build도 통과했다. 병합 커밋은 `03f5130`이다. 이후 변경의 상태는 [Actions](https://github.com/okorion/aether-studio/actions)에서 확인한다.

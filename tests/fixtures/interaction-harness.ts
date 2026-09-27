@@ -6,7 +6,7 @@ import { createSceneMonitors } from '../../src/SceneMonitors'
 import { createAtmosphere } from '../../src/Atmosphere'
 import { createSceneForest } from '../../src/SceneForest'
 import { sampleJourney } from '../../src/Journey'
-import { sampleScaleOffset } from '../../src/ScaleStage'
+import { sampleScaleOffset, SCALE_CEILING_SLIDE } from '../../src/ScaleStage'
 import { createSceneLayers, sampleEmblemCurtain, sampleLayers } from '../../src/SceneLayers'
 import { bindCurtain, bindGroupCurtain, createCurtainBounds } from '../../src/SceneCurtains'
 import { createLightFilmUniforms } from '../../src/SceneLighting'
@@ -454,7 +454,8 @@ function probeWorldSurfaceDepth() {
       capFilmDefine: capMesh.material.defines?.AETHER_LIGHT_FILM as number | undefined,
       ceilingY: ceiling.min.y, ceilingTop: ceiling.max.y, ceilingWidth: ceiling.max.x - ceiling.min.x,
       ceilingVisible: required('aether-chamber-ceiling').visible,
-      undersideY: underside.max.y, undersideWidth: underside.max.x - underside.min.x }
+      undersideY: required('aether-floor-underside').getWorldPosition(new THREE.Vector3()).y,
+      undersideWidth: underside.max.x - underside.min.x }
     const visibility = [.70, .76, .82, .70].map(progress => {
       atProgress(progress)
       return {
@@ -467,7 +468,10 @@ function probeWorldSurfaceDepth() {
     })
     const cases = [
       { name: 'aether-separating-floor', progress: .70, ndcY: -.55 },
-      { name: 'aether-floor-underside', progress: .82, ndcY: .80 },
+      // Sample the visible ceiling during entry and the settled grazing view.
+      // At .82 the smaller ceiling has already moved beyond this screen ray.
+      { name: 'aether-floor-underside', progress: .75, ndcY: .20 },
+      { name: 'aether-floor-underside', progress: .765, ndcY: .60 },
       { name: 'aether-machine-aperture', progress: .67, ndcY: null },
     ].map(entry => {
       atProgress(entry.progress)
@@ -493,10 +497,11 @@ function probeWorldSurfaceDepth() {
         const slide = sampleScaleOffset(entry.progress), radius = sampleJourney(entry.progress).radius
         for (let i = 0; i < positions.count; i++) {
           vertex.fromBufferAttribute(positions, i).applyMatrix4(source.matrixWorld).applyMatrix4(probeCamera.matrixWorldInverse)
-          vertex.y += slide * (-vertex.z / radius - 1)
+          vertex.y += slide * (-vertex.z / radius - 1) * SCALE_CEILING_SLIDE
           vertex.applyMatrix4(probeCamera.matrixWorld).applyMatrix4(inverse)
           positions.setXYZ(i, vertex.x, vertex.y, vertex.z)
         }
+        raySurface.geometry.computeBoundingBox()
         raySurface.geometry.computeBoundingSphere()
       }
       raySurface.updateMatrixWorld(true)

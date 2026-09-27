@@ -5,6 +5,8 @@ export const SCALE_CEILING_Y = REACTOR.worldY - 3.7 * REACTOR.heightScale
 export const SCALE_PANEL_Y = SCALE_CEILING_Y - 2.65
 // The incoming room is already below its ceiling when its curtain opens.
 export const SCALE_ROOM_CEILING_Y = SCALE_CEILING_Y + 4.1
+// Retain some camera-relative parallax while the incoming room slides in.
+export const SCALE_CEILING_SLIDE = .92
 
 /** A fixed panel and ceiling share the same descending camera. */
 export function sampleScaleOffset(progress: number) {

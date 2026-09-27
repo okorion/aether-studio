@@ -572,7 +572,7 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
     expect(surfaces.visibility[2]).toMatchObject({ machine: false, ruins: false, upperStructure: false, underside: true })
     expect(surfaces.visibility[2].eyeY).toBeLessThan(-44.13)
     expect(surfaces.visibility[3]).toEqual(surfaces.visibility[0])
-    expect(surfaces.cases).toHaveLength(3)
+    expect(surfaces.cases).toHaveLength(4)
     for (const surface of surfaces.cases) {
       expect(surface.effectivelyVisible, surface.name).toBe(true)
       expect(surface.depthWrite, surface.name).toBe(true)

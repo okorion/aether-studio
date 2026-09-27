@@ -14,7 +14,7 @@ import { bindGroupCurtain, createCurtainBounds } from './SceneCurtains'
 import { curtainHasCoverage } from './SceneVisibility'
 import { lightChoreographyGLSL, sampleLightChoreography, type LightFilmUniforms } from './SceneLighting'
 import { REACTOR } from './Reactor'
-import { sampleScaleOffset, SCALE_ROOM_CEILING_Y } from './ScaleStage'
+import { sampleScaleOffset, SCALE_ROOM_CEILING_Y, SCALE_CEILING_SLIDE } from './ScaleStage'
 import { createChamberLight, excludeChamberSpotlight } from './SceneChamberLight'
 
 const TAU = Math.PI * 2
@@ -332,7 +332,17 @@ export function createSceneWorlds(
   const ceilingSlide = { value: 0 }, ceilingRadius = { value: 11.6 }
   const ceilingProjection = /* glsl */ `
     gl_Position.y += uCeilingSlide * projectionMatrix[1][1]
-      * (gl_Position.w / uCeilingRadius - 1.);
+      * (gl_Position.w / uCeilingRadius - 1.) * ${SCALE_CEILING_SLIDE};
+  `
+  const ceilingViewGLSL = /* glsl */ `
+    vec3 ceilingView(vec3 viewPosition) {
+      viewPosition.y += uCeilingSlide * (-viewPosition.z / uCeilingRadius - 1.) * ${SCALE_CEILING_SLIDE};
+      return -viewPosition;
+    }
+    vec3 ceilingNormal(vec3 viewNormal) {
+      viewNormal.z += uCeilingSlide / uCeilingRadius * ${SCALE_CEILING_SLIDE} * viewNormal.y;
+      return normalize(viewNormal);
+    }
   `
   const undersideMaterial = mat(new THREE.MeshStandardMaterial({
     color: 0x090d12, metalness: .43, roughness: .57, envMapIntensity: .42,
@@ -347,19 +357,37 @@ export function createSceneWorlds(
   undersideMaterial.onBeforeCompile = shader => {
     shader.uniforms.uCeilingSlide = ceilingSlide
     shader.uniforms.uCeilingRadius = ceilingRadius
-    shader.vertexShader = 'uniform float uCeilingSlide; uniform float uCeilingRadius;\n' + shader.vertexShader
+    const coverageVaryings = 'varying vec3 vCeilingCoverageView; varying vec3 vCeilingCoverageNormal;\n'
+    shader.vertexShader = 'uniform float uCeilingSlide; uniform float uCeilingRadius;\n'
+      + coverageVaryings + ceilingViewGLSL + shader.vertexShader
     shader.vertexShader = shader.vertexShader.replace('#include <project_vertex>',
-      '#include <project_vertex>\n' + ceilingProjection)
-    shader.fragmentShader = ceilingCoverageGLSL + shader.fragmentShader
+      '#include <project_vertex>\n' + ceilingProjection + `
+      vCeilingCoverageView = ceilingView(mvPosition.xyz);
+      vCeilingCoverageNormal = ceilingNormal(transformedNormal);
+    `)
+    shader.fragmentShader = coverageVaryings + ceilingCoverageGLSL + shader.fragmentShader
     shader.fragmentShader = shader.fragmentShader.replace('#include <opaque_fragment>', `
-      float ceilingCoverage = ceilingHorizonCoverage(vViewPosition, vNormal);
+      float ceilingCoverage = ceilingHorizonCoverage(vCeilingCoverageView, vCeilingCoverageNormal);
       if (ceilingCoverage < .001) discard;
       diffuseColor.a *= ceilingCoverage;
       #include <opaque_fragment>
     `)
   }
-  undersideMaterial.customProgramCacheKey = () => 'aether-ceiling-panel-slide-v3'
-  const undersideGeometry = geo(new THREE.PlaneGeometry(192, 192))
+  undersideMaterial.customProgramCacheKey = () => 'aether-ceiling-grazing-parallax-v4'
+  // A shallow, continuous surface recedes above the panel. Give both layers
+  // identical relief and slope so the light stays on the physical underside.
+  const ceilingGeometry = (size: number, segments: number) => {
+    const geometry = geo(new THREE.PlaneGeometry(size, size, segments, segments))
+    const positions = geometry.getAttribute('position')
+    for (let i = 0; i < positions.count; i++) {
+      const x = positions.getX(i), y = positions.getY(i)
+      positions.setZ(i, Math.sin(x * .38 + y * .26) * .065
+        + Math.sin(y * .72 - x * .21) * .035)
+    }
+    geometry.computeVertexNormals()
+    return geometry
+  }
+  const undersideGeometry = ceilingGeometry(192, 96)
   // Keep the shared relief's world-space scale and centre phase unchanged.
   const undersideUv = undersideGeometry.getAttribute('uv')
   for (let i = 0; i < undersideUv.count; i++) {
@@ -368,7 +396,7 @@ export function createSceneWorlds(
   }
   const underside = mesh(lowerSpace, undersideGeometry, undersideMaterial, 0, -3.755, platformZ)
   underside.name = 'aether-floor-underside'
-  underside.rotation.x = Math.PI / 2
+  underside.rotation.x = Math.PI / 2 + .24
   underside.renderOrder = -2
   const causticMaterial = mat(new THREE.ShaderMaterial({
     uniforms: {
@@ -380,6 +408,7 @@ export function createSceneWorlds(
     vertexShader: /* glsl */ `
       uniform float uCeilingSlide;
       uniform float uCeilingRadius;
+      ${ceilingViewGLSL}
       varying vec3 vCeilingWorld;
       varying vec3 vCeilingView;
       varying vec3 vCeilingNormal;
@@ -387,8 +416,8 @@ export function createSceneWorlds(
       void main() {
         vCeilingWorld = (modelMatrix * vec4(position, 1.)).xyz;
         vec4 viewPosition = modelViewMatrix * vec4(position, 1.);
-        vCeilingView = -viewPosition.xyz;
-        vCeilingNormal = normalMatrix * normal;
+        vCeilingView = ceilingView(viewPosition.xyz);
+        vCeilingNormal = ceilingNormal(normalMatrix * normal);
         vCeilingUv = uv;
         gl_Position = projectionMatrix * viewPosition;
         ${ceilingProjection}
@@ -430,8 +459,9 @@ export function createSceneWorlds(
         float detailFade = 1. - smoothstep(.12, .48, length(fwidth(p)));
         float light = (causticNetwork(p) + causticNetwork(p*1.73+vec2(8.3,2.7))*.30) * detailFade;
         light *= .78 + .22 * sin(p.x * .29 + p.y * .17 + t);
-        float edge = 1. - smoothstep(.46, .5,
-          max(abs(vCeilingUv.x - .5), abs(vCeilingUv.y - .5)));
+        // Fade by distance on the surface, without exposing a rectangular
+        // texture footprint. World-space waves retain their perspective scale.
+        float edge = 1. - smoothstep(.28, .49, length(vCeilingUv - .5));
         vec3 cloud = aetherLightCloud(vCeilingWorld, vec3(0., -1., 0.), uTime, uLightDepth);
         vec3 color = vec3(.38, .61, .54) + cloud * .12;
         // Reuse the one low-resolution film decoder. Recognizable moving
@@ -440,7 +470,9 @@ export function createSceneWorlds(
         float filmLuma = dot(film, vec3(.2126, .7152, .0722));
         color *= .8 + filmLuma * .65;
         color = mix(color, color*(vec3(.5)+film*2.4), .35);
-        float coverage = .035 + light;
+        float depth = length(vCeilingView);
+        float depthLight = mix(1., .35, smoothstep(12., 52., depth));
+        float coverage = (.018 + light * .86) * depthLight;
         float horizon = ceilingHorizonCoverage(vCeilingView, vCeilingNormal);
         gl_FragColor = vec4(color, min(1., coverage) * edge * horizon * uOpacity);
         #include <tonemapping_fragment>
@@ -450,9 +482,9 @@ export function createSceneWorlds(
     transparent: true, blending: THREE.AdditiveBlending, depthWrite: false,
   }))
   // The underside of the floor becomes the next chamber's illuminated ceiling.
-  const caustics = mesh(lowerSpace, geo(new THREE.PlaneGeometry(platformWidth, platformDepth)),
+  const caustics = mesh(lowerSpace, ceilingGeometry(192, 96),
     causticMaterial, 0, -3.770, platformZ)
-  caustics.rotation.x = Math.PI / 2
+  caustics.rotation.x = underside.rotation.x
   caustics.renderOrder = 1
   const ruins = createSceneRuins(space, software, mobile)
   floorMaterial.bumpMap = ruins.relief
@@ -755,6 +787,10 @@ export function createSceneWorlds(
       scaleWall.position.y = sampleScaleOffset(progress)
       ceilingSlide.value = scaleWall.position.y
       ceilingRadius.value = journey.radius + (mobileView ? 4.8 : 0)
+      // Open with the existing room boundary, then settle into a grazing view.
+      // This affects only the two ceiling surfaces, never the camera or cut.
+      underside.rotation.x = Math.PI / 2 + .06 + .18 * smooth(.735, .775, progress)
+      caustics.rotation.x = underside.rotation.x
       matter.position.y = 0
       matter.rotation.y = sampleJourney(columnProgress).structureYaw
       scaleWall.rotation.y = 0

@@ -5,7 +5,7 @@ import type {} from './fixtures/interaction-harness'
 import { scrollToProgress } from './scroll'
 import { scrollToScene } from '../src/ScrollTimeline'
 import { sampleJourney } from '../src/Journey'
-import { sampleScaleOffset, SCALE_CEILING_Y } from '../src/ScaleStage'
+import { sampleScaleOffset, SCALE_ROOM_CEILING_Y } from '../src/ScaleStage'
 
 declare global {
   interface Window {
@@ -337,8 +337,8 @@ test('@interaction device and late scales reject pointer camera input until the 
   }
 
   // Keep browser probes inside the band: integer scroll pixels can round the
-  // exact .925 boundary into the first frame of the returning orbit.
-  for (const progress of [.72, .80, .90, .92]) {
+  // exact .870 boundary into the first frame of the returning orbit.
+  for (const progress of [.72, .80, .85, .865]) {
     const before = await moveToProgress(progress)
     await expect(canvas).toHaveAttribute('data-orbit-enabled', 'false')
     const savedYaw = Number(await canvas.getAttribute('data-orbit-yaw'))
@@ -563,7 +563,7 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
     expect(contact.ceilingVisible).toBe(false)
     expect(contact.scaleCorePresent).toBe(false)
     expect(contact.ceilingWidth).toBeCloseTo(64, 5)
-    expect(contact.undersideY).toBeCloseTo(SCALE_CEILING_Y, 5)
+    expect(contact.undersideY).toBeCloseTo(SCALE_ROOM_CEILING_Y, 5)
     expect(contact.undersideWidth).toBeCloseTo(192, 5)
     expect(surfaces.visibility[0]).toMatchObject({ machine: true, ruins: true, upperStructure: true, underside: false })
     // The partial wrapper overlap retains the upper room after the eye has
@@ -691,7 +691,7 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
       }
     }
     const emblem = await page.evaluate(() => window.interactionHarness.probeEmblemCurtainPixels())
-    expect(emblem.map(result => result.progress)).toEqual([.86, .87, .895])
+    expect(emblem.map(result => result.progress)).toEqual([.83, .84, .87])
     for (const result of emblem) {
       const label = `end emblem at ${result.progress}`
       expect(result.baselineRingPixels, label).toBeGreaterThan(1000)
@@ -700,13 +700,13 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
       expect(result.depthHoles, label).toBe(0)
       expect(result.missingBelow, label).toBe(0)
       expect(result.changedBackground, label).toBe(0)
-      if (result.progress < .895) {
+      if (result.progress < .87) {
         // Non-vacuous: both stages would expose red geometry above the seam
         // without the real emblem mask, while some red remains below it.
         expect(result.checkedAbove, label).toBeGreaterThan(1000)
         expect(result.hiddenRingPixels, label).toBeGreaterThan(100)
       } else {
-        // By .895 forestEntry has left the viewport (maximum slanted UV 1.1).
+        // By .87 forestEntry has left the viewport (maximum slanted UV 1.1).
         // There is no remaining scale region to invent a hidden-pixel sample.
         expect(result.upper, label).toBeGreaterThan(1.1)
         expect(result.checkedAbove, label).toBe(0)
@@ -768,7 +768,7 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
     for (const sample of cases) {
       expect(sample.together.leaked, `all effects at ${sample.progress}`).toBe(0)
       expect(sample.pointsOnly.leaked, `white motes at ${sample.progress}`).toBe(0)
-      if (sample.progress >= .2 && sample.progress <= .855) {
+      if (sample.progress >= .2 && sample.progress <= .80) {
         expect(sample.together.lit).toBe(0)
         expect(sample.pointsOnly.lit).toBe(0)
         expect(sample.motesVisible).toBe(false)
@@ -1027,7 +1027,9 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
       expect(state.orbitEnabled).toBe(true)
       expect(state.orbitWeight).toBeGreaterThan(0)
     }
-    expect(returningOrbit[2].orbitWeight).toBe(1)
+    expect(returningOrbit[2].orbitWeight).toBeGreaterThan(returningOrbit[1].orbitWeight)
+    expect(returningOrbit[2].orbitWeight).toBeLessThan(1)
+    expect(returningOrbit[3].orbitWeight).toBe(1)
     for (let turn = 0; turn < 4; turn++) {
       await page.mouse.move(540, 220)
       await page.mouse.down()

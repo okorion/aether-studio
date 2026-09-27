@@ -29,13 +29,10 @@ export function bindCurtain(material: THREE.Material, bounds: CurtainBounds) {
     shader.uniforms.uCurtainUpper = bounds.upper
     shader.uniforms.uCurtainLower = bounds.lower
     shader.vertexShader = 'varying vec4 vCurtainClip;\n' + shader.vertexShader
-    if (shader.vertexShader.includes('#include <project_vertex>')) {
-      shader.vertexShader = shader.vertexShader.replace('#include <project_vertex>',
-        '#include <project_vertex>\nvCurtainClip = gl_Position;')
-    } else {
-      const end = shader.vertexShader.lastIndexOf('}')
-      shader.vertexShader = shader.vertexShader.slice(0, end) + '\nvCurtainClip = gl_Position;\n' + shader.vertexShader.slice(end)
-    }
+    // Capture the final projection, including the incoming ceiling's page
+    // slide. Sampling at project_vertex would mask its old screen position.
+    const end = shader.vertexShader.lastIndexOf('}')
+    shader.vertexShader = shader.vertexShader.slice(0, end) + '\nvCurtainClip = gl_Position;\n' + shader.vertexShader.slice(end)
     shader.fragmentShader = curtainGLSL + shader.fragmentShader
     shader.fragmentShader = shader.fragmentShader.replace(/void\s+main\s*\(\s*\)\s*\{/,
       `void main() {

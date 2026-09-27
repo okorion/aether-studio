@@ -176,7 +176,7 @@ test('@interaction each link feeds down its helix tangent instead of translating
     expect(sampleChainPath(.29,mobile).getPointAt(0)).toEqual(initial);
   }
 });
-test('@interaction chain terminal descends to the lower third at the outgoing curtain and restores on reverse', () => {
+test('@interaction camera framing cannot reverse chain feed or change the helix on reverse scroll', () => {
   for(const mobile of [false,true]) {
     const assembly=createSpineAssembly(false,mobile);
     const chain=assembly.group.getObjectByName('aether-spine-chain') as THREE.InstancedMesh;
@@ -189,12 +189,24 @@ test('@interaction chain terminal descends to the lower third at the outgoing cu
       assembly.group.position.y=j.height;assembly.group.rotation.y=sampleJourney(columnProgress).structureYaw;
       assembly.update(p,1,1,mobile,camera,columnProgress);assembly.group.updateMatrixWorld(true);
       chain.getMatrixAt(0,matrix);
-      const top=chain.localToWorld(new THREE.Vector3().setFromMatrixPosition(matrix)).project(camera);
-      const t = THREE.MathUtils.clamp((p - .40) / .215, 0, 1);
-      expect(top.y).toBeCloseTo(.72 - 1.06 * t * t * (3 - 2 * t),5);
-      if(p >= .615) expect((top.y + 1) / 2).toBeCloseTo(.33,2);
+      const top=new THREE.Vector3().setFromMatrixPosition(matrix);
+      expect(top.distanceTo(sampleChainPath(p,mobile).getPointAt(0))).toBeLessThan(.000001);
+      camera.position.set(9,j.height+3,19);camera.lookAt(0,j.height,0);camera.updateMatrixWorld();
+      const before=Array.from(chain.instanceMatrix.array);
+      assembly.update(p,1,1,mobile,camera,columnProgress);
+      expect(Array.from(chain.instanceMatrix.array)).toEqual(before);
       return Array.from(chain.instanceMatrix.array);
     };
-    try {const initial=sample(.31);for(let i=0;i<=34;i++){const p=.31+i*.01;sample(p);sample(p,p-.004);sample(p,p+.004);}for(let i=34;i>=0;i--)sample(.31+i*.01);expect(sample(.31)).toEqual(initial);}finally{assembly.dispose();}
+    try {
+      const initial=sample(.31);let previous=Infinity;
+      for(let i=0;i<=340;i++) {
+        const p=.31+i*.001;sample(p);sample(p,p-.004);sample(p,p+.004);
+        chain.getMatrixAt(0,matrix);
+        const topY=new THREE.Vector3().setFromMatrixPosition(matrix).y;
+        expect(topY).toBeLessThan(previous);previous=topY;
+      }
+      for(let i=34;i>=0;i--)sample(.31+i*.01);
+      expect(sample(.31)).toEqual(initial);
+    }finally{assembly.dispose();}
   }
 });

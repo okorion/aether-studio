@@ -40,17 +40,15 @@ const chainAngleAtHeight = (y: number) => -1.68 + (y - 3.8) * CHAIN_TURN_PER_HEI
 const CHAIN_TRACK_HEIGHT = 20
 const CHAIN_ARC_PER_HEIGHT = Math.hypot(1, CHAIN_RADIUS * CHAIN_TURN_PER_HEIGHT)
 
-/** Material links feed along one column-attached helix, including camera framing. */
+/** Material links feed along one column-attached helix, independently of framing. */
 class ColumnChainCurve extends THREE.Curve<THREE.Vector3> {
-  private topY: number
+  private readonly topY: number
   private readonly phase: number
   constructor(topY: number, phase: number) {
     super()
     this.topY = topY
     this.phase = phase
   }
-
-  setTopHeight(height: number) { this.topY = height }
 
   getPoint(t: number, target = new THREE.Vector3()) {
     const y = this.topY - t * CHAIN_TRACK_HEIGHT

@@ -129,7 +129,8 @@ export function probeMaterialDetail() {
     const column = compare(bones.material as THREE.MeshPhysicalMaterial, 7)
     scene.remove(bones)
 
-    worlds.update(6.5, .83)
+    // Compare complete surfaces before the lower forest starts clipping tiles.
+    worlds.update(6.5, .79)
     const tiles = modelScene.getObjectByName('aether-scale-tiles')
     if (!(tiles instanceof THREE.InstancedMesh)) throw new Error('Production scale panel was not created')
     scene.add(tiles)
@@ -163,7 +164,7 @@ export function probeMaterialDetail() {
     }
     scaleMaterial.customProgramCacheKey = () => cacheKey + '-normal-diagnostic'
     scaleMaterial.needsUpdate = true
-    worlds.update(8.7, .83, { ndc: new THREE.Vector2(.27, .14), strength: 1,
+    worlds.update(8.7, .79, { ndc: new THREE.Vector2(.27, .14), strength: 1,
       active: true, aspect: 1 }, camera)
     const normals = render()
     let normalPixels = 0, normalError = 0, badNormals = 0

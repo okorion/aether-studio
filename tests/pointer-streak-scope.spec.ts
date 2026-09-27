@@ -16,14 +16,14 @@ test('@interaction flying streaks follow both forest boundaries, including their
     for (const x of [-1, 0, 1]) for (const y of [-1, 0, 1])
       expect(pointerStreakCanSpawn(scope, x, y)).toBe(true)
   }
-  for (const progress of [.2, .235, .45, .63, .72, .825, .83]) {
+  for (const progress of [.2, .235, .45, .63, .72, .79, .80]) {
     const scope = samplePointerStreakScope(progress)
     expect(scope.visible).toBe(false)
     for (const x of [-1, 0, 1]) for (const y of [-1, 0, 1])
       expect(pointerStreakCanSpawn(scope, x, y)).toBe(false)
   }
   const outgoing = samplePointerStreakScope(.15)
-  const incoming = samplePointerStreakScope(.86)
+  const incoming = samplePointerStreakScope(.835)
   // At the midpoint, the same horizontal pointer sweep crosses the slanted
   // boundary in opposite directions for the outgoing and incoming forests.
   expect(pointerStreakCanSpawn(outgoing, -.8, 0)).toBe(true)
@@ -116,7 +116,7 @@ test('@interaction leaving the forest clears ribbons and motes while surface inp
       const moteBirths = Array.from(env.motes.geometry.getAttribute('aBirth').array)
       expect(moteBirths.some(birth => birth >= 0)).toBe(true)
       env.input.setOrbitEnabled(false)
-      for (const p of [.45, .72, .83]) {
+      for (const p of [.45, .72, .80]) {
         env.stage(p)
         stroke(240)
         const state = env.step()
@@ -132,7 +132,7 @@ test('@interaction leaving the forest clears ribbons and motes while surface inp
         expect(state.pitch).toBe(0)
       }
       expect(Array.from(env.motes.geometry.getAttribute('aBirth').array)).not.toEqual(moteBirths)
-      env.stage(.86)
+      env.stage(.835)
       // The lower forest occupies the screen bottom. Moving in the remaining
       // upper scale area must not seed streaks that appear when it recedes.
       stroke(60)
@@ -142,7 +142,7 @@ test('@interaction leaving the forest clears ribbons and motes while surface inp
       stroke(420)
       expect(env.ribbon.geometry.drawRange.count).toBeGreaterThan(0)
       expect(Array.from(env.motes.geometry.getAttribute('aBirth').array).some(birth => birth >= 0)).toBe(true)
-      env.stage(.83)
+      env.stage(.80)
       env.stage(1)
       expect(env.ribbon.geometry.drawRange.count).toBe(0)
       expect(Array.from(env.motes.geometry.getAttribute('aBirth').array).every(birth => birth === -100)).toBe(true)

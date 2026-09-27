@@ -17,8 +17,8 @@ export const smooth = (a: number, b: number, value: number) => {
 export const windowWeight = (p: number, a: number, b: number, c: number, d: number) =>
   smooth(a, b, p) * (1 - smooth(c, d, p))
 
-export const FOREST_ENTRY_START = .825
-export const FOREST_ENTRY_END = .895
+export const FOREST_ENTRY_START = .800
+export const FOREST_ENTRY_END = .870
 
 /** Positive pitch looks down. Keep the lower clearing near eye level. */
 export const forestPitchLimit = (progress: number) => progress >= .855 ? .04 : .6
@@ -45,10 +45,10 @@ const cameraScore = [
   [11.6, 6.28, .04, 1.2, -31], [12.5, 6.28, .07, 1.15, -33.5], [11.8, Math.PI * 2, .04, 1.15, -36],
   [11.1, Math.PI * 2, 0, 1.24, -38.5], [10.2, Math.PI * 2, 0, 1.28, -40.5], [10, Math.PI * 2, 0, 1.3, -42.5],
   // Continue descending through the shared floor/ceiling without a height hold.
-  [10.8, Math.PI * 2, 0, 1.45, -45.0], [11.6, Math.PI * 2, 0, 1.2, -47.5], [12, Math.PI * 2, 0, .94, -50.5],
+  [10.8, Math.PI * 2, 0, 1.45, -45.0], [11.6, Math.PI * 2, 0, 1.2, -47.2], [12, Math.PI * 2, 0, .94, -49.3],
   // Keep the lower forest level: releasing scale framing must not pitch the
   // camera upward against its descent. User drag still restores separately.
-  [12, 7.7, 0, .8, -54], [11.6, 10.0, 0, .86, -57.5], [11.4, 12.25, 0, .94, -61.5],
+  [12, Math.PI * 2, 0, .8, -51.4], [11.6, Math.PI * 2, 0, .86, -53.5], [11.4, Math.PI * 2, 0, .94, -55.5],
 ]
 
 // Monotone cubic slopes preserve continuous travel through the authored stops.
@@ -79,17 +79,19 @@ export function sampleJourney(value: number) {
   const end = smooth(.86, .97, progress)
   // Restore camera control after the lower forest closes the scale curtain.
   // The same weight gates drag and hover parallax in the mechanical scenes.
-  const orbitWeight = 1 - windowWeight(progress, .20, .235, .925, .95)
-  const scaleFraming = windowWeight(progress, .69, .715, .925, .95)
+  const orbitWeight = 1 - windowWeight(progress, .20, .235, FOREST_ENTRY_END, 1)
+  const scaleFraming = windowWeight(progress, .69, .715, FOREST_ENTRY_END, 1)
   const overlay = progress < .1 ? 'entry' : progress < .305 ? 'statement'
     : progress < .65 ? 'work' : progress < .735 ? 'machine'
       : progress < .89 ? 'scales' : 'contact'
   return {
     progress, index: Math.min(23, Math.round(position)),
     radius: mix(0) + (11.6 - mix(0)) * scaleFraming,
-    azimuth: mix(1), elevation: mix(2) * (1 - scaleFraming), exposure: mix(3),
+    // Start the lower orbit at entry instead of catching up to late keyframes.
+    azimuth: progress >= .69 ? Math.PI * 2 + 3.6 * smooth(FOREST_ENTRY_START, 1, progress) : mix(1),
+    elevation: mix(2) * (1 - scaleFraming), exposure: mix(3),
     height: mix(4),
-    structureYaw: Math.PI * 4 * smooth(.235, .665, progress),
+    structureYaw: -Math.PI * 4 * smooth(.235, .665, progress),
     // An absolute scroll phase is reversible and exactly still at rest.
     chainPhase: progress * 10,
     orbitWeight, orbitEnabled: orbitWeight > 0,

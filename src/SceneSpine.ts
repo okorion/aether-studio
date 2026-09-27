@@ -210,21 +210,18 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
   const dummy = new THREE.Object3D()
   const up = new THREE.Vector3(0, 1, 0)
   const tangent = new THREE.Vector3()
-  const projection = new THREE.Matrix4()
-  const terminal = new THREE.Vector3()
   const alternating = new THREE.Quaternion().setFromAxisAngle(up, Math.PI / 2)
   const chainRoll = new THREE.Quaternion().setFromAxisAngle(up, Math.PI / 2)
   let previousProgress = Number.NaN
   let previousEmergence = Number.NaN
   let previousColumnProgress = Number.NaN
   let previousMobile = mobile
-  let previousAnchor = Number.NaN
   let disposed = false
   group.visible = false
 
   return {
     group,
-    update(value: number, opacity: number, emergence: number, mobileView = mobile, camera?: THREE.Camera, columnProgress = value) {
+    update(value: number, opacity: number, emergence: number, mobileView = mobile, _camera?: THREE.Camera, columnProgress = value) {
       if (disposed) return
       const alpha = clamp(opacity)
       const form = ease(emergence)
@@ -242,35 +239,13 @@ export function createSpineAssembly(software: boolean, mobile: boolean) {
       // attached to the column while the shared assembly catches up.
       chains.rotation.y = sampleJourney(progress).structureYaw - sampleJourney(columnProgress).structureYaw
       const chainPath = sampleChainPath(progress, mobileView)
-      let anchorOffset = chainPath.getPointAt(0, terminal).y
-      if (camera) {
-        // The free end descends across the frame with scroll. At the lower
-        // curtain it occupies only the bottom third, including camera motion.
-        chains.updateWorldMatrix(true, false)
-        projection.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse).multiply(chains.matrixWorld)
-        chainPath.getPointAt(0, terminal).multiplyScalar(form)
-        const startY = terminal.applyMatrix4(projection).y
-        const screenY = THREE.MathUtils.lerp(startY,
-          .72 - 1.06 * ease((progress - .40) / .215), ease((progress - .235) / .055))
-        // Solve on the helix itself. A Y-only correction detaches the links
-        // from their track and makes the diagonal strand fall vertically.
-        let low = -30, high = 30
-        for (let iteration = 0; iteration < 30; iteration++) {
-          const height = (low + high) * .5
-          chainPath.setTopHeight(height)
-          chainPath.getPointAt(0, terminal).multiplyScalar(form).applyMatrix4(projection)
-          if (terminal.y < screenY) low = height
-          else high = height
-        }
-        anchorOffset = (low + high) * .5
-        chainPath.setTopHeight(anchorOffset)
-      }
-      if (progress === previousProgress && columnProgress === previousColumnProgress && form === previousEmergence && mobileView === previousMobile && anchorOffset === previousAnchor) return
+      // Camera framing never changes material feed along the column helix.
+      // The scene curtain handles visibility independently of link positions.
+      if (progress === previousProgress && columnProgress === previousColumnProgress && form === previousEmergence && mobileView === previousMobile) return
       previousProgress = progress
       previousColumnProgress = columnProgress
       previousEmergence = form
       previousMobile = mobileView
-      previousAnchor = anchorOffset
       chains.count = getChainLinkCount(mobileView)
       const travel = columnProgress * 1.4
       for (let i = 0; i < rows; i++) {

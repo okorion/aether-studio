@@ -351,7 +351,7 @@ function probeEmblemCurtainPixels() {
     renderer.autoClear = true
     renderer.setClearColor(0x00ff00, 1)
     const baseline = draw()
-    return [.86, .87, .895].map(progress => {
+    return [.83, .84, .87].map(progress => {
       const state = sampleEmblemCurtain(progress)
       bounds.upper.value = state.upper
       bounds.lower.value = state.lower
@@ -481,11 +481,30 @@ function probeWorldSurfaceDepth() {
       surface.matrixAutoUpdate = false
       surface.matrix.copy(source.matrixWorld)
       surface.renderOrder = source.renderOrder
+      // Raycast the ceiling's final projected surface, independently applying
+      // the page translation to CPU vertices. The render still uses the real
+      // production shader, so a projection/depth mismatch fails this probe.
+      const raySurface = new THREE.Mesh(source.geometry.clone(), source.material)
+      raySurface.matrixAutoUpdate = false
+      raySurface.matrix.copy(source.matrixWorld)
+      if (entry.name === 'aether-floor-underside') {
+        const positions = raySurface.geometry.getAttribute('position')
+        const inverse = source.matrixWorld.clone().invert(), vertex = new THREE.Vector3()
+        const slide = sampleScaleOffset(entry.progress), radius = sampleJourney(entry.progress).radius
+        for (let i = 0; i < positions.count; i++) {
+          vertex.fromBufferAttribute(positions, i).applyMatrix4(source.matrixWorld).applyMatrix4(probeCamera.matrixWorldInverse)
+          vertex.y += slide * (-vertex.z / radius - 1)
+          vertex.applyMatrix4(probeCamera.matrixWorld).applyMatrix4(inverse)
+          positions.setXYZ(i, vertex.x, vertex.y, vertex.z)
+        }
+        raySurface.geometry.computeBoundingSphere()
+      }
+      raySurface.updateMatrixWorld(true)
       const surfacePoint = source.getWorldPosition(new THREE.Vector3())
       const raycaster = new THREE.Raycaster()
       if (entry.ndcY !== null) {
         raycaster.setFromCamera(new THREE.Vector2(0, entry.ndcY), probeCamera)
-        const intersection = raycaster.ray.intersectPlane(new THREE.Plane(new THREE.Vector3(0, 1, 0), -surfacePoint.y), new THREE.Vector3())
+        const intersection = raycaster.intersectObject(raySurface, false)[0]?.point
         if (!intersection) throw new Error(`The production camera ray misses ${entry.name}`)
         surfacePoint.copy(intersection)
       } else {
@@ -521,7 +540,7 @@ function probeWorldSurfaceDepth() {
         // that pixel's marker hit. This is an independent ray/GL depth check,
         // not an assumption that the marker's centre determines every pixel.
         raycaster.setFromCamera(new THREE.Vector2(uvX * 2 - 1, uvY * 2 - 1), probeCamera)
-        const surfaceHit = raycaster.intersectObject(surface, false)[0]
+        const surfaceHit = raycaster.intersectObject(raySurface, false)[0]
         const markerHit = raycaster.intersectObject(marker, false)[0]
         // Exclude nearly coplanar samples: CPU triangle intersection and the
         // 24-bit raster depth differ by ~1.6mm at this grazing floor angle.
@@ -533,6 +552,7 @@ function probeWorldSurfaceDepth() {
         if (red(blocked, offset)) { leakedPixels++; leakedDepthGaps.push(markerHit.distance - surfaceHit.distance) }
       }
       probeScene.remove(surface)
+      raySurface.geometry.dispose()
       return { name: entry.name, progress: entry.progress, effectivelyVisible, depthWrite: source.material.depthWrite,
         markerPixels, checkedOccluded, exposedMarker, outsideCurtain, leakedPixels, leakedDepthGaps }
     })
@@ -559,7 +579,8 @@ function probeProductionBoundaryPixels() {
   const target = new THREE.WebGLRenderTarget(width, height)
   // A full-screen plane isolates the REAL production material/binding from
   // sparse geometry coverage. Constant output changes color only, not discard.
-  const geometry = new THREE.PlaneGeometry(5, 5)
+  // Cover the viewport even after a production material's page translation.
+  const geometry = new THREE.PlaneGeometry(12, 12)
   geometry.setAttribute('aArmour', geometry.getAttribute('position').clone())
   geometry.setAttribute('aArmourNormal', geometry.getAttribute('normal').clone())
   geometry.setAttribute('color', new THREE.BufferAttribute(new Float32Array(geometry.attributes.position.count * 3).fill(1), 3))
@@ -568,7 +589,7 @@ function probeProductionBoundaryPixels() {
   const cases = [
     { name: 'aether-spine-vertebrae', region: 'bone', progress: [.635, .65, .665] },
     { name: 'aether-machine-aperture', region: 'device', progress: [.735, .745, .755, .82] },
-    { name: 'aether-scale-tiles', region: 'scales', progress: [.735, .745, .755, .87] },
+    { name: 'aether-scale-tiles', region: 'scales', progress: [.735, .745, .755, .84] },
     { name: 'aether-floor-underside', region: 'scales', progress: [.745, .755] },
   ] as const
   const results = []

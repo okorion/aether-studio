@@ -4,6 +4,8 @@
 import { chromium } from 'playwright'
 import { writeFile, mkdir } from 'node:fs/promises'
 import { dirname } from 'node:path'
+import { createHash } from 'node:crypto'
+import { installLoadingProfileProbe } from './loading-profile-probe.mjs'
 const args = Object.fromEntries(process.argv.slice(2).reduce((pairs, value, index, all) => {
   if (value.startsWith('--')) pairs.push([value.slice(2), all[index + 1]])
   return pairs
@@ -23,6 +25,7 @@ for (let pair = 0; pair < pairs; pair++) {
       const page = await browser.newPage({ viewport, deviceScaleFactor: 1 })
       const errors = []
       page.on('pageerror', error => errors.push(error.message))
+      if (args.detail === '1') await page.addInitScript(installLoadingProfileProbe)
       await page.addInitScript(() => {
         const probe = { firstFrame: null, visibleReady: null, longTasks: [] }
         window.__loadingMeasurement = probe
@@ -35,7 +38,8 @@ for (let pair = 0; pair < pairs; pair++) {
         }).observe(document, { childList: true, subtree: true, attributes: true })
       })
       for (const visit of ['fresh', 'reload']) {
-        const url = new URL(args[label]); url.searchParams.set('profileLoading', '1')
+        const url = new URL(args[label])
+        if (args.trace !== '0') url.searchParams.set('profileLoading', '1')
         if (visit === 'fresh') await page.goto(url.href)
         else await page.reload()
         await page.waitForSelector('.experience.is-ready', { timeout: 120_000 })
@@ -53,6 +57,22 @@ for (let pair = 0; pair < pairs; pair++) {
           }
         })
         if (loading.profile !== 'gpu') throw new Error(`Hardware GPU required, got ${loading.renderer}`)
+        if (args.detail === '1') {
+          const diagnostic = await page.evaluate(() => window.__loadingGL)
+          loading.gl = loading.measures.map(phase => {
+            const methods = {}
+            for (const call of diagnostic.calls) {
+              if (call.start < phase.start || call.start >= phase.start + phase.duration) continue
+              const stats = methods[call.name] ??= { count: 0, ms: 0, max: 0, bytes: 0 }
+              stats.count++; stats.ms += call.duration; stats.max = Math.max(stats.max, call.duration); stats.bytes += call.bytes
+            }
+            return { phase: phase.name, methods }
+          })
+          loading.programs = diagnostic.programs.map(({ sources, ...record }) => ({ ...record,
+            // Material names do not change shader execution. Preserve all other source text.
+            sourceHashes: sources.map(source => createHash('sha256').update(source.replace(/^#define SHADER_NAME .*$/gm, '')).digest('hex')),
+          }))
+        }
         const scroll = await page.evaluate(async () => {
           const intervals = []; const start = performance.now(); let previous = start
           const height = document.documentElement.scrollHeight - innerHeight
@@ -71,7 +91,7 @@ for (let pair = 0; pair < pairs; pair++) {
         results.push({ pair, label, visit, viewport, loading, scroll, errors: [...errors] })
         console.log(JSON.stringify({ pair, label, visit, ready: loading.visibleReady, atmosphere: loading.measures.find(e => e.name.endsWith(':atmosphere'))?.duration, scroll }))
         await mkdir(dirname(args.output), { recursive: true })
-        await writeFile(args.output, JSON.stringify({ browser: browser.version(), platform: process.platform, launchArgs, note: 'Local preview; fresh browser does not reset OS/driver shader caches. Reload cache use is recorded per resource. Durations are CPU/wall-clock, not GPU timer queries.', results }, null, 2) + '\n')
+        await writeFile(args.output, JSON.stringify({ browser: browser.version(), platform: process.platform, launchArgs, trace: args.trace !== '0', detail: args.detail === '1', note: 'Local preview; fresh browser does not reset OS/driver shader caches. Reload cache use is recorded per resource. Durations are CPU/wall-clock, not GPU timer queries.', results }, null, 2) + '\n')
       }
     } finally {
       await browser.close()

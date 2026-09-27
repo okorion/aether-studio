@@ -19,7 +19,7 @@ import { createSceneLightShafts } from './SceneLightShafts'
 import { createSceneEmblem } from './SceneEmblem'
 import { createColumnFollow } from './ColumnFollow'
 import { createLowerForestOrbit } from './SceneOrbit'
-import { createLoadingTrace } from './LoadingTrace'
+import { beginLoadingSpan, createLoadingTrace } from './LoadingTrace'
 
 type SceneProps = {
   reducedMotion: boolean
@@ -244,6 +244,7 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
       camera.position.set(0, 0, smallScreen ? 13.5 : 10.8)
 
       // Studio light cards create convincing chrome reflections without image assets.
+      const endEnvironmentCards = beginLoadingSpan('environment-cards')
       const environment = new THREE.Scene()
       environment.background = new THREE.Color(0x020406)
       const lightCardGeometry = geometry(new THREE.PlaneGeometry(1, 1))
@@ -269,6 +270,7 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
       addLightCard(0x82915a, 2, new THREE.Vector3(0, -3, 2), new THREE.Vector2(4, 1))
       addLightCard(0x31427e, 2, new THREE.Vector3(0, 1, -4), new THREE.Vector2(3, 6))
       addLightCard(0x91c6bc, 1.2, new THREE.Vector3(0.7, 0.2, 6), new THREE.Vector2(3.5, 5))
+      endEnvironmentCards()
       let envMap: THREE.WebGLRenderTarget | undefined
       const refreshEnvironment = () => {
         if (softwareRenderer) return
@@ -277,11 +279,13 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
           renderTargets.delete(envMap)
         }
         const pmrem = new THREE.PMREMGenerator(activeRenderer)
+        const endPMREM = beginLoadingSpan('environment-pmrem')
         try {
           envMap = pmrem.fromScene(environment, 0.06, 0.1, 30)
           renderTargets.add(envMap)
           scene.environment = envMap.texture
         } finally {
+          endPMREM()
           pmrem.dispose()
         }
       }
@@ -466,10 +470,14 @@ export default function Scene({ reducedMotion, active, onLoading, onUnavailable,
       effectDisposers.push(() => artworkTexture.dispose())
       const layers = createSceneLayers(scene)
       effectDisposers.push(() => layers.dispose())
+      const endWorlds = beginLoadingSpan('worlds')
       const worlds = createSceneWorlds(scene, softwareRenderer, smallScreen, video, lightFilm,
         { map: { value: artworkTexture }, ready: artworkReady }, layers.reflectionExclusions)
+      endWorlds()
       effectDisposers.push(() => worlds.dispose())
+      const endForest = beginLoadingSpan('forest')
       const forest = createSceneForest(scene, softwareRenderer, smallScreen, forestFilm)
+      endForest()
       effectDisposers.push(() => forest.dispose())
       const glow = softwareRenderer ? undefined : createSceneGlow(activeRenderer, scene, camera, !smallScreen)
       glow?.resize(innerWidth, innerHeight, activeRenderer.getPixelRatio())

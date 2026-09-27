@@ -16,6 +16,10 @@ if (!Number.isInteger(pairs) || pairs < 1 || pairs > 30) throw new Error('--pair
 const mobile = args.profile === 'mobile'
 const viewport = mobile ? { width: 390, height: 844 } : { width: 1440, height: 900 }
 const results = []
+const programRecord = ({ sources, ...record }) => ({ ...record,
+  // Material names do not change shader execution. Preserve all other source text.
+  sourceHashes: sources.map(source => createHash('sha256').update(source.replace(/^#define SHADER_NAME .*$/gm, '')).digest('hex')),
+})
 const launchArgs = process.platform === 'win32' ? ['--use-angle=d3d11', '--ignore-gpu-blocklist'] : []
 for (let pair = 0; pair < pairs; pair++) {
   // Alternate order. Each build gets a fresh browser, followed by one reload.
@@ -40,6 +44,7 @@ for (let pair = 0; pair < pairs; pair++) {
       for (const visit of ['fresh', 'reload']) {
         const url = new URL(args[label])
         if (args.trace !== '0') url.searchParams.set('profileLoading', '1')
+        else url.searchParams.delete('profileLoading')
         if (visit === 'fresh') await page.goto(url.href)
         else await page.reload()
         await page.waitForSelector('.experience.is-ready', { timeout: 120_000 })
@@ -68,10 +73,7 @@ for (let pair = 0; pair < pairs; pair++) {
             }
             return { phase: phase.name, methods }
           })
-          loading.programs = diagnostic.programs.map(({ sources, ...record }) => ({ ...record,
-            // Material names do not change shader execution. Preserve all other source text.
-            sourceHashes: sources.map(source => createHash('sha256').update(source.replace(/^#define SHADER_NAME .*$/gm, '')).digest('hex')),
-          }))
+          loading.programs = diagnostic.programs.map(programRecord)
         }
         const scroll = await page.evaluate(async () => {
           const intervals = []; const start = performance.now(); let previous = start
@@ -88,6 +90,10 @@ for (let pair = 0; pair < pairs; pair++) {
           const sorted = intervals.slice(1).sort((a, b) => a - b)
           return { p95: sorted[Math.ceil(sorted.length * .95) - 1], max: Math.max(...sorted), over33ms: sorted.filter(t => t > 33.5).length, frames: sorted.length, finalQuality: document.querySelector('.scene-canvas').dataset.quality }
         })
+        if (args.detail === '1') {
+          const programs = await page.evaluate(() => window.__loadingGL.programs)
+          scroll.newPrograms = programs.slice(loading.programs.length).map(programRecord)
+        }
         results.push({ pair, label, visit, viewport, loading, scroll, errors: [...errors] })
         console.log(JSON.stringify({ pair, label, visit, ready: loading.visibleReady, atmosphere: loading.measures.find(e => e.name.endsWith(':atmosphere'))?.duration, scroll }))
         await mkdir(dirname(args.output), { recursive: true })

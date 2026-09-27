@@ -128,8 +128,7 @@ flowchart TD
 | 미디어 소유자 | 현재 역할 |
 | --- | --- |
 | `SceneVideo` | 모니터의 소스별 영상·텍스처 관리 |
-| 포레스트 `SceneLightVideo` | 숲 배경·링·입자에 전달되는 영상 색 |
-| 리액터 `SceneLightVideo` | 별도 챔버 조명 영상 |
+| 공유 `SceneLightVideo` | `forest-memory.mp4` 디코더 하나를 포레스트·갤러리·리액터·수면 천장이 공유. `lightVideo`는 `forestVideo`와 같은 owner |
 | `ProjectDialog`의 video | 상세 화면의 독립 HTML 영상 |
 
 일시정지→재개, Work·상세→홈, 탭 숨김→복귀, 404·재생 거부 순서로 확인한다. 실패 시 대체 표현이 남고 요청을 무한 반복하지 않아야 한다. 검사: `video`, `light-video-browser`, `project-transition`.

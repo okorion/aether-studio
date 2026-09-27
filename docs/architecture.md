@@ -96,7 +96,7 @@ stateDiagram-v2
 
 [SceneVideo.ts](../src/SceneVideo.ts)는 모니터가 공유하는 영상을 지연 로드한다. `optimizedSrc`가 있는 소스는 VP8 지원 여부에 따라 WebM 또는 기본 MP4를 고른다. 현재 포레스트 영상은 MP4를 사용하며, 선택한 영상이 실패하면 절차적 셰이더를 표시한다.
 
-[SceneLightVideo.ts](../src/SceneLightVideo.ts)는 `source`·`role`별로 별도 owner를 만든다. `Scene.tsx`는 포레스트의 `forest-memory.mp4`와 리액터의 `light-projection.mp4`를 각각 보관한다. 홈이 활성 상태인 동안 조명 영상이 함께 재생될 수 있으며, 모니터 영상처럼 화면 경계만으로 모두 중지되는 구조는 아니다. 각 owner가 재생·텍스처·실패 상태를 소유하며, 모션 설정으로 장면을 다시 만들 때도 같은 참조와 재생 위치를 유지한다. 정지·복귀·실패·해제는 영상별로 처리한다.
+[SceneLightVideo.ts](../src/SceneLightVideo.ts)는 영상의 재생·텍스처·실패 상태를 관리한다. `Scene.tsx`에서는 `forest-memory.mp4`의 owner를 하나 만들고 `lightVideo`도 같은 owner를 참조한다. 포레스트·갤러리·리액터·수면 천장은 이 디코더와 재생 상태를 공유한다. 홈이 활성 상태인 동안 재생을 이어가며, 장면 경계를 지났다는 이유만으로 중지하지 않는다. 모션 설정으로 장면을 다시 만들 때도 같은 참조와 재생 위치를 유지한다. `light-projection.mp4`는 이전 조명 자산으로 보존하지만 현재 이 경로에서 사용하지 않는다.
 
 작은 화면과 소프트웨어 렌더러는 입자·조각 수와 반사 계산을 줄인다. 적응형 DPR과 후처리 설정은 `Scene.tsx`에 있다. 비용을 바꿀 때는 평균 프레임 시간만 보지 말고 첫 진입과 장면이 겹치는 구간을 따로 확인한다.
 

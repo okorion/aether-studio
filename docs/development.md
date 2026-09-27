@@ -81,7 +81,7 @@ flowchart TD
 | 자산 | 현재 관리 방식 |
 | --- | --- |
 | 영상·포스터 | `public/media/`의 파일을 그대로 배포. [출처와 재생성](media-sources.md) |
-| 조명 영상 | 포레스트와 리액터의 별도 재생 수명. [조명 문서](light-projection-media.md) |
+| 조명 영상 | 포레스트·갤러리·리액터·수면 천장이 같은 영상 디코더와 재생 상태를 공유. [기존 조명 자산 문서](light-projection-media.md) |
 | 본 컬럼 메시 | CC BY 4.0 파생 메시. [원본·변환·고지](../src/assets/README.md) |
 | 검색·공유 정보 | `index.html`과 `public/site.webmanifest`. [메타데이터](metadata.md) |
 | 아이콘·공유 카드 | 생성 결과를 저장소에 포함. 일반 빌드에서는 재생성하지 않음 |

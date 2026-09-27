@@ -1,0 +1,5982 @@
+{
+  "cache-mobile-final.json": {
+    "comparison": "A/B: see experiment conditions",
+    "groups": {
+      "baseline-fresh": {
+        "firstFrame": {
+          "n": 5,
+          "median": 8411.299999952316,
+          "mad": 18.299999952316284,
+          "min": 8392.5,
+          "max": 8520.400000095367
+        },
+        "visibleReady": {
+          "n": 5,
+          "median": 15320.399999856949,
+          "mad": 1116.4000000953674,
+          "min": 13873.699999809265,
+          "max": 16436.799999952316
+        },
+        "overlayHidden": null,
+        "fadeDuration": null,
+        "scrollP95": {
+          "n": 5,
+          "median": 33.29999999999927,
+          "mad": 0,
+          "min": 33.29999999999927,
+          "max": 33.29999999999927
+        },
+        "scrollMax": {
+          "n": 5,
+          "median": 33.400000000001455,
+          "mad": 0,
+          "min": 33.400000000001455,
+          "max": 33.5
+        },
+        "scrollOver33": {
+          "n": 5,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "jsWireBytes": {
+          "n": 5,
+          "median": 329040,
+          "mad": 0,
+          "min": 329040,
+          "max": 329040
+        },
+        "jsResourceTransferBytes": {
+          "n": 5,
+          "median": 328815,
+          "mad": 0,
+          "min": 328815,
+          "max": 328815
+        },
+        "revalidations": {
+          "n": 5,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "phases": {}
+      },
+      "baseline-reload": {
+        "firstFrame": {
+          "n": 5,
+          "median": 3008.5,
+          "mad": 23.800000190734863,
+          "min": 2908.899999856949,
+          "max": 3032.300000190735
+        },
+        "visibleReady": {
+          "n": 5,
+          "median": 11758.400000095367,
+          "mad": 34.09999990463257,
+          "min": 11724.300000190735,
+          "max": 12516.100000143051
+        },
+        "overlayHidden": null,
+        "fadeDuration": null,
+        "scrollP95": {
+          "n": 5,
+          "median": 33.29999999999927,
+          "mad": 0,
+          "min": 33.29999999999927,
+          "max": 33.30000000000109
+        },
+        "scrollMax": {
+          "n": 5,
+          "median": 33.400000000001455,
+          "mad": 0,
+          "min": 33.400000000001455,
+          "max": 33.5
+        },
+        "scrollOver33": {
+          "n": 5,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "jsWireBytes": {
+          "n": 5,
+          "median": 1284,
+          "mad": 0,
+          "min": 1284,
+          "max": 1284
+        },
+        "jsResourceTransferBytes": {
+          "n": 5,
+          "median": 1200,
+          "mad": 0,
+          "min": 1200,
+          "max": 1200
+        },
+        "revalidations": {
+          "n": 5,
+          "median": 7,
+          "mad": 0,
+          "min": 7,
+          "max": 7
+        },
+        "phases": {}
+      },
+      "candidate-fresh": {
+        "firstFrame": {
+          "n": 5,
+          "median": 8427,
+          "mad": 63.799999952316284,
+          "min": 8296.900000095367,
+          "max": 8624.799999952316
+        },
+        "visibleReady": {
+          "n": 5,
+          "median": 15491.599999904633,
+          "mad": 477.2000000476837,
+          "min": 15014.399999856949,
+          "max": 16369
+        },
+        "overlayHidden": null,
+        "fadeDuration": null,
+        "scrollP95": {
+          "n": 5,
+          "median": 33.29999999999927,
+          "mad": 0,
+          "min": 33.29999999999927,
+          "max": 33.29999999999927
+        },
+        "scrollMax": {
+          "n": 5,
+          "median": 33.400000000001455,
+          "mad": 0,
+          "min": 33.400000000001455,
+          "max": 33.5
+        },
+        "scrollOver33": {
+          "n": 5,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "jsWireBytes": {
+          "n": 5,
+          "median": 329044,
+          "mad": 0,
+          "min": 329044,
+          "max": 329044
+        },
+        "jsResourceTransferBytes": {
+          "n": 5,
+          "median": 328815,
+          "mad": 0,
+          "min": 328815,
+          "max": 328815
+        },
+        "revalidations": {
+          "n": 5,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "phases": {}
+      },
+      "candidate-reload": {
+        "firstFrame": {
+          "n": 5,
+          "median": 2794.100000143051,
+          "mad": 17.59999966621399,
+          "min": 2775.7000000476837,
+          "max": 2842.5999999046326
+        },
+        "visibleReady": {
+          "n": 5,
+          "median": 11748.200000047684,
+          "mad": 31,
+          "min": 11460,
+          "max": 11814.099999904633
+        },
+        "overlayHidden": null,
+        "fadeDuration": null,
+        "scrollP95": {
+          "n": 5,
+          "median": 33.29999999999927,
+          "mad": 0,
+          "min": 33.29999999999927,
+          "max": 33.30000000000109
+        },
+        "scrollMax": {
+          "n": 5,
+          "median": 33.400000000001455,
+          "mad": 0,
+          "min": 33.400000000001455,
+          "max": 33.5
+        },
+        "scrollOver33": {
+          "n": 5,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "jsWireBytes": {
+          "n": 5,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "jsResourceTransferBytes": {
+          "n": 5,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "revalidations": {
+          "n": 5,
+          "median": 2,
+          "mad": 0,
+          "min": 2,
+          "max": 2
+        },
+        "phases": {}
+      }
+    },
+    "paired": {
+      "fresh-firstFrame": {
+        "n": 5,
+        "median": -34.5,
+        "mad": 155.19999980926514,
+        "min": -213.5,
+        "max": 125,
+        "positivePairs": 2,
+        "values": [
+          120.69999980926514,
+          -34.5,
+          125,
+          -97.79999995231628,
+          -213.5
+        ]
+      },
+      "fresh-visibleReady": {
+        "n": 5,
+        "median": -171.20000004768372,
+        "mad": 1248.2999999523163,
+        "min": -2495.300000190735,
+        "max": 1422.4000000953674,
+        "positivePairs": 1,
+        "values": [
+          -2495.300000190735,
+          -51.99999976158142,
+          -1419.5,
+          -171.20000004768372,
+          1422.4000000953674
+        ]
+      },
+      "fresh-overlayHidden": {
+        "positivePairs": 0,
+        "values": []
+      },
+      "fresh-fadeDuration": {
+        "positivePairs": 0,
+        "values": []
+      },
+      "fresh-scrollP95": {
+        "n": 5,
+        "median": 0,
+        "mad": 0,
+        "min": 0,
+        "max": 0,
+        "positivePairs": 0,
+        "values": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "fresh-scrollMax": {
+        "n": 5,
+        "median": 0,
+        "mad": 0.09999999999854481,
+        "min": -0.09999999999854481,
+        "max": 0.09999999999854481,
+        "positivePairs": 2,
+        "values": [
+          0,
+          -0.09999999999854481,
+          0,
+          0.09999999999854481,
+          0.09999999999854481
+        ]
+      },
+      "fresh-scrollOver33": {
+        "n": 5,
+        "median": 0,
+        "mad": 0,
+        "min": 0,
+        "max": 0,
+        "positivePairs": 0,
+        "values": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "fresh-jsWireBytes": {
+        "n": 5,
+        "median": -4,
+        "mad": 0,
+        "min": -4,
+        "max": -4,
+        "positivePairs": 0,
+        "values": [
+          -4,
+          -4,
+          -4,
+          -4,
+          -4
+        ]
+      },
+      "fresh-jsResourceTransferBytes": {
+        "n": 5,
+        "median": 0,
+        "mad": 0,
+        "min": 0,
+        "max": 0,
+        "positivePairs": 0,
+        "values": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "fresh-revalidations": {
+        "n": 5,
+        "median": 0,
+        "mad": 0,
+        "min": 0,
+        "max": 0,
+        "positivePairs": 0,
+        "values": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "reload-firstFrame": {
+        "n": 5,
+        "median": 165.90000009536743,
+        "mad": 46.200000286102295,
+        "min": 119.69999980926514,
+        "max": 246.19999980926514,
+        "positivePairs": 5,
+        "values": [
+          158.89999985694885,
+          119.69999980926514,
+          246.19999980926514,
+          220.60000038146973,
+          165.90000009536743
+        ]
+      },
+      "reload-visibleReady": {
+        "n": 5,
+        "median": 20.40000009536743,
+        "mad": 82,
+        "min": -61.59999990463257,
+        "max": 1056.1000001430511,
+        "positivePairs": 3,
+        "values": [
+          -54.89999985694885,
+          -61.59999990463257,
+          660.8999998569489,
+          1056.1000001430511,
+          20.40000009536743
+        ]
+      },
+      "reload-overlayHidden": {
+        "positivePairs": 0,
+        "values": []
+      },
+      "reload-fadeDuration": {
+        "positivePairs": 0,
+        "values": []
+      },
+      "reload-scrollP95": {
+        "n": 5,
+        "median": 0,
+        "mad": 0,
+        "min": -1.8189894035458565e-12,
+        "max": 1.8189894035458565e-12,
+        "positivePairs": 1,
+        "values": [
+          0,
+          0,
+          -1.8189894035458565e-12,
+          1.8189894035458565e-12,
+          0
+        ]
+      },
+      "reload-scrollMax": {
+        "n": 5,
+        "median": 0,
+        "mad": 0.09999999999854481,
+        "min": -0.09999999999854481,
+        "max": 0.09999999999854481,
+        "positivePairs": 2,
+        "values": [
+          -0.09999999999854481,
+          0,
+          0.09999999999854481,
+          0.09999999999854481,
+          -0.09999999999854481
+        ]
+      },
+      "reload-scrollOver33": {
+        "n": 5,
+        "median": 0,
+        "mad": 0,
+        "min": 0,
+        "max": 0,
+        "positivePairs": 0,
+        "values": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "reload-jsWireBytes": {
+        "n": 5,
+        "median": 1284,
+        "mad": 0,
+        "min": 1284,
+        "max": 1284,
+        "positivePairs": 5,
+        "values": [
+          1284,
+          1284,
+          1284,
+          1284,
+          1284
+        ]
+      },
+      "reload-jsResourceTransferBytes": {
+        "n": 5,
+        "median": 1200,
+        "mad": 0,
+        "min": 1200,
+        "max": 1200,
+        "positivePairs": 5,
+        "values": [
+          1200,
+          1200,
+          1200,
+          1200,
+          1200
+        ]
+      },
+      "reload-revalidations": {
+        "n": 5,
+        "median": 5,
+        "mad": 0,
+        "min": 5,
+        "max": 5,
+        "positivePairs": 5,
+        "values": [
+          5,
+          5,
+          5,
+          5,
+          5
+        ]
+      }
+    },
+    "traces": [],
+    "errors": []
+  },
+  "cache-pilot.json": {
+    "comparison": "A/B: see experiment conditions",
+    "groups": {
+      "baseline-fresh": {
+        "firstFrame": {
+          "n": 1,
+          "median": 8735.200000047684,
+          "mad": 0,
+          "min": 8735.200000047684,
+          "max": 8735.200000047684
+        },
+        "visibleReady": {
+          "n": 1,
+          "median": 17070.5,
+          "mad": 0,
+          "min": 17070.5,
+          "max": 17070.5
+        },
+        "overlayHidden": null,
+        "fadeDuration": null,
+        "scrollP95": {
+          "n": 1,
+          "median": 33.39999999999782,
+          "mad": 0,
+          "min": 33.39999999999782,
+          "max": 33.39999999999782
+        },
+        "scrollMax": {
+          "n": 1,
+          "median": 33.400000000001455,
+          "mad": 0,
+          "min": 33.400000000001455,
+          "max": 33.400000000001455
+        },
+        "scrollOver33": {
+          "n": 1,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "jsWireBytes": {
+          "n": 1,
+          "median": 329040,
+          "mad": 0,
+          "min": 329040,
+          "max": 329040
+        },
+        "jsResourceTransferBytes": {
+          "n": 1,
+          "median": 328815,
+          "mad": 0,
+          "min": 328815,
+          "max": 328815
+        },
+        "revalidations": {
+          "n": 1,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "phases": {}
+      },
+      "baseline-reload": {
+        "firstFrame": {
+          "n": 1,
+          "median": 3150,
+          "mad": 0,
+          "min": 3150,
+          "max": 3150
+        },
+        "visibleReady": {
+          "n": 1,
+          "median": 12875,
+          "mad": 0,
+          "min": 12875,
+          "max": 12875
+        },
+        "overlayHidden": null,
+        "fadeDuration": null,
+        "scrollP95": {
+          "n": 1,
+          "median": 33.29999999999927,
+          "mad": 0,
+          "min": 33.29999999999927,
+          "max": 33.29999999999927
+        },
+        "scrollMax": {
+          "n": 1,
+          "median": 33.400000000001455,
+          "mad": 0,
+          "min": 33.400000000001455,
+          "max": 33.400000000001455
+        },
+        "scrollOver33": {
+          "n": 1,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "jsWireBytes": {
+          "n": 1,
+          "median": 1284,
+          "mad": 0,
+          "min": 1284,
+          "max": 1284
+        },
+        "jsResourceTransferBytes": {
+          "n": 1,
+          "median": 1200,
+          "mad": 0,
+          "min": 1200,
+          "max": 1200
+        },
+        "revalidations": {
+          "n": 1,
+          "median": 7,
+          "mad": 0,
+          "min": 7,
+          "max": 7
+        },
+        "phases": {}
+      },
+      "candidate-fresh": {
+        "firstFrame": {
+          "n": 1,
+          "median": 8579.299999952316,
+          "mad": 0,
+          "min": 8579.299999952316,
+          "max": 8579.299999952316
+        },
+        "visibleReady": {
+          "n": 1,
+          "median": 15760.799999952316,
+          "mad": 0,
+          "min": 15760.799999952316,
+          "max": 15760.799999952316
+        },
+        "overlayHidden": null,
+        "fadeDuration": null,
+        "scrollP95": {
+          "n": 1,
+          "median": 33.29999999999927,
+          "mad": 0,
+          "min": 33.29999999999927,
+          "max": 33.29999999999927
+        },
+        "scrollMax": {
+          "n": 1,
+          "median": 33.400000000001455,
+          "mad": 0,
+          "min": 33.400000000001455,
+          "max": 33.400000000001455
+        },
+        "scrollOver33": {
+          "n": 1,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "jsWireBytes": {
+          "n": 1,
+          "median": 329044,
+          "mad": 0,
+          "min": 329044,
+          "max": 329044
+        },
+        "jsResourceTransferBytes": {
+          "n": 1,
+          "median": 328815,
+          "mad": 0,
+          "min": 328815,
+          "max": 328815
+        },
+        "revalidations": {
+          "n": 1,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "phases": {}
+      },
+      "candidate-reload": {
+        "firstFrame": {
+          "n": 1,
+          "median": 2867.4000000953674,
+          "mad": 0,
+          "min": 2867.4000000953674,
+          "max": 2867.4000000953674
+        },
+        "visibleReady": {
+          "n": 1,
+          "median": 11861.300000190735,
+          "mad": 0,
+          "min": 11861.300000190735,
+          "max": 11861.300000190735
+        },
+        "overlayHidden": null,
+        "fadeDuration": null,
+        "scrollP95": {
+          "n": 1,
+          "median": 33.30000000000291,
+          "mad": 0,
+          "min": 33.30000000000291,
+          "max": 33.30000000000291
+        },
+        "scrollMax": {
+          "n": 1,
+          "median": 33.5,
+          "mad": 0,
+          "min": 33.5,
+          "max": 33.5
+        },
+        "scrollOver33": {
+          "n": 1,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "jsWireBytes": {
+          "n": 1,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "jsResourceTransferBytes": {
+          "n": 1,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "revalidations": {
+          "n": 1,
+          "median": 2,
+          "mad": 0,
+          "min": 2,
+          "max": 2
+        },
+        "phases": {}
+      }
+    },
+    "paired": {
+      "fresh-firstFrame": {
+        "n": 1,
+        "median": 155.90000009536743,
+        "mad": 0,
+        "min": 155.90000009536743,
+        "max": 155.90000009536743,
+        "positivePairs": 1,
+        "values": [
+          155.90000009536743
+        ]
+      },
+      "fresh-visibleReady": {
+        "n": 1,
+        "median": 1309.7000000476837,
+        "mad": 0,
+        "min": 1309.7000000476837,
+        "max": 1309.7000000476837,
+        "positivePairs": 1,
+        "values": [
+          1309.7000000476837
+        ]
+      },
+      "fresh-overlayHidden": {
+        "positivePairs": 0,
+        "values": []
+      },
+      "fresh-fadeDuration": {
+        "positivePairs": 0,
+        "values": []
+      },
+      "fresh-scrollP95": {
+        "n": 1,
+        "median": 0.09999999999854481,
+        "mad": 0,
+        "min": 0.09999999999854481,
+        "max": 0.09999999999854481,
+        "positivePairs": 1,
+        "values": [
+          0.09999999999854481
+        ]
+      },
+      "fresh-scrollMax": {
+        "n": 1,
+        "median": 0,
+        "mad": 0,
+        "min": 0,
+        "max": 0,
+        "positivePairs": 0,
+        "values": [
+          0
+        ]
+      },
+      "fresh-scrollOver33": {
+        "n": 1,
+        "median": 0,
+        "mad": 0,
+        "min": 0,
+        "max": 0,
+        "positivePairs": 0,
+        "values": [
+          0
+        ]
+      },
+      "fresh-jsWireBytes": {
+        "n": 1,
+        "median": -4,
+        "mad": 0,
+        "min": -4,
+        "max": -4,
+        "positivePairs": 0,
+        "values": [
+          -4
+        ]
+      },
+      "fresh-jsResourceTransferBytes": {
+        "n": 1,
+        "median": 0,
+        "mad": 0,
+        "min": 0,
+        "max": 0,
+        "positivePairs": 0,
+        "values": [
+          0
+        ]
+      },
+      "fresh-revalidations": {
+        "n": 1,
+        "median": 0,
+        "mad": 0,
+        "min": 0,
+        "max": 0,
+        "positivePairs": 0,
+        "values": [
+          0
+        ]
+      },
+      "reload-firstFrame": {
+        "n": 1,
+        "median": 282.59999990463257,
+        "mad": 0,
+        "min": 282.59999990463257,
+        "max": 282.59999990463257,
+        "positivePairs": 1,
+        "values": [
+          282.59999990463257
+        ]
+      },
+      "reload-visibleReady": {
+        "n": 1,
+        "median": 1013.6999998092651,
+        "mad": 0,
+        "min": 1013.6999998092651,
+        "max": 1013.6999998092651,
+        "positivePairs": 1,
+        "values": [
+          1013.6999998092651
+        ]
+      },
+      "reload-overlayHidden": {
+        "positivePairs": 0,
+        "values": []
+      },
+      "reload-fadeDuration": {
+        "positivePairs": 0,
+        "values": []
+      },
+      "reload-scrollP95": {
+        "n": 1,
+        "median": -3.637978807091713e-12,
+        "mad": 0,
+        "min": -3.637978807091713e-12,
+        "max": -3.637978807091713e-12,
+        "positivePairs": 0,
+        "values": [
+          -3.637978807091713e-12
+        ]
+      },
+      "reload-scrollMax": {
+        "n": 1,
+        "median": -0.09999999999854481,
+        "mad": 0,
+        "min": -0.09999999999854481,
+        "max": -0.09999999999854481,
+        "positivePairs": 0,
+        "values": [
+          -0.09999999999854481
+        ]
+      },
+      "reload-scrollOver33": {
+        "n": 1,
+        "median": 0,
+        "mad": 0,
+        "min": 0,
+        "max": 0,
+        "positivePairs": 0,
+        "values": [
+          0
+        ]
+      },
+      "reload-jsWireBytes": {
+        "n": 1,
+        "median": 1284,
+        "mad": 0,
+        "min": 1284,
+        "max": 1284,
+        "positivePairs": 1,
+        "values": [
+          1284
+        ]
+      },
+      "reload-jsResourceTransferBytes": {
+        "n": 1,
+        "median": 1200,
+        "mad": 0,
+        "min": 1200,
+        "max": 1200,
+        "positivePairs": 1,
+        "values": [
+          1200
+        ]
+      },
+      "reload-revalidations": {
+        "n": 1,
+        "median": 5,
+        "mad": 0,
+        "min": 5,
+        "max": 5,
+        "positivePairs": 1,
+        "values": [
+          5
+        ]
+      }
+    },
+    "traces": [],
+    "errors": []
+  },
+  "production-desktop-final.json": {
+    "comparison": "A/A: same target, no optimization delta",
+    "groups": {
+      "baseline-fresh": {
+        "firstFrame": {
+          "n": 5,
+          "median": 5209.900000095367,
+          "mad": 33.60000014305115,
+          "min": 5174.100000143051,
+          "max": 7480
+        },
+        "visibleReady": {
+          "n": 5,
+          "median": 5868.400000095367,
+          "mad": 67.89999985694885,
+          "min": 5793,
+          "max": 8208
+        },
+        "overlayHidden": null,
+        "fadeDuration": null,
+        "scrollP95": {
+          "n": 5,
+          "median": 16.700000000000728,
+          "mad": 0,
+          "min": 16.700000000000728,
+          "max": 16.799999999999272
+        },
+        "scrollMax": {
+          "n": 5,
+          "median": 16.80000000000109,
+          "mad": 0,
+          "min": 16.80000000000109,
+          "max": 16.80000000000109
+        },
+        "scrollOver33": {
+          "n": 5,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "jsWireBytes": {
+          "n": 5,
+          "median": 407490,
+          "mad": 1,
+          "min": 407489,
+          "max": 407494
+        },
+        "jsResourceTransferBytes": {
+          "n": 5,
+          "median": 407759,
+          "mad": 0,
+          "min": 407759,
+          "max": 407759
+        },
+        "revalidations": {
+          "n": 5,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "phases": {}
+      },
+      "baseline-reload": {
+        "firstFrame": {
+          "n": 5,
+          "median": 1728.5,
+          "mad": 17.5,
+          "min": 1705.3999998569489,
+          "max": 1827.7999999523163
+        },
+        "visibleReady": {
+          "n": 5,
+          "median": 4176.399999856949,
+          "mad": 39.09999990463257,
+          "min": 4137.299999952316,
+          "max": 4288.5
+        },
+        "overlayHidden": null,
+        "fadeDuration": null,
+        "scrollP95": {
+          "n": 5,
+          "median": 16.799999999999272,
+          "mad": 0,
+          "min": 16.700000000000728,
+          "max": 16.800000000000182
+        },
+        "scrollMax": {
+          "n": 5,
+          "median": 16.80000000000109,
+          "mad": 0,
+          "min": 16.80000000000109,
+          "max": 16.80000000000109
+        },
+        "scrollOver33": {
+          "n": 5,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "jsWireBytes": {
+          "n": 5,
+          "median": 325,
+          "mad": 0,
+          "min": 325,
+          "max": 325
+        },
+        "jsResourceTransferBytes": {
+          "n": 5,
+          "median": 1200,
+          "mad": 0,
+          "min": 1200,
+          "max": 1200
+        },
+        "revalidations": {
+          "n": 5,
+          "median": 7,
+          "mad": 0,
+          "min": 7,
+          "max": 7
+        },
+        "phases": {}
+      },
+      "candidate-fresh": {
+        "firstFrame": {
+          "n": 5,
+          "median": 5171.700000047684,
+          "mad": 12.400000095367432,
+          "min": 5144.700000047684,
+          "max": 5273.700000047684
+        },
+        "visibleReady": {
+          "n": 5,
+          "median": 5842.900000095367,
+          "mad": 46.299999952316284,
+          "min": 5753.799999952316,
+          "max": 6000.700000047684
+        },
+        "overlayHidden": null,
+        "fadeDuration": null,
+        "scrollP95": {
+          "n": 5,
+          "median": 16.700000000000728,
+          "mad": 0,
+          "min": 16.700000000000728,
+          "max": 16.799999999999272
+        },
+        "scrollMax": {
+          "n": 5,
+          "median": 16.80000000000109,
+          "mad": 0,
+          "min": 16.80000000000109,
+          "max": 16.80000000000109
+        },
+        "scrollOver33": {
+          "n": 5,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "jsWireBytes": {
+          "n": 5,
+          "median": 407493,
+          "mad": 3,
+          "min": 407490,
+          "max": 407517
+        },
+        "jsResourceTransferBytes": {
+          "n": 5,
+          "median": 407759,
+          "mad": 0,
+          "min": 407759,
+          "max": 407759
+        },
+        "revalidations": {
+          "n": 5,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "phases": {}
+      },
+      "candidate-reload": {
+        "firstFrame": {
+          "n": 5,
+          "median": 1760,
+          "mad": 4.599999904632568,
+          "min": 1741.7000000476837,
+          "max": 1764.5999999046326
+        },
+        "visibleReady": {
+          "n": 5,
+          "median": 4213.799999952316,
+          "mad": 12.400000095367432,
+          "min": 4153.099999904633,
+          "max": 4226.700000047684
+        },
+        "overlayHidden": null,
+        "fadeDuration": null,
+        "scrollP95": {
+          "n": 5,
+          "median": 16.700000000000728,
+          "mad": 0,
+          "min": 16.700000000000728,
+          "max": 16.700000000000728
+        },
+        "scrollMax": {
+          "n": 5,
+          "median": 16.80000000000109,
+          "mad": 0,
+          "min": 16.80000000000109,
+          "max": 16.80000000000109
+        },
+        "scrollOver33": {
+          "n": 5,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "jsWireBytes": {
+          "n": 5,
+          "median": 325,
+          "mad": 0,
+          "min": 323,
+          "max": 325
+        },
+        "jsResourceTransferBytes": {
+          "n": 5,
+          "median": 1200,
+          "mad": 0,
+          "min": 1200,
+          "max": 1200
+        },
+        "revalidations": {
+          "n": 5,
+          "median": 7,
+          "mad": 0,
+          "min": 7,
+          "max": 7
+        },
+        "phases": {}
+      },
+      "pooled-fresh": {
+        "firstFrame": {
+          "n": 10,
+          "median": 5180.200000047684,
+          "mad": 22.100000023841858,
+          "min": 5144.700000047684,
+          "max": 7480
+        },
+        "visibleReady": {
+          "n": 10,
+          "median": 5856.600000023842,
+          "mad": 56.200000047683716,
+          "min": 5753.799999952316,
+          "max": 8208
+        },
+        "overlayHidden": null,
+        "fadeDuration": null,
+        "scrollP95": {
+          "n": 10,
+          "median": 16.700000000000728,
+          "mad": 0,
+          "min": 16.700000000000728,
+          "max": 16.799999999999272
+        },
+        "scrollMax": {
+          "n": 10,
+          "median": 16.80000000000109,
+          "mad": 0,
+          "min": 16.80000000000109,
+          "max": 16.80000000000109
+        },
+        "scrollOver33": {
+          "n": 10,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "jsWireBytes": {
+          "n": 10,
+          "median": 407491.5,
+          "mad": 1.5,
+          "min": 407489,
+          "max": 407517
+        },
+        "jsResourceTransferBytes": {
+          "n": 10,
+          "median": 407759,
+          "mad": 0,
+          "min": 407759,
+          "max": 407759
+        },
+        "revalidations": {
+          "n": 10,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "phases": {}
+      },
+      "pooled-reload": {
+        "firstFrame": {
+          "n": 10,
+          "median": 1750.3999999761581,
+          "mad": 12.399999976158142,
+          "min": 1705.3999998569489,
+          "max": 1827.7999999523163
+        },
+        "visibleReady": {
+          "n": 10,
+          "median": 4213.600000023842,
+          "mad": 30.850000023841858,
+          "min": 4137.299999952316,
+          "max": 4288.5
+        },
+        "overlayHidden": null,
+        "fadeDuration": null,
+        "scrollP95": {
+          "n": 10,
+          "median": 16.700000000000728,
+          "mad": 0,
+          "min": 16.700000000000728,
+          "max": 16.800000000000182
+        },
+        "scrollMax": {
+          "n": 10,
+          "median": 16.80000000000109,
+          "mad": 0,
+          "min": 16.80000000000109,
+          "max": 16.80000000000109
+        },
+        "scrollOver33": {
+          "n": 10,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "jsWireBytes": {
+          "n": 10,
+          "median": 325,
+          "mad": 0,
+          "min": 323,
+          "max": 325
+        },
+        "jsResourceTransferBytes": {
+          "n": 10,
+          "median": 1200,
+          "mad": 0,
+          "min": 1200,
+          "max": 1200
+        },
+        "revalidations": {
+          "n": 10,
+          "median": 7,
+          "mad": 0,
+          "min": 7,
+          "max": 7
+        },
+        "phases": {}
+      }
+    },
+    "paired": {},
+    "traces": [],
+    "errors": []
+  },
+  "production-desktop-overlay-final.json": {
+    "comparison": "A/A: same target, no optimization delta",
+    "groups": {
+      "baseline-fresh": {
+        "firstFrame": {
+          "n": 5,
+          "median": 5186.700000047684,
+          "mad": 56.59999990463257,
+          "min": 5120.200000047684,
+          "max": 5269.400000095367
+        },
+        "visibleReady": {
+          "n": 5,
+          "median": 5864.700000047684,
+          "mad": 38.40000009536743,
+          "min": 5737.100000143051,
+          "max": 5903.100000143051
+        },
+        "overlayHidden": {
+          "n": 5,
+          "median": 6305.799999952316,
+          "mad": 43.200000047683716,
+          "min": 6170.200000047684,
+          "max": 6349
+        },
+        "fadeDuration": {
+          "n": 5,
+          "median": 433.09999990463257,
+          "mad": 8,
+          "min": 417.2999999523163,
+          "max": 445.89999985694885
+        },
+        "scrollP95": {
+          "n": 5,
+          "median": 16.799999999999272,
+          "mad": 0,
+          "min": 16.700000000000728,
+          "max": 16.799999999999272
+        },
+        "scrollMax": {
+          "n": 5,
+          "median": 16.80000000000109,
+          "mad": 0,
+          "min": 16.80000000000109,
+          "max": 16.80000000000109
+        },
+        "scrollOver33": {
+          "n": 5,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "jsWireBytes": {
+          "n": 5,
+          "median": 407494,
+          "mad": 2,
+          "min": 407490,
+          "max": 407497
+        },
+        "jsResourceTransferBytes": {
+          "n": 5,
+          "median": 407759,
+          "mad": 0,
+          "min": 407759,
+          "max": 407759
+        },
+        "revalidations": {
+          "n": 5,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "phases": {}
+      },
+      "baseline-reload": {
+        "firstFrame": {
+          "n": 5,
+          "median": 1732.2999999523163,
+          "mad": 11.999999761581421,
+          "min": 1720.3000001907349,
+          "max": 1777.0999999046326
+        },
+        "visibleReady": {
+          "n": 5,
+          "median": 4172.100000143051,
+          "mad": 34.10000014305115,
+          "min": 4121,
+          "max": 4244.700000047684
+        },
+        "overlayHidden": {
+          "n": 5,
+          "median": 4588.900000095367,
+          "mad": 31.5,
+          "min": 4538.099999904633,
+          "max": 4686.900000095367
+        },
+        "fadeDuration": {
+          "n": 5,
+          "median": 433.09999990463257,
+          "mad": 9.100000143051147,
+          "min": 416.7999999523163,
+          "max": 442.2000000476837
+        },
+        "scrollP95": {
+          "n": 5,
+          "median": 16.799999999999272,
+          "mad": 0,
+          "min": 16.700000000000728,
+          "max": 16.799999999999272
+        },
+        "scrollMax": {
+          "n": 5,
+          "median": 16.80000000000109,
+          "mad": 0,
+          "min": 16.80000000000109,
+          "max": 16.80000000000109
+        },
+        "scrollOver33": {
+          "n": 5,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "jsWireBytes": {
+          "n": 5,
+          "median": 325,
+          "mad": 0,
+          "min": 323,
+          "max": 325
+        },
+        "jsResourceTransferBytes": {
+          "n": 5,
+          "median": 1200,
+          "mad": 0,
+          "min": 1200,
+          "max": 1200
+        },
+        "revalidations": {
+          "n": 5,
+          "median": 7,
+          "mad": 0,
+          "min": 7,
+          "max": 7
+        },
+        "phases": {}
+      },
+      "candidate-fresh": {
+        "firstFrame": null,
+        "visibleReady": null,
+        "overlayHidden": null,
+        "fadeDuration": null,
+        "scrollP95": null,
+        "scrollMax": null,
+        "scrollOver33": null,
+        "jsWireBytes": null,
+        "jsResourceTransferBytes": null,
+        "revalidations": null,
+        "phases": {}
+      },
+      "candidate-reload": {
+        "firstFrame": null,
+        "visibleReady": null,
+        "overlayHidden": null,
+        "fadeDuration": null,
+        "scrollP95": null,
+        "scrollMax": null,
+        "scrollOver33": null,
+        "jsWireBytes": null,
+        "jsResourceTransferBytes": null,
+        "revalidations": null,
+        "phases": {}
+      },
+      "pooled-fresh": {
+        "firstFrame": {
+          "n": 5,
+          "median": 5186.700000047684,
+          "mad": 56.59999990463257,
+          "min": 5120.200000047684,
+          "max": 5269.400000095367
+        },
+        "visibleReady": {
+          "n": 5,
+          "median": 5864.700000047684,
+          "mad": 38.40000009536743,
+          "min": 5737.100000143051,
+          "max": 5903.100000143051
+        },
+        "overlayHidden": {
+          "n": 5,
+          "median": 6305.799999952316,
+          "mad": 43.200000047683716,
+          "min": 6170.200000047684,
+          "max": 6349
+        },
+        "fadeDuration": {
+          "n": 5,
+          "median": 433.09999990463257,
+          "mad": 8,
+          "min": 417.2999999523163,
+          "max": 445.89999985694885
+        },
+        "scrollP95": {
+          "n": 5,
+          "median": 16.799999999999272,
+          "mad": 0,
+          "min": 16.700000000000728,
+          "max": 16.799999999999272
+        },
+        "scrollMax": {
+          "n": 5,
+          "median": 16.80000000000109,
+          "mad": 0,
+          "min": 16.80000000000109,
+          "max": 16.80000000000109
+        },
+        "scrollOver33": {
+          "n": 5,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "jsWireBytes": {
+          "n": 5,
+          "median": 407494,
+          "mad": 2,
+          "min": 407490,
+          "max": 407497
+        },
+        "jsResourceTransferBytes": {
+          "n": 5,
+          "median": 407759,
+          "mad": 0,
+          "min": 407759,
+          "max": 407759
+        },
+        "revalidations": {
+          "n": 5,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "phases": {}
+      },
+      "pooled-reload": {
+        "firstFrame": {
+          "n": 5,
+          "median": 1732.2999999523163,
+          "mad": 11.999999761581421,
+          "min": 1720.3000001907349,
+          "max": 1777.0999999046326
+        },
+        "visibleReady": {
+          "n": 5,
+          "median": 4172.100000143051,
+          "mad": 34.10000014305115,
+          "min": 4121,
+          "max": 4244.700000047684
+        },
+        "overlayHidden": {
+          "n": 5,
+          "median": 4588.900000095367,
+          "mad": 31.5,
+          "min": 4538.099999904633,
+          "max": 4686.900000095367
+        },
+        "fadeDuration": {
+          "n": 5,
+          "median": 433.09999990463257,
+          "mad": 9.100000143051147,
+          "min": 416.7999999523163,
+          "max": 442.2000000476837
+        },
+        "scrollP95": {
+          "n": 5,
+          "median": 16.799999999999272,
+          "mad": 0,
+          "min": 16.700000000000728,
+          "max": 16.799999999999272
+        },
+        "scrollMax": {
+          "n": 5,
+          "median": 16.80000000000109,
+          "mad": 0,
+          "min": 16.80000000000109,
+          "max": 16.80000000000109
+        },
+        "scrollOver33": {
+          "n": 5,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "jsWireBytes": {
+          "n": 5,
+          "median": 325,
+          "mad": 0,
+          "min": 323,
+          "max": 325
+        },
+        "jsResourceTransferBytes": {
+          "n": 5,
+          "median": 1200,
+          "mad": 0,
+          "min": 1200,
+          "max": 1200
+        },
+        "revalidations": {
+          "n": 5,
+          "median": 7,
+          "mad": 0,
+          "min": 7,
+          "max": 7
+        },
+        "phases": {}
+      }
+    },
+    "paired": {},
+    "traces": [],
+    "errors": []
+  },
+  "production-detail.json": {
+    "comparison": "A/A: same target, no optimization delta",
+    "groups": {
+      "baseline-fresh": {
+        "firstFrame": {
+          "n": 1,
+          "median": 8036.799999952316,
+          "mad": 0,
+          "min": 8036.799999952316,
+          "max": 8036.799999952316
+        },
+        "visibleReady": {
+          "n": 1,
+          "median": 8827.200000047684,
+          "mad": 0,
+          "min": 8827.200000047684,
+          "max": 8827.200000047684
+        },
+        "overlayHidden": null,
+        "fadeDuration": null,
+        "scrollP95": {
+          "n": 1,
+          "median": 16.700000000000728,
+          "mad": 0,
+          "min": 16.700000000000728,
+          "max": 16.700000000000728
+        },
+        "scrollMax": {
+          "n": 1,
+          "median": 16.80000000000109,
+          "mad": 0,
+          "min": 16.80000000000109,
+          "max": 16.80000000000109
+        },
+        "scrollOver33": {
+          "n": 1,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "jsWireBytes": {
+          "n": 1,
+          "median": 407487,
+          "mad": 0,
+          "min": 407487,
+          "max": 407487
+        },
+        "jsResourceTransferBytes": {
+          "n": 1,
+          "median": 407759,
+          "mad": 0,
+          "min": 407759,
+          "max": 407759
+        },
+        "revalidations": {
+          "n": 1,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "phases": {
+          "aether:scene-1:renderer": {
+            "n": 1,
+            "median": 152.79999995231628,
+            "mad": 0,
+            "min": 152.79999995231628,
+            "max": 152.79999995231628
+          },
+          "aether:scene-1:environment": {
+            "n": 1,
+            "median": 678.2999999523163,
+            "mad": 0,
+            "min": 678.2999999523163,
+            "max": 678.2999999523163
+          },
+          "aether:detail:environment-cards": {
+            "n": 1,
+            "median": 1,
+            "mad": 0,
+            "min": 1,
+            "max": 1
+          },
+          "aether:detail:environment-pmrem": {
+            "n": 1,
+            "median": 676.5,
+            "mad": 0,
+            "min": 676.5,
+            "max": 676.5
+          },
+          "aether:scene-1:foreground": {
+            "n": 1,
+            "median": 69.70000004768372,
+            "mad": 0,
+            "min": 69.70000004768372,
+            "max": 69.70000004768372
+          },
+          "aether:scene-1:atmosphere": {
+            "n": 1,
+            "median": 301.09999990463257,
+            "mad": 0,
+            "min": 301.09999990463257,
+            "max": 301.09999990463257
+          },
+          "aether:scene-1:worlds-and-input": {
+            "n": 1,
+            "median": 403.40000009536743,
+            "mad": 0,
+            "min": 403.40000009536743,
+            "max": 403.40000009536743
+          },
+          "aether:detail:worlds": {
+            "n": 1,
+            "median": 110.5,
+            "mad": 0,
+            "min": 110.5,
+            "max": 110.5
+          },
+          "aether:detail:forest": {
+            "n": 1,
+            "median": 284.90000009536743,
+            "mad": 0,
+            "min": 284.90000009536743,
+            "max": 284.90000009536743
+          },
+          "aether:scene-1:resources": {
+            "n": 1,
+            "median": 160.20000004768372,
+            "mad": 0,
+            "min": 160.20000004768372,
+            "max": 160.20000004768372
+          },
+          "aether:scene-1:textures": {
+            "n": 1,
+            "median": 3.5999999046325684,
+            "mad": 0,
+            "min": 3.5999999046325684,
+            "max": 3.5999999046325684
+          },
+          "aether:detail:texture-collection": {
+            "n": 1,
+            "median": 1.4000000953674316,
+            "mad": 0,
+            "min": 1.4000000953674316,
+            "max": 1.4000000953674316
+          },
+          "aether:detail:texture-upload": {
+            "n": 1,
+            "median": 1.7999999523162842,
+            "mad": 0,
+            "min": 1.7999999523162842,
+            "max": 1.7999999523162842
+          },
+          "aether:scene-1:linear": {
+            "n": 1,
+            "median": 1415.5,
+            "mad": 0,
+            "min": 1415.5,
+            "max": 1415.5
+          },
+          "aether:detail:linear-submit": {
+            "n": 1,
+            "median": 48.799999952316284,
+            "mad": 0,
+            "min": 48.799999952316284,
+            "max": 48.799999952316284
+          },
+          "aether:detail:linear-wait": {
+            "n": 1,
+            "median": 1366.2999999523163,
+            "mad": 0,
+            "min": 1366.2999999523163,
+            "max": 1366.2999999523163
+          },
+          "aether:scene-1:geometry": {
+            "n": 1,
+            "median": 243,
+            "mad": 0,
+            "min": 243,
+            "max": 243
+          },
+          "aether:detail:geometry-first-use-render": {
+            "n": 1,
+            "median": 242.5,
+            "mad": 0,
+            "min": 242.5,
+            "max": 242.5
+          },
+          "aether:scene-1:shaders": {
+            "n": 1,
+            "median": 1265.2000000476837,
+            "mad": 0,
+            "min": 1265.2000000476837,
+            "max": 1265.2000000476837
+          },
+          "aether:detail:display-submit": {
+            "n": 1,
+            "median": 56,
+            "mad": 0,
+            "min": 56,
+            "max": 56
+          },
+          "aether:detail:display-wait": {
+            "n": 1,
+            "median": 1209.0999999046326,
+            "mad": 0,
+            "min": 1209.0999999046326,
+            "max": 1209.0999999046326
+          },
+          "aether:scene-1:postprocess": {
+            "n": 1,
+            "median": 224.20000004768372,
+            "mad": 0,
+            "min": 224.20000004768372,
+            "max": 224.20000004768372
+          },
+          "aether:scene-1:first-frame": {
+            "n": 1,
+            "median": 169.20000004768372,
+            "mad": 0,
+            "min": 169.20000004768372,
+            "max": 169.20000004768372
+          }
+        }
+      },
+      "baseline-reload": {
+        "firstFrame": {
+          "n": 1,
+          "median": 1961.6000001430511,
+          "mad": 0,
+          "min": 1961.6000001430511,
+          "max": 1961.6000001430511
+        },
+        "visibleReady": {
+          "n": 1,
+          "median": 4660.800000190735,
+          "mad": 0,
+          "min": 4660.800000190735,
+          "max": 4660.800000190735
+        },
+        "overlayHidden": null,
+        "fadeDuration": null,
+        "scrollP95": {
+          "n": 1,
+          "median": 16.799999999999272,
+          "mad": 0,
+          "min": 16.799999999999272,
+          "max": 16.799999999999272
+        },
+        "scrollMax": {
+          "n": 1,
+          "median": 16.80000000000109,
+          "mad": 0,
+          "min": 16.80000000000109,
+          "max": 16.80000000000109
+        },
+        "scrollOver33": {
+          "n": 1,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "jsWireBytes": {
+          "n": 1,
+          "median": 324,
+          "mad": 0,
+          "min": 324,
+          "max": 324
+        },
+        "jsResourceTransferBytes": {
+          "n": 1,
+          "median": 1200,
+          "mad": 0,
+          "min": 1200,
+          "max": 1200
+        },
+        "revalidations": {
+          "n": 1,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "phases": {
+          "aether:scene-1:renderer": {
+            "n": 1,
+            "median": 18.299999952316284,
+            "mad": 0,
+            "min": 18.299999952316284,
+            "max": 18.299999952316284
+          },
+          "aether:scene-1:environment": {
+            "n": 1,
+            "median": 19.299999952316284,
+            "mad": 0,
+            "min": 19.299999952316284,
+            "max": 19.299999952316284
+          },
+          "aether:detail:environment-cards": {
+            "n": 1,
+            "median": 0.40000009536743164,
+            "mad": 0,
+            "min": 0.40000009536743164,
+            "max": 0.40000009536743164
+          },
+          "aether:detail:environment-pmrem": {
+            "n": 1,
+            "median": 18.59999990463257,
+            "mad": 0,
+            "min": 18.59999990463257,
+            "max": 18.59999990463257
+          },
+          "aether:scene-1:foreground": {
+            "n": 1,
+            "median": 54.700000047683716,
+            "mad": 0,
+            "min": 54.700000047683716,
+            "max": 54.700000047683716
+          },
+          "aether:scene-1:atmosphere": {
+            "n": 1,
+            "median": 332.2999999523163,
+            "mad": 0,
+            "min": 332.2999999523163,
+            "max": 332.2999999523163
+          },
+          "aether:scene-1:worlds-and-input": {
+            "n": 1,
+            "median": 439.40000009536743,
+            "mad": 0,
+            "min": 439.40000009536743,
+            "max": 439.40000009536743
+          },
+          "aether:detail:worlds": {
+            "n": 1,
+            "median": 104.89999985694885,
+            "mad": 0,
+            "min": 104.89999985694885,
+            "max": 104.89999985694885
+          },
+          "aether:detail:forest": {
+            "n": 1,
+            "median": 325.90000009536743,
+            "mad": 0,
+            "min": 325.90000009536743,
+            "max": 325.90000009536743
+          },
+          "aether:scene-1:resources": {
+            "n": 1,
+            "median": 40.299999952316284,
+            "mad": 0,
+            "min": 40.299999952316284,
+            "max": 40.299999952316284
+          },
+          "aether:scene-1:textures": {
+            "n": 1,
+            "median": 3.8999998569488525,
+            "mad": 0,
+            "min": 3.8999998569488525,
+            "max": 3.8999998569488525
+          },
+          "aether:detail:texture-collection": {
+            "n": 1,
+            "median": 1.8999998569488525,
+            "mad": 0,
+            "min": 1.8999998569488525,
+            "max": 1.8999998569488525
+          },
+          "aether:detail:texture-upload": {
+            "n": 1,
+            "median": 1.7999999523162842,
+            "mad": 0,
+            "min": 1.7999999523162842,
+            "max": 1.7999999523162842
+          },
+          "aether:scene-1:linear": {
+            "n": 1,
+            "median": 334.90000009536743,
+            "mad": 0,
+            "min": 334.90000009536743,
+            "max": 334.90000009536743
+          },
+          "aether:detail:linear-submit": {
+            "n": 1,
+            "median": 65.90000009536743,
+            "mad": 0,
+            "min": 65.90000009536743,
+            "max": 65.90000009536743
+          },
+          "aether:detail:linear-wait": {
+            "n": 1,
+            "median": 268.7999999523163,
+            "mad": 0,
+            "min": 268.7999999523163,
+            "max": 268.7999999523163
+          },
+          "aether:scene-1:geometry": {
+            "n": 1,
+            "median": 125.29999995231628,
+            "mad": 0,
+            "min": 125.29999995231628,
+            "max": 125.29999995231628
+          },
+          "aether:detail:geometry-first-use-render": {
+            "n": 1,
+            "median": 124.70000004768372,
+            "mad": 0,
+            "min": 124.70000004768372,
+            "max": 124.70000004768372
+          },
+          "aether:detail:display-submit": {
+            "n": 1,
+            "median": 44.799999952316284,
+            "mad": 0,
+            "min": 44.799999952316284,
+            "max": 44.799999952316284
+          },
+          "aether:scene-1:shaders": {
+            "n": 1,
+            "median": 162.20000004768372,
+            "mad": 0,
+            "min": 162.20000004768372,
+            "max": 162.20000004768372
+          },
+          "aether:detail:display-wait": {
+            "n": 1,
+            "median": 117.20000004768372,
+            "mad": 0,
+            "min": 117.20000004768372,
+            "max": 117.20000004768372
+          },
+          "aether:scene-1:postprocess": {
+            "n": 1,
+            "median": 21.5,
+            "mad": 0,
+            "min": 21.5,
+            "max": 21.5
+          },
+          "aether:scene-1:first-frame": {
+            "n": 1,
+            "median": 29.09999990463257,
+            "mad": 0,
+            "min": 29.09999990463257,
+            "max": 29.09999990463257
+          }
+        }
+      },
+      "candidate-fresh": {
+        "firstFrame": {
+          "n": 1,
+          "median": 5452.200000047684,
+          "mad": 0,
+          "min": 5452.200000047684,
+          "max": 5452.200000047684
+        },
+        "visibleReady": {
+          "n": 1,
+          "median": 6314.600000143051,
+          "mad": 0,
+          "min": 6314.600000143051,
+          "max": 6314.600000143051
+        },
+        "overlayHidden": null,
+        "fadeDuration": null,
+        "scrollP95": {
+          "n": 1,
+          "median": 16.700000000000728,
+          "mad": 0,
+          "min": 16.700000000000728,
+          "max": 16.700000000000728
+        },
+        "scrollMax": {
+          "n": 1,
+          "median": 16.80000000000109,
+          "mad": 0,
+          "min": 16.80000000000109,
+          "max": 16.80000000000109
+        },
+        "scrollOver33": {
+          "n": 1,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "jsWireBytes": {
+          "n": 1,
+          "median": 407489,
+          "mad": 0,
+          "min": 407489,
+          "max": 407489
+        },
+        "jsResourceTransferBytes": {
+          "n": 1,
+          "median": 407759,
+          "mad": 0,
+          "min": 407759,
+          "max": 407759
+        },
+        "revalidations": {
+          "n": 1,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "phases": {
+          "aether:scene-1:renderer": {
+            "n": 1,
+            "median": 176.79999995231628,
+            "mad": 0,
+            "min": 176.79999995231628,
+            "max": 176.79999995231628
+          },
+          "aether:scene-1:environment": {
+            "n": 1,
+            "median": 697.5,
+            "mad": 0,
+            "min": 697.5,
+            "max": 697.5
+          },
+          "aether:detail:environment-cards": {
+            "n": 1,
+            "median": 1.0999999046325684,
+            "mad": 0,
+            "min": 1.0999999046325684,
+            "max": 1.0999999046325684
+          },
+          "aether:detail:environment-pmrem": {
+            "n": 1,
+            "median": 695.5999999046326,
+            "mad": 0,
+            "min": 695.5999999046326,
+            "max": 695.5999999046326
+          },
+          "aether:scene-1:foreground": {
+            "n": 1,
+            "median": 67.20000004768372,
+            "mad": 0,
+            "min": 67.20000004768372,
+            "max": 67.20000004768372
+          },
+          "aether:scene-1:atmosphere": {
+            "n": 1,
+            "median": 293.59999990463257,
+            "mad": 0,
+            "min": 293.59999990463257,
+            "max": 293.59999990463257
+          },
+          "aether:scene-1:worlds-and-input": {
+            "n": 1,
+            "median": 410.60000014305115,
+            "mad": 0,
+            "min": 410.60000014305115,
+            "max": 410.60000014305115
+          },
+          "aether:detail:worlds": {
+            "n": 1,
+            "median": 113.30000019073486,
+            "mad": 0,
+            "min": 113.30000019073486,
+            "max": 113.30000019073486
+          },
+          "aether:detail:forest": {
+            "n": 1,
+            "median": 288.7999999523163,
+            "mad": 0,
+            "min": 288.7999999523163,
+            "max": 288.7999999523163
+          },
+          "aether:scene-1:resources": {
+            "n": 1,
+            "median": 158.29999995231628,
+            "mad": 0,
+            "min": 158.29999995231628,
+            "max": 158.29999995231628
+          },
+          "aether:scene-1:textures": {
+            "n": 1,
+            "median": 3.799999952316284,
+            "mad": 0,
+            "min": 3.799999952316284,
+            "max": 3.799999952316284
+          },
+          "aether:detail:texture-collection": {
+            "n": 1,
+            "median": 1.6000001430511475,
+            "mad": 0,
+            "min": 1.6000001430511475,
+            "max": 1.6000001430511475
+          },
+          "aether:detail:texture-upload": {
+            "n": 1,
+            "median": 1.7999999523162842,
+            "mad": 0,
+            "min": 1.7999999523162842,
+            "max": 1.7999999523162842
+          },
+          "aether:scene-1:linear": {
+            "n": 1,
+            "median": 1390,
+            "mad": 0,
+            "min": 1390,
+            "max": 1390
+          },
+          "aether:detail:linear-submit": {
+            "n": 1,
+            "median": 55.200000047683716,
+            "mad": 0,
+            "min": 55.200000047683716,
+            "max": 55.200000047683716
+          },
+          "aether:detail:linear-wait": {
+            "n": 1,
+            "median": 1334.5999999046326,
+            "mad": 0,
+            "min": 1334.5999999046326,
+            "max": 1334.5999999046326
+          },
+          "aether:scene-1:geometry": {
+            "n": 1,
+            "median": 132.79999995231628,
+            "mad": 0,
+            "min": 132.79999995231628,
+            "max": 132.79999995231628
+          },
+          "aether:detail:geometry-first-use-render": {
+            "n": 1,
+            "median": 132.39999985694885,
+            "mad": 0,
+            "min": 132.39999985694885,
+            "max": 132.39999985694885
+          },
+          "aether:scene-1:shaders": {
+            "n": 1,
+            "median": 1288.7999999523163,
+            "mad": 0,
+            "min": 1288.7999999523163,
+            "max": 1288.7999999523163
+          },
+          "aether:detail:display-submit": {
+            "n": 1,
+            "median": 61.39999985694885,
+            "mad": 0,
+            "min": 61.39999985694885,
+            "max": 61.39999985694885
+          },
+          "aether:detail:display-wait": {
+            "n": 1,
+            "median": 1227.2000000476837,
+            "mad": 0,
+            "min": 1227.2000000476837,
+            "max": 1227.2000000476837
+          },
+          "aether:scene-1:postprocess": {
+            "n": 1,
+            "median": 234.70000004768372,
+            "mad": 0,
+            "min": 234.70000004768372,
+            "max": 234.70000004768372
+          },
+          "aether:scene-1:first-frame": {
+            "n": 1,
+            "median": 167.5,
+            "mad": 0,
+            "min": 167.5,
+            "max": 167.5
+          }
+        }
+      },
+      "candidate-reload": {
+        "firstFrame": {
+          "n": 1,
+          "median": 1776,
+          "mad": 0,
+          "min": 1776,
+          "max": 1776
+        },
+        "visibleReady": {
+          "n": 1,
+          "median": 4424,
+          "mad": 0,
+          "min": 4424,
+          "max": 4424
+        },
+        "overlayHidden": null,
+        "fadeDuration": null,
+        "scrollP95": {
+          "n": 1,
+          "median": 16.799999999999272,
+          "mad": 0,
+          "min": 16.799999999999272,
+          "max": 16.799999999999272
+        },
+        "scrollMax": {
+          "n": 1,
+          "median": 16.80000000000109,
+          "mad": 0,
+          "min": 16.80000000000109,
+          "max": 16.80000000000109
+        },
+        "scrollOver33": {
+          "n": 1,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "jsWireBytes": {
+          "n": 1,
+          "median": 324,
+          "mad": 0,
+          "min": 324,
+          "max": 324
+        },
+        "jsResourceTransferBytes": {
+          "n": 1,
+          "median": 1200,
+          "mad": 0,
+          "min": 1200,
+          "max": 1200
+        },
+        "revalidations": {
+          "n": 1,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "phases": {
+          "aether:scene-1:renderer": {
+            "n": 1,
+            "median": 15.399999856948853,
+            "mad": 0,
+            "min": 15.399999856948853,
+            "max": 15.399999856948853
+          },
+          "aether:scene-1:environment": {
+            "n": 1,
+            "median": 18.5,
+            "mad": 0,
+            "min": 18.5,
+            "max": 18.5
+          },
+          "aether:detail:environment-cards": {
+            "n": 1,
+            "median": 0.3000001907348633,
+            "mad": 0,
+            "min": 0.3000001907348633,
+            "max": 0.3000001907348633
+          },
+          "aether:detail:environment-pmrem": {
+            "n": 1,
+            "median": 17.699999809265137,
+            "mad": 0,
+            "min": 17.699999809265137,
+            "max": 17.699999809265137
+          },
+          "aether:scene-1:foreground": {
+            "n": 1,
+            "median": 50.299999952316284,
+            "mad": 0,
+            "min": 50.299999952316284,
+            "max": 50.299999952316284
+          },
+          "aether:scene-1:atmosphere": {
+            "n": 1,
+            "median": 311.10000014305115,
+            "mad": 0,
+            "min": 311.10000014305115,
+            "max": 311.10000014305115
+          },
+          "aether:scene-1:worlds-and-input": {
+            "n": 1,
+            "median": 373.2000000476837,
+            "mad": 0,
+            "min": 373.2000000476837,
+            "max": 373.2000000476837
+          },
+          "aether:detail:worlds": {
+            "n": 1,
+            "median": 86.60000014305115,
+            "mad": 0,
+            "min": 86.60000014305115,
+            "max": 86.60000014305115
+          },
+          "aether:detail:forest": {
+            "n": 1,
+            "median": 279.5,
+            "mad": 0,
+            "min": 279.5,
+            "max": 279.5
+          },
+          "aether:scene-1:resources": {
+            "n": 1,
+            "median": 22.299999952316284,
+            "mad": 0,
+            "min": 22.299999952316284,
+            "max": 22.299999952316284
+          },
+          "aether:scene-1:textures": {
+            "n": 1,
+            "median": 2.5999999046325684,
+            "mad": 0,
+            "min": 2.5999999046325684,
+            "max": 2.5999999046325684
+          },
+          "aether:detail:texture-collection": {
+            "n": 1,
+            "median": 1.1000001430511475,
+            "mad": 0,
+            "min": 1.1000001430511475,
+            "max": 1.1000001430511475
+          },
+          "aether:detail:texture-upload": {
+            "n": 1,
+            "median": 1.3999998569488525,
+            "mad": 0,
+            "min": 1.3999998569488525,
+            "max": 1.3999998569488525
+          },
+          "aether:scene-1:linear": {
+            "n": 1,
+            "median": 287.2000000476837,
+            "mad": 0,
+            "min": 287.2000000476837,
+            "max": 287.2000000476837
+          },
+          "aether:detail:linear-submit": {
+            "n": 1,
+            "median": 50.09999990463257,
+            "mad": 0,
+            "min": 50.09999990463257,
+            "max": 50.09999990463257
+          },
+          "aether:detail:linear-wait": {
+            "n": 1,
+            "median": 236.90000009536743,
+            "mad": 0,
+            "min": 236.90000009536743,
+            "max": 236.90000009536743
+          },
+          "aether:scene-1:geometry": {
+            "n": 1,
+            "median": 121.90000009536743,
+            "mad": 0,
+            "min": 121.90000009536743,
+            "max": 121.90000009536743
+          },
+          "aether:detail:geometry-first-use-render": {
+            "n": 1,
+            "median": 121.60000014305115,
+            "mad": 0,
+            "min": 121.60000014305115,
+            "max": 121.60000014305115
+          },
+          "aether:scene-1:shaders": {
+            "n": 1,
+            "median": 140.09999990463257,
+            "mad": 0,
+            "min": 140.09999990463257,
+            "max": 140.09999990463257
+          },
+          "aether:detail:display-submit": {
+            "n": 1,
+            "median": 42.80000019073486,
+            "mad": 0,
+            "min": 42.80000019073486,
+            "max": 42.80000019073486
+          },
+          "aether:detail:display-wait": {
+            "n": 1,
+            "median": 97,
+            "mad": 0,
+            "min": 97,
+            "max": 97
+          },
+          "aether:scene-1:postprocess": {
+            "n": 1,
+            "median": 23,
+            "mad": 0,
+            "min": 23,
+            "max": 23
+          },
+          "aether:scene-1:first-frame": {
+            "n": 1,
+            "median": 37.799999952316284,
+            "mad": 0,
+            "min": 37.799999952316284,
+            "max": 37.799999952316284
+          }
+        }
+      },
+      "pooled-fresh": {
+        "firstFrame": {
+          "n": 2,
+          "median": 6744.5,
+          "mad": 1292.2999999523163,
+          "min": 5452.200000047684,
+          "max": 8036.799999952316
+        },
+        "visibleReady": {
+          "n": 2,
+          "median": 7570.900000095367,
+          "mad": 1256.2999999523163,
+          "min": 6314.600000143051,
+          "max": 8827.200000047684
+        },
+        "overlayHidden": null,
+        "fadeDuration": null,
+        "scrollP95": {
+          "n": 2,
+          "median": 16.700000000000728,
+          "mad": 0,
+          "min": 16.700000000000728,
+          "max": 16.700000000000728
+        },
+        "scrollMax": {
+          "n": 2,
+          "median": 16.80000000000109,
+          "mad": 0,
+          "min": 16.80000000000109,
+          "max": 16.80000000000109
+        },
+        "scrollOver33": {
+          "n": 2,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "jsWireBytes": {
+          "n": 2,
+          "median": 407488,
+          "mad": 1,
+          "min": 407487,
+          "max": 407489
+        },
+        "jsResourceTransferBytes": {
+          "n": 2,
+          "median": 407759,
+          "mad": 0,
+          "min": 407759,
+          "max": 407759
+        },
+        "revalidations": {
+          "n": 2,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "phases": {
+          "aether:scene-1:renderer": {
+            "n": 2,
+            "median": 164.79999995231628,
+            "mad": 12,
+            "min": 152.79999995231628,
+            "max": 176.79999995231628
+          },
+          "aether:scene-1:environment": {
+            "n": 2,
+            "median": 687.8999999761581,
+            "mad": 9.600000023841858,
+            "min": 678.2999999523163,
+            "max": 697.5
+          },
+          "aether:detail:environment-cards": {
+            "n": 2,
+            "median": 1.0499999523162842,
+            "mad": 0.04999995231628418,
+            "min": 1,
+            "max": 1.0999999046325684
+          },
+          "aether:detail:environment-pmrem": {
+            "n": 2,
+            "median": 686.0499999523163,
+            "mad": 9.549999952316284,
+            "min": 676.5,
+            "max": 695.5999999046326
+          },
+          "aether:scene-1:foreground": {
+            "n": 2,
+            "median": 68.45000004768372,
+            "mad": 1.25,
+            "min": 67.20000004768372,
+            "max": 69.70000004768372
+          },
+          "aether:scene-1:atmosphere": {
+            "n": 2,
+            "median": 297.34999990463257,
+            "mad": 3.75,
+            "min": 293.59999990463257,
+            "max": 301.09999990463257
+          },
+          "aether:scene-1:worlds-and-input": {
+            "n": 2,
+            "median": 407.0000001192093,
+            "mad": 3.600000023841858,
+            "min": 403.40000009536743,
+            "max": 410.60000014305115
+          },
+          "aether:detail:worlds": {
+            "n": 2,
+            "median": 111.90000009536743,
+            "mad": 1.4000000953674316,
+            "min": 110.5,
+            "max": 113.30000019073486
+          },
+          "aether:detail:forest": {
+            "n": 2,
+            "median": 286.85000002384186,
+            "mad": 1.9499999284744263,
+            "min": 284.90000009536743,
+            "max": 288.7999999523163
+          },
+          "aether:scene-1:resources": {
+            "n": 2,
+            "median": 159.25,
+            "mad": 0.9500000476837158,
+            "min": 158.29999995231628,
+            "max": 160.20000004768372
+          },
+          "aether:scene-1:textures": {
+            "n": 2,
+            "median": 3.6999999284744263,
+            "mad": 0.10000002384185791,
+            "min": 3.5999999046325684,
+            "max": 3.799999952316284
+          },
+          "aether:detail:texture-collection": {
+            "n": 2,
+            "median": 1.5000001192092896,
+            "mad": 0.10000002384185791,
+            "min": 1.4000000953674316,
+            "max": 1.6000001430511475
+          },
+          "aether:detail:texture-upload": {
+            "n": 2,
+            "median": 1.7999999523162842,
+            "mad": 0,
+            "min": 1.7999999523162842,
+            "max": 1.7999999523162842
+          },
+          "aether:scene-1:linear": {
+            "n": 2,
+            "median": 1402.75,
+            "mad": 12.75,
+            "min": 1390,
+            "max": 1415.5
+          },
+          "aether:detail:linear-submit": {
+            "n": 2,
+            "median": 52,
+            "mad": 3.200000047683716,
+            "min": 48.799999952316284,
+            "max": 55.200000047683716
+          },
+          "aether:detail:linear-wait": {
+            "n": 2,
+            "median": 1350.4499999284744,
+            "mad": 15.850000023841858,
+            "min": 1334.5999999046326,
+            "max": 1366.2999999523163
+          },
+          "aether:scene-1:geometry": {
+            "n": 2,
+            "median": 187.89999997615814,
+            "mad": 55.10000002384186,
+            "min": 132.79999995231628,
+            "max": 243
+          },
+          "aether:detail:geometry-first-use-render": {
+            "n": 2,
+            "median": 187.44999992847443,
+            "mad": 55.050000071525574,
+            "min": 132.39999985694885,
+            "max": 242.5
+          },
+          "aether:scene-1:shaders": {
+            "n": 2,
+            "median": 1277,
+            "mad": 11.799999952316284,
+            "min": 1265.2000000476837,
+            "max": 1288.7999999523163
+          },
+          "aether:detail:display-submit": {
+            "n": 2,
+            "median": 58.699999928474426,
+            "mad": 2.6999999284744263,
+            "min": 56,
+            "max": 61.39999985694885
+          },
+          "aether:detail:display-wait": {
+            "n": 2,
+            "median": 1218.1499999761581,
+            "mad": 9.050000071525574,
+            "min": 1209.0999999046326,
+            "max": 1227.2000000476837
+          },
+          "aether:scene-1:postprocess": {
+            "n": 2,
+            "median": 229.45000004768372,
+            "mad": 5.25,
+            "min": 224.20000004768372,
+            "max": 234.70000004768372
+          },
+          "aether:scene-1:first-frame": {
+            "n": 2,
+            "median": 168.35000002384186,
+            "mad": 0.8500000238418579,
+            "min": 167.5,
+            "max": 169.20000004768372
+          }
+        }
+      },
+      "pooled-reload": {
+        "firstFrame": {
+          "n": 2,
+          "median": 1868.8000000715256,
+          "mad": 92.80000007152557,
+          "min": 1776,
+          "max": 1961.6000001430511
+        },
+        "visibleReady": {
+          "n": 2,
+          "median": 4542.400000095367,
+          "mad": 118.40000009536743,
+          "min": 4424,
+          "max": 4660.800000190735
+        },
+        "overlayHidden": null,
+        "fadeDuration": null,
+        "scrollP95": {
+          "n": 2,
+          "median": 16.799999999999272,
+          "mad": 0,
+          "min": 16.799999999999272,
+          "max": 16.799999999999272
+        },
+        "scrollMax": {
+          "n": 2,
+          "median": 16.80000000000109,
+          "mad": 0,
+          "min": 16.80000000000109,
+          "max": 16.80000000000109
+        },
+        "scrollOver33": {
+          "n": 2,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "jsWireBytes": {
+          "n": 2,
+          "median": 324,
+          "mad": 0,
+          "min": 324,
+          "max": 324
+        },
+        "jsResourceTransferBytes": {
+          "n": 2,
+          "median": 1200,
+          "mad": 0,
+          "min": 1200,
+          "max": 1200
+        },
+        "revalidations": {
+          "n": 2,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "phases": {
+          "aether:scene-1:renderer": {
+            "n": 2,
+            "median": 16.84999990463257,
+            "mad": 1.4500000476837158,
+            "min": 15.399999856948853,
+            "max": 18.299999952316284
+          },
+          "aether:scene-1:environment": {
+            "n": 2,
+            "median": 18.899999976158142,
+            "mad": 0.3999999761581421,
+            "min": 18.5,
+            "max": 19.299999952316284
+          },
+          "aether:detail:environment-cards": {
+            "n": 2,
+            "median": 0.35000014305114746,
+            "mad": 0.04999995231628418,
+            "min": 0.3000001907348633,
+            "max": 0.40000009536743164
+          },
+          "aether:detail:environment-pmrem": {
+            "n": 2,
+            "median": 18.149999856948853,
+            "mad": 0.4500000476837158,
+            "min": 17.699999809265137,
+            "max": 18.59999990463257
+          },
+          "aether:scene-1:foreground": {
+            "n": 2,
+            "median": 52.5,
+            "mad": 2.200000047683716,
+            "min": 50.299999952316284,
+            "max": 54.700000047683716
+          },
+          "aether:scene-1:atmosphere": {
+            "n": 2,
+            "median": 321.7000000476837,
+            "mad": 10.599999904632568,
+            "min": 311.10000014305115,
+            "max": 332.2999999523163
+          },
+          "aether:scene-1:worlds-and-input": {
+            "n": 2,
+            "median": 406.3000000715256,
+            "mad": 33.10000002384186,
+            "min": 373.2000000476837,
+            "max": 439.40000009536743
+          },
+          "aether:detail:worlds": {
+            "n": 2,
+            "median": 95.75,
+            "mad": 9.149999856948853,
+            "min": 86.60000014305115,
+            "max": 104.89999985694885
+          },
+          "aether:detail:forest": {
+            "n": 2,
+            "median": 302.7000000476837,
+            "mad": 23.200000047683716,
+            "min": 279.5,
+            "max": 325.90000009536743
+          },
+          "aether:scene-1:resources": {
+            "n": 2,
+            "median": 31.299999952316284,
+            "mad": 9,
+            "min": 22.299999952316284,
+            "max": 40.299999952316284
+          },
+          "aether:scene-1:textures": {
+            "n": 2,
+            "median": 3.2499998807907104,
+            "mad": 0.6499999761581421,
+            "min": 2.5999999046325684,
+            "max": 3.8999998569488525
+          },
+          "aether:detail:texture-collection": {
+            "n": 2,
+            "median": 1.5,
+            "mad": 0.39999985694885254,
+            "min": 1.1000001430511475,
+            "max": 1.8999998569488525
+          },
+          "aether:detail:texture-upload": {
+            "n": 2,
+            "median": 1.5999999046325684,
+            "mad": 0.20000004768371582,
+            "min": 1.3999998569488525,
+            "max": 1.7999999523162842
+          },
+          "aether:scene-1:linear": {
+            "n": 2,
+            "median": 311.0500000715256,
+            "mad": 23.850000023841858,
+            "min": 287.2000000476837,
+            "max": 334.90000009536743
+          },
+          "aether:detail:linear-submit": {
+            "n": 2,
+            "median": 58,
+            "mad": 7.900000095367432,
+            "min": 50.09999990463257,
+            "max": 65.90000009536743
+          },
+          "aether:detail:linear-wait": {
+            "n": 2,
+            "median": 252.85000002384186,
+            "mad": 15.949999928474426,
+            "min": 236.90000009536743,
+            "max": 268.7999999523163
+          },
+          "aether:scene-1:geometry": {
+            "n": 2,
+            "median": 123.60000002384186,
+            "mad": 1.6999999284744263,
+            "min": 121.90000009536743,
+            "max": 125.29999995231628
+          },
+          "aether:detail:geometry-first-use-render": {
+            "n": 2,
+            "median": 123.15000009536743,
+            "mad": 1.5499999523162842,
+            "min": 121.60000014305115,
+            "max": 124.70000004768372
+          },
+          "aether:detail:display-submit": {
+            "n": 2,
+            "median": 43.800000071525574,
+            "mad": 0.9999998807907104,
+            "min": 42.80000019073486,
+            "max": 44.799999952316284
+          },
+          "aether:scene-1:shaders": {
+            "n": 2,
+            "median": 151.14999997615814,
+            "mad": 11.050000071525574,
+            "min": 140.09999990463257,
+            "max": 162.20000004768372
+          },
+          "aether:detail:display-wait": {
+            "n": 2,
+            "median": 107.10000002384186,
+            "mad": 10.100000023841858,
+            "min": 97,
+            "max": 117.20000004768372
+          },
+          "aether:scene-1:postprocess": {
+            "n": 2,
+            "median": 22.25,
+            "mad": 0.75,
+            "min": 21.5,
+            "max": 23
+          },
+          "aether:scene-1:first-frame": {
+            "n": 2,
+            "median": 33.449999928474426,
+            "mad": 4.350000023841858,
+            "min": 29.09999990463257,
+            "max": 37.799999952316284
+          }
+        }
+      }
+    },
+    "paired": {},
+    "traces": [
+      {
+        "path": "production-detail.json.0-baseline-fresh.trace.json.gz",
+        "mainThread": 31436,
+        "window": {
+          "start": 1490186522926,
+          "end": 1490194559726
+        },
+        "note": "Named event inclusive durations; nested categories overlap. Do not sum categories or threads as wall-clock parse time. Includes measurement scripts unless public URL is present.",
+        "events": {
+          "V8.ParseProgram": {
+            "main": {
+              "n": 13,
+              "median": 0.022,
+              "mad": 0.019999999999999997,
+              "min": 0.001,
+              "max": 5.207
+            },
+            "mainInclusiveMs": 10.87,
+            "backgroundInclusiveMs": 0
+          },
+          "V8.ParseFunction": {
+            "main": {
+              "n": 1601,
+              "median": 0.006,
+              "mad": 0.003,
+              "min": 0.001,
+              "max": 5.665
+            },
+            "mainInclusiveMs": 29.911000000000097,
+            "backgroundInclusiveMs": 0
+          },
+          "V8.PreParse": {
+            "main": {
+              "n": 1342,
+              "median": 0.003,
+              "mad": 0.002,
+              "min": 0.001,
+              "max": 0.224
+            },
+            "mainInclusiveMs": 8.754999999999972,
+            "backgroundInclusiveMs": 19.212999999999926
+          },
+          "v8.parseOnBackground": {
+            "main": null,
+            "mainInclusiveMs": 0,
+            "backgroundInclusiveMs": 37.348
+          },
+          "V8.CompileCode": {
+            "main": {
+              "n": 1568,
+              "median": 0.015,
+              "mad": 0.006999999999999999,
+              "min": 0.004,
+              "max": 5.448
+            },
+            "mainInclusiveMs": 54.35000000000015,
+            "backgroundInclusiveMs": 0
+          },
+          "V8.CompileCodeBackground": {
+            "main": null,
+            "mainInclusiveMs": 0,
+            "backgroundInclusiveMs": 2.047
+          },
+          "v8.compileModule": {
+            "main": {
+              "n": 4,
+              "median": 0.023,
+              "mad": 0.0105,
+              "min": 0.011,
+              "max": 0.048
+            },
+            "mainInclusiveMs": 0.105,
+            "backgroundInclusiveMs": 0
+          },
+          "v8.evaluateModule": {
+            "main": {
+              "n": 2,
+              "median": 9.6645,
+              "mad": 4.8255,
+              "min": 4.839,
+              "max": 14.49
+            },
+            "mainInclusiveMs": 19.329,
+            "backgroundInclusiveMs": 0
+          }
+        },
+        "longTasks": [
+          {
+            "startMs": 2637.396,
+            "durationMs": 64.965
+          },
+          {
+            "startMs": 2949.366,
+            "durationMs": 1637.488
+          },
+          {
+            "startMs": 4605.429,
+            "durationMs": 108.792
+          },
+          {
+            "startMs": 4715.683,
+            "durationMs": 52.877
+          },
+          {
+            "startMs": 5342.273,
+            "durationMs": 240.787
+          },
+          {
+            "startMs": 6134.765,
+            "durationMs": 299.393
+          },
+          {
+            "startMs": 6986.322,
+            "durationMs": 192.389
+          },
+          {
+            "startMs": 7642.945,
+            "durationMs": 224.784
+          },
+          {
+            "startMs": 7884.1,
+            "durationMs": 153.463
+          }
+        ]
+      },
+      {
+        "path": "production-detail.json.0-baseline-reload.trace.json.gz",
+        "mainThread": 31436,
+        "window": {
+          "start": 1490207379324,
+          "end": 1490209340924.0002
+        },
+        "note": "Named event inclusive durations; nested categories overlap. Do not sum categories or threads as wall-clock parse time. Includes measurement scripts unless public URL is present.",
+        "events": {
+          "V8.ParseProgram": {
+            "main": {
+              "n": 1,
+              "median": 4.341,
+              "mad": 0,
+              "min": 4.341,
+              "max": 4.341
+            },
+            "mainInclusiveMs": 4.341,
+            "backgroundInclusiveMs": 0
+          },
+          "V8.ParseFunction": {
+            "main": {
+              "n": 62,
+              "median": 0.0085,
+              "mad": 0.0045000000000000005,
+              "min": 0.002,
+              "max": 0.101
+            },
+            "mainInclusiveMs": 0.8300000000000003,
+            "backgroundInclusiveMs": 0
+          },
+          "V8.PreParse": {
+            "main": {
+              "n": 488,
+              "median": 0.003,
+              "mad": 0.002,
+              "min": 0.001,
+              "max": 0.188
+            },
+            "mainInclusiveMs": 3.57599999999998,
+            "backgroundInclusiveMs": 0
+          },
+          "v8.parseOnBackground": {
+            "main": null,
+            "mainInclusiveMs": 0,
+            "backgroundInclusiveMs": 0
+          },
+          "V8.CompileCode": {
+            "main": {
+              "n": 61,
+              "median": 0.016,
+              "mad": 0.006999999999999999,
+              "min": 0.006,
+              "max": 4.626
+            },
+            "mainInclusiveMs": 6.141999999999999,
+            "backgroundInclusiveMs": 0
+          },
+          "V8.CompileCodeBackground": {
+            "main": null,
+            "mainInclusiveMs": 0,
+            "backgroundInclusiveMs": 0
+          },
+          "v8.compileModule": {
+            "main": {
+              "n": 4,
+              "median": 0.009,
+              "mad": 0.0045,
+              "min": 0.004,
+              "max": 0.031
+            },
+            "mainInclusiveMs": 0.05299999999999999,
+            "backgroundInclusiveMs": 0
+          },
+          "v8.evaluateModule": {
+            "main": {
+              "n": 2,
+              "median": 1.7615,
+              "mad": 0.4425000000000001,
+              "min": 1.319,
+              "max": 2.204
+            },
+            "mainInclusiveMs": 3.523,
+            "backgroundInclusiveMs": 0
+          }
+        },
+        "longTasks": [
+          {
+            "startMs": 379.959,
+            "durationMs": 877.681
+          },
+          {
+            "startMs": 1284.38,
+            "durationMs": 70.14
+          },
+          {
+            "startMs": 1623.059,
+            "durationMs": 170.406
+          }
+        ]
+      },
+      {
+        "path": "production-detail.json.0-candidate-fresh.trace.json.gz",
+        "mainThread": 63328,
+        "window": {
+          "start": 1490224875030,
+          "end": 1490230327230
+        },
+        "note": "Named event inclusive durations; nested categories overlap. Do not sum categories or threads as wall-clock parse time. Includes measurement scripts unless public URL is present.",
+        "events": {
+          "V8.ParseProgram": {
+            "main": {
+              "n": 13,
+              "median": 0.024,
+              "mad": 0.021,
+              "min": 0.002,
+              "max": 5.692
+            },
+            "mainInclusiveMs": 11.625,
+            "backgroundInclusiveMs": 0
+          },
+          "V8.ParseFunction": {
+            "main": {
+              "n": 1602,
+              "median": 0.007,
+              "mad": 0.004,
+              "min": 0.001,
+              "max": 6.984
+            },
+            "mainInclusiveMs": 32.04800000000006,
+            "backgroundInclusiveMs": 0
+          },
+          "V8.PreParse": {
+            "main": {
+              "n": 1341,
+              "median": 0.003,
+              "mad": 0.002,
+              "min": 0.001,
+              "max": 0.267
+            },
+            "mainInclusiveMs": 9.409999999999977,
+            "backgroundInclusiveMs": 19.22400000000001
+          },
+          "v8.parseOnBackground": {
+            "main": null,
+            "mainInclusiveMs": 0,
+            "backgroundInclusiveMs": 41.778
+          },
+          "V8.CompileCode": {
+            "main": {
+              "n": 1568,
+              "median": 0.016,
+              "mad": 0.008,
+              "min": 0.004,
+              "max": 5.726
+            },
+            "mainInclusiveMs": 58.89000000000022,
+            "backgroundInclusiveMs": 0
+          },
+          "V8.CompileCodeBackground": {
+            "main": null,
+            "mainInclusiveMs": 0,
+            "backgroundInclusiveMs": 2.877
+          },
+          "v8.compileModule": {
+            "main": {
+              "n": 4,
+              "median": 0.0305,
+              "mad": 0.005999999999999998,
+              "min": 0.024,
+              "max": 0.052
+            },
+            "mainInclusiveMs": 0.13699999999999998,
+            "backgroundInclusiveMs": 0
+          },
+          "v8.evaluateModule": {
+            "main": {
+              "n": 2,
+              "median": 11.4985,
+              "mad": 5.110500000000001,
+              "min": 6.388,
+              "max": 16.609
+            },
+            "mainInclusiveMs": 22.997,
+            "backgroundInclusiveMs": 0
+          }
+        },
+        "longTasks": [
+          {
+            "startMs": 117.387,
+            "durationMs": 77.357
+          },
+          {
+            "startMs": 429.302,
+            "durationMs": 1678.669
+          },
+          {
+            "startMs": 2119.739,
+            "durationMs": 112.181
+          },
+          {
+            "startMs": 2233.963,
+            "durationMs": 59.458
+          },
+          {
+            "startMs": 3111.672,
+            "durationMs": 210.065
+          },
+          {
+            "startMs": 3627.834,
+            "durationMs": 194.642
+          },
+          {
+            "startMs": 4241.359,
+            "durationMs": 119.066
+          },
+          {
+            "startMs": 4673.671,
+            "durationMs": 150.041
+          },
+          {
+            "startMs": 5049.341,
+            "durationMs": 235.112
+          },
+          {
+            "startMs": 5297.497,
+            "durationMs": 155.568
+          }
+        ]
+      },
+      {
+        "path": "production-detail.json.0-candidate-reload.trace.json.gz",
+        "mainThread": 63328,
+        "window": {
+          "start": 1490243956723,
+          "end": 1490245732723
+        },
+        "note": "Named event inclusive durations; nested categories overlap. Do not sum categories or threads as wall-clock parse time. Includes measurement scripts unless public URL is present.",
+        "events": {
+          "V8.ParseProgram": {
+            "main": {
+              "n": 1,
+              "median": 4.725,
+              "mad": 0,
+              "min": 4.725,
+              "max": 4.725
+            },
+            "mainInclusiveMs": 4.725,
+            "backgroundInclusiveMs": 0
+          },
+          "V8.ParseFunction": {
+            "main": {
+              "n": 62,
+              "median": 0.008,
+              "mad": 0.004,
+              "min": 0.002,
+              "max": 0.11
+            },
+            "mainInclusiveMs": 0.8710000000000004,
+            "backgroundInclusiveMs": 0
+          },
+          "V8.PreParse": {
+            "main": {
+              "n": 488,
+              "median": 0.003,
+              "mad": 0.002,
+              "min": 0.001,
+              "max": 0.166
+            },
+            "mainInclusiveMs": 3.8399999999999808,
+            "backgroundInclusiveMs": 0
+          },
+          "v8.parseOnBackground": {
+            "main": null,
+            "mainInclusiveMs": 0,
+            "backgroundInclusiveMs": 0
+          },
+          "V8.CompileCode": {
+            "main": {
+              "n": 61,
+              "median": 0.016,
+              "mad": 0.007000000000000001,
+              "min": 0.006,
+              "max": 5.032
+            },
+            "mainInclusiveMs": 6.592999999999998,
+            "backgroundInclusiveMs": 0
+          },
+          "V8.CompileCodeBackground": {
+            "main": null,
+            "mainInclusiveMs": 0,
+            "backgroundInclusiveMs": 0
+          },
+          "v8.compileModule": {
+            "main": {
+              "n": 4,
+              "median": 0.0155,
+              "mad": 0.005,
+              "min": 0.006,
+              "max": 0.029
+            },
+            "mainInclusiveMs": 0.066,
+            "backgroundInclusiveMs": 0
+          },
+          "v8.evaluateModule": {
+            "main": {
+              "n": 2,
+              "median": 1.9529999999999998,
+              "mad": 0.23399999999999987,
+              "min": 1.719,
+              "max": 2.187
+            },
+            "mainInclusiveMs": 3.9059999999999997,
+            "backgroundInclusiveMs": 0
+          }
+        },
+        "longTasks": [
+          {
+            "startMs": 372.012,
+            "durationMs": 772.704
+          },
+          {
+            "startMs": 1162.896,
+            "durationMs": 53.061
+          },
+          {
+            "startMs": 1452.638,
+            "durationMs": 165.23
+          }
+        ]
+      }
+    ],
+    "errors": []
+  },
+  "production-mobile-detail.json": {
+    "comparison": "A/A: same target, no optimization delta",
+    "groups": {
+      "baseline-fresh": {
+        "firstFrame": {
+          "n": 1,
+          "median": 8876.299999952316,
+          "mad": 0,
+          "min": 8876.299999952316,
+          "max": 8876.299999952316
+        },
+        "visibleReady": {
+          "n": 1,
+          "median": 17163.5,
+          "mad": 0,
+          "min": 17163.5,
+          "max": 17163.5
+        },
+        "overlayHidden": null,
+        "fadeDuration": null,
+        "scrollP95": {
+          "n": 1,
+          "median": 33.39999999999782,
+          "mad": 0,
+          "min": 33.39999999999782,
+          "max": 33.39999999999782
+        },
+        "scrollMax": {
+          "n": 1,
+          "median": 33.400000000001455,
+          "mad": 0,
+          "min": 33.400000000001455,
+          "max": 33.400000000001455
+        },
+        "scrollOver33": {
+          "n": 1,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "jsWireBytes": {
+          "n": 1,
+          "median": 407513,
+          "mad": 0,
+          "min": 407513,
+          "max": 407513
+        },
+        "jsResourceTransferBytes": {
+          "n": 1,
+          "median": 407759,
+          "mad": 0,
+          "min": 407759,
+          "max": 407759
+        },
+        "revalidations": {
+          "n": 1,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "phases": {
+          "aether:scene-1:renderer": {
+            "n": 1,
+            "median": 43.39999985694885,
+            "mad": 0,
+            "min": 43.39999985694885,
+            "max": 43.39999985694885
+          },
+          "aether:scene-1:environment": {
+            "n": 1,
+            "median": 744.5,
+            "mad": 0,
+            "min": 744.5,
+            "max": 744.5
+          },
+          "aether:detail:environment-cards": {
+            "n": 1,
+            "median": 5.299999952316284,
+            "mad": 0,
+            "min": 5.299999952316284,
+            "max": 5.299999952316284
+          },
+          "aether:detail:environment-pmrem": {
+            "n": 1,
+            "median": 732.7999999523163,
+            "mad": 0,
+            "min": 732.7999999523163,
+            "max": 732.7999999523163
+          },
+          "aether:scene-1:foreground": {
+            "n": 1,
+            "median": 214.40000009536743,
+            "mad": 0,
+            "min": 214.40000009536743,
+            "max": 214.40000009536743
+          },
+          "aether:scene-1:atmosphere": {
+            "n": 1,
+            "median": 559.7999999523163,
+            "mad": 0,
+            "min": 559.7999999523163,
+            "max": 559.7999999523163
+          },
+          "aether:scene-1:worlds-and-input": {
+            "n": 1,
+            "median": 820.7999999523163,
+            "mad": 0,
+            "min": 820.7999999523163,
+            "max": 820.7999999523163
+          },
+          "aether:detail:worlds": {
+            "n": 1,
+            "median": 424.7999999523163,
+            "mad": 0,
+            "min": 424.7999999523163,
+            "max": 424.7999999523163
+          },
+          "aether:detail:forest": {
+            "n": 1,
+            "median": 370.2999999523163,
+            "mad": 0,
+            "min": 370.2999999523163,
+            "max": 370.2999999523163
+          },
+          "aether:scene-1:resources": {
+            "n": 1,
+            "median": 162.60000014305115,
+            "mad": 0,
+            "min": 162.60000014305115,
+            "max": 162.60000014305115
+          },
+          "aether:scene-1:textures": {
+            "n": 1,
+            "median": 13.299999952316284,
+            "mad": 0,
+            "min": 13.299999952316284,
+            "max": 13.299999952316284
+          },
+          "aether:detail:texture-collection": {
+            "n": 1,
+            "median": 5,
+            "mad": 0,
+            "min": 5,
+            "max": 5
+          },
+          "aether:detail:texture-upload": {
+            "n": 1,
+            "median": 5.700000047683716,
+            "mad": 0,
+            "min": 5.700000047683716,
+            "max": 5.700000047683716
+          },
+          "aether:scene-1:linear": {
+            "n": 1,
+            "median": 1334.7999999523163,
+            "mad": 0,
+            "min": 1334.7999999523163,
+            "max": 1334.7999999523163
+          },
+          "aether:detail:linear-submit": {
+            "n": 1,
+            "median": 1051.4000000953674,
+            "mad": 0,
+            "min": 1051.4000000953674,
+            "max": 1051.4000000953674
+          },
+          "aether:detail:linear-wait": {
+            "n": 1,
+            "median": 282.7999999523163,
+            "mad": 0,
+            "min": 282.7999999523163,
+            "max": 282.7999999523163
+          },
+          "aether:scene-1:geometry": {
+            "n": 1,
+            "median": 259,
+            "mad": 0,
+            "min": 259,
+            "max": 259
+          },
+          "aether:detail:geometry-first-use-render": {
+            "n": 1,
+            "median": 257,
+            "mad": 0,
+            "min": 257,
+            "max": 257
+          },
+          "aether:scene-1:shaders": {
+            "n": 1,
+            "median": 1251.9000000953674,
+            "mad": 0,
+            "min": 1251.9000000953674,
+            "max": 1251.9000000953674
+          },
+          "aether:detail:display-submit": {
+            "n": 1,
+            "median": 373.2000000476837,
+            "mad": 0,
+            "min": 373.2000000476837,
+            "max": 373.2000000476837
+          },
+          "aether:detail:display-wait": {
+            "n": 1,
+            "median": 878.3000001907349,
+            "mad": 0,
+            "min": 878.3000001907349,
+            "max": 878.3000001907349
+          },
+          "aether:scene-1:postprocess": {
+            "n": 1,
+            "median": 142.39999985694885,
+            "mad": 0,
+            "min": 142.39999985694885,
+            "max": 142.39999985694885
+          },
+          "aether:scene-1:first-frame": {
+            "n": 1,
+            "median": 202.10000014305115,
+            "mad": 0,
+            "min": 202.10000014305115,
+            "max": 202.10000014305115
+          }
+        }
+      },
+      "baseline-reload": {
+        "firstFrame": {
+          "n": 1,
+          "median": 2970.5999999046326,
+          "mad": 0,
+          "min": 2970.5999999046326,
+          "max": 2970.5999999046326
+        },
+        "visibleReady": {
+          "n": 1,
+          "median": 12420.200000047684,
+          "mad": 0,
+          "min": 12420.200000047684,
+          "max": 12420.200000047684
+        },
+        "overlayHidden": null,
+        "fadeDuration": null,
+        "scrollP95": {
+          "n": 1,
+          "median": 33.30000000000291,
+          "mad": 0,
+          "min": 33.30000000000291,
+          "max": 33.30000000000291
+        },
+        "scrollMax": {
+          "n": 1,
+          "median": 33.400000000001455,
+          "mad": 0,
+          "min": 33.400000000001455,
+          "max": 33.400000000001455
+        },
+        "scrollOver33": {
+          "n": 1,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "jsWireBytes": {
+          "n": 1,
+          "median": 325,
+          "mad": 0,
+          "min": 325,
+          "max": 325
+        },
+        "jsResourceTransferBytes": {
+          "n": 1,
+          "median": 1200,
+          "mad": 0,
+          "min": 1200,
+          "max": 1200
+        },
+        "revalidations": {
+          "n": 1,
+          "median": 7,
+          "mad": 0,
+          "min": 7,
+          "max": 7
+        },
+        "phases": {
+          "aether:scene-1:renderer": {
+            "n": 1,
+            "median": 22.300000190734863,
+            "mad": 0,
+            "min": 22.300000190734863,
+            "max": 22.300000190734863
+          },
+          "aether:scene-1:environment": {
+            "n": 1,
+            "median": 50.69999980926514,
+            "mad": 0,
+            "min": 50.69999980926514,
+            "max": 50.69999980926514
+          },
+          "aether:detail:environment-cards": {
+            "n": 1,
+            "median": 1.2999999523162842,
+            "mad": 0,
+            "min": 1.2999999523162842,
+            "max": 1.2999999523162842
+          },
+          "aether:detail:environment-pmrem": {
+            "n": 1,
+            "median": 46.30000019073486,
+            "mad": 0,
+            "min": 46.30000019073486,
+            "max": 46.30000019073486
+          },
+          "aether:scene-1:foreground": {
+            "n": 1,
+            "median": 149.80000019073486,
+            "mad": 0,
+            "min": 149.80000019073486,
+            "max": 149.80000019073486
+          },
+          "aether:scene-1:atmosphere": {
+            "n": 1,
+            "median": 491.7999999523163,
+            "mad": 0,
+            "min": 491.7999999523163,
+            "max": 491.7999999523163
+          },
+          "aether:scene-1:worlds-and-input": {
+            "n": 1,
+            "median": 676.2000000476837,
+            "mad": 0,
+            "min": 676.2000000476837,
+            "max": 676.2000000476837
+          },
+          "aether:detail:worlds": {
+            "n": 1,
+            "median": 321.7000000476837,
+            "mad": 0,
+            "min": 321.7000000476837,
+            "max": 321.7000000476837
+          },
+          "aether:detail:forest": {
+            "n": 1,
+            "median": 335.5,
+            "mad": 0,
+            "min": 335.5,
+            "max": 335.5
+          },
+          "aether:scene-1:resources": {
+            "n": 1,
+            "median": 80.69999980926514,
+            "mad": 0,
+            "min": 80.69999980926514,
+            "max": 80.69999980926514
+          },
+          "aether:scene-1:textures": {
+            "n": 1,
+            "median": 8.5,
+            "mad": 0,
+            "min": 8.5,
+            "max": 8.5
+          },
+          "aether:detail:texture-collection": {
+            "n": 1,
+            "median": 3.5,
+            "mad": 0,
+            "min": 3.5,
+            "max": 3.5
+          },
+          "aether:detail:texture-upload": {
+            "n": 1,
+            "median": 4.5,
+            "mad": 0,
+            "min": 4.5,
+            "max": 4.5
+          },
+          "aether:scene-1:linear": {
+            "n": 1,
+            "median": 259.10000014305115,
+            "mad": 0,
+            "min": 259.10000014305115,
+            "max": 259.10000014305115
+          },
+          "aether:detail:linear-submit": {
+            "n": 1,
+            "median": 217.39999985694885,
+            "mad": 0,
+            "min": 217.39999985694885,
+            "max": 217.39999985694885
+          },
+          "aether:detail:linear-wait": {
+            "n": 1,
+            "median": 40.60000014305115,
+            "mad": 0,
+            "min": 40.60000014305115,
+            "max": 40.60000014305115
+          },
+          "aether:scene-1:geometry": {
+            "n": 1,
+            "median": 230.29999995231628,
+            "mad": 0,
+            "min": 230.29999995231628,
+            "max": 230.29999995231628
+          },
+          "aether:detail:geometry-first-use-render": {
+            "n": 1,
+            "median": 228.5,
+            "mad": 0,
+            "min": 228.5,
+            "max": 228.5
+          },
+          "aether:scene-1:shaders": {
+            "n": 1,
+            "median": 210.5,
+            "mad": 0,
+            "min": 210.5,
+            "max": 210.5
+          },
+          "aether:detail:display-submit": {
+            "n": 1,
+            "median": 193.70000004768372,
+            "mad": 0,
+            "min": 193.70000004768372,
+            "max": 193.70000004768372
+          },
+          "aether:detail:display-wait": {
+            "n": 1,
+            "median": 16.200000047683716,
+            "mad": 0,
+            "min": 16.200000047683716,
+            "max": 16.200000047683716
+          },
+          "aether:scene-1:postprocess": {
+            "n": 1,
+            "median": 10.299999952316284,
+            "mad": 0,
+            "min": 10.299999952316284,
+            "max": 10.299999952316284
+          },
+          "aether:scene-1:first-frame": {
+            "n": 1,
+            "median": 50.40000009536743,
+            "mad": 0,
+            "min": 50.40000009536743,
+            "max": 50.40000009536743
+          }
+        }
+      },
+      "candidate-fresh": {
+        "firstFrame": {
+          "n": 1,
+          "median": 8936.700000047684,
+          "mad": 0,
+          "min": 8936.700000047684,
+          "max": 8936.700000047684
+        },
+        "visibleReady": {
+          "n": 1,
+          "median": 14937.099999904633,
+          "mad": 0,
+          "min": 14937.099999904633,
+          "max": 14937.099999904633
+        },
+        "overlayHidden": null,
+        "fadeDuration": null,
+        "scrollP95": {
+          "n": 1,
+          "median": 33.39999999999782,
+          "mad": 0,
+          "min": 33.39999999999782,
+          "max": 33.39999999999782
+        },
+        "scrollMax": {
+          "n": 1,
+          "median": 33.5,
+          "mad": 0,
+          "min": 33.5,
+          "max": 33.5
+        },
+        "scrollOver33": {
+          "n": 1,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "jsWireBytes": {
+          "n": 1,
+          "median": 407486,
+          "mad": 0,
+          "min": 407486,
+          "max": 407486
+        },
+        "jsResourceTransferBytes": {
+          "n": 1,
+          "median": 407759,
+          "mad": 0,
+          "min": 407759,
+          "max": 407759
+        },
+        "revalidations": {
+          "n": 1,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "phases": {
+          "aether:scene-1:renderer": {
+            "n": 1,
+            "median": 43.40000009536743,
+            "mad": 0,
+            "min": 43.40000009536743,
+            "max": 43.40000009536743
+          },
+          "aether:scene-1:environment": {
+            "n": 1,
+            "median": 751.2999999523163,
+            "mad": 0,
+            "min": 751.2999999523163,
+            "max": 751.2999999523163
+          },
+          "aether:detail:environment-cards": {
+            "n": 1,
+            "median": 5.299999952316284,
+            "mad": 0,
+            "min": 5.299999952316284,
+            "max": 5.299999952316284
+          },
+          "aether:detail:environment-pmrem": {
+            "n": 1,
+            "median": 739.9000000953674,
+            "mad": 0,
+            "min": 739.9000000953674,
+            "max": 739.9000000953674
+          },
+          "aether:scene-1:foreground": {
+            "n": 1,
+            "median": 215.20000004768372,
+            "mad": 0,
+            "min": 215.20000004768372,
+            "max": 215.20000004768372
+          },
+          "aether:scene-1:atmosphere": {
+            "n": 1,
+            "median": 551.8999998569489,
+            "mad": 0,
+            "min": 551.8999998569489,
+            "max": 551.8999998569489
+          },
+          "aether:scene-1:worlds-and-input": {
+            "n": 1,
+            "median": 832.7000000476837,
+            "mad": 0,
+            "min": 832.7000000476837,
+            "max": 832.7000000476837
+          },
+          "aether:detail:worlds": {
+            "n": 1,
+            "median": 427.60000014305115,
+            "mad": 0,
+            "min": 427.60000014305115,
+            "max": 427.60000014305115
+          },
+          "aether:detail:forest": {
+            "n": 1,
+            "median": 378.69999980926514,
+            "mad": 0,
+            "min": 378.69999980926514,
+            "max": 378.69999980926514
+          },
+          "aether:scene-1:resources": {
+            "n": 1,
+            "median": 160.09999990463257,
+            "mad": 0,
+            "min": 160.09999990463257,
+            "max": 160.09999990463257
+          },
+          "aether:scene-1:textures": {
+            "n": 1,
+            "median": 12.5,
+            "mad": 0,
+            "min": 12.5,
+            "max": 12.5
+          },
+          "aether:detail:texture-collection": {
+            "n": 1,
+            "median": 4.5,
+            "mad": 0,
+            "min": 4.5,
+            "max": 4.5
+          },
+          "aether:detail:texture-upload": {
+            "n": 1,
+            "median": 5.700000047683716,
+            "mad": 0,
+            "min": 5.700000047683716,
+            "max": 5.700000047683716
+          },
+          "aether:scene-1:linear": {
+            "n": 1,
+            "median": 1365.2000000476837,
+            "mad": 0,
+            "min": 1365.2000000476837,
+            "max": 1365.2000000476837
+          },
+          "aether:detail:linear-submit": {
+            "n": 1,
+            "median": 228.80000019073486,
+            "mad": 0,
+            "min": 228.80000019073486,
+            "max": 228.80000019073486
+          },
+          "aether:detail:linear-wait": {
+            "n": 1,
+            "median": 1135.6000001430511,
+            "mad": 0,
+            "min": 1135.6000001430511,
+            "max": 1135.6000001430511
+          },
+          "aether:scene-1:geometry": {
+            "n": 1,
+            "median": 258,
+            "mad": 0,
+            "min": 258,
+            "max": 258
+          },
+          "aether:detail:geometry-first-use-render": {
+            "n": 1,
+            "median": 256.10000014305115,
+            "mad": 0,
+            "min": 256.10000014305115,
+            "max": 256.10000014305115
+          },
+          "aether:scene-1:shaders": {
+            "n": 1,
+            "median": 1270.2999999523163,
+            "mad": 0,
+            "min": 1270.2999999523163,
+            "max": 1270.2999999523163
+          },
+          "aether:detail:display-submit": {
+            "n": 1,
+            "median": 302.40000009536743,
+            "mad": 0,
+            "min": 302.40000009536743,
+            "max": 302.40000009536743
+          },
+          "aether:detail:display-wait": {
+            "n": 1,
+            "median": 967.2999999523163,
+            "mad": 0,
+            "min": 967.2999999523163,
+            "max": 967.2999999523163
+          },
+          "aether:scene-1:postprocess": {
+            "n": 1,
+            "median": 141.70000004768372,
+            "mad": 0,
+            "min": 141.70000004768372,
+            "max": 141.70000004768372
+          },
+          "aether:scene-1:first-frame": {
+            "n": 1,
+            "median": 208.5,
+            "mad": 0,
+            "min": 208.5,
+            "max": 208.5
+          }
+        }
+      },
+      "candidate-reload": {
+        "firstFrame": {
+          "n": 1,
+          "median": 2979.7000000476837,
+          "mad": 0,
+          "min": 2979.7000000476837,
+          "max": 2979.7000000476837
+        },
+        "visibleReady": {
+          "n": 1,
+          "median": 12523.900000095367,
+          "mad": 0,
+          "min": 12523.900000095367,
+          "max": 12523.900000095367
+        },
+        "overlayHidden": null,
+        "fadeDuration": null,
+        "scrollP95": {
+          "n": 1,
+          "median": 33.30000000000291,
+          "mad": 0,
+          "min": 33.30000000000291,
+          "max": 33.30000000000291
+        },
+        "scrollMax": {
+          "n": 1,
+          "median": 33.5,
+          "mad": 0,
+          "min": 33.5,
+          "max": 33.5
+        },
+        "scrollOver33": {
+          "n": 1,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "jsWireBytes": {
+          "n": 1,
+          "median": 325,
+          "mad": 0,
+          "min": 325,
+          "max": 325
+        },
+        "jsResourceTransferBytes": {
+          "n": 1,
+          "median": 1200,
+          "mad": 0,
+          "min": 1200,
+          "max": 1200
+        },
+        "revalidations": {
+          "n": 1,
+          "median": 7,
+          "mad": 0,
+          "min": 7,
+          "max": 7
+        },
+        "phases": {
+          "aether:scene-1:renderer": {
+            "n": 1,
+            "median": 24.399999856948853,
+            "mad": 0,
+            "min": 24.399999856948853,
+            "max": 24.399999856948853
+          },
+          "aether:scene-1:environment": {
+            "n": 1,
+            "median": 50.10000014305115,
+            "mad": 0,
+            "min": 50.10000014305115,
+            "max": 50.10000014305115
+          },
+          "aether:detail:environment-cards": {
+            "n": 1,
+            "median": 1.4000000953674316,
+            "mad": 0,
+            "min": 1.4000000953674316,
+            "max": 1.4000000953674316
+          },
+          "aether:detail:environment-pmrem": {
+            "n": 1,
+            "median": 45.90000009536743,
+            "mad": 0,
+            "min": 45.90000009536743,
+            "max": 45.90000009536743
+          },
+          "aether:scene-1:foreground": {
+            "n": 1,
+            "median": 148,
+            "mad": 0,
+            "min": 148,
+            "max": 148
+          },
+          "aether:scene-1:atmosphere": {
+            "n": 1,
+            "median": 491.7000000476837,
+            "mad": 0,
+            "min": 491.7000000476837,
+            "max": 491.7000000476837
+          },
+          "aether:scene-1:worlds-and-input": {
+            "n": 1,
+            "median": 680.7999999523163,
+            "mad": 0,
+            "min": 680.7999999523163,
+            "max": 680.7999999523163
+          },
+          "aether:detail:worlds": {
+            "n": 1,
+            "median": 312.7000000476837,
+            "mad": 0,
+            "min": 312.7000000476837,
+            "max": 312.7000000476837
+          },
+          "aether:detail:forest": {
+            "n": 1,
+            "median": 349.7000000476837,
+            "mad": 0,
+            "min": 349.7000000476837,
+            "max": 349.7000000476837
+          },
+          "aether:scene-1:resources": {
+            "n": 1,
+            "median": 76.39999985694885,
+            "mad": 0,
+            "min": 76.39999985694885,
+            "max": 76.39999985694885
+          },
+          "aether:scene-1:textures": {
+            "n": 1,
+            "median": 11.800000190734863,
+            "mad": 0,
+            "min": 11.800000190734863,
+            "max": 11.800000190734863
+          },
+          "aether:detail:texture-collection": {
+            "n": 1,
+            "median": 5.299999952316284,
+            "mad": 0,
+            "min": 5.299999952316284,
+            "max": 5.299999952316284
+          },
+          "aether:detail:texture-upload": {
+            "n": 1,
+            "median": 5.800000190734863,
+            "mad": 0,
+            "min": 5.800000190734863,
+            "max": 5.800000190734863
+          },
+          "aether:scene-1:linear": {
+            "n": 1,
+            "median": 262.2999999523163,
+            "mad": 0,
+            "min": 262.2999999523163,
+            "max": 262.2999999523163
+          },
+          "aether:detail:linear-submit": {
+            "n": 1,
+            "median": 220.20000004768372,
+            "mad": 0,
+            "min": 220.20000004768372,
+            "max": 220.20000004768372
+          },
+          "aether:detail:linear-wait": {
+            "n": 1,
+            "median": 41.299999952316284,
+            "mad": 0,
+            "min": 41.299999952316284,
+            "max": 41.299999952316284
+          },
+          "aether:scene-1:geometry": {
+            "n": 1,
+            "median": 219.79999995231628,
+            "mad": 0,
+            "min": 219.79999995231628,
+            "max": 219.79999995231628
+          },
+          "aether:detail:geometry-first-use-render": {
+            "n": 1,
+            "median": 217.89999985694885,
+            "mad": 0,
+            "min": 217.89999985694885,
+            "max": 217.89999985694885
+          },
+          "aether:scene-1:shaders": {
+            "n": 1,
+            "median": 211.40000009536743,
+            "mad": 0,
+            "min": 211.40000009536743,
+            "max": 211.40000009536743
+          },
+          "aether:detail:display-submit": {
+            "n": 1,
+            "median": 193,
+            "mad": 0,
+            "min": 193,
+            "max": 193
+          },
+          "aether:detail:display-wait": {
+            "n": 1,
+            "median": 17.799999952316284,
+            "mad": 0,
+            "min": 17.799999952316284,
+            "max": 17.799999952316284
+          },
+          "aether:scene-1:postprocess": {
+            "n": 1,
+            "median": 10.899999856948853,
+            "mad": 0,
+            "min": 10.899999856948853,
+            "max": 10.899999856948853
+          },
+          "aether:scene-1:first-frame": {
+            "n": 1,
+            "median": 57.299999952316284,
+            "mad": 0,
+            "min": 57.299999952316284,
+            "max": 57.299999952316284
+          }
+        }
+      },
+      "pooled-fresh": {
+        "firstFrame": {
+          "n": 2,
+          "median": 8906.5,
+          "mad": 30.200000047683716,
+          "min": 8876.299999952316,
+          "max": 8936.700000047684
+        },
+        "visibleReady": {
+          "n": 2,
+          "median": 16050.299999952316,
+          "mad": 1113.2000000476837,
+          "min": 14937.099999904633,
+          "max": 17163.5
+        },
+        "overlayHidden": null,
+        "fadeDuration": null,
+        "scrollP95": {
+          "n": 2,
+          "median": 33.39999999999782,
+          "mad": 0,
+          "min": 33.39999999999782,
+          "max": 33.39999999999782
+        },
+        "scrollMax": {
+          "n": 2,
+          "median": 33.45000000000073,
+          "mad": 0.049999999999272404,
+          "min": 33.400000000001455,
+          "max": 33.5
+        },
+        "scrollOver33": {
+          "n": 2,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "jsWireBytes": {
+          "n": 2,
+          "median": 407499.5,
+          "mad": 13.5,
+          "min": 407486,
+          "max": 407513
+        },
+        "jsResourceTransferBytes": {
+          "n": 2,
+          "median": 407759,
+          "mad": 0,
+          "min": 407759,
+          "max": 407759
+        },
+        "revalidations": {
+          "n": 2,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "phases": {
+          "aether:scene-1:renderer": {
+            "n": 2,
+            "median": 43.39999997615814,
+            "mad": 1.1920928955078125e-7,
+            "min": 43.39999985694885,
+            "max": 43.40000009536743
+          },
+          "aether:scene-1:environment": {
+            "n": 2,
+            "median": 747.8999999761581,
+            "mad": 3.399999976158142,
+            "min": 744.5,
+            "max": 751.2999999523163
+          },
+          "aether:detail:environment-cards": {
+            "n": 2,
+            "median": 5.299999952316284,
+            "mad": 0,
+            "min": 5.299999952316284,
+            "max": 5.299999952316284
+          },
+          "aether:detail:environment-pmrem": {
+            "n": 2,
+            "median": 736.3500000238419,
+            "mad": 3.5500000715255737,
+            "min": 732.7999999523163,
+            "max": 739.9000000953674
+          },
+          "aether:scene-1:foreground": {
+            "n": 2,
+            "median": 214.80000007152557,
+            "mad": 0.3999999761581421,
+            "min": 214.40000009536743,
+            "max": 215.20000004768372
+          },
+          "aether:scene-1:atmosphere": {
+            "n": 2,
+            "median": 555.8499999046326,
+            "mad": 3.950000047683716,
+            "min": 551.8999998569489,
+            "max": 559.7999999523163
+          },
+          "aether:scene-1:worlds-and-input": {
+            "n": 2,
+            "median": 826.75,
+            "mad": 5.950000047683716,
+            "min": 820.7999999523163,
+            "max": 832.7000000476837
+          },
+          "aether:detail:worlds": {
+            "n": 2,
+            "median": 426.2000000476837,
+            "mad": 1.4000000953674316,
+            "min": 424.7999999523163,
+            "max": 427.60000014305115
+          },
+          "aether:detail:forest": {
+            "n": 2,
+            "median": 374.4999998807907,
+            "mad": 4.199999928474426,
+            "min": 370.2999999523163,
+            "max": 378.69999980926514
+          },
+          "aether:scene-1:resources": {
+            "n": 2,
+            "median": 161.35000002384186,
+            "mad": 1.2500001192092896,
+            "min": 160.09999990463257,
+            "max": 162.60000014305115
+          },
+          "aether:scene-1:textures": {
+            "n": 2,
+            "median": 12.899999976158142,
+            "mad": 0.3999999761581421,
+            "min": 12.5,
+            "max": 13.299999952316284
+          },
+          "aether:detail:texture-collection": {
+            "n": 2,
+            "median": 4.75,
+            "mad": 0.25,
+            "min": 4.5,
+            "max": 5
+          },
+          "aether:detail:texture-upload": {
+            "n": 2,
+            "median": 5.700000047683716,
+            "mad": 0,
+            "min": 5.700000047683716,
+            "max": 5.700000047683716
+          },
+          "aether:scene-1:linear": {
+            "n": 2,
+            "median": 1350,
+            "mad": 15.200000047683716,
+            "min": 1334.7999999523163,
+            "max": 1365.2000000476837
+          },
+          "aether:detail:linear-submit": {
+            "n": 2,
+            "median": 640.1000001430511,
+            "mad": 411.2999999523163,
+            "min": 228.80000019073486,
+            "max": 1051.4000000953674
+          },
+          "aether:detail:linear-wait": {
+            "n": 2,
+            "median": 709.2000000476837,
+            "mad": 426.40000009536743,
+            "min": 282.7999999523163,
+            "max": 1135.6000001430511
+          },
+          "aether:scene-1:geometry": {
+            "n": 2,
+            "median": 258.5,
+            "mad": 0.5,
+            "min": 258,
+            "max": 259
+          },
+          "aether:detail:geometry-first-use-render": {
+            "n": 2,
+            "median": 256.5500000715256,
+            "mad": 0.44999992847442627,
+            "min": 256.10000014305115,
+            "max": 257
+          },
+          "aether:scene-1:shaders": {
+            "n": 2,
+            "median": 1261.1000000238419,
+            "mad": 9.199999928474426,
+            "min": 1251.9000000953674,
+            "max": 1270.2999999523163
+          },
+          "aether:detail:display-submit": {
+            "n": 2,
+            "median": 337.8000000715256,
+            "mad": 35.39999997615814,
+            "min": 302.40000009536743,
+            "max": 373.2000000476837
+          },
+          "aether:detail:display-wait": {
+            "n": 2,
+            "median": 922.8000000715256,
+            "mad": 44.49999988079071,
+            "min": 878.3000001907349,
+            "max": 967.2999999523163
+          },
+          "aether:scene-1:postprocess": {
+            "n": 2,
+            "median": 142.04999995231628,
+            "mad": 0.34999990463256836,
+            "min": 141.70000004768372,
+            "max": 142.39999985694885
+          },
+          "aether:scene-1:first-frame": {
+            "n": 2,
+            "median": 205.30000007152557,
+            "mad": 3.1999999284744263,
+            "min": 202.10000014305115,
+            "max": 208.5
+          }
+        }
+      },
+      "pooled-reload": {
+        "firstFrame": {
+          "n": 2,
+          "median": 2975.149999976158,
+          "mad": 4.550000071525574,
+          "min": 2970.5999999046326,
+          "max": 2979.7000000476837
+        },
+        "visibleReady": {
+          "n": 2,
+          "median": 12472.050000071526,
+          "mad": 51.85000002384186,
+          "min": 12420.200000047684,
+          "max": 12523.900000095367
+        },
+        "overlayHidden": null,
+        "fadeDuration": null,
+        "scrollP95": {
+          "n": 2,
+          "median": 33.30000000000291,
+          "mad": 0,
+          "min": 33.30000000000291,
+          "max": 33.30000000000291
+        },
+        "scrollMax": {
+          "n": 2,
+          "median": 33.45000000000073,
+          "mad": 0.049999999999272404,
+          "min": 33.400000000001455,
+          "max": 33.5
+        },
+        "scrollOver33": {
+          "n": 2,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "jsWireBytes": {
+          "n": 2,
+          "median": 325,
+          "mad": 0,
+          "min": 325,
+          "max": 325
+        },
+        "jsResourceTransferBytes": {
+          "n": 2,
+          "median": 1200,
+          "mad": 0,
+          "min": 1200,
+          "max": 1200
+        },
+        "revalidations": {
+          "n": 2,
+          "median": 7,
+          "mad": 0,
+          "min": 7,
+          "max": 7
+        },
+        "phases": {
+          "aether:scene-1:renderer": {
+            "n": 2,
+            "median": 23.350000023841858,
+            "mad": 1.0499998331069946,
+            "min": 22.300000190734863,
+            "max": 24.399999856948853
+          },
+          "aether:scene-1:environment": {
+            "n": 2,
+            "median": 50.39999997615814,
+            "mad": 0.29999983310699463,
+            "min": 50.10000014305115,
+            "max": 50.69999980926514
+          },
+          "aether:detail:environment-cards": {
+            "n": 2,
+            "median": 1.350000023841858,
+            "mad": 0.05000007152557373,
+            "min": 1.2999999523162842,
+            "max": 1.4000000953674316
+          },
+          "aether:detail:environment-pmrem": {
+            "n": 2,
+            "median": 46.10000014305115,
+            "mad": 0.20000004768371582,
+            "min": 45.90000009536743,
+            "max": 46.30000019073486
+          },
+          "aether:scene-1:foreground": {
+            "n": 2,
+            "median": 148.90000009536743,
+            "mad": 0.9000000953674316,
+            "min": 148,
+            "max": 149.80000019073486
+          },
+          "aether:scene-1:atmosphere": {
+            "n": 2,
+            "median": 491.75,
+            "mad": 0.04999995231628418,
+            "min": 491.7000000476837,
+            "max": 491.7999999523163
+          },
+          "aether:scene-1:worlds-and-input": {
+            "n": 2,
+            "median": 678.5,
+            "mad": 2.299999952316284,
+            "min": 676.2000000476837,
+            "max": 680.7999999523163
+          },
+          "aether:detail:worlds": {
+            "n": 2,
+            "median": 317.2000000476837,
+            "mad": 4.5,
+            "min": 312.7000000476837,
+            "max": 321.7000000476837
+          },
+          "aether:detail:forest": {
+            "n": 2,
+            "median": 342.60000002384186,
+            "mad": 7.100000023841858,
+            "min": 335.5,
+            "max": 349.7000000476837
+          },
+          "aether:scene-1:resources": {
+            "n": 2,
+            "median": 78.549999833107,
+            "mad": 2.149999976158142,
+            "min": 76.39999985694885,
+            "max": 80.69999980926514
+          },
+          "aether:scene-1:textures": {
+            "n": 2,
+            "median": 10.150000095367432,
+            "mad": 1.6500000953674316,
+            "min": 8.5,
+            "max": 11.800000190734863
+          },
+          "aether:detail:texture-collection": {
+            "n": 2,
+            "median": 4.399999976158142,
+            "mad": 0.8999999761581421,
+            "min": 3.5,
+            "max": 5.299999952316284
+          },
+          "aether:detail:texture-upload": {
+            "n": 2,
+            "median": 5.150000095367432,
+            "mad": 0.6500000953674316,
+            "min": 4.5,
+            "max": 5.800000190734863
+          },
+          "aether:scene-1:linear": {
+            "n": 2,
+            "median": 260.7000000476837,
+            "mad": 1.5999999046325684,
+            "min": 259.10000014305115,
+            "max": 262.2999999523163
+          },
+          "aether:detail:linear-submit": {
+            "n": 2,
+            "median": 218.79999995231628,
+            "mad": 1.4000000953674316,
+            "min": 217.39999985694885,
+            "max": 220.20000004768372
+          },
+          "aether:detail:linear-wait": {
+            "n": 2,
+            "median": 40.950000047683716,
+            "mad": 0.34999990463256836,
+            "min": 40.60000014305115,
+            "max": 41.299999952316284
+          },
+          "aether:scene-1:geometry": {
+            "n": 2,
+            "median": 225.04999995231628,
+            "mad": 5.25,
+            "min": 219.79999995231628,
+            "max": 230.29999995231628
+          },
+          "aether:detail:geometry-first-use-render": {
+            "n": 2,
+            "median": 223.19999992847443,
+            "mad": 5.300000071525574,
+            "min": 217.89999985694885,
+            "max": 228.5
+          },
+          "aether:scene-1:shaders": {
+            "n": 2,
+            "median": 210.95000004768372,
+            "mad": 0.4500000476837158,
+            "min": 210.5,
+            "max": 211.40000009536743
+          },
+          "aether:detail:display-submit": {
+            "n": 2,
+            "median": 193.35000002384186,
+            "mad": 0.3500000238418579,
+            "min": 193,
+            "max": 193.70000004768372
+          },
+          "aether:detail:display-wait": {
+            "n": 2,
+            "median": 17,
+            "mad": 0.7999999523162842,
+            "min": 16.200000047683716,
+            "max": 17.799999952316284
+          },
+          "aether:scene-1:postprocess": {
+            "n": 2,
+            "median": 10.599999904632568,
+            "mad": 0.2999999523162842,
+            "min": 10.299999952316284,
+            "max": 10.899999856948853
+          },
+          "aether:scene-1:first-frame": {
+            "n": 2,
+            "median": 53.85000002384186,
+            "mad": 3.4499999284744263,
+            "min": 50.40000009536743,
+            "max": 57.299999952316284
+          }
+        }
+      }
+    },
+    "paired": {},
+    "traces": [
+      {
+        "path": "production-mobile-detail.json.0-baseline-fresh.trace.json.gz",
+        "mainThread": 53928,
+        "window": {
+          "start": 1491251967359,
+          "end": 1491260843659
+        },
+        "note": "Named event inclusive durations; nested categories overlap. Do not sum categories or threads as wall-clock parse time. Includes measurement scripts unless public URL is present.",
+        "events": {
+          "V8.ParseProgram": {
+            "main": {
+              "n": 11,
+              "median": 0.174,
+              "mad": 0.17099999999999999,
+              "min": 0.002,
+              "max": 26.857
+            },
+            "mainInclusiveMs": 53.772999999999996,
+            "backgroundInclusiveMs": 0
+          },
+          "V8.ParseFunction": {
+            "main": {
+              "n": 1590,
+              "median": 0.008,
+              "mad": 0.005,
+              "min": 0.001,
+              "max": 28.074
+            },
+            "mainInclusiveMs": 145.3919999999999,
+            "backgroundInclusiveMs": 0
+          },
+          "V8.PreParse": {
+            "main": {
+              "n": 1345,
+              "median": 0.003,
+              "mad": 0.002,
+              "min": 0.001,
+              "max": 1.001
+            },
+            "mainInclusiveMs": 42.48000000000015,
+            "backgroundInclusiveMs": 12.153999999999984
+          },
+          "v8.parseOnBackground": {
+            "main": null,
+            "mainInclusiveMs": 0,
+            "backgroundInclusiveMs": 4338.613
+          },
+          "V8.CompileCode": {
+            "main": {
+              "n": 1556,
+              "median": 0.0375,
+              "mad": 0.0325,
+              "min": 0.004,
+              "max": 26.065
+            },
+            "mainInclusiveMs": 257.0879999999991,
+            "backgroundInclusiveMs": 0
+          },
+          "V8.CompileCodeBackground": {
+            "main": null,
+            "mainInclusiveMs": 0,
+            "backgroundInclusiveMs": 1.986
+          },
+          "v8.compileModule": {
+            "main": {
+              "n": 4,
+              "median": 0.1835,
+              "mad": 0.01050000000000001,
+              "min": 0.025,
+              "max": 0.203
+            },
+            "mainInclusiveMs": 0.5950000000000001,
+            "backgroundInclusiveMs": 0
+          },
+          "v8.evaluateModule": {
+            "main": {
+              "n": 2,
+              "median": 47.566500000000005,
+              "mad": 26.2175,
+              "min": 21.349,
+              "max": 73.784
+            },
+            "mainInclusiveMs": 95.13300000000001,
+            "backgroundInclusiveMs": 0
+          }
+        },
+        "longTasks": [
+          {
+            "startMs": 822.141,
+            "durationMs": 77.868
+          },
+          {
+            "startMs": 902.239,
+            "durationMs": 284.414
+          },
+          {
+            "startMs": 1250.718,
+            "durationMs": 295.521
+          },
+          {
+            "startMs": 3122.393,
+            "durationMs": 2500.714
+          },
+          {
+            "startMs": 5671.28,
+            "durationMs": 1066.201
+          },
+          {
+            "startMs": 7019.835,
+            "durationMs": 633.025
+          },
+          {
+            "startMs": 7765.227,
+            "durationMs": 192.767
+          },
+          {
+            "startMs": 8149.344,
+            "durationMs": 225.362
+          },
+          {
+            "startMs": 8530.689,
+            "durationMs": 143.596
+          },
+          {
+            "startMs": 8680.948,
+            "durationMs": 199.676
+          }
+        ]
+      },
+      {
+        "path": "production-mobile-detail.json.0-baseline-reload.trace.json.gz",
+        "mainThread": 53928,
+        "window": {
+          "start": 1491282785649,
+          "end": 1491285756249
+        },
+        "note": "Named event inclusive durations; nested categories overlap. Do not sum categories or threads as wall-clock parse time. Includes measurement scripts unless public URL is present.",
+        "events": {
+          "V8.ParseProgram": {
+            "main": {
+              "n": 1,
+              "median": 25.066,
+              "mad": 0,
+              "min": 25.066,
+              "max": 25.066
+            },
+            "mainInclusiveMs": 25.066,
+            "backgroundInclusiveMs": 0
+          },
+          "V8.ParseFunction": {
+            "main": {
+              "n": 64,
+              "median": 0.0115,
+              "mad": 0.0085,
+              "min": 0.002,
+              "max": 0.411
+            },
+            "mainInclusiveMs": 5.395999999999997,
+            "backgroundInclusiveMs": 0
+          },
+          "V8.PreParse": {
+            "main": {
+              "n": 490,
+              "median": 0.004,
+              "mad": 0.003,
+              "min": 0.001,
+              "max": 0.828
+            },
+            "mainInclusiveMs": 20.424000000000003,
+            "backgroundInclusiveMs": 0
+          },
+          "v8.parseOnBackground": {
+            "main": null,
+            "mainInclusiveMs": 0,
+            "backgroundInclusiveMs": 0
+          },
+          "V8.CompileCode": {
+            "main": {
+              "n": 63,
+              "median": 0.178,
+              "mad": 0.027999999999999997,
+              "min": 0.007,
+              "max": 26.897
+            },
+            "mainInclusiveMs": 36.307000000000016,
+            "backgroundInclusiveMs": 0
+          },
+          "V8.CompileCodeBackground": {
+            "main": null,
+            "mainInclusiveMs": 0,
+            "backgroundInclusiveMs": 0
+          },
+          "v8.compileModule": {
+            "main": {
+              "n": 4,
+              "median": 0.09000000000000001,
+              "mad": 0.08050000000000002,
+              "min": 0.009,
+              "max": 0.188
+            },
+            "mainInclusiveMs": 0.377,
+            "backgroundInclusiveMs": 0
+          },
+          "v8.evaluateModule": {
+            "main": {
+              "n": 2,
+              "median": 8.236,
+              "mad": 1.71,
+              "min": 6.526,
+              "max": 9.946
+            },
+            "mainInclusiveMs": 16.472,
+            "backgroundInclusiveMs": 0
+          }
+        },
+        "longTasks": [
+          {
+            "startMs": 729.185,
+            "durationMs": 1418.866
+          },
+          {
+            "startMs": 2200.288,
+            "durationMs": 227.957
+          },
+          {
+            "startMs": 2468.14,
+            "durationMs": 425.548
+          },
+          {
+            "startMs": 2920.099,
+            "durationMs": 54.215
+          }
+        ]
+      },
+      {
+        "path": "production-mobile-detail.json.0-candidate-fresh.trace.json.gz",
+        "mainThread": 36292,
+        "window": {
+          "start": 1491309536093,
+          "end": 1491318472793
+        },
+        "note": "Named event inclusive durations; nested categories overlap. Do not sum categories or threads as wall-clock parse time. Includes measurement scripts unless public URL is present.",
+        "events": {
+          "V8.ParseProgram": {
+            "main": {
+              "n": 13,
+              "median": 0.02,
+              "mad": 0.018000000000000002,
+              "min": 0.001,
+              "max": 27.288
+            },
+            "mainInclusiveMs": 53.631,
+            "backgroundInclusiveMs": 0
+          },
+          "V8.ParseFunction": {
+            "main": {
+              "n": 1590,
+              "median": 0.009,
+              "mad": 0.005999999999999999,
+              "min": 0.001,
+              "max": 29.085
+            },
+            "mainInclusiveMs": 144.9339999999998,
+            "backgroundInclusiveMs": 0
+          },
+          "V8.PreParse": {
+            "main": {
+              "n": 1351,
+              "median": 0.003,
+              "mad": 0.002,
+              "min": 0.001,
+              "max": 1.038
+            },
+            "mainInclusiveMs": 42.58400000000012,
+            "backgroundInclusiveMs": 12.31300000000001
+          },
+          "v8.parseOnBackground": {
+            "main": null,
+            "mainInclusiveMs": 0,
+            "backgroundInclusiveMs": 4327.188
+          },
+          "V8.CompileCode": {
+            "main": {
+              "n": 1556,
+              "median": 0.0445,
+              "mad": 0.040499999999999994,
+              "min": 0.004,
+              "max": 26.414
+            },
+            "mainInclusiveMs": 258.09699999999964,
+            "backgroundInclusiveMs": 0
+          },
+          "V8.CompileCodeBackground": {
+            "main": null,
+            "mainInclusiveMs": 0,
+            "backgroundInclusiveMs": 2.195
+          },
+          "v8.compileModule": {
+            "main": {
+              "n": 4,
+              "median": 0.103,
+              "mad": 0.08049999999999999,
+              "min": 0.022,
+              "max": 0.208
+            },
+            "mainInclusiveMs": 0.43600000000000005,
+            "backgroundInclusiveMs": 0
+          },
+          "v8.evaluateModule": {
+            "main": {
+              "n": 2,
+              "median": 48.216,
+              "mad": 29.333999999999996,
+              "min": 18.882,
+              "max": 77.55
+            },
+            "mainInclusiveMs": 96.432,
+            "backgroundInclusiveMs": 0
+          }
+        },
+        "longTasks": [
+          {
+            "startMs": 825.83,
+            "durationMs": 81.817
+          },
+          {
+            "startMs": 909.716,
+            "durationMs": 286.484
+          },
+          {
+            "startMs": 1258.804,
+            "durationMs": 305.925
+          },
+          {
+            "startMs": 3121.362,
+            "durationMs": 2508.87
+          },
+          {
+            "startMs": 5679.249,
+            "durationMs": 243.353
+          },
+          {
+            "startMs": 5960.512,
+            "durationMs": 228.564
+          },
+          {
+            "startMs": 6678.94,
+            "durationMs": 106.656
+          },
+          {
+            "startMs": 7057.349,
+            "durationMs": 562.674
+          },
+          {
+            "startMs": 7752.764,
+            "durationMs": 311.618
+          },
+          {
+            "startMs": 8140.092,
+            "durationMs": 246.927
+          },
+          {
+            "startMs": 8585.544,
+            "durationMs": 142.991
+          },
+          {
+            "startMs": 8742.838,
+            "durationMs": 198.472
+          }
+        ]
+      },
+      {
+        "path": "production-mobile-detail.json.0-candidate-reload.trace.json.gz",
+        "mainThread": 36292,
+        "window": {
+          "start": 1491338830599,
+          "end": 1491341810299
+        },
+        "note": "Named event inclusive durations; nested categories overlap. Do not sum categories or threads as wall-clock parse time. Includes measurement scripts unless public URL is present.",
+        "events": {
+          "V8.ParseProgram": {
+            "main": {
+              "n": 1,
+              "median": 21.365,
+              "mad": 0,
+              "min": 21.365,
+              "max": 21.365
+            },
+            "mainInclusiveMs": 21.365,
+            "backgroundInclusiveMs": 0
+          },
+          "V8.ParseFunction": {
+            "main": {
+              "n": 64,
+              "median": 0.0085,
+              "mad": 0.0045000000000000005,
+              "min": 0.002,
+              "max": 0.234
+            },
+            "mainInclusiveMs": 3.1769999999999983,
+            "backgroundInclusiveMs": 0
+          },
+          "V8.PreParse": {
+            "main": {
+              "n": 486,
+              "median": 0.003,
+              "mad": 0.002,
+              "min": 0.001,
+              "max": 0.636
+            },
+            "mainInclusiveMs": 16.824,
+            "backgroundInclusiveMs": 0
+          },
+          "v8.parseOnBackground": {
+            "main": null,
+            "mainInclusiveMs": 0,
+            "backgroundInclusiveMs": 0
+          },
+          "V8.CompileCode": {
+            "main": {
+              "n": 63,
+              "median": 0.025,
+              "mad": 0.018000000000000002,
+              "min": 0.007,
+              "max": 22.77
+            },
+            "mainInclusiveMs": 29.028000000000002,
+            "backgroundInclusiveMs": 0
+          },
+          "V8.CompileCodeBackground": {
+            "main": null,
+            "mainInclusiveMs": 0,
+            "backgroundInclusiveMs": 0
+          },
+          "v8.compileModule": {
+            "main": {
+              "n": 4,
+              "median": 0.08800000000000001,
+              "mad": 0.08050000000000002,
+              "min": 0.007,
+              "max": 0.186
+            },
+            "mainInclusiveMs": 0.369,
+            "backgroundInclusiveMs": 0
+          },
+          "v8.evaluateModule": {
+            "main": {
+              "n": 2,
+              "median": 8.036,
+              "mad": 2.3480000000000003,
+              "min": 5.688,
+              "max": 10.384
+            },
+            "mainInclusiveMs": 16.072,
+            "backgroundInclusiveMs": 0
+          }
+        },
+        "longTasks": [
+          {
+            "startMs": 733.538,
+            "durationMs": 1420.162
+          },
+          {
+            "startMs": 2204.856,
+            "durationMs": 233.879
+          },
+          {
+            "startMs": 2479.244,
+            "durationMs": 414.226
+          },
+          {
+            "startMs": 2926.549,
+            "durationMs": 57.082
+          }
+        ]
+      }
+    ],
+    "errors": []
+  },
+  "production-mobile-final.json": {
+    "comparison": "A/A: same target, no optimization delta",
+    "groups": {
+      "baseline-fresh": {
+        "firstFrame": {
+          "n": 5,
+          "median": 8903.200000047684,
+          "mad": 83.29999995231628,
+          "min": 8819.900000095367,
+          "max": 9288.5
+        },
+        "visibleReady": {
+          "n": 5,
+          "median": 16337.900000095367,
+          "mad": 768.2000000476837,
+          "min": 14213.200000047684,
+          "max": 17106.10000014305
+        },
+        "overlayHidden": null,
+        "fadeDuration": null,
+        "scrollP95": {
+          "n": 5,
+          "median": 33.29999999999927,
+          "mad": 0,
+          "min": 33.29999999999927,
+          "max": 33.399999999999636
+        },
+        "scrollMax": {
+          "n": 5,
+          "median": 33.400000000001455,
+          "mad": 0,
+          "min": 33.400000000001455,
+          "max": 33.5
+        },
+        "scrollOver33": {
+          "n": 5,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "jsWireBytes": {
+          "n": 5,
+          "median": 407509,
+          "mad": 1,
+          "min": 407488,
+          "max": 407513
+        },
+        "jsResourceTransferBytes": {
+          "n": 5,
+          "median": 407759,
+          "mad": 0,
+          "min": 407759,
+          "max": 407759
+        },
+        "revalidations": {
+          "n": 5,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "phases": {}
+      },
+      "baseline-reload": {
+        "firstFrame": {
+          "n": 5,
+          "median": 2976.9000000953674,
+          "mad": 31.700000047683716,
+          "min": 2945.2000000476837,
+          "max": 3324.7999999523163
+        },
+        "visibleReady": {
+          "n": 5,
+          "median": 12336.200000047684,
+          "mad": 615.7999999523163,
+          "min": 11697.200000047684,
+          "max": 12976.099999904633
+        },
+        "overlayHidden": null,
+        "fadeDuration": null,
+        "scrollP95": {
+          "n": 5,
+          "median": 33.39999999999782,
+          "mad": 3.637978807091713e-12,
+          "min": 33.29999999999927,
+          "max": 33.400000000001455
+        },
+        "scrollMax": {
+          "n": 5,
+          "median": 33.400000000001455,
+          "mad": 0,
+          "min": 33.400000000001455,
+          "max": 50
+        },
+        "scrollOver33": {
+          "n": 5,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 1
+        },
+        "jsWireBytes": {
+          "n": 5,
+          "median": 345,
+          "mad": 3,
+          "min": 324,
+          "max": 348
+        },
+        "jsResourceTransferBytes": {
+          "n": 5,
+          "median": 1200,
+          "mad": 0,
+          "min": 1200,
+          "max": 1200
+        },
+        "revalidations": {
+          "n": 5,
+          "median": 7,
+          "mad": 0,
+          "min": 7,
+          "max": 7
+        },
+        "phases": {}
+      },
+      "candidate-fresh": {
+        "firstFrame": {
+          "n": 5,
+          "median": 9076.299999952316,
+          "mad": 123.59999990463257,
+          "min": 8820.100000143051,
+          "max": 12094.100000143051
+        },
+        "visibleReady": {
+          "n": 5,
+          "median": 16724.099999904633,
+          "mad": 390.69999980926514,
+          "min": 15689.900000095367,
+          "max": 20002.700000047684
+        },
+        "overlayHidden": null,
+        "fadeDuration": null,
+        "scrollP95": {
+          "n": 5,
+          "median": 33.30000000000291,
+          "mad": 3.637978807091713e-12,
+          "min": 33.29999999999927,
+          "max": 33.39999999999782
+        },
+        "scrollMax": {
+          "n": 5,
+          "median": 33.400000000001455,
+          "mad": 0,
+          "min": 33.400000000001455,
+          "max": 33.5
+        },
+        "scrollOver33": {
+          "n": 5,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "jsWireBytes": {
+          "n": 5,
+          "median": 407510,
+          "mad": 1,
+          "min": 407509,
+          "max": 407514
+        },
+        "jsResourceTransferBytes": {
+          "n": 5,
+          "median": 407759,
+          "mad": 0,
+          "min": 407759,
+          "max": 407759
+        },
+        "revalidations": {
+          "n": 5,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "phases": {}
+      },
+      "candidate-reload": {
+        "firstFrame": {
+          "n": 5,
+          "median": 3071,
+          "mad": 80.60000014305115,
+          "min": 2949.2999999523163,
+          "max": 3289.5
+        },
+        "visibleReady": {
+          "n": 5,
+          "median": 12187.200000047684,
+          "mad": 461.2000000476837,
+          "min": 11726,
+          "max": 12836.399999856949
+        },
+        "overlayHidden": null,
+        "fadeDuration": null,
+        "scrollP95": {
+          "n": 5,
+          "median": 33.30000000000291,
+          "mad": 3.637978807091713e-12,
+          "min": 33.29999999999927,
+          "max": 33.399999999999636
+        },
+        "scrollMax": {
+          "n": 5,
+          "median": 33.5,
+          "mad": 0,
+          "min": 33.400000000001455,
+          "max": 33.5
+        },
+        "scrollOver33": {
+          "n": 5,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "jsWireBytes": {
+          "n": 5,
+          "median": 325,
+          "mad": 2,
+          "min": 323,
+          "max": 347
+        },
+        "jsResourceTransferBytes": {
+          "n": 5,
+          "median": 1200,
+          "mad": 0,
+          "min": 1200,
+          "max": 1200
+        },
+        "revalidations": {
+          "n": 5,
+          "median": 7,
+          "mad": 0,
+          "min": 7,
+          "max": 7
+        },
+        "phases": {}
+      },
+      "pooled-fresh": {
+        "firstFrame": {
+          "n": 10,
+          "median": 9014.5,
+          "mad": 166.30000007152557,
+          "min": 8819.900000095367,
+          "max": 12094.100000143051
+        },
+        "visibleReady": {
+          "n": 10,
+          "median": 16440.300000071526,
+          "mad": 496,
+          "min": 14213.200000047684,
+          "max": 20002.700000047684
+        },
+        "overlayHidden": null,
+        "fadeDuration": null,
+        "scrollP95": {
+          "n": 10,
+          "median": 33.30000000000109,
+          "mad": 1.8189894035458565e-12,
+          "min": 33.29999999999927,
+          "max": 33.399999999999636
+        },
+        "scrollMax": {
+          "n": 10,
+          "median": 33.400000000001455,
+          "mad": 0,
+          "min": 33.400000000001455,
+          "max": 33.5
+        },
+        "scrollOver33": {
+          "n": 10,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "jsWireBytes": {
+          "n": 10,
+          "median": 407509,
+          "mad": 1,
+          "min": 407488,
+          "max": 407514
+        },
+        "jsResourceTransferBytes": {
+          "n": 10,
+          "median": 407759,
+          "mad": 0,
+          "min": 407759,
+          "max": 407759
+        },
+        "revalidations": {
+          "n": 10,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "phases": {}
+      },
+      "pooled-reload": {
+        "firstFrame": {
+          "n": 10,
+          "median": 3030.6999999284744,
+          "mad": 70.95000004768372,
+          "min": 2945.2000000476837,
+          "max": 3324.7999999523163
+        },
+        "visibleReady": {
+          "n": 10,
+          "median": 12261.700000047684,
+          "mad": 552.8999999761581,
+          "min": 11697.200000047684,
+          "max": 12976.099999904633
+        },
+        "overlayHidden": null,
+        "fadeDuration": null,
+        "scrollP95": {
+          "n": 10,
+          "median": 33.350000000000364,
+          "mad": 0.049999999999272404,
+          "min": 33.29999999999927,
+          "max": 33.400000000001455
+        },
+        "scrollMax": {
+          "n": 10,
+          "median": 33.5,
+          "mad": 0.049999999999272404,
+          "min": 33.400000000001455,
+          "max": 50
+        },
+        "scrollOver33": {
+          "n": 10,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 1
+        },
+        "jsWireBytes": {
+          "n": 10,
+          "median": 335,
+          "mad": 11.5,
+          "min": 323,
+          "max": 348
+        },
+        "jsResourceTransferBytes": {
+          "n": 10,
+          "median": 1200,
+          "mad": 0,
+          "min": 1200,
+          "max": 1200
+        },
+        "revalidations": {
+          "n": 10,
+          "median": 7,
+          "mad": 0,
+          "min": 7,
+          "max": 7
+        },
+        "phases": {}
+      }
+    },
+    "paired": {},
+    "traces": [],
+    "errors": []
+  },
+  "production-mobile-overlay-final.json": {
+    "comparison": "A/A: same target, no optimization delta",
+    "groups": {
+      "baseline-fresh": {
+        "firstFrame": {
+          "n": 5,
+          "median": 8932.800000190735,
+          "mad": 41.09999966621399,
+          "min": 8873.600000143051,
+          "max": 9008.599999904633
+        },
+        "visibleReady": {
+          "n": 5,
+          "median": 16087.599999904633,
+          "mad": 651.1000001430511,
+          "min": 14874.799999952316,
+          "max": 16997.799999952316
+        },
+        "overlayHidden": {
+          "n": 5,
+          "median": 16527.89999985695,
+          "mad": 646,
+          "min": 15308.700000047684,
+          "max": 17426.200000047684
+        },
+        "fadeDuration": {
+          "n": 5,
+          "median": 433.90000009536743,
+          "mad": 3.5,
+          "min": 428.40000009536743,
+          "max": 440.2999999523163
+        },
+        "scrollP95": {
+          "n": 5,
+          "median": 33.30000000000109,
+          "mad": 1.8189894035458565e-12,
+          "min": 33.29999999999927,
+          "max": 33.30000000000291
+        },
+        "scrollMax": {
+          "n": 5,
+          "median": 33.400000000001455,
+          "mad": 0,
+          "min": 33.400000000001455,
+          "max": 50
+        },
+        "scrollOver33": {
+          "n": 5,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 1
+        },
+        "jsWireBytes": {
+          "n": 5,
+          "median": 407511,
+          "mad": 5,
+          "min": 407492,
+          "max": 407518
+        },
+        "jsResourceTransferBytes": {
+          "n": 5,
+          "median": 407759,
+          "mad": 0,
+          "min": 407759,
+          "max": 407759
+        },
+        "revalidations": {
+          "n": 5,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "phases": {}
+      },
+      "baseline-reload": {
+        "firstFrame": {
+          "n": 5,
+          "median": 3009,
+          "mad": 5,
+          "min": 2944.7000000476837,
+          "max": 3132.0999999046326
+        },
+        "visibleReady": {
+          "n": 5,
+          "median": 12218.200000047684,
+          "mad": 271.2999999523163,
+          "min": 11747.900000095367,
+          "max": 12715
+        },
+        "overlayHidden": {
+          "n": 5,
+          "median": 12653.299999952316,
+          "mad": 289.09999990463257,
+          "min": 12172.100000143051,
+          "max": 13153.799999952316
+        },
+        "fadeDuration": {
+          "n": 5,
+          "median": 428.09999990463257,
+          "mad": 7,
+          "min": 417.2999999523163,
+          "max": 438.7999999523163
+        },
+        "scrollP95": {
+          "n": 5,
+          "median": 33.30000000000109,
+          "mad": 1.8189894035458565e-12,
+          "min": 33.29999999999927,
+          "max": 33.39999999999782
+        },
+        "scrollMax": {
+          "n": 5,
+          "median": 33.400000000001455,
+          "mad": 0,
+          "min": 33.400000000001455,
+          "max": 33.400000000001455
+        },
+        "scrollOver33": {
+          "n": 5,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "jsWireBytes": {
+          "n": 5,
+          "median": 325,
+          "mad": 0,
+          "min": 322,
+          "max": 348
+        },
+        "jsResourceTransferBytes": {
+          "n": 5,
+          "median": 1200,
+          "mad": 0,
+          "min": 1200,
+          "max": 1200
+        },
+        "revalidations": {
+          "n": 5,
+          "median": 7,
+          "mad": 0,
+          "min": 7,
+          "max": 7
+        },
+        "phases": {}
+      },
+      "candidate-fresh": {
+        "firstFrame": null,
+        "visibleReady": null,
+        "overlayHidden": null,
+        "fadeDuration": null,
+        "scrollP95": null,
+        "scrollMax": null,
+        "scrollOver33": null,
+        "jsWireBytes": null,
+        "jsResourceTransferBytes": null,
+        "revalidations": null,
+        "phases": {}
+      },
+      "candidate-reload": {
+        "firstFrame": null,
+        "visibleReady": null,
+        "overlayHidden": null,
+        "fadeDuration": null,
+        "scrollP95": null,
+        "scrollMax": null,
+        "scrollOver33": null,
+        "jsWireBytes": null,
+        "jsResourceTransferBytes": null,
+        "revalidations": null,
+        "phases": {}
+      },
+      "pooled-fresh": {
+        "firstFrame": {
+          "n": 5,
+          "median": 8932.800000190735,
+          "mad": 41.09999966621399,
+          "min": 8873.600000143051,
+          "max": 9008.599999904633
+        },
+        "visibleReady": {
+          "n": 5,
+          "median": 16087.599999904633,
+          "mad": 651.1000001430511,
+          "min": 14874.799999952316,
+          "max": 16997.799999952316
+        },
+        "overlayHidden": {
+          "n": 5,
+          "median": 16527.89999985695,
+          "mad": 646,
+          "min": 15308.700000047684,
+          "max": 17426.200000047684
+        },
+        "fadeDuration": {
+          "n": 5,
+          "median": 433.90000009536743,
+          "mad": 3.5,
+          "min": 428.40000009536743,
+          "max": 440.2999999523163
+        },
+        "scrollP95": {
+          "n": 5,
+          "median": 33.30000000000109,
+          "mad": 1.8189894035458565e-12,
+          "min": 33.29999999999927,
+          "max": 33.30000000000291
+        },
+        "scrollMax": {
+          "n": 5,
+          "median": 33.400000000001455,
+          "mad": 0,
+          "min": 33.400000000001455,
+          "max": 50
+        },
+        "scrollOver33": {
+          "n": 5,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 1
+        },
+        "jsWireBytes": {
+          "n": 5,
+          "median": 407511,
+          "mad": 5,
+          "min": 407492,
+          "max": 407518
+        },
+        "jsResourceTransferBytes": {
+          "n": 5,
+          "median": 407759,
+          "mad": 0,
+          "min": 407759,
+          "max": 407759
+        },
+        "revalidations": {
+          "n": 5,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "phases": {}
+      },
+      "pooled-reload": {
+        "firstFrame": {
+          "n": 5,
+          "median": 3009,
+          "mad": 5,
+          "min": 2944.7000000476837,
+          "max": 3132.0999999046326
+        },
+        "visibleReady": {
+          "n": 5,
+          "median": 12218.200000047684,
+          "mad": 271.2999999523163,
+          "min": 11747.900000095367,
+          "max": 12715
+        },
+        "overlayHidden": {
+          "n": 5,
+          "median": 12653.299999952316,
+          "mad": 289.09999990463257,
+          "min": 12172.100000143051,
+          "max": 13153.799999952316
+        },
+        "fadeDuration": {
+          "n": 5,
+          "median": 428.09999990463257,
+          "mad": 7,
+          "min": 417.2999999523163,
+          "max": 438.7999999523163
+        },
+        "scrollP95": {
+          "n": 5,
+          "median": 33.30000000000109,
+          "mad": 1.8189894035458565e-12,
+          "min": 33.29999999999927,
+          "max": 33.39999999999782
+        },
+        "scrollMax": {
+          "n": 5,
+          "median": 33.400000000001455,
+          "mad": 0,
+          "min": 33.400000000001455,
+          "max": 33.400000000001455
+        },
+        "scrollOver33": {
+          "n": 5,
+          "median": 0,
+          "mad": 0,
+          "min": 0,
+          "max": 0
+        },
+        "jsWireBytes": {
+          "n": 5,
+          "median": 325,
+          "mad": 0,
+          "min": 322,
+          "max": 348
+        },
+        "jsResourceTransferBytes": {
+          "n": 5,
+          "median": 1200,
+          "mad": 0,
+          "min": 1200,
+          "max": 1200
+        },
+        "revalidations": {
+          "n": 5,
+          "median": 7,
+          "mad": 0,
+          "min": 7,
+          "max": 7
+        },
+        "phases": {}
+      }
+    },
+    "paired": {},
+    "traces": [],
+    "errors": []
+  }
+}

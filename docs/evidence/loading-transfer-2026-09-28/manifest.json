@@ -1,0 +1,298 @@
+{
+  "checkedAt": "2026-09-27T18:55:14.627Z",
+  "runtimeCommit": "b80ba753ae9ce5a2b5523dac430b75107418e0f5",
+  "productionURL": "https://aether-studio-nu.vercel.app/",
+  "githubDeployment": 6695808715,
+  "mergedPRs": {
+    "66": "bdfda295b8e4917271f3416dd057ec2b30ac8d20",
+    "67": "b80ba753ae9ce5a2b5523dac430b75107418e0f5"
+  },
+  "environment": {
+    "os": "Windows 10 Home 10.0.19045",
+    "cpu": "AMD Ryzen 7 3700X",
+    "gpu": "NVIDIA GeForce RTX 2060 SUPER",
+    "driver": "32.0.15.6094",
+    "chromium": "153.0.8010.12",
+    "backend": "ANGLE D3D11"
+  },
+  "mobile": {
+    "physicalDevice": "연결된 WPD/Android/iPhone/iPad/Apple Mobile/ADB/MTP 장치 미확보",
+    "tools": "PATH adb/idevice_id 및 기본 Android SDK adb 없음",
+    "scope": "PC Chromium 에뮬레이션만 수행; OS background/열/장기 메모리 미측정"
+  },
+  "checks": {
+    "lint": "passed",
+    "typecheck": "passed",
+    "build": "passed",
+    "relatedTests": {
+      "passed": 58,
+      "skipped": 1,
+      "skipReason": "기존 desktop의 터치 전용 검사; mobile에서 통과"
+    },
+    "applicationDiff": "none"
+  },
+  "runs": [
+    {
+      "name": "cache-mobile-final.json",
+      "visits": 20,
+      "assets": [
+        "/assets/index-Bfb6xSh1.js",
+        "/assets/Scene-Ithk0gN2.js",
+        "/assets/three-CjtGedH4.js",
+        "/assets/three-effects-DJx7NKBm.js"
+      ],
+      "trace": false,
+      "timeline": false,
+      "cpu": 4,
+      "network": {
+        "latencyMs": 150,
+        "downloadBytesPerSecond": 200000,
+        "uploadBytesPerSecond": 93750
+      },
+      "errors": 0
+    },
+    {
+      "name": "cache-pilot.json",
+      "visits": 4,
+      "assets": [
+        "/assets/index-Bfb6xSh1.js",
+        "/assets/Scene-Ithk0gN2.js",
+        "/assets/three-CjtGedH4.js",
+        "/assets/three-effects-DJx7NKBm.js"
+      ],
+      "trace": false,
+      "timeline": false,
+      "cpu": 4,
+      "network": {
+        "latencyMs": 150,
+        "downloadBytesPerSecond": 200000,
+        "uploadBytesPerSecond": 93750
+      },
+      "errors": 0
+    },
+    {
+      "name": "production-desktop-final.json",
+      "visits": 20,
+      "assets": [
+        "/assets/index-Bfb6xSh1.js",
+        "/assets/Scene-Ithk0gN2.js",
+        "/assets/three-effects-DJx7NKBm.js",
+        "/assets/three-CjtGedH4.js"
+      ],
+      "trace": false,
+      "timeline": false,
+      "cpu": 1,
+      "network": "unrestricted",
+      "errors": 0
+    },
+    {
+      "name": "production-desktop-overlay-final.json",
+      "visits": 10,
+      "assets": [
+        "/assets/index-Bfb6xSh1.js",
+        "/assets/Scene-Ithk0gN2.js",
+        "/assets/three-effects-DJx7NKBm.js",
+        "/assets/three-CjtGedH4.js"
+      ],
+      "trace": false,
+      "timeline": false,
+      "cpu": 1,
+      "network": "unrestricted",
+      "errors": 0
+    },
+    {
+      "name": "production-detail.json",
+      "visits": 4,
+      "assets": [
+        "/assets/index-Bfb6xSh1.js",
+        "/assets/Scene-Ithk0gN2.js",
+        "/assets/three-effects-DJx7NKBm.js",
+        "/assets/three-CjtGedH4.js"
+      ],
+      "trace": true,
+      "timeline": true,
+      "cpu": 1,
+      "network": "unrestricted",
+      "errors": 0
+    },
+    {
+      "name": "production-mobile-detail.json",
+      "visits": 4,
+      "assets": [
+        "/assets/index-Bfb6xSh1.js",
+        "/assets/Scene-Ithk0gN2.js",
+        "/assets/three-CjtGedH4.js",
+        "/assets/three-effects-DJx7NKBm.js"
+      ],
+      "trace": true,
+      "timeline": true,
+      "cpu": 4,
+      "network": {
+        "latencyMs": 150,
+        "downloadBytesPerSecond": 200000,
+        "uploadBytesPerSecond": 93750
+      },
+      "errors": 0
+    },
+    {
+      "name": "production-mobile-final.json",
+      "visits": 20,
+      "assets": [
+        "/assets/index-Bfb6xSh1.js",
+        "/assets/Scene-Ithk0gN2.js",
+        "/assets/three-CjtGedH4.js",
+        "/assets/three-effects-DJx7NKBm.js"
+      ],
+      "trace": false,
+      "timeline": false,
+      "cpu": 4,
+      "network": {
+        "latencyMs": 150,
+        "downloadBytesPerSecond": 200000,
+        "uploadBytesPerSecond": 93750
+      },
+      "errors": 0
+    },
+    {
+      "name": "production-mobile-overlay-final.json",
+      "visits": 10,
+      "assets": [
+        "/assets/index-Bfb6xSh1.js",
+        "/assets/Scene-Ithk0gN2.js",
+        "/assets/three-CjtGedH4.js",
+        "/assets/three-effects-DJx7NKBm.js"
+      ],
+      "trace": false,
+      "timeline": false,
+      "cpu": 4,
+      "network": {
+        "latencyMs": 150,
+        "downloadBytesPerSecond": 200000,
+        "uploadBytesPerSecond": 93750
+      },
+      "errors": 0
+    }
+  ],
+  "files": [
+    {
+      "name": ".gitattributes",
+      "bytes": 65,
+      "sha256": "1c449f92334636a63823f6d6ee0235ed4f0c5a2fa62c96c2879fd93db31c4c27"
+    },
+    {
+      "name": "cache-mobile-final.json",
+      "bytes": 1025938,
+      "sha256": "3eec2a41e374ba42947b7dd8905928e45a73ceb7e2f4a2e9b84beaf69e2d48d1"
+    },
+    {
+      "name": "cache-pilot.json",
+      "bytes": 205776,
+      "sha256": "99ccc5a0e57c2afea70989af691c4884f28532bc3165c9fc329989b4251354ea"
+    },
+    {
+      "name": "deployment-after.json",
+      "bytes": 11082,
+      "sha256": "d3df75e76eaffe8a049a0c33ce98b4eb7022f61f7ad4e38fbf241ca3c11de5e3"
+    },
+    {
+      "name": "deployment.json",
+      "bytes": 11065,
+      "sha256": "1cf7ddabf832ddc79ca7a22aed0fe8e0cd14c50925c4953f745e780e52f6c818"
+    },
+    {
+      "name": "mobile-landscape.png",
+      "bytes": 1470716,
+      "sha256": "532a3f390a9d697da65855d4a997bae8dc098d69d9847f54821f07487829b11a"
+    },
+    {
+      "name": "mobile-portrait.png",
+      "bytes": 1145323,
+      "sha256": "96de9f88f350397a29bde33010b9367ea5962e480731b5aec90cacc984b088b4"
+    },
+    {
+      "name": "mobile-smoke.json",
+      "bytes": 15337,
+      "sha256": "014a76297414f73572a2ce83e0d622ff25a3bb940a6ea4a6bb9b854dbf697f06"
+    },
+    {
+      "name": "mobile-smoke.mjs",
+      "bytes": 3968,
+      "sha256": "faf3ff0ce0af28ce4bb89f1ebfc91cfff6c0af079ac77980ddcd8718b9fbe10f"
+    },
+    {
+      "name": "production-desktop-final.json",
+      "bytes": 1047656,
+      "sha256": "03f58309793b5d2475a7bde5907bec0a4b8ad9be2fa24de8f34826a50aa821d4"
+    },
+    {
+      "name": "production-desktop-overlay-final.json",
+      "bytes": 524315,
+      "sha256": "7a78f91ae3b32451751d2d4c516712e2857a4ff5197cfedfedffa38d1392acdc"
+    },
+    {
+      "name": "production-detail.json",
+      "bytes": 213474,
+      "sha256": "6a8a420b44c2be44ba3e8093c32cf8d68af64237ae3ffa3f93497a030654f993"
+    },
+    {
+      "name": "production-detail.json.0-baseline-fresh.trace.json.gz",
+      "bytes": 915388,
+      "sha256": "21ea33502e64c7eb2274f0858b3e0a3f3c0ad33c8f236a616bfa02393cc08560"
+    },
+    {
+      "name": "production-detail.json.0-baseline-reload.trace.json.gz",
+      "bytes": 827295,
+      "sha256": "741c8d5b9135f18aa04d572d01d2d6b72269803fb006f1a73a4ceaa3e60971ab"
+    },
+    {
+      "name": "production-detail.json.0-candidate-fresh.trace.json.gz",
+      "bytes": 925616,
+      "sha256": "f0c457d08832a6d07dc77e8abdbd81db99730fcc4917f870b2f48975c386273b"
+    },
+    {
+      "name": "production-detail.json.0-candidate-reload.trace.json.gz",
+      "bytes": 829717,
+      "sha256": "dc563a0d70e59c33f1758fabeab2a8eeeb8fb204425f9c3de3b248a8353e8d9f"
+    },
+    {
+      "name": "production-mobile-detail.json",
+      "bytes": 237596,
+      "sha256": "06321353110dd60c6723a7c398b80bc40e2e9171b1be8886814a41bb3ecd4ee3"
+    },
+    {
+      "name": "production-mobile-detail.json.0-baseline-fresh.trace.json.gz",
+      "bytes": 1214340,
+      "sha256": "090f11e43f1eb5d471592c6d4ea631cb7e518825ed2f8ba879393dc56ed37998"
+    },
+    {
+      "name": "production-mobile-detail.json.0-baseline-reload.trace.json.gz",
+      "bytes": 1066836,
+      "sha256": "4b6d02ae2b75d0e96ee00187505b2e27c017e408f3dd648ec16dc66d1819ff43"
+    },
+    {
+      "name": "production-mobile-detail.json.0-candidate-fresh.trace.json.gz",
+      "bytes": 1156036,
+      "sha256": "2922f8b396a1d4d0a7966bd0b99ca92cb83192eb7228bcc9073f77df1af46d74"
+    },
+    {
+      "name": "production-mobile-detail.json.0-candidate-reload.trace.json.gz",
+      "bytes": 1057271,
+      "sha256": "105d9afb298c67f043e030ca421c94afce3cf5837f262cc689089c79ddb3f316"
+    },
+    {
+      "name": "production-mobile-final.json",
+      "bytes": 1053535,
+      "sha256": "f1431112f3345e3bcef59271dbfeaea400476e886fc0a452f03856625d588670"
+    },
+    {
+      "name": "production-mobile-overlay-final.json",
+      "bytes": 528188,
+      "sha256": "a860354fa787c0ed59f59ea976349ddea12728966e09529a844b738caccd5f7f"
+    },
+    {
+      "name": "summary.json",
+      "bytes": 157647,
+      "sha256": "8642c525254f806c3d7898350fba74ea679753e8843abb758f1c36543ba2763c"
+    }
+  ]
+}

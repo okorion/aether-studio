@@ -32,6 +32,7 @@
 
 ## 변경과 측정 기록
 
+- [운영 전송·JavaScript 실행과 모바일 보조 검사](loading-performance-transfer-2026-09-28.md): 운영 캐시·trace 분석, 캐시 후보의 5쌍 비교와 보류, 실기기 미검증 범위.
 - [GPU 프로그램 재사용과 포레스트 생성 최적화](loading-performance-2026-09-28.md): 프로그램·업로드·PMREM 비용 분해, 개별·결합 비교와 회귀 검증.
 - [초기 로딩 측정과 꽃 입자 생성 최적화](loading-performance-2026-09-27.md): 단계별 시간, 변경 전후 반복 측정과 화질 보존 검사.
 

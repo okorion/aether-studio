@@ -39,7 +39,7 @@ Playwright 설정은 [playwright.config.ts](../playwright.config.ts), CI 설정�
 
 ## 성능과 실기기 범위
 
-초기 로딩의 단계별 계측과 production 전후 비교는 [2026-09-27 로딩 측정](loading-performance-2026-09-27.md)을 따른다. `scripts/measure-loading.mjs`는 HTTP 요청·생성·컴파일 대기·실제 첫 프레임·표시 종료와 첫 왕복의 RAF 간격을 기록한다. GPU 검사는 동시에 실행하지 않는다.
+초기 로딩의 단계별 계측과 production 전후 비교는 [2026-09-28 GPU 준비·장면 생성 측정](loading-performance-2026-09-28.md)을 따른다. [2026-09-27 꽃 입자 측정](loading-performance-2026-09-27.md)은 당시 기록으로 보존한다. `scripts/measure-loading.mjs`는 HTTP 요청·생성·컴파일 대기·실제 첫 프레임·표시 종료와 첫 왕복의 RAF 간격을 기록한다. `--detail 1`의 WebGL 호출 진단과 최종 성능 비교는 따로 실행하고, `--trace 0`으로 User Timing을 끈 비교도 할 수 있다. GPU 검사는 동시에 실행하지 않는다.
 
 PR #20의 RTX 2060 SUPER·Chromium ANGLE D3D11·1440×900·DPR 1 측정에서 19초 하강과 19초 상승의 RAF p95는 각각 16.8ms였고, 33.5ms를 넘는 프레임은 없었다. 한 기기의 한 차례 왕복 결과이며 모든 환경의 FPS를 뜻하지 않는다. 정지 스크린샷은 성능 측정에 사용하지 않는다.
 

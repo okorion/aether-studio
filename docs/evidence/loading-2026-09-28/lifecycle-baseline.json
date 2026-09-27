@@ -1,0 +1,570 @@
+{
+  "records": [
+    {
+      "label": "initial-normal",
+      "heap": {
+        "usedSize": 12218312,
+        "totalSize": 14540800,
+        "embedderHeapUsedSize": 2312192,
+        "backingStorageSize": 79713648
+      },
+      "state": {
+        "engine": "three.js r186",
+        "renderProfile": "gpu",
+        "renderState": "ready",
+        "cameraMode": "idle",
+        "orbitEnabled": "true",
+        "preparation": "ready",
+        "videoState": "{\"active\":false,\"disposed\":false,\"ready\":[false,false],\"playing\":[false,false],\"state\":[\"idle\",\"idle\"],\"errors\":[null,null]}",
+        "lightVideoState": "{\"active\":true,\"ready\":true,\"playing\":true,\"attached\":true,\"state\":\"playing\",\"error\":null}",
+        "forestVideoState": "{\"active\":true,\"ready\":true,\"playing\":true,\"attached\":true,\"state\":\"playing\",\"error\":null}",
+        "scaleTime": "1.7493",
+        "monitorHover": "-1",
+        "reactorFlow": "{\"enabled\":true,\"active\":false,\"initialized\":false,\"count\":144000,\"steps\":0,\"profile\":\"desktop\"}",
+        "emblemState": "{\"variant\":\"glass\",\"capture\":\"ready\",\"width\":720,\"height\":450}",
+        "journeyStep": "1",
+        "focusX": "0.0000",
+        "focusY": "0.0000",
+        "orbitYaw": "0.0000",
+        "renderProgress": "0.000000",
+        "pointerStrength": "0.0000",
+        "cameraY": "0.3479",
+        "targetY": "0.0000",
+        "modelY": "0.0000",
+        "viewAzimuth": "0.0000",
+        "forestYaw": "0.0000",
+        "columnProgress": "0.000000",
+        "structureYaw": "0.0000",
+        "ringRoll": "0.0000",
+        "chainPhase": "0.000000",
+        "chamberY": "-40.4000",
+        "frameMs": "17.4",
+        "drawCalls": "65",
+        "quality": "1.00",
+        "geometries": "102",
+        "textures": "40",
+        "programs": "111",
+        "renderFrame": "90"
+      },
+      "contexts": [
+        {
+          "lost": false,
+          "connected": true,
+          "resources": {
+            "program": 111,
+            "texture": 44,
+            "buffer": 433,
+            "framebuffer": 20,
+            "renderbuffer": 6
+          }
+        }
+      ]
+    },
+    {
+      "label": "rebuild-1-reduce",
+      "heap": {
+        "usedSize": 11668824,
+        "totalSize": 13492224,
+        "embedderHeapUsedSize": 2365304,
+        "backingStorageSize": 79713806
+      },
+      "state": {
+        "engine": "three.js r186",
+        "renderProfile": "gpu",
+        "renderState": "ready",
+        "cameraMode": "idle",
+        "orbitEnabled": "true",
+        "preparation": "ready",
+        "videoState": "{\"active\":false,\"disposed\":false,\"ready\":[false,false],\"playing\":[false,false],\"state\":[\"idle\",\"idle\"],\"errors\":[null,null]}",
+        "monitorHover": "-1",
+        "lightVideoState": "{\"active\":false,\"ready\":true,\"playing\":false,\"attached\":true,\"state\":\"paused\",\"error\":null}",
+        "forestVideoState": "{\"active\":false,\"ready\":true,\"playing\":false,\"attached\":true,\"state\":\"paused\",\"error\":null}",
+        "scaleTime": "1.7826",
+        "reactorFlow": "{\"enabled\":true,\"active\":false,\"initialized\":false,\"count\":144000,\"steps\":0,\"profile\":\"desktop\"}",
+        "emblemState": "{\"variant\":\"glass\",\"capture\":\"ready\",\"width\":720,\"height\":450}",
+        "journeyStep": "1",
+        "focusX": "0.0000",
+        "focusY": "0.0000",
+        "orbitYaw": "0.0000",
+        "renderProgress": "0.000000",
+        "pointerStrength": "0.0000",
+        "cameraY": "0.3479",
+        "targetY": "0.0000",
+        "modelY": "0.0000",
+        "viewAzimuth": "0.0000",
+        "forestYaw": "0.0000",
+        "columnProgress": "0.000000",
+        "structureYaw": "0.0000",
+        "ringRoll": "0.0000",
+        "chainPhase": "0.000000",
+        "chamberY": "-40.4000",
+        "frameMs": "16.0",
+        "drawCalls": "105",
+        "quality": "1.00",
+        "geometries": "102",
+        "textures": "39",
+        "programs": "111",
+        "renderFrame": "1"
+      },
+      "contexts": [
+        {
+          "lost": true,
+          "connected": false,
+          "resources": {
+            "program": 0,
+            "texture": 0,
+            "buffer": 0,
+            "framebuffer": 0,
+            "renderbuffer": 0
+          }
+        },
+        {
+          "lost": false,
+          "connected": true,
+          "resources": {
+            "program": 111,
+            "texture": 43,
+            "buffer": 433,
+            "framebuffer": 20,
+            "renderbuffer": 6
+          }
+        }
+      ]
+    },
+    {
+      "label": "rebuild-2-no-preference",
+      "heap": {
+        "usedSize": 13486440,
+        "totalSize": 15589376,
+        "embedderHeapUsedSize": 2333872,
+        "backingStorageSize": 79713769
+      },
+      "state": {
+        "engine": "three.js r186",
+        "renderProfile": "gpu",
+        "renderState": "ready",
+        "cameraMode": "idle",
+        "orbitEnabled": "true",
+        "preparation": "ready",
+        "videoState": "{\"active\":false,\"disposed\":false,\"ready\":[false,false],\"playing\":[false,false],\"state\":[\"idle\",\"idle\"],\"errors\":[null,null]}",
+        "lightVideoState": "{\"active\":true,\"ready\":true,\"playing\":true,\"attached\":true,\"state\":\"playing\",\"error\":null}",
+        "forestVideoState": "{\"active\":true,\"ready\":true,\"playing\":true,\"attached\":true,\"state\":\"playing\",\"error\":null}",
+        "scaleTime": "2.3652",
+        "monitorHover": "-1",
+        "reactorFlow": "{\"enabled\":true,\"active\":false,\"initialized\":false,\"count\":144000,\"steps\":0,\"profile\":\"desktop\"}",
+        "emblemState": "{\"variant\":\"glass\",\"capture\":\"ready\",\"width\":720,\"height\":450}",
+        "journeyStep": "1",
+        "focusX": "0.0000",
+        "focusY": "0.0000",
+        "orbitYaw": "0.0000",
+        "renderProgress": "0.000000",
+        "pointerStrength": "0.0000",
+        "cameraY": "0.3479",
+        "targetY": "0.0000",
+        "modelY": "0.0000",
+        "viewAzimuth": "0.0000",
+        "forestYaw": "0.0000",
+        "columnProgress": "0.000000",
+        "structureYaw": "0.0000",
+        "ringRoll": "0.0000",
+        "chainPhase": "0.000000",
+        "chamberY": "-40.4000",
+        "frameMs": "16.4",
+        "drawCalls": "65",
+        "quality": "1.00",
+        "geometries": "102",
+        "textures": "39",
+        "programs": "111",
+        "renderFrame": "30"
+      },
+      "contexts": [
+        {
+          "lost": true,
+          "connected": false,
+          "resources": {
+            "program": 0,
+            "texture": 0,
+            "buffer": 0,
+            "framebuffer": 0,
+            "renderbuffer": 0
+          }
+        },
+        {
+          "lost": true,
+          "connected": false,
+          "resources": {
+            "program": 0,
+            "texture": 0,
+            "buffer": 0,
+            "framebuffer": 0,
+            "renderbuffer": 0
+          }
+        },
+        {
+          "lost": false,
+          "connected": true,
+          "resources": {
+            "program": 111,
+            "texture": 43,
+            "buffer": 433,
+            "framebuffer": 20,
+            "renderbuffer": 6
+          }
+        }
+      ]
+    },
+    {
+      "label": "rebuild-3-reduce",
+      "heap": {
+        "usedSize": 12527212,
+        "totalSize": 13754368,
+        "embedderHeapUsedSize": 2321536,
+        "backingStorageSize": 79713806
+      },
+      "state": {
+        "engine": "three.js r186",
+        "renderProfile": "gpu",
+        "renderState": "ready",
+        "cameraMode": "idle",
+        "orbitEnabled": "true",
+        "preparation": "ready",
+        "videoState": "{\"active\":false,\"disposed\":false,\"ready\":[false,false],\"playing\":[false,false],\"state\":[\"idle\",\"idle\"],\"errors\":[null,null]}",
+        "monitorHover": "-1",
+        "lightVideoState": "{\"active\":false,\"ready\":true,\"playing\":false,\"attached\":true,\"state\":\"paused\",\"error\":null}",
+        "forestVideoState": "{\"active\":false,\"ready\":true,\"playing\":false,\"attached\":true,\"state\":\"paused\",\"error\":null}",
+        "scaleTime": "2.3819",
+        "reactorFlow": "{\"enabled\":true,\"active\":false,\"initialized\":false,\"count\":144000,\"steps\":0,\"profile\":\"desktop\"}",
+        "emblemState": "{\"variant\":\"glass\",\"capture\":\"ready\",\"width\":720,\"height\":450}",
+        "journeyStep": "1",
+        "focusX": "0.0000",
+        "focusY": "0.0000",
+        "orbitYaw": "0.0000",
+        "renderProgress": "0.000000",
+        "pointerStrength": "0.0000",
+        "cameraY": "0.3479",
+        "targetY": "0.0000",
+        "modelY": "0.0000",
+        "viewAzimuth": "0.0000",
+        "forestYaw": "0.0000",
+        "columnProgress": "0.000000",
+        "structureYaw": "0.0000",
+        "ringRoll": "0.0000",
+        "chainPhase": "0.000000",
+        "chamberY": "-40.4000",
+        "frameMs": "16.0",
+        "drawCalls": "105",
+        "quality": "1.00",
+        "geometries": "102",
+        "textures": "39",
+        "programs": "111",
+        "renderFrame": "1"
+      },
+      "contexts": [
+        {
+          "lost": true,
+          "connected": false,
+          "resources": {
+            "program": 0,
+            "texture": 0,
+            "buffer": 0,
+            "framebuffer": 0,
+            "renderbuffer": 0
+          }
+        },
+        {
+          "lost": true,
+          "connected": false,
+          "resources": {
+            "program": 0,
+            "texture": 0,
+            "buffer": 0,
+            "framebuffer": 0,
+            "renderbuffer": 0
+          }
+        },
+        {
+          "lost": true,
+          "connected": false,
+          "resources": {
+            "program": 0,
+            "texture": 0,
+            "buffer": 0,
+            "framebuffer": 0,
+            "renderbuffer": 0
+          }
+        },
+        {
+          "lost": false,
+          "connected": true,
+          "resources": {
+            "program": 111,
+            "texture": 43,
+            "buffer": 433,
+            "framebuffer": 20,
+            "renderbuffer": 6
+          }
+        }
+      ]
+    },
+    {
+      "label": "rebuild-4-no-preference",
+      "heap": {
+        "usedSize": 14023340,
+        "totalSize": 16637952,
+        "embedderHeapUsedSize": 2344552,
+        "backingStorageSize": 79713769
+      },
+      "state": {
+        "engine": "three.js r186",
+        "renderProfile": "gpu",
+        "renderState": "ready",
+        "cameraMode": "idle",
+        "orbitEnabled": "true",
+        "preparation": "ready",
+        "videoState": "{\"active\":false,\"disposed\":false,\"ready\":[false,false],\"playing\":[false,false],\"state\":[\"idle\",\"idle\"],\"errors\":[null,null]}",
+        "lightVideoState": "{\"active\":true,\"ready\":true,\"playing\":true,\"attached\":true,\"state\":\"playing\",\"error\":null}",
+        "forestVideoState": "{\"active\":true,\"ready\":true,\"playing\":true,\"attached\":true,\"state\":\"playing\",\"error\":null}",
+        "scaleTime": "2.9645",
+        "monitorHover": "-1",
+        "reactorFlow": "{\"enabled\":true,\"active\":false,\"initialized\":false,\"count\":144000,\"steps\":0,\"profile\":\"desktop\"}",
+        "emblemState": "{\"variant\":\"glass\",\"capture\":\"ready\",\"width\":720,\"height\":450}",
+        "journeyStep": "1",
+        "focusX": "0.0000",
+        "focusY": "0.0000",
+        "orbitYaw": "0.0000",
+        "renderProgress": "0.000000",
+        "pointerStrength": "0.0000",
+        "cameraY": "0.3479",
+        "targetY": "0.0000",
+        "modelY": "0.0000",
+        "viewAzimuth": "0.0000",
+        "forestYaw": "0.0000",
+        "columnProgress": "0.000000",
+        "structureYaw": "0.0000",
+        "ringRoll": "0.0000",
+        "chainPhase": "0.000000",
+        "chamberY": "-40.4000",
+        "frameMs": "16.7",
+        "drawCalls": "65",
+        "quality": "1.00",
+        "geometries": "102",
+        "textures": "39",
+        "programs": "111",
+        "renderFrame": "30"
+      },
+      "contexts": [
+        {
+          "lost": true,
+          "connected": false,
+          "resources": {
+            "program": 0,
+            "texture": 0,
+            "buffer": 0,
+            "framebuffer": 0,
+            "renderbuffer": 0
+          }
+        },
+        {
+          "lost": true,
+          "connected": false,
+          "resources": {
+            "program": 0,
+            "texture": 0,
+            "buffer": 0,
+            "framebuffer": 0,
+            "renderbuffer": 0
+          }
+        },
+        {
+          "lost": true,
+          "connected": false,
+          "resources": {
+            "program": 0,
+            "texture": 0,
+            "buffer": 0,
+            "framebuffer": 0,
+            "renderbuffer": 0
+          }
+        },
+        {
+          "lost": true,
+          "connected": false,
+          "resources": {
+            "program": 0,
+            "texture": 0,
+            "buffer": 0,
+            "framebuffer": 0,
+            "renderbuffer": 0
+          }
+        },
+        {
+          "lost": false,
+          "connected": true,
+          "resources": {
+            "program": 111,
+            "texture": 43,
+            "buffer": 433,
+            "framebuffer": 20,
+            "renderbuffer": 6
+          }
+        }
+      ]
+    },
+    {
+      "label": "lost-during-preparation",
+      "stateBeforeLoss": {
+        "engine": "three.js r186",
+        "renderProfile": "gpu",
+        "renderState": "loading",
+        "cameraMode": "idle",
+        "orbitEnabled": "true",
+        "preparation": "compiling"
+      },
+      "contexts": [
+        {
+          "lost": true,
+          "connected": true,
+          "resources": {
+            "program": 0,
+            "texture": 0,
+            "buffer": 0,
+            "framebuffer": 0,
+            "renderbuffer": 0
+          }
+        }
+      ]
+    },
+    {
+      "label": "restore-after-loss",
+      "heap": {
+        "usedSize": 13034816,
+        "totalSize": 16637952,
+        "embedderHeapUsedSize": 2171912,
+        "backingStorageSize": 79713479
+      },
+      "state": {
+        "engine": "three.js r186",
+        "renderProfile": "gpu",
+        "renderState": "ready",
+        "cameraMode": "idle",
+        "orbitEnabled": "true",
+        "preparation": "ready",
+        "videoState": "{\"active\":false,\"disposed\":false,\"ready\":[false,false],\"playing\":[false,false],\"state\":[\"idle\",\"idle\"],\"errors\":[null,null]}",
+        "monitorHover": "-1",
+        "lightVideoState": "{\"active\":true,\"ready\":true,\"playing\":true,\"attached\":true,\"state\":\"playing\",\"error\":null}",
+        "forestVideoState": "{\"active\":true,\"ready\":true,\"playing\":true,\"attached\":true,\"state\":\"playing\",\"error\":null}",
+        "scaleTime": "0.6160",
+        "reactorFlow": "{\"enabled\":true,\"active\":false,\"initialized\":false,\"count\":144000,\"steps\":0,\"profile\":\"desktop\"}",
+        "emblemState": "{\"variant\":\"glass\",\"capture\":\"ready\",\"width\":720,\"height\":450}",
+        "journeyStep": "1",
+        "focusX": "0.0000",
+        "focusY": "0.0000",
+        "orbitYaw": "0.0000",
+        "renderProgress": "0.000000",
+        "pointerStrength": "0.0000",
+        "cameraY": "0.3479",
+        "targetY": "0.0000",
+        "modelY": "0.0000",
+        "viewAzimuth": "0.0000",
+        "forestYaw": "0.0000",
+        "columnProgress": "0.000000",
+        "structureYaw": "0.0000",
+        "ringRoll": "0.0000",
+        "chainPhase": "0.000000",
+        "chamberY": "-40.4000",
+        "frameMs": "16.6",
+        "drawCalls": "65",
+        "quality": "1.00",
+        "geometries": "102",
+        "textures": "40",
+        "programs": "111",
+        "renderFrame": "30"
+      },
+      "contexts": [
+        {
+          "lost": false,
+          "connected": true,
+          "resources": {
+            "program": 111,
+            "texture": 44,
+            "buffer": 433,
+            "framebuffer": 20,
+            "renderbuffer": 6
+          }
+        }
+      ]
+    },
+    {
+      "label": "retry-after-loss",
+      "heap": {
+        "usedSize": 12007088,
+        "totalSize": 13230080,
+        "embedderHeapUsedSize": 2287312,
+        "backingStorageSize": 79713534
+      },
+      "state": {
+        "engine": "three.js r186",
+        "renderProfile": "gpu",
+        "renderState": "ready",
+        "cameraMode": "idle",
+        "orbitEnabled": "true",
+        "preparation": "ready",
+        "videoState": "{\"active\":false,\"disposed\":false,\"ready\":[false,false],\"playing\":[false,false],\"state\":[\"idle\",\"idle\"],\"errors\":[null,null]}",
+        "monitorHover": "-1",
+        "lightVideoState": "{\"active\":false,\"ready\":true,\"playing\":false,\"attached\":true,\"state\":\"paused\",\"error\":null}",
+        "forestVideoState": "{\"active\":false,\"ready\":true,\"playing\":false,\"attached\":true,\"state\":\"paused\",\"error\":null}",
+        "scaleTime": "0.6494",
+        "reactorFlow": "{\"enabled\":true,\"active\":false,\"initialized\":false,\"count\":144000,\"steps\":0,\"profile\":\"desktop\"}",
+        "emblemState": "{\"variant\":\"glass\",\"capture\":\"ready\",\"width\":720,\"height\":450}",
+        "journeyStep": "1",
+        "focusX": "0.0000",
+        "focusY": "0.0000",
+        "orbitYaw": "0.0000",
+        "renderProgress": "0.000000",
+        "pointerStrength": "0.0000",
+        "cameraY": "0.3479",
+        "targetY": "0.0000",
+        "modelY": "0.0000",
+        "viewAzimuth": "0.0000",
+        "forestYaw": "0.0000",
+        "columnProgress": "0.000000",
+        "structureYaw": "0.0000",
+        "ringRoll": "0.0000",
+        "chainPhase": "0.000000",
+        "chamberY": "-40.4000",
+        "frameMs": "16.0",
+        "drawCalls": "105",
+        "quality": "1.00",
+        "geometries": "102",
+        "textures": "39",
+        "programs": "111",
+        "renderFrame": "1"
+      },
+      "contexts": [
+        {
+          "lost": true,
+          "connected": false,
+          "resources": {
+            "program": 0,
+            "texture": 0,
+            "buffer": 0,
+            "framebuffer": 0,
+            "renderbuffer": 0
+          }
+        },
+        {
+          "lost": false,
+          "connected": true,
+          "resources": {
+            "program": 111,
+            "texture": 43,
+            "buffer": 433,
+            "framebuffer": 20,
+            "renderbuffer": 6
+          }
+        }
+      ]
+    }
+  ],
+  "errors": []
+}

@@ -28,7 +28,7 @@ test('@interaction emblem completes one clockwise turn then a gentle reversible 
   const visible = (p: number, pointer = 0) => {
     const j = sampleJourney(p), requested = j.azimuth + pointer
     const camera = sampleViewAzimuth(p, requested)
-    return sampleEmblemYaw(p, j.azimuth, j.end) + (camera - requested) - camera
+    return sampleEmblemYaw(p, j.azimuth) + (camera - requested) - camera
   }
   let previous = visible(0)
   for (let i = 1; i <= 235; i++) {
@@ -48,7 +48,7 @@ test('@interaction emblem completes one clockwise turn then a gentle reversible 
   for (const p of [.1, .17, .2, .27, .94].reverse()) {
     expect(visible(p, .12) - visible(p)).toBeCloseTo(-.12, 10)
     const j = sampleJourney(p)
-    if (p >= .5) expect(sampleEmblemYaw(p, j.azimuth, j.end)).toBeCloseTo(.7 * (1 - j.end), 10)
+    if (p >= .5) expect(sampleEmblemYaw(p, j.azimuth)).toBeCloseTo(.7, 10)
   }
 })
 
@@ -57,7 +57,7 @@ test('@interaction panel approaches the incoming cut and holds its front view un
   let lastY = -Infinity
   for (let i = 0; i <= 155; i++) {
     const p = .715 + i / 1000, j = sampleJourney(p)
-    expect(j.orbitWeight).toBe(0)
+    if (p <= .8) expect(j.orbitWeight).toBe(0)
     expect(j.elevation).toBeCloseTo(0, 8)
     expect(sampleViewAzimuth(p, j.azimuth)).toBeCloseTo(Math.PI * 2, 8)
     expect(j.radius).toBeCloseTo(11.6, 8)

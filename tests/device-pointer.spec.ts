@@ -69,17 +69,17 @@ test('@interaction lower forest limits looking down without restricting upward o
         env.send('pointerdown')
         env.send('pointermove', 320, down ? 380 : 100)
         let view = env.step(1 / 60, progress)
-        for (let i = 0; i < 90; i++) view = env.step(1 / 60, progress)
-        if (down && progress > .9) expect(view.pitch).toBeCloseTo(.04, 4)
-        else expect(down ? view.pitch : -view.pitch).toBeGreaterThan(.4)
+        for (let i = 0; i < 150; i++) view = env.step(1 / 60, progress)
+        if (down && progress > .9) expect(view.pitch).toBeCloseTo(.28, 4)
+        else expect(down ? view.pitch : -view.pitch).toBeGreaterThan(progress > .9 ? .21 : .4)
         expect(view.yaw).toBe(0)
         const baseCameraY = journey.height + Math.sin(journey.elevation) * journey.radius
         const chosenCameraY = journey.height
           + Math.sin(THREE.MathUtils.clamp(journey.elevation + view.pitch * journey.orbitWeight, -.72, .72)) * journey.radius
         if (down && progress > .9) {
-          expect(chosenCameraY - baseCameraY).toBeLessThan(.5)
+          expect(chosenCameraY - baseCameraY).toBeLessThan(3.3)
           env.send('pointermove', 320, 480)
-          expect(env.step(1, progress).pitch).toBeCloseTo(.04, 4)
+          expect(env.step(1, progress).pitch).toBeCloseTo(.28, 4)
         } else expect(down ? chosenCameraY - baseCameraY : baseCameraY - chosenCameraY).toBeGreaterThan(1)
         env.send('pointerup')
         const settled = env.step(4, progress)

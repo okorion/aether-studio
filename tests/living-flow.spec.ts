@@ -8,20 +8,20 @@ import { createSceneForest } from '../src/SceneForest'
 // No page or browser fixture: these inspect the production scene objects and
 // camera projections on the CPU. Shader pixels remain part of visual GPU QA.
 test('@interaction lower descent restores orbit continuously after the locked gallery', () => {
-  for (const p of [.24, .34, .64, .76, .85, .86]) {
+  for (const p of [.24, .34, .64, .76, .8]) {
     expect(sampleJourney(p).orbitEnabled).toBe(false)
     expect(sampleJourney(p).orbitWeight).toBe(0)
   }
-  let previous = sampleJourney(.87)
-  for (let i = 1; i <= 130; i++) {
-    const current = sampleJourney(.87 + i * .001)
+  let previous = sampleJourney(.8)
+  for (let i = 1; i <= 40; i++) {
+    const current = sampleJourney(.8 + i * .001)
     expect(current.orbitEnabled).toBe(true)
     expect(current.orbitWeight).toBeGreaterThan(previous.orbitWeight)
-    expect(current.orbitWeight - previous.orbitWeight).toBeLessThan(.012)
+    expect(current.orbitWeight - previous.orbitWeight).toBeLessThan(.038)
     expect(current.height).toBeLessThan(previous.height)
     previous = current
   }
-  expect(sampleJourney(.95).orbitWeight).toBeLessThan(1)
+  expect(sampleJourney(.84).orbitWeight).toBe(1)
   expect(sampleJourney(1).orbitWeight).toBe(1)
 })
 

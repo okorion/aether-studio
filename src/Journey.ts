@@ -21,7 +21,8 @@ export const FOREST_ENTRY_START = .800
 export const FOREST_ENTRY_END = .870
 
 /** Positive pitch looks down. Keep the lower clearing near eye level. */
-export const forestPitchLimit = (progress: number) => progress >= .855 ? .04 : .6
+export const forestPitchLimit = (progress: number) => .6 - .32 * smooth(.78, FOREST_ENTRY_START, progress)
+export const forestPitchMinimum = (progress: number) => -.6 + .38 * smooth(.78, FOREST_ENTRY_START, progress)
 
 /** Forests rotate in front of a fixed film; the compact scale stage stays frontal. */
 export function sampleViewAzimuth(progress: number, requested: number) {
@@ -32,8 +33,8 @@ export function sampleViewAzimuth(progress: number, requested: number) {
 }
 
 /** One clockwise passage, followed by a small reverse turn into the column. */
-export function sampleEmblemYaw(progress: number, authoredAzimuth: number, end: number) {
-  if (progress >= .5) return smooth(.21, .30, progress) * .7 * (1 - end)
+export function sampleEmblemYaw(progress: number, authoredAzimuth: number) {
+  if (progress >= .5) return .7
   // Parent/camera compensation contributes -authoredAzimuth. Cancel only that
   // authored part; pointer orbit continues to act on the visible ring.
   return authoredAzimuth - Math.PI * 2 * smooth(0, .235, progress)
@@ -88,9 +89,9 @@ export function sampleJourney(value: number) {
   const scales = windowWeight(progress, .74, .81, .87, .94)
   const core = windowWeight(progress, .20, .28, .88, .96)
   const end = smooth(.86, .97, progress)
-  // Restore camera control after the lower forest closes the scale curtain.
+  // Restore camera control as the lower forest enters the scale curtain.
   // The same weight gates drag and hover parallax in the mechanical scenes.
-  const orbitWeight = 1 - windowWeight(progress, .20, .235, FOREST_ENTRY_END, 1)
+  const orbitWeight = 1 - windowWeight(progress, .20, .235, FOREST_ENTRY_START, .84)
   const scaleFraming = windowWeight(progress, .69, .715, FOREST_ENTRY_END, 1)
   const overlay = progress < .1 ? 'entry' : progress < .305 ? 'statement'
     : progress < .65 ? 'work' : progress < .735 ? 'machine'

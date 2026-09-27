@@ -305,7 +305,7 @@ test('@interaction production scene accepts background drag and excludes navigat
   await page.mouse.up()
 })
 
-test('@interaction device and late scales reject pointer camera input until the lower ring', async ({ page }) => {
+test('@interaction device and scales lock orbit until the lower forest starts entering', async ({ page }) => {
   // Several sequential scenes and input types are checked in software WebGL.
   // Linux CI reached its previous 90s total budget while still making progress.
   test.setTimeout(150_000)
@@ -338,7 +338,7 @@ test('@interaction device and late scales reject pointer camera input until the 
 
   // Keep browser probes inside the band: integer scroll pixels can round the
   // exact .870 boundary into the first frame of the returning orbit.
-  for (const progress of [.72, .80, .85, .865]) {
+  for (const progress of [.72, .78, .795]) {
     const before = await moveToProgress(progress)
     await expect(canvas).toHaveAttribute('data-orbit-enabled', 'false')
     const savedYaw = Number(await canvas.getAttribute('data-orbit-yaw'))
@@ -355,7 +355,7 @@ test('@interaction device and late scales reject pointer camera input until the 
     expect(Math.abs(Number(await canvas.getAttribute('data-orbit-yaw')) - savedYaw)).toBeLessThan(.0002)
   }
 
-  const lowerRing = await moveToProgress(.95)
+  const lowerRing = await moveToProgress(.85)
   await expect(canvas).toHaveAttribute('data-orbit-enabled', 'true')
   await page.mouse.move(1100, 340)
   await page.mouse.down()
@@ -365,7 +365,7 @@ test('@interaction device and late scales reject pointer camera input until the 
   expect(Math.abs(turned.forestYaw - lowerRing.forestYaw)).toBeGreaterThan(.2)
 
   // Returning into the visible scale curtain cancels an already-held drag.
-  const lockedAgain = await moveToProgress(.85)
+  const lockedAgain = await moveToProgress(.795)
   await expect(canvas).toHaveAttribute('data-orbit-enabled', 'false')
   await expect(canvas).toHaveAttribute('data-camera-mode', 'idle')
   await expect(page.locator('html')).not.toHaveClass(/scene-dragging/)
@@ -1013,7 +1013,7 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
 
   test('orbit locks preserve the chosen view and mechanical scroll can stop and reverse', async ({ page }) => {
     const lockedBoundaries = await page.evaluate(() =>
-      [.235, .24, .45, .72, .83, .85, .86]
+      [.235, .24, .45, .72, .79]
         .map((progress) => window.interactionHarness.sampleJourney(progress)),
     )
     for (const state of lockedBoundaries) {
@@ -1021,7 +1021,7 @@ test.describe('@interaction isolated rendered trail and input lifecycle', () => 
       expect(state.orbitWeight).toBe(0)
     }
     const returningOrbit = await page.evaluate(() =>
-      [0, .94, .95, 1].map((progress) => window.interactionHarness.sampleJourney(progress)),
+      [0, .81, .82, .84].map((progress) => window.interactionHarness.sampleJourney(progress)),
     )
     for (const state of returningOrbit) {
       expect(state.orbitEnabled).toBe(true)

@@ -63,6 +63,33 @@ function compiledSource(material: THREE.Material) {
   return shader
 }
 
+test('@interaction glass program sharing preserves shader variants and independent material uniforms', () => {
+  for (const [software, mobile] of [[false, false], [false, true], [true, false]]) {
+    const fixture = setup('glass', software, mobile)
+    try {
+      const pairs = [
+        ['aether-emblem-ring', 'aether-emblem-inner-ring'],
+        ['aether-emblem-ribbon-0', 'aether-emblem-ribbon-edge-0'],
+      ]
+      for (const [left, right] of pairs) {
+        const a = fixture.mesh(left).material, b = fixture.mesh(right).material
+        const sa = compiledSource(a), sb = compiledSource(b)
+        expect(a).not.toBe(b)
+        expect(a.customProgramCacheKey()).toBe(b.customProgramCacheKey())
+        expect(sa.vertexShader).toBe(sb.vertexShader)
+        expect(sa.fragmentShader).toBe(sb.fragmentShader)
+        expect(sa.uniforms.uEmblemThickness).not.toBe(sb.uniforms.uEmblemThickness)
+        const original = sb.uniforms.uEmblemThickness.value
+        sa.uniforms.uEmblemThickness.value = .123
+        expect(sb.uniforms.uEmblemThickness.value).toBe(original)
+      }
+      const keys = ['aether-emblem-ring', 'aether-emblem-glyph', 'aether-emblem-ribbon-0']
+        .map(name => fixture.mesh(name).material.customProgramCacheKey())
+      expect(new Set(keys).size).toBe(3)
+    } finally { fixture.dispose() }
+  }
+})
+
 test('@interaction silver emblem preserves its original geometry, material recipe, ribbons and scroll pose', () => {
   const fixture = setup('silver')
   const { emblem, mesh, world, neighbor } = fixture

@@ -207,7 +207,10 @@ export function createSceneEmblem(options: SceneEmblemOptions) {
           #include <opaque_fragment>
         `)
       }
-      surface.customProgramCacheKey = () => `${previousKey}-film-prism-${index}-v3`
+      // The index selects a material/uniform value, not GLSL. Let Three share
+      // identical ring/ribbon programs while each surface keeps its uniforms.
+      // previousKey still separates the glyph and animated ribbon hooks.
+      surface.customProgramCacheKey = () => `${previousKey}-film-prism-v3`
     }
   }
 

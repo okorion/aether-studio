@@ -1,0 +1,119 @@
+{
+  "environment": {
+    "os": "Windows 10 Home 10.0.19045",
+    "cpu": "AMD Ryzen 7 3700X",
+    "gpu": "NVIDIA GeForce RTX 2060 SUPER",
+    "driver": "32.0.15.6094",
+    "browser": "Chromium 153.0.8010.12",
+    "backend": "ANGLE D3D11",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "dpr": 1,
+    "node": "25.9.0",
+    "three": "0.186.0"
+  },
+  "builds": {
+    "baseline": {
+      "commit": "bdfda295b8e4917271f3416dd057ec2b30ac8d20",
+      "files": {
+        "audio-DTVot48Q.js": {
+          "bytes": 855,
+          "sha256": "b695a6e3feaae6feab56dc6c9a9e82266bb126aa8dbaf2d010ef786b2a3007d9"
+        },
+        "index-BgT0__Lh.js": {
+          "bytes": 244945,
+          "sha256": "2cd828d59e38bf4c07b548d9ce1b1572335552a0b034c9709e2abb6e967b5052"
+        },
+        "Scene-BUBWOMJ2.js": {
+          "bytes": 483748,
+          "sha256": "d24f182e9874acd29799deb8e7f6d7c29378a126d856660cbbd3f888ef630179"
+        },
+        "three-CjtGedH4.js": {
+          "bytes": 587045,
+          "sha256": "128ec0d581f1ffa840b9efe9823e9f25ed56e91cbe9410d5a62c66cf6d7573af"
+        },
+        "three-effects-DJx7NKBm.js": {
+          "bytes": 28074,
+          "sha256": "96c48cecc1ba7e33668fdf91eaf9cd8f6d7a8d269a14c0d1d607def9aac209ad"
+        }
+      }
+    },
+    "instrumented": {
+      "commit": "bed8a10",
+      "files": {
+        "audio-DTVot48Q.js": {
+          "bytes": 855,
+          "sha256": "b695a6e3feaae6feab56dc6c9a9e82266bb126aa8dbaf2d010ef786b2a3007d9"
+        },
+        "index-BpjB8l-o.js": {
+          "bytes": 245108,
+          "sha256": "3b791a6697f946c497ebbe510fef42555fac2b3bde662bdc056674e4250c1999"
+        },
+        "Scene-32ol9lMi.js": {
+          "bytes": 484082,
+          "sha256": "7bf1cb34946c4b52cea3ed8da3614d27b2b81070071354f79ce5ab3d4a045479"
+        },
+        "three-CjtGedH4.js": {
+          "bytes": 587045,
+          "sha256": "128ec0d581f1ffa840b9efe9823e9f25ed56e91cbe9410d5a62c66cf6d7573af"
+        },
+        "three-effects-DJx7NKBm.js": {
+          "bytes": 28074,
+          "sha256": "96c48cecc1ba7e33668fdf91eaf9cd8f6d7a8d269a14c0d1d607def9aac209ad"
+        }
+      }
+    },
+    "gpu": {
+      "commit": "4e3eaeb",
+      "files": {
+        "audio-DTVot48Q.js": {
+          "bytes": 855,
+          "sha256": "b695a6e3feaae6feab56dc6c9a9e82266bb126aa8dbaf2d010ef786b2a3007d9"
+        },
+        "index-CZKR2A0o.js": {
+          "bytes": 245108,
+          "sha256": "188d5f305e665a09326cb7745eab3a1da619d0175297bedcd60a6f5c1ba58f5f"
+        },
+        "Scene-BSdoRGle.js": {
+          "bytes": 484077,
+          "sha256": "a60764cc5719175f1001c630d3c876ce5e8b0ab83cfd8f7e60014e3127a7d13d"
+        },
+        "three-CjtGedH4.js": {
+          "bytes": 587045,
+          "sha256": "128ec0d581f1ffa840b9efe9823e9f25ed56e91cbe9410d5a62c66cf6d7573af"
+        },
+        "three-effects-DJx7NKBm.js": {
+          "bytes": 28074,
+          "sha256": "96c48cecc1ba7e33668fdf91eaf9cd8f6d7a8d269a14c0d1d607def9aac209ad"
+        }
+      }
+    },
+    "combined": {
+      "commit": "63e0923",
+      "files": {
+        "audio-DTVot48Q.js": {
+          "bytes": 855,
+          "sha256": "b695a6e3feaae6feab56dc6c9a9e82266bb126aa8dbaf2d010ef786b2a3007d9"
+        },
+        "index-Bfb6xSh1.js": {
+          "bytes": 245108,
+          "sha256": "8f8d51d182f1014e486a78cdbe9bcfca40ae22c30d2a4e1a988e3e4a655ba34f"
+        },
+        "Scene-Ithk0gN2.js": {
+          "bytes": 484238,
+          "sha256": "58cbee9c654c7d0275eccc63392af1f36756be7d7659a8fb140ef99b7b9daf54"
+        },
+        "three-CjtGedH4.js": {
+          "bytes": 587045,
+          "sha256": "128ec0d581f1ffa840b9efe9823e9f25ed56e91cbe9410d5a62c66cf6d7573af"
+        },
+        "three-effects-DJx7NKBm.js": {
+          "bytes": 28074,
+          "sha256": "96c48cecc1ba7e33668fdf91eaf9cd8f6d7a8d269a14c0d1d607def9aac209ad"
+        }
+      }
+    }
+  }
+}

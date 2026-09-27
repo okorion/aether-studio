@@ -1,0 +1,44 @@
+[
+  {
+    "scene": "forest",
+    "pixels": 1296000,
+    "changedPixels": 0,
+    "maxChannelDifference": 0,
+    "meanAbsoluteChannelDifference": 0.0
+  },
+  {
+    "scene": "emblem",
+    "pixels": 1296000,
+    "changedPixels": 9,
+    "maxChannelDifference": 1,
+    "meanAbsoluteChannelDifference": 2.8292181069958848e-06
+  },
+  {
+    "scene": "column",
+    "pixels": 1296000,
+    "changedPixels": 0,
+    "maxChannelDifference": 0,
+    "meanAbsoluteChannelDifference": 0.0
+  },
+  {
+    "scene": "reactor",
+    "pixels": 1296000,
+    "changedPixels": 6231,
+    "maxChannelDifference": 1,
+    "meanAbsoluteChannelDifference": 0.0016324588477366255
+  },
+  {
+    "scene": "scales",
+    "pixels": 1296000,
+    "changedPixels": 0,
+    "maxChannelDifference": 0,
+    "meanAbsoluteChannelDifference": 0.0
+  },
+  {
+    "scene": "lower-forest",
+    "pixels": 1296000,
+    "changedPixels": 0,
+    "maxChannelDifference": 0,
+    "meanAbsoluteChannelDifference": 0.0
+  }
+]

@@ -1,0 +1,1091 @@
+{
+  "browser": "153.0.8010.12",
+  "platform": "win32",
+  "launchArgs": [
+    "--use-angle=d3d11",
+    "--ignore-gpu-blocklist"
+  ],
+  "note": "Local preview; fresh browser does not reset OS/driver shader caches. Reload cache use is recorded per resource. Durations are CPU/wall-clock, not GPU timer queries.",
+  "results": [
+    {
+      "pair": 0,
+      "label": "baseline",
+      "visit": "fresh",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "loading": {
+        "firstFrame": 5916.899999856949,
+        "visibleReady": 6945.5,
+        "longTasks": [
+          {
+            "start": 89.19999980926514,
+            "duration": 102
+          },
+          {
+            "start": 412.2999999523163,
+            "duration": 1859
+          },
+          {
+            "start": 2412.5999999046326,
+            "duration": 56
+          },
+          {
+            "start": 3954.699999809265,
+            "duration": 201
+          },
+          {
+            "start": 5514.799999952316,
+            "duration": 234
+          },
+          {
+            "start": 5761.399999856949,
+            "duration": 157
+          }
+        ],
+        "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 2060 SUPER (0x00001F06) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+        "profile": "gpu",
+        "quality": "1.00",
+        "measures": [
+          {
+            "name": "aether:scene-1:renderer",
+            "start": 413.19999980926514,
+            "duration": 286
+          },
+          {
+            "name": "aether:scene-1:environment",
+            "start": 699.1999998092651,
+            "duration": 698.2000000476837
+          },
+          {
+            "name": "aether:scene-1:foreground",
+            "start": 1397.3999998569489,
+            "duration": 79.5
+          },
+          {
+            "name": "aether:scene-1:atmosphere",
+            "start": 1476.8999998569489,
+            "duration": 328.7999999523163
+          },
+          {
+            "name": "aether:scene-1:worlds-and-input",
+            "start": 1805.6999998092651,
+            "duration": 446.2000000476837
+          },
+          {
+            "name": "aether:scene-1:resources",
+            "start": 2251.899999856949,
+            "duration": 160.79999995231628
+          },
+          {
+            "name": "aether:scene-1:textures",
+            "start": 2412.699999809265,
+            "duration": 3.5
+          },
+          {
+            "name": "aether:scene-1:linear",
+            "start": 2416.199999809265,
+            "duration": 1538.5
+          },
+          {
+            "name": "aether:scene-1:geometry",
+            "start": 3954.699999809265,
+            "duration": 135.90000009536743
+          },
+          {
+            "name": "aether:scene-1:shaders",
+            "start": 4090.5999999046326,
+            "duration": 1424.2000000476837
+          },
+          {
+            "name": "aether:scene-1:postprocess",
+            "start": 5514.799999952316,
+            "duration": 234.5
+          },
+          {
+            "name": "aether:scene-1:first-frame",
+            "start": 5749.299999952316,
+            "duration": 167.59999990463257
+          }
+        ],
+        "marks": [
+          {
+            "name": "aether:module:request",
+            "start": 96.5
+          },
+          {
+            "name": "aether:module:ready",
+            "start": 238.59999990463257
+          },
+          {
+            "name": "aether:scene-1:begin",
+            "start": 413.19999980926514
+          },
+          {
+            "name": "aether:scene-1:renderer",
+            "start": 699.1999998092651
+          },
+          {
+            "name": "aether:scene-1:environment",
+            "start": 1397.3999998569489
+          },
+          {
+            "name": "aether:scene-1:foreground",
+            "start": 1476.8999998569489
+          },
+          {
+            "name": "aether:scene-1:atmosphere",
+            "start": 1805.6999998092651
+          },
+          {
+            "name": "aether:scene-1:worlds-and-input",
+            "start": 2251.899999856949
+          },
+          {
+            "name": "aether:scene-1:resources",
+            "start": 2412.699999809265
+          },
+          {
+            "name": "aether:scene-1:textures",
+            "start": 2416.199999809265
+          },
+          {
+            "name": "aether:scene-1:linear",
+            "start": 3954.699999809265
+          },
+          {
+            "name": "aether:scene-1:geometry",
+            "start": 4090.5999999046326
+          },
+          {
+            "name": "aether:scene-1:shaders",
+            "start": 5514.799999952316
+          },
+          {
+            "name": "aether:scene-1:postprocess",
+            "start": 5749.299999952316
+          },
+          {
+            "name": "aether:scene-1:first-frame",
+            "start": 5916.899999856949
+          }
+        ],
+        "resources": [
+          {
+            "path": "/assets/index-BgT0__Lh.js",
+            "start": 32.39999985694885,
+            "end": 50.5,
+            "duration": 18.100000143051147,
+            "transferBytes": 76800,
+            "encodedBytes": 76500,
+            "decodedBytes": 244945
+          },
+          {
+            "path": "/assets/index-B2GgQWi7.css",
+            "start": 32.69999980926514,
+            "end": 43.799999952316284,
+            "duration": 11.100000143051147,
+            "transferBytes": 7704,
+            "encodedBytes": 7404,
+            "decodedBytes": 26349
+          },
+          {
+            "path": "/assets/Scene-BUBWOMJ2.js",
+            "start": 99.09999990463257,
+            "end": 123.59999990463257,
+            "duration": 24.5,
+            "transferBytes": 166573,
+            "encodedBytes": 166273,
+            "decodedBytes": 483748
+          },
+          {
+            "path": "/assets/three-CjtGedH4.js",
+            "start": 99.29999995231628,
+            "end": 119.29999995231628,
+            "duration": 20,
+            "transferBytes": 147283,
+            "encodedBytes": 146983,
+            "decodedBytes": 587045
+          },
+          {
+            "path": "/assets/three-effects-DJx7NKBm.js",
+            "start": 99.39999985694885,
+            "end": 104.5,
+            "duration": 5.1000001430511475,
+            "transferBytes": 7592,
+            "encodedBytes": 7292,
+            "decodedBytes": 28074
+          },
+          {
+            "path": "/assets/dm-sans-latin-400-normal-CW0RaeGs.woff2",
+            "start": 124.19999980926514,
+            "end": 198.19999980926514,
+            "duration": 74,
+            "transferBytes": 14500,
+            "encodedBytes": 14200,
+            "decodedBytes": 14200
+          },
+          {
+            "path": "/assets/dm-sans-latin-300-normal-C46oWILc.woff2",
+            "start": 124.79999995231628,
+            "end": 198.5,
+            "duration": 73.70000004768372,
+            "transferBytes": 14008,
+            "encodedBytes": 13708,
+            "decodedBytes": 13708
+          },
+          {
+            "path": "/assets/ibm-plex-mono-latin-400-normal-DMJ8VG8y.woff2",
+            "start": 124.89999985694885,
+            "end": 198.79999995231628,
+            "duration": 73.90000009536743,
+            "transferBytes": 15008,
+            "encodedBytes": 14708,
+            "decodedBytes": 14708
+          },
+          {
+            "path": "/assets/barlow-condensed-latin-400-normal-Dc2u_eUW.woff2",
+            "start": 125.5,
+            "end": 199.19999980926514,
+            "duration": 73.69999980926514,
+            "transferBytes": 21464,
+            "encodedBytes": 21164,
+            "decodedBytes": 21164
+          },
+          {
+            "path": "/media/scale-alloy.jpg",
+            "start": 2270.7999999523163,
+            "end": 2301.5999999046326,
+            "duration": 30.799999952316284,
+            "transferBytes": 452245,
+            "encodedBytes": 451945,
+            "decodedBytes": 451945
+          },
+          {
+            "path": "/media/forest-memory.mp4",
+            "start": 5925.599999904633,
+            "end": 5966.699999809265,
+            "duration": 41.09999990463257,
+            "transferBytes": 963887,
+            "encodedBytes": 963587,
+            "decodedBytes": 963587
+          }
+        ]
+      },
+      "scroll": {
+        "p95": 16.799999999999272,
+        "max": 16.80000000000109,
+        "over33ms": 0,
+        "frames": 480,
+        "finalQuality": "1.00"
+      },
+      "errors": []
+    },
+    {
+      "pair": 0,
+      "label": "baseline",
+      "visit": "reload",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "loading": {
+        "firstFrame": 1941.2999999523163,
+        "visibleReady": 4494.200000047684,
+        "longTasks": [
+          {
+            "start": 346.7000000476837,
+            "duration": 887
+          },
+          {
+            "start": 1599.5999999046326,
+            "duration": 164
+          }
+        ],
+        "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 2060 SUPER (0x00001F06) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+        "profile": "gpu",
+        "quality": "1.00",
+        "measures": [
+          {
+            "name": "aether:scene-1:renderer",
+            "start": 346.7999999523163,
+            "duration": 10.200000047683716
+          },
+          {
+            "name": "aether:scene-1:environment",
+            "start": 357,
+            "duration": 22.09999990463257
+          },
+          {
+            "name": "aether:scene-1:foreground",
+            "start": 379.09999990463257,
+            "duration": 60.200000047683716
+          },
+          {
+            "name": "aether:scene-1:atmosphere",
+            "start": 439.2999999523163,
+            "duration": 351.60000014305115
+          },
+          {
+            "name": "aether:scene-1:worlds-and-input",
+            "start": 790.9000000953674,
+            "duration": 439.2999999523163
+          },
+          {
+            "name": "aether:scene-1:resources",
+            "start": 1230.2000000476837,
+            "duration": 39.5
+          },
+          {
+            "name": "aether:scene-1:textures",
+            "start": 1269.7000000476837,
+            "duration": 2.5
+          },
+          {
+            "name": "aether:scene-1:linear",
+            "start": 1272.2000000476837,
+            "duration": 327.5
+          },
+          {
+            "name": "aether:scene-1:geometry",
+            "start": 1599.7000000476837,
+            "duration": 120.70000004768372
+          },
+          {
+            "name": "aether:scene-1:shaders",
+            "start": 1720.4000000953674,
+            "duration": 165.29999995231628
+          },
+          {
+            "name": "aether:scene-1:postprocess",
+            "start": 1885.7000000476837,
+            "duration": 28.5
+          },
+          {
+            "name": "aether:scene-1:first-frame",
+            "start": 1914.2000000476837,
+            "duration": 27
+          }
+        ],
+        "marks": [
+          {
+            "name": "aether:module:request",
+            "start": 43.700000047683716
+          },
+          {
+            "name": "aether:module:ready",
+            "start": 68.90000009536743
+          },
+          {
+            "name": "aether:scene-1:begin",
+            "start": 346.7999999523163
+          },
+          {
+            "name": "aether:scene-1:renderer",
+            "start": 357
+          },
+          {
+            "name": "aether:scene-1:environment",
+            "start": 379.09999990463257
+          },
+          {
+            "name": "aether:scene-1:foreground",
+            "start": 439.2999999523163
+          },
+          {
+            "name": "aether:scene-1:atmosphere",
+            "start": 790.9000000953674
+          },
+          {
+            "name": "aether:scene-1:worlds-and-input",
+            "start": 1230.2000000476837
+          },
+          {
+            "name": "aether:scene-1:resources",
+            "start": 1269.7000000476837
+          },
+          {
+            "name": "aether:scene-1:textures",
+            "start": 1272.2000000476837
+          },
+          {
+            "name": "aether:scene-1:linear",
+            "start": 1599.7000000476837
+          },
+          {
+            "name": "aether:scene-1:geometry",
+            "start": 1720.4000000953674
+          },
+          {
+            "name": "aether:scene-1:shaders",
+            "start": 1885.7000000476837
+          },
+          {
+            "name": "aether:scene-1:postprocess",
+            "start": 1914.2000000476837
+          },
+          {
+            "name": "aether:scene-1:first-frame",
+            "start": 1941.2000000476837
+          }
+        ],
+        "resources": [
+          {
+            "path": "/assets/index-BgT0__Lh.js",
+            "start": 32,
+            "end": 34.5,
+            "duration": 2.5,
+            "transferBytes": 300,
+            "encodedBytes": 76500,
+            "decodedBytes": 244945
+          },
+          {
+            "path": "/assets/index-B2GgQWi7.css",
+            "start": 32.09999990463257,
+            "end": 35,
+            "duration": 2.9000000953674316,
+            "transferBytes": 300,
+            "encodedBytes": 7404,
+            "decodedBytes": 26349
+          },
+          {
+            "path": "/assets/Scene-BUBWOMJ2.js",
+            "start": 43.90000009536743,
+            "end": 48.5,
+            "duration": 4.599999904632568,
+            "transferBytes": 300,
+            "encodedBytes": 166273,
+            "decodedBytes": 483748
+          },
+          {
+            "path": "/assets/three-CjtGedH4.js",
+            "start": 44,
+            "end": 52.90000009536743,
+            "duration": 8.900000095367432,
+            "transferBytes": 300,
+            "encodedBytes": 146983,
+            "decodedBytes": 587045
+          },
+          {
+            "path": "/assets/three-effects-DJx7NKBm.js",
+            "start": 44.09999990463257,
+            "end": 50.09999990463257,
+            "duration": 6,
+            "transferBytes": 300,
+            "encodedBytes": 7292,
+            "decodedBytes": 28074
+          },
+          {
+            "path": "/assets/dm-sans-latin-400-normal-CW0RaeGs.woff2",
+            "start": 48.200000047683716,
+            "end": 51.59999990463257,
+            "duration": 3.3999998569488525,
+            "transferBytes": 300,
+            "encodedBytes": 0,
+            "decodedBytes": 0
+          },
+          {
+            "path": "/assets/dm-sans-latin-300-normal-C46oWILc.woff2",
+            "start": 48.299999952316284,
+            "end": 52.09999990463257,
+            "duration": 3.799999952316284,
+            "transferBytes": 300,
+            "encodedBytes": 0,
+            "decodedBytes": 0
+          },
+          {
+            "path": "/assets/ibm-plex-mono-latin-400-normal-DMJ8VG8y.woff2",
+            "start": 48.40000009536743,
+            "end": 52.59999990463257,
+            "duration": 4.199999809265137,
+            "transferBytes": 300,
+            "encodedBytes": 0,
+            "decodedBytes": 0
+          },
+          {
+            "path": "/assets/barlow-condensed-latin-400-normal-Dc2u_eUW.woff2",
+            "start": 48.5,
+            "end": 53.200000047683716,
+            "duration": 4.700000047683716,
+            "transferBytes": 300,
+            "encodedBytes": 0,
+            "decodedBytes": 0
+          },
+          {
+            "path": "/media/scale-alloy.jpg",
+            "start": 791.7999999523163,
+            "end": 793.9000000953674,
+            "duration": 2.1000001430511475,
+            "transferBytes": 300,
+            "encodedBytes": 0,
+            "decodedBytes": 0
+          },
+          {
+            "path": "/media/forest-memory.mp4",
+            "start": 1943.0999999046326,
+            "end": 1945.7999999523163,
+            "duration": 2.700000047683716,
+            "transferBytes": 963887,
+            "encodedBytes": 963587,
+            "decodedBytes": 963587
+          }
+        ]
+      },
+      "scroll": {
+        "p95": 16.700000000000728,
+        "max": 16.80000000000109,
+        "over33ms": 0,
+        "frames": 480,
+        "finalQuality": "1.00"
+      },
+      "errors": []
+    },
+    {
+      "pair": 0,
+      "label": "candidate",
+      "visit": "fresh",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "loading": {
+        "firstFrame": 5688.199999809265,
+        "visibleReady": 6345,
+        "longTasks": [
+          {
+            "start": 49,
+            "duration": 68
+          },
+          {
+            "start": 359.09999990463257,
+            "duration": 1645
+          },
+          {
+            "start": 2146.199999809265,
+            "duration": 56
+          },
+          {
+            "start": 2600.5999999046326,
+            "duration": 239
+          },
+          {
+            "start": 3186.2999999523163,
+            "duration": 235
+          },
+          {
+            "start": 3693.699999809265,
+            "duration": 200
+          },
+          {
+            "start": 5294.799999952316,
+            "duration": 232
+          },
+          {
+            "start": 5534.799999952316,
+            "duration": 154
+          }
+        ],
+        "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 2060 SUPER (0x00001F06) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+        "profile": "gpu",
+        "quality": "1.00",
+        "measures": [
+          {
+            "name": "aether:scene-1:renderer",
+            "start": 359.89999985694885,
+            "duration": 160.70000004768372
+          },
+          {
+            "name": "aether:scene-1:environment",
+            "start": 520.5999999046326,
+            "duration": 689.2999999523163
+          },
+          {
+            "name": "aether:scene-1:foreground",
+            "start": 1209.8999998569489,
+            "duration": 66.60000014305115
+          },
+          {
+            "name": "aether:scene-1:atmosphere",
+            "start": 1276.5,
+            "duration": 289.59999990463257
+          },
+          {
+            "name": "aether:scene-1:worlds-and-input",
+            "start": 1566.0999999046326,
+            "duration": 424.90000009536743
+          },
+          {
+            "name": "aether:scene-1:resources",
+            "start": 1991,
+            "duration": 155.29999995231628
+          },
+          {
+            "name": "aether:scene-1:textures",
+            "start": 2146.2999999523163,
+            "duration": 2.8999998569488525
+          },
+          {
+            "name": "aether:scene-1:linear",
+            "start": 2149.199999809265,
+            "duration": 1544.6000001430511
+          },
+          {
+            "name": "aether:scene-1:geometry",
+            "start": 3693.7999999523163,
+            "duration": 139.89999985694885
+          },
+          {
+            "name": "aether:scene-1:shaders",
+            "start": 3833.699999809265,
+            "duration": 1461.2000000476837
+          },
+          {
+            "name": "aether:scene-1:postprocess",
+            "start": 5294.899999856949,
+            "duration": 232.40000009536743
+          },
+          {
+            "name": "aether:scene-1:first-frame",
+            "start": 5527.299999952316,
+            "duration": 160.79999995231628
+          }
+        ],
+        "marks": [
+          {
+            "name": "aether:module:request",
+            "start": 53.299999952316284
+          },
+          {
+            "name": "aether:module:ready",
+            "start": 136.39999985694885
+          },
+          {
+            "name": "aether:scene-1:begin",
+            "start": 359.89999985694885
+          },
+          {
+            "name": "aether:scene-1:renderer",
+            "start": 520.5999999046326
+          },
+          {
+            "name": "aether:scene-1:environment",
+            "start": 1209.8999998569489
+          },
+          {
+            "name": "aether:scene-1:foreground",
+            "start": 1276.5
+          },
+          {
+            "name": "aether:scene-1:atmosphere",
+            "start": 1566.0999999046326
+          },
+          {
+            "name": "aether:scene-1:worlds-and-input",
+            "start": 1991
+          },
+          {
+            "name": "aether:scene-1:resources",
+            "start": 2146.2999999523163
+          },
+          {
+            "name": "aether:scene-1:textures",
+            "start": 2149.199999809265
+          },
+          {
+            "name": "aether:scene-1:linear",
+            "start": 3693.7999999523163
+          },
+          {
+            "name": "aether:scene-1:geometry",
+            "start": 3833.699999809265
+          },
+          {
+            "name": "aether:scene-1:shaders",
+            "start": 5294.899999856949
+          },
+          {
+            "name": "aether:scene-1:postprocess",
+            "start": 5527.299999952316
+          },
+          {
+            "name": "aether:scene-1:first-frame",
+            "start": 5688.099999904633
+          }
+        ],
+        "resources": [
+          {
+            "path": "/assets/index-BgT0__Lh.js",
+            "start": 11,
+            "end": 26.699999809265137,
+            "duration": 15.699999809265137,
+            "transferBytes": 76800,
+            "encodedBytes": 76500,
+            "decodedBytes": 244945
+          },
+          {
+            "path": "/assets/index-B2GgQWi7.css",
+            "start": 11.299999952316284,
+            "end": 20.899999856948853,
+            "duration": 9.599999904632568,
+            "transferBytes": 7704,
+            "encodedBytes": 7404,
+            "decodedBytes": 26349
+          },
+          {
+            "path": "/assets/Scene-BUBWOMJ2.js",
+            "start": 54.5,
+            "end": 78.59999990463257,
+            "duration": 24.09999990463257,
+            "transferBytes": 166573,
+            "encodedBytes": 166273,
+            "decodedBytes": 483748
+          },
+          {
+            "path": "/assets/three-CjtGedH4.js",
+            "start": 54.59999990463257,
+            "end": 73.5,
+            "duration": 18.90000009536743,
+            "transferBytes": 147283,
+            "encodedBytes": 146983,
+            "decodedBytes": 587045
+          },
+          {
+            "path": "/assets/three-effects-DJx7NKBm.js",
+            "start": 54.69999980926514,
+            "end": 59.59999990463257,
+            "duration": 4.900000095367432,
+            "transferBytes": 7592,
+            "encodedBytes": 7292,
+            "decodedBytes": 28074
+          },
+          {
+            "path": "/assets/dm-sans-latin-400-normal-CW0RaeGs.woff2",
+            "start": 63,
+            "end": 121.5,
+            "duration": 58.5,
+            "transferBytes": 14500,
+            "encodedBytes": 14200,
+            "decodedBytes": 14200
+          },
+          {
+            "path": "/assets/dm-sans-latin-300-normal-C46oWILc.woff2",
+            "start": 63.09999990463257,
+            "end": 121.79999995231628,
+            "duration": 58.700000047683716,
+            "transferBytes": 14008,
+            "encodedBytes": 13708,
+            "decodedBytes": 13708
+          },
+          {
+            "path": "/assets/ibm-plex-mono-latin-400-normal-DMJ8VG8y.woff2",
+            "start": 63.09999990463257,
+            "end": 122.19999980926514,
+            "duration": 59.09999990463257,
+            "transferBytes": 15008,
+            "encodedBytes": 14708,
+            "decodedBytes": 14708
+          },
+          {
+            "path": "/assets/barlow-condensed-latin-400-normal-Dc2u_eUW.woff2",
+            "start": 63.299999952316284,
+            "end": 122.39999985694885,
+            "duration": 59.09999990463257,
+            "transferBytes": 21464,
+            "encodedBytes": 21164,
+            "decodedBytes": 21164
+          },
+          {
+            "path": "/media/scale-alloy.jpg",
+            "start": 2003.5,
+            "end": 2007.1999998092651,
+            "duration": 3.6999998092651367,
+            "transferBytes": 452245,
+            "encodedBytes": 451945,
+            "decodedBytes": 451945
+          },
+          {
+            "path": "/media/forest-memory.mp4",
+            "start": 5693.899999856949,
+            "end": 5698.199999809265,
+            "duration": 4.299999952316284,
+            "transferBytes": 963887,
+            "encodedBytes": 963587,
+            "decodedBytes": 963587
+          }
+        ]
+      },
+      "scroll": {
+        "p95": 16.700000000000728,
+        "max": 16.80000000000109,
+        "over33ms": 0,
+        "frames": 480,
+        "finalQuality": "1.00"
+      },
+      "errors": []
+    },
+    {
+      "pair": 0,
+      "label": "candidate",
+      "visit": "reload",
+      "viewport": {
+        "width": 1440,
+        "height": 900
+      },
+      "loading": {
+        "firstFrame": 1760,
+        "visibleReady": 4414,
+        "longTasks": [
+          {
+            "start": 336.5,
+            "duration": 771
+          },
+          {
+            "start": 1149.7000000476837,
+            "duration": 50
+          },
+          {
+            "start": 1453.7000000476837,
+            "duration": 158
+          }
+        ],
+        "renderer": "ANGLE (NVIDIA, NVIDIA GeForce RTX 2060 SUPER (0x00001F06) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+        "profile": "gpu",
+        "quality": "1.00",
+        "measures": [
+          {
+            "name": "aether:scene-1:renderer",
+            "start": 336.7000000476837,
+            "duration": 9.599999904632568
+          },
+          {
+            "name": "aether:scene-1:environment",
+            "start": 346.2999999523163,
+            "duration": 15.200000047683716
+          },
+          {
+            "name": "aether:scene-1:foreground",
+            "start": 361.5,
+            "duration": 49.299999952316284
+          },
+          {
+            "name": "aether:scene-1:atmosphere",
+            "start": 410.7999999523163,
+            "duration": 311.7000000476837
+          },
+          {
+            "name": "aether:scene-1:worlds-and-input",
+            "start": 722.5,
+            "duration": 381
+          },
+          {
+            "name": "aether:scene-1:resources",
+            "start": 1103.5,
+            "duration": 46.200000047683716
+          },
+          {
+            "name": "aether:scene-1:textures",
+            "start": 1149.7000000476837,
+            "duration": 3.299999952316284
+          },
+          {
+            "name": "aether:scene-1:linear",
+            "start": 1153,
+            "duration": 300.7999999523163
+          },
+          {
+            "name": "aether:scene-1:geometry",
+            "start": 1453.7999999523163,
+            "duration": 116.90000009536743
+          },
+          {
+            "name": "aether:scene-1:shaders",
+            "start": 1570.7000000476837,
+            "duration": 148.70000004768372
+          },
+          {
+            "name": "aether:scene-1:postprocess",
+            "start": 1719.4000000953674,
+            "duration": 17.5
+          },
+          {
+            "name": "aether:scene-1:first-frame",
+            "start": 1736.9000000953674,
+            "duration": 23.09999990463257
+          }
+        ],
+        "marks": [
+          {
+            "name": "aether:module:request",
+            "start": 33.90000009536743
+          },
+          {
+            "name": "aether:module:ready",
+            "start": 55.10000014305115
+          },
+          {
+            "name": "aether:scene-1:begin",
+            "start": 336.7000000476837
+          },
+          {
+            "name": "aether:scene-1:renderer",
+            "start": 346.2999999523163
+          },
+          {
+            "name": "aether:scene-1:environment",
+            "start": 361.5
+          },
+          {
+            "name": "aether:scene-1:foreground",
+            "start": 410.7999999523163
+          },
+          {
+            "name": "aether:scene-1:atmosphere",
+            "start": 722.5
+          },
+          {
+            "name": "aether:scene-1:worlds-and-input",
+            "start": 1103.5
+          },
+          {
+            "name": "aether:scene-1:resources",
+            "start": 1149.7000000476837
+          },
+          {
+            "name": "aether:scene-1:textures",
+            "start": 1153
+          },
+          {
+            "name": "aether:scene-1:linear",
+            "start": 1453.7999999523163
+          },
+          {
+            "name": "aether:scene-1:geometry",
+            "start": 1570.7000000476837
+          },
+          {
+            "name": "aether:scene-1:shaders",
+            "start": 1719.4000000953674
+          },
+          {
+            "name": "aether:scene-1:postprocess",
+            "start": 1736.9000000953674
+          },
+          {
+            "name": "aether:scene-1:first-frame",
+            "start": 1760
+          }
+        ],
+        "resources": [
+          {
+            "path": "/assets/index-BgT0__Lh.js",
+            "start": 22.5,
+            "end": 25.5,
+            "duration": 3,
+            "transferBytes": 300,
+            "encodedBytes": 76500,
+            "decodedBytes": 244945
+          },
+          {
+            "path": "/assets/index-B2GgQWi7.css",
+            "start": 22.600000143051147,
+            "end": 25.299999952316284,
+            "duration": 2.6999998092651367,
+            "transferBytes": 300,
+            "encodedBytes": 7404,
+            "decodedBytes": 26349
+          },
+          {
+            "path": "/assets/Scene-BUBWOMJ2.js",
+            "start": 34,
+            "end": 38,
+            "duration": 4,
+            "transferBytes": 300,
+            "encodedBytes": 166273,
+            "decodedBytes": 483748
+          },
+          {
+            "path": "/assets/three-CjtGedH4.js",
+            "start": 34.10000014305115,
+            "end": 38.60000014305115,
+            "duration": 4.5,
+            "transferBytes": 300,
+            "encodedBytes": 146983,
+            "decodedBytes": 587045
+          },
+          {
+            "path": "/assets/three-effects-DJx7NKBm.js",
+            "start": 34.200000047683716,
+            "end": 37.700000047683716,
+            "duration": 3.5,
+            "transferBytes": 300,
+            "encodedBytes": 7292,
+            "decodedBytes": 28074
+          },
+          {
+            "path": "/assets/dm-sans-latin-400-normal-CW0RaeGs.woff2",
+            "start": 38.700000047683716,
+            "end": 40.60000014305115,
+            "duration": 1.9000000953674316,
+            "transferBytes": 300,
+            "encodedBytes": 0,
+            "decodedBytes": 0
+          },
+          {
+            "path": "/assets/dm-sans-latin-300-normal-C46oWILc.woff2",
+            "start": 38.799999952316284,
+            "end": 41,
+            "duration": 2.200000047683716,
+            "transferBytes": 300,
+            "encodedBytes": 0,
+            "decodedBytes": 0
+          },
+          {
+            "path": "/assets/ibm-plex-mono-latin-400-normal-DMJ8VG8y.woff2",
+            "start": 38.90000009536743,
+            "end": 41.60000014305115,
+            "duration": 2.700000047683716,
+            "transferBytes": 300,
+            "encodedBytes": 0,
+            "decodedBytes": 0
+          },
+          {
+            "path": "/assets/barlow-condensed-latin-400-normal-Dc2u_eUW.woff2",
+            "start": 39,
+            "end": 42.299999952316284,
+            "duration": 3.299999952316284,
+            "transferBytes": 300,
+            "encodedBytes": 0,
+            "decodedBytes": 0
+          },
+          {
+            "path": "/media/scale-alloy.jpg",
+            "start": 723.2000000476837,
+            "end": 725,
+            "duration": 1.7999999523162842,
+            "transferBytes": 300,
+            "encodedBytes": 0,
+            "decodedBytes": 0
+          },
+          {
+            "path": "/media/forest-memory.mp4",
+            "start": 1761.7999999523163,
+            "end": 1764,
+            "duration": 2.200000047683716,
+            "transferBytes": 963887,
+            "encodedBytes": 963587,
+            "decodedBytes": 963587
+          }
+        ]
+      },
+      "scroll": {
+        "p95": 16.700000000000728,
+        "max": 16.80000000000109,
+        "over33ms": 0,
+        "frames": 480,
+        "finalQuality": "1.00"
+      },
+      "errors": []
+    }
+  ]
+}

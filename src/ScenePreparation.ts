@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import type { LoadingStage } from './loading'
+import { beginLoadingSpan } from './LoadingTrace'
 
 /** Compile hidden sections before the first interactive frame, in both output paths. */
 export async function prepareSceneShaders(
@@ -17,6 +18,7 @@ export async function prepareSceneShaders(
   try {
     // Canvas titles/wrappers and static grain maps otherwise upload exactly
     // when their section first appears. Never load/advance a VideoTexture here.
+    const endCollect = beginLoadingSpan('texture-collection')
     const textures = new Set<THREE.Texture>()
     const collect = (value: unknown) => {
       if (value instanceof THREE.Texture && !value.isRenderTargetTexture && !(value instanceof THREE.VideoTexture)) {
@@ -31,17 +33,24 @@ export async function prepareSceneShaders(
         if (material instanceof THREE.ShaderMaterial) Object.values(material.uniforms).forEach(uniform => collect(uniform.value))
       }
     })
+    endCollect()
+    const endTextures = beginLoadingSpan('texture-upload')
     textures.forEach(texture => renderer.initTexture(texture))
+    endTextures()
     if (cancelled()) return
     onProgress('textures')
     let linear: Promise<unknown>
     try {
       renderer.setRenderTarget(target)
+      const endSubmit = beginLoadingSpan('linear-submit')
       linear = renderer.compileAsync(scene, camera)
+      endSubmit()
     } finally {
       renderer.setRenderTarget(previous)
     }
+    const endLinearWait = beginLoadingSpan('linear-wait')
     await linear
+    endLinearWait()
     if (cancelled()) return
     onProgress('linear')
     // Parallel compilation does not run first-use uniform queries or upload
@@ -59,7 +68,9 @@ export async function prepareSceneShaders(
     })
     try {
       renderer.setRenderTarget(target)
+      const endRender = beginLoadingSpan('geometry-first-use-render')
       renderer.render(scene, camera)
+      endRender()
     } finally {
       for (const state of saved) {
         state.object.visible = state.visible
@@ -70,7 +81,12 @@ export async function prepareSceneShaders(
     }
     if (cancelled()) return
     onProgress('geometry')
-    await renderer.compileAsync(scene, camera)
+    const endDisplaySubmit = beginLoadingSpan('display-submit')
+    const display = renderer.compileAsync(scene, camera)
+    endDisplaySubmit()
+    const endDisplayWait = beginLoadingSpan('display-wait')
+    await display
+    endDisplayWait()
     if (!cancelled()) onProgress('shaders')
   } finally {
     target.dispose()

@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 import { build } from 'vite'
 import type { probeReactorFlow, probeAtmosphereGpuFlow } from './fixtures/reactor-flow-harness'
 
-test('@interaction reactor GPU position history carries directional wakes and stays inside the O', async ({ page }) => {
+for (const pixelRatio of [1, 1.25, 1.5, 2, 3]) test(`@interaction reactor GPU position history stays inside the O at DPR ${pixelRatio}`, async ({ page }) => {
   test.setTimeout(90_000)
   const output = await build({ configFile: false, logLevel: 'silent', build: { write: false, minify: false,
     lib: { entry: 'tests/fixtures/reactor-flow-harness.ts', formats: ['iife'], name: 'ReactorFlowProbe' } } })
@@ -13,8 +13,9 @@ test('@interaction reactor GPU position history carries directional wakes and st
   page.on('console', message => { if (message.type() === 'error') errors.push(message.text()) })
   await page.goto('about:blank')
   await page.addScriptTag({ content: chunk.code })
-  const state = await page.evaluate(() => (window as unknown as { ReactorFlowProbe: {
-    probeReactorFlow: typeof probeReactorFlow } }).ReactorFlowProbe.probeReactorFlow())
+  const state = await page.evaluate(pixelRatio => (window as unknown as { ReactorFlowProbe: {
+    probeReactorFlow: typeof probeReactorFlow } }).ReactorFlowProbe.probeReactorFlow(pixelRatio), pixelRatio)
+  expect(state.initialization.max).toBeLessThan(.00001)
   expect(state.direction.meanX).toBeGreaterThan(.02)
   expect(state.history.meanDistance).toBeGreaterThan(.01)
   expect(state.idle.meanDistance).toBeGreaterThan(.01)
@@ -35,8 +36,8 @@ test('@interaction reactor GPU position history carries directional wakes and st
   expect(state.glError).toBe(0)
   const integration = []
   for (const mobile of [false, true]) {
-    const result = await page.evaluate(mobile => (window as unknown as { ReactorFlowProbe: {
-      probeAtmosphereGpuFlow: typeof probeAtmosphereGpuFlow } }).ReactorFlowProbe.probeAtmosphereGpuFlow(mobile), mobile)
+    const result = await page.evaluate(({ mobile, pixelRatio }) => (window as unknown as { ReactorFlowProbe: {
+      probeAtmosphereGpuFlow: typeof probeAtmosphereGpuFlow } }).ReactorFlowProbe.probeAtmosphereGpuFlow(mobile, pixelRatio), { mobile, pixelRatio })
     expect(result.status.enabled).toBe(true)
     expect(result.status.count).toBe(result.baseCount)
     expect(result.uniqueCells).toBe(result.baseCount)

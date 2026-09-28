@@ -126,7 +126,8 @@ export function createReactorFlow(renderer: THREE.WebGLRenderer, mobile: boolean
       renderer.xr.enabled = false
       renderer.autoClear = true
       renderer.setRenderTarget(targets[index])
-      renderer.setViewport(0, 0, side, side)
+      // setRenderTarget applies the texture viewport in physical texels.
+      // setViewport would multiply it by the screen DPR and remap state samples.
       renderer.setScissorTest(false)
       renderer.render(scene, camera)
       state.value = targets[index].texture

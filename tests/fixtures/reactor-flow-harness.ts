@@ -14,8 +14,9 @@ const compare = (a: Float32Array, b: Float32Array, count: number) => {
   return { meanX: meanX / count, meanDistance: distance / count, max }
 }
 
-export async function probeReactorFlow() {
+export async function probeReactorFlow(pixelRatio = 1) {
   const renderer = new THREE.WebGLRenderer()
+  renderer.setPixelRatio(pixelRatio)
   renderer.setSize(160, 100)
   const count = 192
   const seeds = new Float32Array(count * 3), lanes = new Float32Array(count * 4)
@@ -40,9 +41,11 @@ export async function probeReactorFlow() {
   const scissor = renderer.getScissor(new THREE.Vector4()).toArray()
   try {
     await Promise.all([control.prepare(), driven.prepare()])
+    const seedPositions = new Float32Array((control.state.value as THREE.DataTexture).image.data as Float32Array)
     control.update(0, .735, camera)
     driven.update(0, .735, camera)
     const initial = control.snapshot()!
+    const initialization = compare(initial, seedPositions, count)
     for (let frame = 1; frame <= 30; frame++) {
       control.update(frame / 60, .735, camera)
       driven.update(frame / 60, .735, camera, { flowTexture: texture, aspect: 1.6 })
@@ -90,7 +93,7 @@ export async function probeReactorFlow() {
       scissorTest: renderer.getScissorTest(), autoClear: renderer.autoClear }
     const stepCount = driven.getStatus().steps
     driven.dispose(); driven.dispose(); driven.update(102, .735, camera)
-    return { direction, history, idle, smallReverse, maxTube, minHole, finite, paused, pausedSteps, suspended, snapshotRestore,
+    return { initialization, direction, history, idle, smallReverse, maxTube, minHole, finite, paused, pausedSteps, suspended, snapshotRestore,
       exited, exitSteps: exited.steps - beforeExitSteps, reverse, rendererState,
       disposedSteps: driven.getStatus().steps - stepCount, glError: renderer.getContext().getError() }
   } finally {
@@ -99,8 +102,9 @@ export async function probeReactorFlow() {
 }
 
 /** The production vertex shader must consume each grain's own state texel. */
-export async function probeAtmosphereGpuFlow(mobile: boolean) {
+export async function probeAtmosphereGpuFlow(mobile: boolean, pixelRatio = 1) {
   const renderer = new THREE.WebGLRenderer()
+  renderer.setPixelRatio(pixelRatio)
   renderer.setSize(192, 1)
   const scene = new THREE.Scene()
   const atmosphere = createAtmosphere(scene, false, mobile, undefined, { renderer })

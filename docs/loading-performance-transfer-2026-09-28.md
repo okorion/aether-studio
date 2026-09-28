@@ -112,6 +112,8 @@ Scene 요청부터 모듈 평가 완료까지는 평상시 첫 방문 85.0–103
 
 [평상시 상세 원자료](evidence/loading-transfer-2026-09-28/production-detail.json), [제한 조건 상세 원자료](evidence/loading-transfer-2026-09-28/production-mobile-detail.json)와 같은 이름의 `.trace.json.gz` 파일을 보존한다. 압축을 풀면 DevTools/Perfetto에서 열 수 있는 `traceEvents` 구조다. 원래 trace의 모든 args를 보관한 파일은 아니며 공개 script metadata와 시간 필드만 남겼다.
 
+PR 리뷰 후 trace 집계 경계를 보정했다. navigation부터 첫 프레임까지의 구간과 겹치는 이벤트만 포함하고, 경계를 넘는 시간은 잘라낸다. 원래 `summary.json`과 trace는 보존하고 [보정 집계](evidence/loading-transfer-2026-09-28/summary-window-corrected.json)를 추가했다. 기존 자료에서 첫 프레임을 넘던 `RunTask` 6개의 구간 내 시간이 0.763–4.610ms 줄었다. 위 V8 표와 가장 긴 작업 수치, 로딩·스크롤 측정값은 그대로다. 시작·끝 경계, 양쪽 경계를 모두 넘는 이벤트, 다른 프로세스, 원자료 보존을 `node --test scripts/clip-trace-window.test.mjs`로 검증했다.
+
 ## 모바일 실기기 범위
 
 Windows에서 연결된 WPD·Android·iPhone·ADB 장치가 조회되지 않았고 PATH의 `adb`, `idevice_id`와 기본 Android SDK의 adb 실행 파일도 없었다. 모바일 실기기 측정은 완료하지 않았다. Safari/iOS, 실제 화면 회전·앱 전환과 복귀, 장시간 발열·메모리, 실제 터치 관성은 PC 보조 검사로 대신 증명하지 않는다.

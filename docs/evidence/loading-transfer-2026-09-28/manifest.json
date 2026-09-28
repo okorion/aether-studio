@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-09-27T18:55:14.627Z",
+  "checkedAt": "2026-09-28T00:17:46.890Z",
   "runtimeCommit": "b80ba753ae9ce5a2b5523dac430b75107418e0f5",
   "productionURL": "https://aether-studio-nu.vercel.app/",
   "githubDeployment": 6695808715,
@@ -288,6 +288,11 @@
       "name": "production-mobile-overlay-final.json",
       "bytes": 528188,
       "sha256": "a860354fa787c0ed59f59ea976349ddea12728966e09529a844b738caccd5f7f"
+    },
+    {
+      "name": "summary-window-corrected.json",
+      "bytes": 158117,
+      "sha256": "73c132652f5387e02dc63f56b5679e4fcbc7dcb5a84d81b87af7b586d035927f"
     },
     {
       "name": "summary.json",

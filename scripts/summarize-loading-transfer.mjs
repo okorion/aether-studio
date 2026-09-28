@@ -2,6 +2,7 @@
 import { readFile, writeFile, readdir } from 'node:fs/promises'
 import { gunzipSync } from 'node:zlib'
 import { join } from 'node:path'
+import { clipTraceWindow } from './clip-trace-window.mjs'
 
 const directory = process.argv[2]
 if (!directory) throw new Error('evidence directory required')
@@ -54,10 +55,10 @@ for (const file of await readdir(directory)) {
     const nav = r.loading.network.find(n => n.type === 'Document')
     const start = nav.start * 1e6
     const end = start + r.loading.firstFrame * 1000
-    const selected = events.filter(e => e.dur && e.ts >= start && e.ts < end && e.pid === firstModule.pid)
+    const selected = clipTraceWindow(events, start, end, firstModule.pid)
     const names = ['V8.ParseProgram', 'V8.ParseFunction', 'V8.PreParse', 'v8.parseOnBackground', 'V8.CompileCode', 'V8.CompileCodeBackground', 'v8.compileModule', 'v8.evaluateModule']
     traces.push({ path, mainThread: firstModule.tid, window: { start, end },
-      note: 'Named event inclusive durations; nested categories overlap. Do not sum categories or threads as wall-clock parse time. Includes measurement scripts unless public URL is present.',
+      note: 'Durations clipped to the navigation-to-first-frame window. Named event inclusive durations; nested categories overlap. Do not sum categories or threads as wall-clock parse time. Includes measurement scripts unless public URL is present.',
       events: Object.fromEntries(names.map(name => [name, {
         main: stats(selected.filter(e => e.name === name && e.tid === firstModule.tid).map(e => e.dur / 1000)),
         mainInclusiveMs: selected.filter(e => e.name === name && e.tid === firstModule.tid).reduce((s, e) => s + e.dur / 1000, 0),
@@ -68,5 +69,5 @@ for (const file of await readdir(directory)) {
   }
   output[file] = { comparison: sameTarget ? 'A/A: same target, no optimization delta' : 'A/B: see experiment conditions', groups, paired, traces, errors: data.results.flatMap(r => r.errors) }
 }
-await writeFile(join(directory, 'summary.json'), JSON.stringify(output, null, 2) + '\n')
+await writeFile(join(directory, process.argv[3] ?? 'summary.json'), JSON.stringify(output, null, 2) + '\n')
 console.log(JSON.stringify(Object.fromEntries(Object.entries(output).map(([key, value]) => [key, { groups: Object.fromEntries(Object.entries(value.groups).map(([group, stats]) => [group, { firstFrame: stats.firstFrame, visibleReady: stats.visibleReady, revalidations: stats.revalidations }])), paired: value.paired['reload-firstFrame'] }])), null, 2))

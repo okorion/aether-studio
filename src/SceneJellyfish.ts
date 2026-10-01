@@ -2,7 +2,7 @@ import * as THREE from 'three'
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js'
 import { bindGroupCurtain, createCurtainBounds } from './SceneCurtains'
 import { sampleLayers } from './SceneLayers'
-import { FOREST_ENTRY_START } from './Journey'
+import { FOREST_ENTRY_START, sampleJourney } from './Journey'
 
 const TAU = Math.PI * 2
 const RADIUS = .23
@@ -114,7 +114,7 @@ export function createSceneJellyfish(
     root.name = `aether-bell-creature-${index}`
     // Lower forests keep the original full anchor sequence on every profile.
     const anchor = new THREE.Vector3(...anchors[index % anchors.length])
-    if (index >= perForest) anchor.y -= 61.5
+    if (index >= perForest) anchor.y += sampleJourney(1).height
     root.scale.setScalar(index % perForest === 0 ? 1 : .7 + (index * .137) % .4)
     const bell = new THREE.Mesh(surface(bellRows, radialSegments), bellMaterial)
     bell.name = 'bell'

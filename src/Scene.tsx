@@ -80,7 +80,7 @@ const particleFragment = /* glsl */ `
     color += vec3(0.6, 0.9, 1.0) * spec * 0.7;
     float fog = exp(-max(0.0, vDepth - 9.0) * 0.10);
     float focus = smoothstep(5.0, 11.0, vDepth);
-    float alpha = smoothstep(1.0, mix(0.25, 0.78, focus), r) * shimmer * fog * uOpacity;
+    float alpha = (1.0 - smoothstep(mix(0.25, 0.78, focus), 1.0, r)) * shimmer * fog * uOpacity;
     gl_FragColor = vec4(color, alpha);
   }
 `

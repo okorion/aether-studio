@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test'
 import * as THREE from 'three'
 import { createSceneJellyfish, sampleJellyStroke } from '../src/SceneJellyfish'
+import { sampleJourney } from '../src/Journey'
 import { sceneToScroll } from '../src/ScrollTimeline'
 
 test('@interaction 상단과 하단 포레스트의 해파리 셰이더가 오류 없이 준비된다', async ({ page }) => {
@@ -98,9 +99,11 @@ test('@interaction 벨 크리처는 정지 시간, 재진입, 품질별 개수�
     expect(jellyfish.group.children.filter(child => child.visible)).toHaveLength(count / 2)
     expect(root.visible).toBe(false)
     const lower = jellyfish.group.children[count / 2]
-    expect(lower.position.y).toBeLessThan(-59)
+    const lowerHeight = sampleJourney(1).height
+    expect(lower.position.y).toBeLessThan(lowerHeight + 3)
     // A lower-quality profile must not restart the upper forest's anchor list.
-    const expectedAnchor = software ? [-3.5, -63.5, -2] : mobile ? [5.5, -65.3, -5] : [3.2, -60.2, -3]
+    const expectedAnchor = software ? [-3.5, lowerHeight - 2, -2]
+      : mobile ? [5.5, lowerHeight - 3.8, -5] : [3.2, lowerHeight + 1.3, -3]
     expect(lower.position.distanceTo(new THREE.Vector3(...expectedAnchor))).toBeLessThan(1)
     const geometries = new Set<THREE.BufferGeometry>()
     const materials = new Set<THREE.Material>()

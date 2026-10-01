@@ -137,7 +137,7 @@ export function createSceneLightShafts(
   for (let zone = 0; zone < 2; zone++) for (let i = 0; i < groveCount; i++) {
     const angle = i * 2.39996 + zone * .83
     const radius = 6.1 + (i % 3) * 1.35
-    add(Math.cos(angle) * radius, (zone ? -61.5 : 0) + 10.8 - (i % 3) * .75,
+    add(Math.cos(angle) * radius, sampleJourney(zone).height + 10.8 - (i % 3) * .75,
       Math.sin(angle) * radius, 4.0 + (i % 4) * .85, 15.0 + (i % 3) * 2.1, zone, i * .731 + zone * 4.7)
   }
   const chamberCount = mobile ? 3 : 5
